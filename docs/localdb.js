@@ -115,6 +115,7 @@
 
   // ---- Google Диск -----------------------------------------------------
   var token = null, tokenExp = 0, tokClient = null, gsiLoading = null;
+  (function () { var t = jget('plan.tok', null); if (t && t.t && t.exp > Date.now() + 60000) { token = t.t; tokenExp = t.exp; } })();
   var status = { text: '', cls: '' };
   var busy = false, syncTimer = null, waiting = null;
 
@@ -145,13 +146,20 @@
           callback: function (r) {
             if (r && r.access_token) {
               token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
+              jset('plan.tok', { t: token, exp: tokenExp });
               meta.signed = true; saveMeta();
+              if (!meta.hint) {
+                fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)', { headers: { Authorization: 'Bearer ' + token } })
+                  .then(function (x) { return x.json(); })
+                  .then(function (j) { if (j && j.user && j.user.emailAddress) { meta.hint = j.user.emailAddress; saveMeta(); } })
+                  .catch(function () {});
+              }
               res(token);
             } else rej(new Error(r && r.error ? r.error : 'auth'));
           },
           error_callback: function (e) { rej(new Error((e && e.type) || 'auth')); }
         });
-        tokClient.requestAccessToken({ prompt: interactive ? 'select_account' : '' });
+        tokClient.requestAccessToken(meta.hint ? { prompt: '', hint: meta.hint } : { prompt: interactive ? 'select_account' : '' });
       });
     });
   }
@@ -159,7 +167,7 @@
   function api(url, opt) {
     opt = opt || {}; opt.headers = Object.assign({ Authorization: 'Bearer ' + token }, opt.headers || {});
     return fetch(url, opt).then(function (r) {
-      if (r.status === 401) { token = null; tokenExp = 0; throw new Error('auth'); }
+      if (r.status === 401) { token = null; tokenExp = 0; jset('plan.tok', null); throw new Error('auth'); }
       if (!r.ok) throw new Error('http' + r.status);
       return r;
     });
@@ -259,7 +267,7 @@
     if (updateReady) { txt = 'ОБНОВИТЬ'; cls = 'upd'; }
     else if (!navigator.onLine) { txt = 'ОФЛАЙН'; cls = 'off'; }
     else if (busy) { txt = '…'; cls = 'work'; }
-    else if (!meta.signed) { txt = 'ВОЙТИ'; cls = 'warn'; }
+    else if (!meta.signed || !haveToken()) { txt = meta.signed ? 'ВХОД ↻' : 'ВОЙТИ'; cls = 'warn'; }
     else if (status.cls === 'warn') { txt = '!'; cls = 'warn'; }
     else if (dirty) { txt = '●'; cls = 'work'; }
     else { txt = '✓'; cls = 'ok'; }
@@ -281,7 +289,7 @@
     if (meta.signed) {
       b = el('button', 'pl-b', 'ВЫЙТИ'); b.onclick = function () {
         try { if (window.google && token) google.accounts.oauth2.revoke(token, function () {}); } catch (e) {}
-        token = null; tokenExp = 0; meta.signed = false; delete meta.sheetId; saveMeta(); setStatus('', ''); renderChip();
+        token = null; tokenExp = 0; jset('plan.tok', null); meta.signed = false; delete meta.sheetId; delete meta.hint; saveMeta(); setStatus('', ''); renderChip();
       }; menu.appendChild(b);
     }
     b = el('button', 'pl-b', 'ИМПОРТ ИЗ ФАЙЛА');
@@ -312,7 +320,10 @@
       };
       rd.readAsText(f);
     };
-    chip.onclick = function () { menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu(); };
+    chip.onclick = function () {
+      if (!updateReady && meta.signed && !haveToken() && navigator.onLine && !busy) { sync(false); return; }
+      menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu();
+    };
     document.body.appendChild(chip); document.body.appendChild(menu); document.body.appendChild(fileIn);
     renderChip();
   }
@@ -342,7 +353,7 @@
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && meta.signed && navigator.onLine) sync(false);
     });
-    setInterval(function () { if (!document.hidden && meta.signed && navigator.onLine && haveToken()) sync(false); }, 60000);
+    setInterval(function () { renderChip(); if (!document.hidden && meta.signed && navigator.onLine && haveToken()) sync(false); }, 60000);
     if (meta.signed && navigator.onLine) sync(false);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
