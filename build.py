@@ -58,7 +58,7 @@ icon(192, .82).save(f'{DIST}/icon-192.png')
 icon(512, .82).save(f'{DIST}/icon-512.png')
 icon(512, .62).save(f'{DIST}/icon-512-maskable.png')
 
-for f in ['manifest.json', 'config.js', 'localdb.js']:
+for f in ['manifest.json', 'config.js', 'localdb.js', 'privacy.html']:
     shutil.copy(f'{SRC}/{f}', f'{DIST}/{f}')
 
 # --- sw.js с версией = хэш содержимого
