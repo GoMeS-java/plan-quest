@@ -1,0 +1,39 @@
+/* Service worker: версия кэша = хэш файлов (подставляет build.py). */
+var VERSION = '__VERSION__';
+var CACHE = 'plan-' + VERSION;
+var SHELL = __SHELL__;
+
+self.addEventListener('install', function (e) {
+  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }));
+});
+self.addEventListener('activate', function (e) {
+  e.waitUntil(caches.keys().then(function (keys) {
+    return Promise.all(keys.filter(function (k) { return k.indexOf('plan-') === 0 && k !== CACHE && k !== 'plan-fonts'; })
+      .map(function (k) { return caches.delete(k); }));
+  }).then(function () { return self.clients.claim(); }));
+});
+self.addEventListener('message', function (e) { if (e.data === 'SKIP_WAITING') self.skipWaiting(); });
+
+self.addEventListener('fetch', function (e) {
+  var req = e.request;
+  if (req.method !== 'GET') return;
+  var url = new URL(req.url);
+  // Шрифты Google: кладём в кэш при первом онлайн-открытии
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    e.respondWith(caches.open('plan-fonts').then(function (c) {
+      return c.match(req).then(function (hit) {
+        var net = fetch(req).then(function (r) { if (r && (r.ok || r.type === 'opaque')) c.put(req, r.clone()); return r; }).catch(function () { return hit; });
+        return hit || net;
+      });
+    }));
+    return;
+  }
+  if (url.origin !== location.origin) return;      // Google API и вход не трогаем
+  e.respondWith(caches.open(CACHE).then(function (c) {
+    return c.match(req, { ignoreSearch: true }).then(function (hit) {
+      if (hit) return hit;
+      if (req.mode === 'navigate') return c.match('index.html');
+      return fetch(req);
+    });
+  }));
+});
