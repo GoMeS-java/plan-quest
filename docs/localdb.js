@@ -10,7 +10,7 @@
   var CFG = window.PLAN_CONFIG || {};
   var KEY = 'plan.store.v1';
   var META = 'plan.meta.v1';
-  var FILE_NAME = CFG.fileName || 'plan-data.json';
+  var FILE_NAME = CFG.fileName || 'plan-data';
   var SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
   var docs = {};      // path -> {d, u}
@@ -165,29 +165,52 @@
     });
   }
 
+  var TAB = 'data';
   function findFile() {
-    if (meta.fileId) return Promise.resolve(meta.fileId);
-    var q = encodeURIComponent("name='" + FILE_NAME + "' and trashed=false");
+    if (meta.sheetId) return Promise.resolve(meta.sheetId);
+    var q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and name='" + FILE_NAME + "' and trashed=false");
     return api('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&spaces=drive')
       .then(function (r) { return r.json(); })
-      .then(function (j) { if (j.files && j.files.length) { meta.fileId = j.files[0].id; saveMeta(); return meta.fileId; } return null; });
+      .then(function (j) { if (j.files && j.files.length) { meta.sheetId = j.files[0].id; saveMeta(); return meta.sheetId; } return null; });
   }
-  function downloadFile(id) {
-    return api('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media').then(function (r) { return r.json(); });
+  // Таблица: строка = запись. Колонки: path | json | u. Пустой json = запись удалена.
+  function readRows(id) {
+    return api('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + TAB + '!A:C?valueRenderOption=UNFORMATTED_VALUE')
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var out = {};
+        (j.values || []).forEach(function (row, i) {
+          if (i === 0 && row[0] === 'path') return;
+          var path = row[0]; if (!path || typeof path !== 'string') return;
+          var d = null, js = row[1];
+          if (js !== undefined && js !== '') { try { d = JSON.parse(String(js)); } catch (e) { return; } }
+          out[path] = { d: d, u: Number(row[2]) || 0 };
+        });
+        return { docs: out };
+      });
   }
-  function bodyJson() { return JSON.stringify({ v: 1, docs: docs }); }
+  function rowsOut() {
+    var rows = [['path', 'json', 'u']];
+    Object.keys(docs).sort().forEach(function (p) {
+      var r = docs[p];
+      rows.push([p, r.d == null ? '' : JSON.stringify(r.d), r.u || 0]);
+    });
+    return rows;
+  }
+  function writeAll(id) {
+    var rows = rowsOut();
+    return api('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + TAB + '!A1:C' + rows.length + '?valueInputOption=RAW', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ range: TAB + '!A1:C' + rows.length, majorDimension: 'ROWS', values: rows })
+    });
+  }
   function createFile() {
-    var boundary = 'plan' + Date.now();
-    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' +
-      JSON.stringify({ name: FILE_NAME, mimeType: 'application/json' }) + '\r\n--' + boundary +
-      '\r\nContent-Type: application/json\r\n\r\n' + bodyJson() + '\r\n--' + boundary + '--';
-    return api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
-      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
-    }).then(function (r) { return r.json(); }).then(function (j) { meta.fileId = j.id; saveMeta(); return j.id; });
-  }
-  function uploadFile(id) {
-    return api('https://www.googleapis.com/upload/drive/v3/files/' + id + '?uploadType=media', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: bodyJson()
+    return api('https://sheets.googleapis.com/v4/spreadsheets', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: { title: FILE_NAME }, sheets: [{ properties: { title: TAB } }] })
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      meta.sheetId = j.spreadsheetId; saveMeta();
+      return writeAll(meta.sheetId).then(function () { return meta.sheetId; });
     });
   }
 
@@ -196,9 +219,9 @@
     busy = true; setStatus('Синхронизация…', 'work');
     waiting = getToken(!!interactive).then(function () { return findFile(); }).then(function (id) {
       if (!id) return createFile().then(function () { return { created: true }; });
-      return downloadFile(id).then(function (remote) {
+      return readRows(id).then(function (remote) {
         var m = merge(remote);
-        if (m.remote || dirty) return uploadFile(id).then(function () { return m; });
+        if (m.remote || dirty) return writeAll(id).then(function () { return m; });
         return m;
       });
     }).then(function () {
@@ -258,7 +281,7 @@
     if (meta.signed) {
       b = el('button', 'pl-b', 'ВЫЙТИ'); b.onclick = function () {
         try { if (window.google && token) google.accounts.oauth2.revoke(token, function () {}); } catch (e) {}
-        token = null; tokenExp = 0; meta.signed = false; delete meta.fileId; saveMeta(); setStatus('', ''); renderChip();
+        token = null; tokenExp = 0; meta.signed = false; delete meta.sheetId; saveMeta(); setStatus('', ''); renderChip();
       }; menu.appendChild(b);
     }
     b = el('button', 'pl-b', 'ИМПОРТ ИЗ ФАЙЛА');

@@ -8,28 +8,40 @@ errors = []
 GSI = """window.google={accounts:{oauth2:{initTokenClient:function(o){return {requestAccessToken:function(){setTimeout(function(){o.callback({access_token:'tok',expires_in:3600})},10)}}},revoke:function(t,cb){cb&&cb()}}}};"""
 drive = {'file': None, 'id': 'FILE1'}
 
+sheet = {'rows': None}
 def handle(route):
     req = route.request; u = req.url
     if u.endswith('/config.js'):
-        return route.fulfill(status=200, content_type='text/javascript', body="window.PLAN_CONFIG={clientId:'test',fileName:'plan-data.json'};")
+        return route.fulfill(status=200, content_type='text/javascript', body="window.PLAN_CONFIG={clientId:'test',fileName:'plan-data'};")
     if 'accounts.google.com/gsi/client' in u:
         return route.fulfill(status=200, content_type='text/javascript', body=GSI)
     if 'fonts.g' in u:
         return route.fulfill(status=200, content_type='text/css', body='')
     if 'googleapis.com/drive/v3/files?q=' in u:
-        files = [{'id': drive['id'], 'name': 'plan-data.json'}] if drive['file'] else []
+        files = [{'id': 'SHEET1', 'name': 'plan-data'}] if sheet['rows'] else []
         return route.fulfill(status=200, content_type='application/json', body=json.dumps({'files': files}))
-    if 'alt=media' in u:
-        return route.fulfill(status=200, content_type='application/json', body=drive['file'])
-    if 'upload/drive/v3/files' in u and req.method == 'POST':
-        body = req.post_data
-        m = re.search(r'Content-Type: application/json\r\n\r\n(\{"v".*?\})\r\n--plan', body, re.S)
-        drive['file'] = m.group(1)
-        return route.fulfill(status=200, content_type='application/json', body=json.dumps({'id': drive['id']}))
-    if 'upload/drive/v3/files/' in u and req.method == 'PATCH':
-        drive['file'] = req.post_data
+    if u == 'https://sheets.googleapis.com/v4/spreadsheets' and req.method == 'POST':
+        sheet['rows'] = []
+        return route.fulfill(status=200, content_type='application/json', body=json.dumps({'spreadsheetId': 'SHEET1'}))
+    if 'sheets.googleapis.com/v4/spreadsheets/SHEET1/values/data!A:C' in u:
+        return route.fulfill(status=200, content_type='application/json', body=json.dumps({'values': sheet['rows']}))
+    if 'sheets.googleapis.com/v4/spreadsheets/SHEET1/values/data!A1' in u and req.method == 'PUT':
+        sheet['rows'] = json.loads(req.post_data)['values']
         return route.fulfill(status=200, content_type='application/json', body='{}')
     route.continue_()
+
+def remote_docs():
+    out = {}
+    for i, r in enumerate(sheet['rows']):
+        if i == 0: continue
+        out[r[0]] = {'d': json.loads(r[1]) if r[1] != '' else None, 'u': r[2]}
+    return out
+
+def set_row(path, d, u):
+    for r in sheet['rows']:
+        if r[0] == path:
+            r[1] = json.dumps(d, ensure_ascii=False) if d is not None else ''; r[2] = u; return
+    sheet['rows'].append([path, json.dumps(d, ensure_ascii=False) if d is not None else '', u])
 
 def cfg(route):
     route.fulfill(status=200, content_type='text/javascript', body="window.PLAN_CONFIG={clientId:'test',fileName:'plan-data.json'};")
@@ -62,24 +74,24 @@ with sync_playwright() as pw:
     # синхронизация: файла на Диске нет → создаётся
     page.evaluate("PLAN_CONFIG.clientId='test'")
     page.evaluate("PlanSync.sync(true)"); page.wait_for_timeout(1200)
-    f = json.loads(drive['file'])
-    print('5 created drive file docs:', len(f['docs']), '| chip', page.inner_text('.pl-chip'))
+    print('5 created sheet rows:', len(sheet['rows']) - 1, '| header', sheet['rows'][0], '| chip', page.inner_text('.pl-chip'))
     # «я» правлю файл на Диске: новая запись и правка существующей (u новее)
-    f['docs']['goals/new_from_chat'] = {'d': {'name': 'Тест от Claude', 'done': False, 'ts': 1}, 'u': int(time.time() * 1000)}
-    f['docs']['days/2026-10-21']['d']['steps'] = 7777; f['docs']['days/2026-10-21']['u'] = int(time.time() * 1000) + 5
-    drive['file'] = json.dumps(f, ensure_ascii=False)
+    now = int(time.time() * 1000)
+    set_row('goals/new_from_chat', {'name': 'Тест от Claude', 'done': False, 'ts': 1}, now)
+    d21 = remote_docs()['days/2026-10-21']['d']; d21['steps'] = 7777
+    set_row('days/2026-10-21', d21, now + 5)
     # на телефоне тем временем локальная правка старее чужой и новая запись
     page.evaluate("claude.use('db').then(db=>db.doc('jar/phone1').set({t:'с телефона',a:5,date:'2026-10-21',ts:2}))")
     page.wait_for_timeout(100)
     page.evaluate("PlanSync.sync(false)"); page.wait_for_timeout(1000)
-    f2 = json.loads(drive['file'])
+    f2 = {'docs': remote_docs()}
     loc = page.evaluate("JSON.stringify([PlanSync._docs()['goals/new_from_chat'], PlanSync._docs()['days/2026-10-21'].d.steps])")
     print('6 merge: local got chat edits:', loc[:80], '| drive got phone doc:', 'jar/phone1' in f2['docs'])
     page.screenshot(path='/tmp/app3.png')
     # удаление синхронизируется
     page.evaluate("claude.use('db').then(db=>db.doc('jar/phone1').delete())"); page.wait_for_timeout(100)
     page.evaluate("PlanSync.sync(false)"); page.wait_for_timeout(800)
-    print('7 tombstone on drive:', json.loads(drive['file'])['docs']['jar/phone1']['d'])
+    print('7 tombstone on sheet:', repr(remote_docs()['jar/phone1']['d']), [r for r in sheet['rows'] if r[0]=='jar/phone1'][0][1:])
     # обновление SW
     subprocess.run(['sed', '-i', 's/Сохранение недоступно/Сохранение недоступно!/', 'src/game.html'])
     subprocess.run(['python3', 'build.py'], capture_output=True)
