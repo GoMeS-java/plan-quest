@@ -1131,7 +1131,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var inc = 0, exp = 0, work = 0, cats = {};
     S.tx.forEach(function (t) {
       if (t.date.slice(0, 7) !== mk || t.kind === 'xfer') return;
-      if (t.kind === 'in') inc += t.amt;
+      if (t.kind === 'in') { if (t.cat !== 'Долг') inc += t.amt; }
       else {
         exp += t.amt;
         if (t.work) work += t.amt;
