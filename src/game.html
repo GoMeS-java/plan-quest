@@ -710,6 +710,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     Object.keys(S.per).forEach(function (k) { add(k, periodicGain(k)); });
     Object.keys(S.weeks).forEach(function (k) { if (S.weeks[k].meet) add(k, 5); });
     Object.keys(SI.done).forEach(function (k) { if (SI.done[k]) add(addDays(k, 6), 2); });
+    var kw = mondayKey('2026-10-19'), kcur = mondayKey(today);
+    while (kw <= kcur) { if (kcalWeek(kw) === 7) add(addDays(kw, 6), 3); kw = addDays(kw, 7); }
     var wk = {};
     S.weights.forEach(function (w) { var m = mondayKey(w.date); if (!wk[m] || w.date < wk[m]) wk[m] = w.date; });
     Object.keys(wk).forEach(function (m) { add(wk[m], 2); });
@@ -787,6 +789,15 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       k = dkey(nx);
     }
     return { goals: goals, done: done };
+  }
+  function kcalWeek(mk) {
+    var cnt = 0, d = parseKey(mk);
+    for (var i = 0; i < 7; i++) {
+      var day = S.days[dkey(d)];
+      if (day && day.q && day.q[2]) cnt++;
+      d.setDate(d.getDate() + 1);
+    }
+    return cnt;
   }
   function dayCount(k, SI) {
     var day = S.days[k];
@@ -986,6 +997,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       dd.setDate(dd.getDate() + 1);
     }
     list.appendChild(questButton('Каждый день по ' + fmt(sg) + ' шагов', cnt + ' из 7 дней. Если выполнишь все семь, цель вырастет на 1 000', '+2', !!SI.done[mk], null, true));
+    var kc = kcalWeek(mk);
+    list.appendChild(questButton('Неделя в пределах 2200 ккал', kc + ' из 7 дней подряд. Отмечай квест «Еда в пределах 2200 ккал» каждый день', '+3', kc === 7, null, true));
   }
   function remaining(ms) {
     var s = Math.max(0, Math.floor(ms / 1000));
