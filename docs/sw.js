@@ -1,5 +1,5 @@
 /* Service worker: версия кэша = хэш файлов (подставляет build.py). */
-var VERSION = 'fb886b7675';
+var VERSION = 'f9e4650807';
 var CACHE = 'plan-' + VERSION;
 var SHELL = ["./", "index.html", "manifest.json", "config.js", "localdb.js", "icon-192.png", "icon-512.png", "icon-512-maskable.png"];
 
