@@ -73,7 +73,7 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .bar i.on { background: var(--gold); box-shadow: inset 0 -4px 0 var(--gold-dark); }
 .hint { color: var(--muted); }
 
-.tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 6px; }
+.tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr)); gap: 6px; }
 .tab { font-family: var(--font-display); font-size: 8px; padding: 12px 2px; background: var(--panel); color: var(--muted); border: 3px solid var(--line); cursor: pointer; min-width: 0; }
 .tab[aria-selected="true"] { background: var(--gold); color: #1a1511; border-color: var(--gold-dark); }
 .tab:focus-visible, .q:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, .del:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
@@ -229,6 +229,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <button class="tab" role="tab" aria-selected="true" data-t="today">СЕГОДНЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="week">НЕДЕЛЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="shop" style="font-size:7px">УЛУЧШЕНИЯ</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="ach" style="font-size:7px">ДОСТИЖЕНИЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="goals">ЦЕЛИ</button>
   </div>
 
@@ -252,7 +253,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div id="psec">
       <h2>ПЕРИОДИЧЕСКИЕ, НЕОБЯЗАТЕЛЬНЫЕ</h2>
       <div id="plist" style="display:flex;flex-direction:column;gap:10px"></div>
-      <div class="hint">Штрафа за них нет. Приседания: 3 раза в день с паузой 2 часа, награда +0,5, +0,5 и +1. Тренировка: раз в день, отмечается по скриншоту из приложения.</div>
+      <div class="hint">Штрафа за них нет. Приседания и отжимания: 3 подхода в день с паузой 2 часа, награда растёт с каждым подходом. Тренировка: раз в день, отмечается по скриншоту из приложения.</div>
     </div>
     <h2>ПОСЛЕДНИЕ 14 ДНЕЙ</h2>
     <div class="strip" id="strip" aria-hidden="true"></div>
@@ -270,6 +271,14 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div class="upg"><span>Очков улучшения:</span><b id="upg2">0</b></div>
     <div id="slist" style="display:flex;flex-direction:column;gap:10px"></div>
     <div class="note">Покупка до 20 000 ₽ стоит одно очко улучшения, свыше 20 000 ₽ два, свыше 40 000 ₽ три, и так далее: плюс очко за каждые 20 000 ₽. Очко даётся за новый уровень. Выбрал награду, и покупка открывается только через 24 часа.</div>
+  </section>
+
+  <section class="panel" id="ach" data-g="a">
+    <h2>НАВЫКИ</h2>
+    <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
+    <h2 id="ach-h">ДОСТИЖЕНИЯ</h2>
+    <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="note">Достижения считаются сами по записанным данным, считать ничего не нужно. Часть скрыта, они откроются, когда условие выполнится. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
   </section>
 
   <section class="panel" id="goals" data-g="a">
@@ -416,6 +425,15 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div id="lv-text"></div>
     <button class="btn" type="button" id="lv-go">К УЛУЧШЕНИЯМ</button>
     <button class="btn alt" type="button" id="lv-ok">ОК</button>
+  </div>
+</div>
+
+<div class="lvup" id="achup" hidden role="dialog" aria-modal="true" aria-label="Открыто достижение">
+  <div class="lbox">
+    <div class="lbig" id="ac-kind"></div>
+    <div class="lbig" id="ac-big" style="font-size:14px"></div>
+    <div id="ac-text"></div>
+    <button class="btn" type="button" id="ac-ok">ОК</button>
   </div>
 </div>
 
@@ -685,15 +703,37 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 
   // ---- computed -----------------------------------------------------
   var START_KEY = '2026-10-19', PEN_START = '2026-10-20';
-  var SQ_REW = [0.5, 0.5, 1], SQ_MAX = 3, SQ_GAP = 2 * 3600000;
+  var SQ_MAX = 3, SQ_GAP = 2 * 3600000;
+  // скрытые навыки: пороги по сумме повторов, награда за подход зависит от его размера
+  var SK = {
+    squat: { name: 'Приседания', what: 'приседаний', th: [100, 400, 1000, 2500] },
+    pushup: { name: 'Отжимания на коленях', what: 'отжиманий на коленях', th: [100, 300, 800, 2000] }
+  };
+  var SK_KEYS = ['squat', 'pushup'];
+  var SK_ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+  var SK_BONUS = [0, 1, 2, 3, 5];
+  var SK_SETREW = [[0.5, 0.5, 1], [1, 1, 1], [1, 1.5, 1.5], [1.5, 1.5, 1.5], [2, 1.5, 1.5]];
+  function repsOf(q, key, i) { var r = q[key + 'R'] && q[key + 'R'][i]; return r > 0 ? r : 10; }
+  function sizeIdx(reps) { return Math.max(0, Math.min(4, Math.round(reps / 10) - 1)); }
+  function skillLevel(key, total) { var n = 1; SK[key].th.forEach(function (t) { if (total >= t) n++; }); return n; }
+  function skillTotal(key) {
+    var t = 0, today = dkey(new Date());
+    Object.keys(S.per).forEach(function (k) {
+      if (k > today) return;
+      var q = perDay(k);
+      for (var i = 0; i < Math.min(q[key].length, SQ_MAX); i++) t += repsOf(q, key, i);
+    });
+    return t;
+  }
   function need(L) { return 40 + 20 * (L - 1); }
   function fmtP(x) { return String(Math.round(x * 10) / 10).replace('.', ','); }
   function addDays(k, n) { var d = parseKey(k); d.setDate(d.getDate() + n); return dkey(d); }
-  function perDay(k) { var q = S.per[k] || {}; return { squat: q.squat || [], pushup: q.pushup || [], workout: q.workout || [] }; }
+  function perDay(k) { var q = S.per[k] || {}; return { squat: q.squat || [], pushup: q.pushup || [], squatR: q.squatR || [], pushupR: q.pushupR || [], workout: q.workout || [] }; }
   function periodicGain(k) {
     var q = perDay(k), g = 0, i;
-    for (i = 0; i < Math.min(q.squat.length, SQ_MAX); i++) g += SQ_REW[i];
-    for (i = 0; i < Math.min(q.pushup.length, SQ_MAX); i++) g += SQ_REW[i];
+    SK_KEYS.forEach(function (key) {
+      for (i = 0; i < Math.min(q[key].length, SQ_MAX); i++) g += SK_SETREW[sizeIdx(repsOf(q, key, i))][i];
+    });
     if (q.workout.length) g += 1;
     return g;
   }
@@ -704,11 +744,84 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (!(day.steps >= g)) out.push(fmt(g) + ' шагов');
     return out;
   }
+  var ACH = [
+    { id: 'steps50', t: 'Пятьдесят тысяч', d: 'Пройти суммарно 50 000 шагов', val: 'steps', goal: 50000, pts: 1 },
+    { id: 'steps100', t: 'Стотысячник', d: 'Пройти суммарно 100 000 шагов', val: 'steps', goal: 100000, pts: 2, secret: 1, h: 'Что-то связано с общим числом шагов' },
+    { id: 'steps250', t: 'Марафонец', d: 'Пройти суммарно 250 000 шагов', val: 'steps', goal: 250000, pts: 3, secret: 1, title: 'МАРАФОНЕЦ', h: 'Долгая дорога, много шагов' },
+    { id: 'steps500', t: 'Паломник', d: 'Пройти суммарно 500 000 шагов', val: 'steps', goal: 500000, pts: 5, secret: 1, title: 'ПАЛОМНИК', h: 'Очень долгая дорога' },
+    { id: 'bigday', t: 'Рывок', d: '15 000 шагов за один день', val: 'maxDay', goal: 15000, pts: 1, secret: 1, h: 'Один день, много шагов' },
+    { id: 'reps1000', t: 'Тысяча повторов', d: '1000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 1000, pts: 3, secret: 1, h: 'Приседания и отжимания копятся вместе' },
+    { id: 'wk5', t: 'Пять тренировок', d: 'Пять тренировок по приложению', val: 'wk', goal: 5, pts: 1 },
+    { id: 'wk20', t: 'Железный', d: 'Двадцать тренировок по приложению', val: 'wk', goal: 20, pts: 3, secret: 1, title: 'ЖЕЛЕЗНЫЙ', h: 'Тренировки, и их нужно много' },
+    { id: 'perf3', t: 'Три идеальных дня', d: 'Три дня подряд закрыть все 7 ежедневных квестов', val: 'perfBest', goal: 3, pts: 2 },
+    { id: 'perf7', t: 'Неделя без осечек', d: 'Семь идеальных дней подряд', val: 'perfBest', goal: 7, pts: 4, secret: 1, title: 'НЕСГИБАЕМЫЙ', h: 'Идеальные дни, один за другим' },
+    { id: 'perf10', t: 'Десять идеальных', d: 'Десять идеальных дней, не обязательно подряд', val: 'perf', goal: 10, pts: 3, secret: 1, h: 'Идеальные дни копятся' },
+    { id: 'early7', t: 'Жаворонок', d: 'Семь дней подряд вставать до 10:00', val: 'earlyBest', goal: 7, pts: 2, secret: 1, title: 'ЖАВОРОНОК', h: 'Что-то про утро' },
+    { id: 'kcal3', t: 'Ровное питание', d: 'Три недели, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 3, pts: 3, secret: 1, h: 'Недели с едой в пределах нормы' },
+    { id: 'stepw2', t: 'Шаг за шагом', d: 'Две недели, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 2, pts: 2, secret: 1, h: 'Идеальные недели по шагам' },
+    { id: 'meets5', t: 'Душа компании', d: 'Пять встреч с людьми не по работе', val: 'meets', goal: 5, pts: 3, secret: 1, title: 'ДУША КОМПАНИИ', h: 'Люди и встречи' },
+    { id: 'combo', t: 'Тройной удар', d: 'За один день три подхода приседаний, три подхода отжиманий и тренировка', val: 'combo', goal: 1, pts: 2, secret: 1, h: 'Один день, три вида нагрузки' },
+    { id: 'weigh4', t: 'Контроль', d: 'Взвешиваться четыре недели', val: 'weigh', goal: 4, pts: 1 }
+  ];
+  function growthInfo(SI, today) {
+    var out = { pts: {}, ach: {}, ups: { squat: [], pushup: [] }, st: null };
+    function give(k, v) { if (v) out.pts[k] = (out.pts[k] || 0) + v; }
+    var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0 };
+    var first = START_KEY;
+    Object.keys(S.days).concat(Object.keys(S.per)).forEach(function (k) { if (k < first) first = k; });
+    var wkWeigh = {};
+    S.weights.forEach(function (w) { var m = mondayKey(w.date); if (!wkWeigh[m] || w.date < wkWeigh[m]) wkWeigh[m] = w.date; });
+    var weighDates = {};
+    Object.keys(wkWeigh).forEach(function (m) { weighDates[wkWeigh[m]] = 1; });
+    var level = { squat: 1, pushup: 1 };
+    var k = first;
+    while (k <= today) {
+      var day = S.days[k] || {}, q = perDay(k);
+      if (day.steps > 0) { st.steps += day.steps; if (day.steps > st.maxDay) st.maxDay = day.steps; }
+      SK_KEYS.forEach(function (key) {
+        for (var i = 0; i < Math.min(q[key].length, SQ_MAX); i++) {
+          var r = repsOf(q, key, i);
+          st[key === 'squat' ? 'sq' : 'pu'] += r;
+          var lv = skillLevel(key, st[key === 'squat' ? 'sq' : 'pu']);
+          while (level[key] < lv) {
+            level[key]++;
+            out.ups[key].push({ lvl: level[key], date: k });
+            give(k, SK_BONUS[level[key] - 1]);
+          }
+        }
+      });
+      st.reps = st.sq + st.pu;
+      if (q.workout.length) st.wk++;
+      var perfect = dayCount(k, SI) >= QDEF.length + 1;
+      if (perfect) { st.perf++; st.perfRun++; if (st.perfRun > st.perfBest) st.perfBest = st.perfRun; } else st.perfRun = 0;
+      if (day.q && day.q[0]) { st.earlyRun++; if (st.earlyRun > st.earlyBest) st.earlyBest = st.earlyRun; } else st.earlyRun = 0;
+      if (q.squat.length >= SQ_MAX && q.pushup.length >= SQ_MAX && q.workout.length) st.combo++;
+      if (parseKey(k).getDay() === 0) {
+        var mk = mondayKey(k);
+        if (kcalWeek(mk) === 7) st.kcalW++;
+        if (SI.done[mk]) st.stepW++;
+      }
+      if (S.weeks[k] && S.weeks[k].meet) st.meets++;
+      if (weighDates[k]) st.weigh++;
+      for (var ai = 0; ai < ACH.length; ai++) {
+        var A = ACH[ai];
+        if (out.ach[A.id] === undefined && st[A.val] >= A.goal) { out.ach[A.id] = k; give(k, A.pts); }
+      }
+      k = addDays(k, 1);
+    }
+    out.st = st;
+    out.level = level;
+    return out;
+  }
+  var lastGI = null;
   function pointsInfo() {
     var SI = stepInfo(), today = dkey(new Date());
     var ev = {};
     function add(k, v) { if (k && k <= today) ev[k] = (ev[k] || 0) + v; }
     Object.keys(S.per).forEach(function (k) { add(k, periodicGain(k)); });
+    var GI = growthInfo(SI, today);
+    lastGI = GI;
+    Object.keys(GI.pts).forEach(function (k) { add(k, GI.pts[k]); });
     Object.keys(S.weeks).forEach(function (k) { if (S.weeks[k].meet) add(k, 5); });
     Object.keys(SI.done).forEach(function (k) { if (SI.done[k]) add(addDays(k, 6), 2); });
     var kw = mondayKey('2026-10-19'), kcur = mondayKey(today);
@@ -870,6 +983,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('lv-text').textContent = 'Вы повысили уровень до ' + L + '. Вам доступно ' + avail + ' ' + plural(avail, 'улучшение', 'улучшения', 'улучшений') + ' в магазине.';
     $('lvup').hidden = false;
     $('lv-ok').focus();
+    burst();
+  }
+  function burst() {
     var app = document.querySelector('.app');
     var sh = { off: 0, weak: 3, strong: 9 }[FX.shake] || 0;
     if (sh) {
@@ -961,22 +1077,35 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var box = $('plist');
     clear(box);
     var k = dkey(new Date()), q = perDay(k);
-    [
-      { key: 'squat', title: '10 приседаний', act: doSquat, undo: undoSquat, undoText: 'Отменить последнее выполнение приседаний' },
-      { key: 'pushup', title: '10 отжиманий на коленях', act: doPushup, undo: undoPushup, undoText: 'Отменить последнее выполнение отжиманий' }
-    ].forEach(function (ex) {
-      var arrE = q[ex.key];
+    SK_KEYS.forEach(function (key) {
+      var ex = { key: key, act: key === 'squat' ? doSquat : doPushup, undo: key === 'squat' ? undoSquat : undoPushup,
+        undoText: key === 'squat' ? 'Отменить последнее выполнение приседаний' : 'Отменить последнее выполнение отжиманий' };
+      var lvl = skillLevel(key, skillTotal(key)), size = lvl * 10;
+      var arrE = q[key];
       var c = Math.min(arrE.length, SQ_MAX);
       var last = arrE.length ? arrE[arrE.length - 1] : 0;
       var wait = last + SQ_GAP - Date.now();
       var sub, pts, pressed = false, click = null, timer = false;
+      var rw = c < SQ_MAX ? SK_SETREW[lvl - 1][c] : 0;
       if (c >= SQ_MAX) { sub = 'на сегодня всё, 3 из 3'; pts = '✓'; pressed = true; }
-      else if (wait > 0) { sub = 'сегодня ' + c + ' из 3. Следующий через ' + remaining(wait); pts = '+' + fmtP(SQ_REW[c]); pressed = true; timer = true; }
-      else { sub = 'сегодня ' + c + ' из 3'; pts = '+' + fmtP(SQ_REW[c]); click = ex.act; }
-      var btn = questButton(ex.title, sub, pts, pressed, click, !click);
-      if (timer) { btn.setAttribute('data-ptimer', String(last + SQ_GAP)); btn.setAttribute('data-pkey', ex.key); }
-      if (fresh(fx) && fx.sq === ex.key && fx.n === arrE.length) { btn.classList.add('just'); flyCoin(btn.querySelector('.box')); fx = null; }
+      else if (wait > 0) { sub = 'сегодня ' + c + ' из 3. Следующий через ' + remaining(wait); pts = '+' + fmtP(rw); pressed = true; timer = true; }
+      else { sub = 'сегодня ' + c + ' из 3'; pts = '+' + fmtP(rw); click = function () { ex.act(size); }; }
+      var btn = questButton(size + ' ' + SK[key].what, sub, pts, pressed, click, !click);
+      if (timer) { btn.setAttribute('data-ptimer', String(last + SQ_GAP)); btn.setAttribute('data-pkey', key); }
+      if (fresh(fx) && fx.sq === key && fx.n === arrE.length) { btn.classList.add('just'); flyCoin(btn.querySelector('.box')); fx = null; }
       box.appendChild(btn);
+      if (click && lvl > 1) {
+        var row = el('div', 'hint', 'Или подход поменьше: ');
+        for (var z = 1; z < lvl; z++) {
+          (function (n) {
+            var sb = el('button', 'linkbtn', n * 10 + ' (+' + fmtP(SK_SETREW[n - 1][c]) + ')');
+            sb.type = 'button';
+            sb.addEventListener('click', function () { ex.act(n * 10); });
+            row.appendChild(sb); row.appendChild(document.createTextNode(' '));
+          })(z);
+        }
+        box.appendChild(row);
+      }
       if (arrE.length) {
         var u = el('button', 'linkbtn', ex.undoText);
         u.type = 'button';
@@ -1603,8 +1732,86 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('p-' + k).addEventListener('click', function () { spPeriod = k; renderSpend(); });
   });
 
+  var achQueue = [], achShowing = false;
+  function readAchSeen() { try { return JSON.parse(localStorage.getItem('achSeen') || 'null'); } catch (e) { return null; } }
+  function writeAchSeen(a) { try { localStorage.setItem('achSeen', JSON.stringify(a)); } catch (e) {} }
+  function achEvents() {
+    var ev = [];
+    if (!lastGI) return ev;
+    ACH.forEach(function (A) { if (lastGI.ach[A.id]) ev.push({ id: 'a:' + A.id, date: lastGI.ach[A.id], kind: 'ДОСТИЖЕНИЕ', big: A.t, text: A.d + '. Награда: +' + A.pts + ' ' + plural(A.pts, 'очко', 'очка', 'очков') + (A.title ? '. Титул «' + A.title + '» теперь под персонажем.' : '.') }); });
+    SK_KEYS.forEach(function (key) {
+      lastGI.ups[key].forEach(function (u) {
+        var b = SK_BONUS[u.lvl - 1];
+        ev.push({ id: 's:' + key + ':' + u.lvl, date: u.date, kind: 'СЕКРЕТНЫЙ НАВЫК ОТКРЫТ', big: SK[key].name + ' ' + SK_ROMAN[u.lvl - 1],
+          text: 'Теперь доступен подход по ' + u.lvl * 10 + ' повторов, и за него дают больше очков. Награда за навык: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
+      });
+    });
+    return ev;
+  }
+  function showNextAch() {
+    if (achShowing || !achQueue.length) return;
+    var e = achQueue.shift();
+    achShowing = true;
+    $('ac-kind').textContent = e.kind;
+    $('ac-big').textContent = e.big;
+    $('ac-text').textContent = e.text;
+    $('achup').hidden = false;
+    $('ac-ok').focus();
+    burst();
+  }
+  function checkAch() {
+    if (!loaded || !lastGI) return;
+    var seen = readAchSeen(), evs = achEvents(), today = dkey(new Date());
+    var had = seen !== null;
+    seen = seen || [];
+    var changed = false;
+    evs.forEach(function (e) {
+      if (seen.indexOf(e.id) >= 0) return;
+      seen.push(e.id); changed = true;
+      // старые открытия при первом запуске на устройстве не показываем всплывающим окном
+      if (e.date >= addDays(today, -1)) achQueue.push(e);
+    });
+    if (changed || !had) writeAchSeen(seen);
+    showNextAch();
+  }
+  $('ac-ok').addEventListener('click', function () { $('achup').hidden = true; achShowing = false; showNextAch(); });
+  function renderAch() {
+    if (!lastGI) return;
+    var box = $('alist'), sk = $('sklist');
+    clear(box); clear(sk);
+    var any = false;
+    SK_KEYS.forEach(function (key) {
+      lastGI.ups[key].forEach(function (u) {
+        any = true;
+        sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], 'подход по ' + u.lvl * 10 + ' повторов, открыто ' + dshort(u.date), '✓', true, null, true));
+      });
+    });
+    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно повторов. Подсказок нет.'));
+    var open = 0, locked = [], hidden = [];
+    ACH.forEach(function (A) {
+      var d = lastGI.ach[A.id];
+      if (d) {
+        open++;
+        box.appendChild(questButton(A.t, A.d + ' · ' + dshort(d) + (A.title ? ' · титул «' + A.title + '»' : ''), '+' + A.pts, true, null, true));
+      } else if (!A.secret) locked.push(A); else hidden.push(A);
+    });
+    locked.forEach(function (A) {
+      var v = Math.min(lastGI.st[A.val] || 0, A.goal);
+      box.appendChild(questButton(A.t, A.d + ' (' + fmt(v) + ' из ' + fmt(A.goal) + ')', '+' + A.pts, false, null, true));
+    });
+    if (hidden.length) {
+      var hk = dkey(new Date()), hs = 0;
+      for (var i = 0; i < hk.length; i++) hs = (hs * 31 + hk.charCodeAt(i)) % 9973;
+      var hh = hidden[hs % hidden.length];
+      box.appendChild(questButton('???', 'Скрытые достижения ещё есть. Подсказка дня: ' + hh.h, '+?', false, null, true));
+    }
+    $('ach-h').textContent = 'ДОСТИЖЕНИЯ: ОТКРЫТО ' + open;
+    var title = '', best = '';
+    ACH.forEach(function (A) { var d = lastGI.ach[A.id]; if (A.title && d && d >= best) { best = d; title = A.title; } });
+    document.querySelector('.nametag').textContent = title || 'ТЫ';
+  }
   function renderAll() {
-    renderPoints(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal();
+    renderPoints(); renderAch(); checkAch(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal();
   }
   function renderGlobal() {
     var box = $('gg-list');
@@ -1638,30 +1845,35 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (q[i]) fx = { q: i, k: k, t: Date.now() };
     enqueue(function () { return db.doc('days/' + k).set({ q: q, kcal: cur.kcal == null ? null : cur.kcal, steps: cur.steps == null ? null : cur.steps }); });
   }
-  function doExercise(key) {
+  function doExercise(key, reps) {
     if (!db) return;
     var k = dkey(new Date()), q = perDay(k), cur = q[key];
     if (cur.length >= SQ_MAX) return;
+    var maxSize = skillLevel(key, skillTotal(key)) * 10;
+    reps = Math.min(maxSize, Math.max(10, Math.round((reps || 10) / 10) * 10));
     var last = cur.length ? cur[cur.length - 1] : 0;
     if (last + SQ_GAP > Date.now()) return;
     var arr = cur.concat([Date.now()]);
+    var rArr = cur.map(function (_, i) { return repsOf(q, key, i); }).concat([reps]);
     fx = { sq: key, n: arr.length, t: Date.now() };
-    saveExercise(k, q, key, arr);
+    saveExercise(k, q, key, arr, rArr);
   }
   function undoExercise(key) {
     if (!db) return;
     var k = dkey(new Date()), q = perDay(k);
     if (!q[key].length) return;
-    saveExercise(k, q, key, q[key].slice(0, -1));
+    var rArr = q[key].map(function (_, i) { return repsOf(q, key, i); });
+    saveExercise(k, q, key, q[key].slice(0, -1), rArr.slice(0, -1));
   }
-  function saveExercise(k, q, key, arr) {
+  function saveExercise(k, q, key, arr, rArr) {
     var doc = { squat: q.squat, pushup: q.pushup, workout: q.workout };
-    doc[key] = arr;
+    SK_KEYS.forEach(function (kk) { doc[kk + 'R'] = q[kk].map(function (_, i) { return repsOf(q, kk, i); }); });
+    doc[key] = arr; doc[key + 'R'] = rArr;
     enqueue(function () { return db.doc('per/' + k).set(doc); });
   }
-  function doSquat() { doExercise('squat'); }
+  function doSquat(n) { doExercise('squat', n); }
   function undoSquat() { undoExercise('squat'); }
-  function doPushup() { doExercise('pushup'); }
+  function doPushup(n) { doExercise('pushup', n); }
   function undoPushup() { undoExercise('pushup'); }
   $('d-today').addEventListener('click', function () { viewBack = 0; renderToday(); });
   $('d-yest').addEventListener('click', function () { viewBack = 1; renderToday(); });
