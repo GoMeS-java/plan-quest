@@ -72,6 +72,59 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .bar { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; }
 .bar i { height: 16px; background: var(--panel-2); border: 2px solid #1a1511; }
 .bar i.on { background: var(--gold); box-shadow: inset 0 -4px 0 var(--gold-dark); }
+
+/* ---- оформление: награды за достижения ---- */
+.coin[data-skin="round"], :root[data-coin="round"] .coin, :root[data-coin="round"] .fly { border-radius: 50%; }
+.coin[data-skin="star"], :root[data-coin="star"] .coin, :root[data-coin="star"] .fly { clip-path: polygon(50% 0, 62% 36%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 36%); }
+.coin[data-skin="gem"], :root[data-coin="gem"] .coin, :root[data-coin="gem"] .fly { clip-path: polygon(50% 0, 100% 38%, 50% 100%, 0 38%); }
+.coin[data-skin="heart"], :root[data-coin="heart"] .coin, :root[data-coin="heart"] .fly { clip-path: polygon(50% 100%, 0 35%, 12% 8%, 35% 0, 50% 18%, 65% 0, 88% 8%, 100% 35%); }
+.coin[data-skin="hex"], :root[data-coin="hex"] .coin, :root[data-coin="hex"] .fly { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+:root[data-bar="fire"] .bar i.on, .bar[data-skin="fire"] i.on { background: linear-gradient(#ffe36a, #ff8a2f 55%, #d8381f); box-shadow: none; }
+:root[data-bar="round"] .bar i, .bar[data-skin="round"] i { border-radius: 7px; }
+:root[data-bar="neon"] .bar i.on, .bar[data-skin="neon"] i.on { box-shadow: 0 0 9px var(--gold), inset 0 0 0 2px rgba(255,255,255,.4); }
+:root[data-bar="stripes"] .bar i.on, .bar[data-skin="stripes"] i.on { background: repeating-linear-gradient(135deg, var(--gold) 0 4px, var(--gold-dark) 4px 8px); box-shadow: none; }
+:root[data-bar="dots"] .bar i.on, .bar[data-skin="dots"] i.on { background: radial-gradient(circle, var(--gold) 42%, transparent 48%) center / 6px 6px, var(--gold-dark); box-shadow: none; }
+.bar.mini { grid-template-columns: repeat(6, 8px); gap: 2px; }
+.bar.mini i { height: 10px; border-width: 1px; }
+.stage[data-bg="dawn"] { --wall: #4d3529; --floor: #35261c; }
+.stage[data-bg="dawn"] .window { background: linear-gradient(#ffd9a0, #ff9a6b 62%, #d9577a); }
+.stage[data-bg="dawn"] .moon { top: 58px; left: 34px; background: #fff0b5; box-shadow: 4px 0 0 #fff0b5, -4px 0 0 #fff0b5, 0 4px 0 #fff0b5, 0 -4px 0 #fff0b5, 8px 8px 0 #ffd27a, -8px 8px 0 #ffd27a, 8px -8px 0 #ffd27a, -8px -8px 0 #ffd27a; }
+.stage[data-bg="dawn"] .star { display: none; }
+.stage[data-bg="space"] { --wall: #12132e; --floor: #0b0c20; }
+.stage[data-bg="space"]::before { content: ""; position: absolute; inset: 0 0 26% 0; background: radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 30% 62%, #cfd7ee, transparent), radial-gradient(1.5px 1.5px at 44% 24%, #fff, transparent), radial-gradient(1px 1px at 58% 70%, #f6e7a8, transparent), radial-gradient(1px 1px at 72% 40%, #fff, transparent), radial-gradient(1.5px 1.5px at 88% 78%, #cfd7ee, transparent), radial-gradient(1px 1px at 20% 86%, #fff, transparent), radial-gradient(1px 1px at 66% 10%, #fff, transparent), radial-gradient(1px 1px at 8% 48%, #f6e7a8, transparent), radial-gradient(1.5px 1.5px at 94% 28%, #fff, transparent); animation: twinkle 3s steps(2) infinite; pointer-events: none; }
+.stage[data-bg="space"] .window { background: linear-gradient(#1b0f3d, #3a1c63); }
+.stage[data-bg="space"] .moon { background: #e8884a; box-shadow: 4px 0 0 #e8884a, -4px 0 0 #e8884a, 0 4px 0 #e8884a, 0 -4px 0 #e8884a, 12px 2px 0 #f6c98a, -12px 2px 0 #f6c98a; }
+.stage[data-bg="winter"] { --wall: #3c4756; --floor: #2b323d; }
+.stage[data-bg="winter"] .window { background: linear-gradient(#b9cde0, #e6eef6); }
+.stage[data-bg="winter"] .moon { background: #fff7d8; }
+.stage[data-bg="winter"] .star { background: #ffffff; }
+.stage[data-bg="winter"]::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(2px 2px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 70px 110px, #fff, transparent), radial-gradient(3px 3px at 130px 60px, #fff, transparent), radial-gradient(2px 2px at 170px 150px, #fff, transparent); background-size: 200px 200px; animation: snow 9s linear infinite; }
+.stage[data-bg="city"] { --wall: #2c2a3d; --floor: #201e2e; }
+.stage[data-bg="city"] .window { background: linear-gradient(#2a2f6b, #8a4f9a 62%, #e1769a) 0 0 / 100% 100%, linear-gradient(#171a35, #171a35); }
+.stage[data-bg="city"] .window .moon { top: 10px; left: 56px; }
+.stage[data-bg="city"] .window { background:
+  linear-gradient(#141731, #141731) 4px 100% / 14px 46px no-repeat,
+  linear-gradient(#1a1d3c, #1a1d3c) 20px 100% / 12px 70px no-repeat,
+  linear-gradient(#141731, #141731) 34px 100% / 16px 38px no-repeat,
+  linear-gradient(#1a1d3c, #1a1d3c) 52px 100% / 12px 58px no-repeat,
+  linear-gradient(#141731, #141731) 66px 100% / 16px 80px no-repeat,
+  linear-gradient(#1a1d3c, #1a1d3c) 84px 100% / 10px 44px no-repeat,
+  radial-gradient(1.5px 1.5px at 24px 70px, #ffd27a, transparent) 0 0 / 100% 100% no-repeat,
+  radial-gradient(1.5px 1.5px at 70px 60px, #ffd27a, transparent) 0 0 / 100% 100% no-repeat,
+  radial-gradient(1.5px 1.5px at 10px 80px, #ffd27a, transparent) 0 0 / 100% 100% no-repeat,
+  linear-gradient(#2a2f6b, #8a4f9a 62%, #e1769a); }
+.stage[data-bg="library"] { --wall: #3a2b21; --floor: #2a1f17; }
+.stage[data-bg="library"]::before { content: ""; position: absolute; inset: 0 0 26% 0; opacity: .5; background: repeating-linear-gradient(0deg, transparent 0 62px, #5a4330 62px 68px), repeating-linear-gradient(90deg, #7a3b2e 0 7px, #2f5d4a 7px 12px, #c49a3a 12px 16px, #3d4f7a 16px 23px, #8a5a8f 23px 27px, #a35a3a 27px 31px); pointer-events: none; }
+@keyframes twinkle { 50% { opacity: .55; } }
+@keyframes snow { to { background-position: 40px 200px; } }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--font-display); font-size: 8px; padding: 8px 10px; background: var(--panel-2); color: var(--fg); border: 3px solid var(--line); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+.chip:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+.chip i.sw { display: inline-block; width: 12px; height: 12px; border: 2px solid #1a1511; }
+.chip .coin { margin: 0; }
+.looksec { display: flex; flex-direction: column; gap: 6px; }
+.looksec > b { font-family: var(--font-display); font-size: 9px; color: var(--muted); font-weight: 400; }
 .hint { color: var(--muted); }
 
 .tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr)); gap: 6px; }
@@ -191,7 +244,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 .wbig { font-family: var(--font-display); font-size: 22px; }
 .wbig small { font-size: 11px; color: var(--muted); }
 .wchart { width: 100%; height: auto; display: block; }
-@media (prefers-reduced-motion: reduce) { .hero canvas, .q.just .t b, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .stage::before, .hero canvas, .q.just .t b, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
 </style></head><body>
 
 <div class="app">
@@ -279,6 +332,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
     <h2 id="ach-h">ДОСТИЖЕНИЯ</h2>
     <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
+    <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
+    <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <div class="note">Все достижения скрыты, условия неизвестны и перемешаны по всему приложению. Они откроются сами, когда условие выполнится, считать ничего не нужно. Скрытых больше, чем строк со знаками вопроса. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
   </section>
 
@@ -675,8 +730,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   }
 
   // ---- state --------------------------------------------------------
-  var S = { opening: null, wardrobe: [], outfit: null, tx: [], items: [], avito: [], jar: [], days: {}, per: {}, weeks: {}, weights: [], buys: [], cart: null };
-  var db = null, loaded = false, pending = 14;
+  var S = { rare: {}, look: null, opening: null, wardrobe: [], outfit: null, tx: [], items: [], avito: [], jar: [], days: {}, per: {}, weeks: {}, weights: [], buys: [], cart: null };
+  var db = null, loaded = false, pending = 16;
   var chain = Promise.resolve();
   function enqueue(fn) {
     chain = chain.then(fn).catch(dbErr);
@@ -836,12 +891,150 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'x87', t: 'Скрытое достижение', d: 'Сделать подход приседаний или отжиманий рано утром', val: 'dawn', goal: 1, pts: 2 },
     { id: 'x88', t: 'Скрытое достижение', d: 'Семь подходов приседаний или отжиманий рано утром', val: 'dawn', goal: 7, pts: 4, title: 'РАННЯЯ ПТАХА' },
     { id: 'x89', t: 'Скрытое достижение', d: 'Записать шаги, где есть три семёрки подряд', val: 'lucky', goal: 1, pts: 3 },
-    { id: 'x90', t: 'Скрытое достижение', d: 'За один день пройти вдвое больше цели по шагам', val: 'doubleSteps', goal: 1, pts: 2 }
+    { id: 'x90', t: 'Скрытое достижение', d: 'За один день пройти вдвое больше цели по шагам', val: 'doubleSteps', goal: 1, pts: 2 },
+    { id: 'x91', t: 'Скрытое достижение', d: '101 дней по 10 000 шагов и больше', val: 'days10k', goal: 101, pts: 12 },
+    { id: 'x92', t: 'Скрытое достижение', d: 'Записать калории 121 день', val: 'kcalLog', goal: 121, pts: 8 },
+    { id: 'x93', t: 'Скрытое достижение', d: '1 337 подходов приседаний и отжиманий', val: 'sets', goal: 1337, pts: 15 },
+    { id: 'x94', t: 'Скрытое достижение', d: '140 раз встать до 10:00', val: 'early', goal: 140, pts: 10 },
+    { id: 'x95', t: 'Скрытое достижение', d: 'Кинуть в копилку 19 раз', val: 'jar', goal: 19, pts: 5 }
   ];
+
+  // ---- оформление и суперредкие достижения ----
+  var ACH_COS = {"x67": "t_ametist", "x21": "t_rubin", "x18": "t_rzhavchina", "x83": "t_persik", "x61": "t_hvoya", "x01": "t_lavanda", "x80": "t_nefrit", "x47": "t_orhideya", "x07": "t_okean", "x38": "t_izum", "x44": "t_neon_rozov", "x26": "t_lazur", "x49": "t_neon_gol", "x73": "t_grafit", "x36": "t_korall", "x85": "t_fistashka", "x52": "t_med", "x87": "t_led", "x58": "t_vishnya", "x08": "t_biryuza", "x33": "t_malina", "x02": "t_nebo", "x70": "t_siren", "x42": "t_rumyanets", "x75": "t_myata", "x78": "t_neon_zel", "x90": "t_serebro", "x64": "t_laym", "x84": "t_sapfir", "x22": "t_indigo", "x50": "r_round", "x04": "c_gem", "x37": "c_hex", "x43": "r_stripes", "x16": "r_dots", "x65": "r_neon", "x53": "r_fire", "x95": "c_heart", "x14": "c_star", "x45": "c_round"};
+  var COS = {};
+  ([{"id": "t_malina", "n": "Малина", "v": {"--bg": "#160e11", "--panel": "#22161a", "--panel-2": "#2f1e24", "--line": "#49313a", "--muted": "#ad99a1", "--gold": "#ea538a", "--gold-dark": "#8e103e", "--wall": "#342329", "--floor": "#25181d"}}, {"id": "t_izum", "n": "Изумруд", "v": {"--bg": "#0f1512", "--panel": "#17211c", "--panel-2": "#1f2d27", "--line": "#33473e", "--muted": "#9baba4", "--gold": "#39d08a", "--gold-dark": "#186d45", "--wall": "#24322c", "--floor": "#19241f"}}, {"id": "t_biryuza", "n": "Бирюза", "v": {"--bg": "#0f1515", "--panel": "#172120", "--panel-2": "#1f2d2c", "--line": "#334746", "--muted": "#9babaa", "--gold": "#2fdacf", "--gold-dark": "#13726c", "--wall": "#243231", "--floor": "#192423"}}, {"id": "t_sapfir", "n": "Сапфир", "v": {"--bg": "#0e1115", "--panel": "#161b22", "--panel-2": "#1f252e", "--line": "#323c48", "--muted": "#9aa2ac", "--gold": "#4b8ce2", "--gold-dark": "#144483", "--wall": "#242a33", "--floor": "#181e25"}}, {"id": "t_ametist", "n": "Аметист", "v": {"--bg": "#120e16", "--panel": "#1c1622", "--panel-2": "#261e2f", "--line": "#3c3149", "--muted": "#a399ad", "--gold": "#a574dc", "--gold-dark": "#512088", "--wall": "#2b2334", "--floor": "#1e1825"}}, {"id": "t_rubin", "n": "Рубин", "v": {"--bg": "#160e0e", "--panel": "#231517", "--panel-2": "#2f1d1f", "--line": "#4a3033", "--muted": "#ae989a", "--gold": "#e65b69", "--gold-dark": "#8d131f", "--wall": "#352224", "--floor": "#261719"}}, {"id": "t_laym", "n": "Лайм", "v": {"--bg": "#12150f", "--panel": "#1d2117", "--panel-2": "#282d1f", "--line": "#3f4733", "--muted": "#a5ab9b", "--gold": "#96dd2c", "--gold-dark": "#4c7311", "--wall": "#2d3224", "--floor": "#202419"}}, {"id": "t_myata", "n": "Мята", "v": {"--bg": "#0f1413", "--panel": "#18201e", "--panel-2": "#212c28", "--line": "#354540", "--muted": "#9daaa6", "--gold": "#4abf9c", "--gold-dark": "#216350", "--wall": "#26312e", "--floor": "#1a2320"}}, {"id": "t_lazur", "n": "Лазурь", "v": {"--bg": "#0f1315", "--panel": "#171e21", "--panel-2": "#1f292d", "--line": "#334247", "--muted": "#9ba7ab", "--gold": "#23b2e7", "--gold-dark": "#0c5c79", "--wall": "#242f32", "--floor": "#192124"}}, {"id": "t_indigo", "n": "Индиго", "v": {"--bg": "#0e0e16", "--panel": "#161622", "--panel-2": "#1e1e2f", "--line": "#313249", "--muted": "#999aad", "--gold": "#7f82e1", "--gold-dark": "#202390", "--wall": "#232334", "--floor": "#181825"}}, {"id": "t_orhideya", "n": "Орхидея", "v": {"--bg": "#150e15", "--panel": "#221621", "--panel-2": "#2e1f2d", "--line": "#483247", "--muted": "#ac9aac", "--gold": "#d35acf", "--gold-dark": "#781e75", "--wall": "#332433", "--floor": "#251824"}}, {"id": "t_korall", "n": "Коралл", "v": {"--bg": "#160f0e", "--panel": "#221816", "--panel-2": "#2f211e", "--line": "#493531", "--muted": "#ad9c99", "--gold": "#e86045", "--gold-dark": "#87230f", "--wall": "#342623", "--floor": "#251a18"}}, {"id": "t_med", "n": "Медь", "v": {"--bg": "#15110e", "--panel": "#221b16", "--panel-2": "#2e251f", "--line": "#483b32", "--muted": "#aca19a", "--gold": "#d37536", "--gold-dark": "#6e3a17", "--wall": "#332a24", "--floor": "#251d18"}}, {"id": "t_nefrit", "n": "Нефрит", "v": {"--bg": "#0f150f", "--panel": "#182118", "--panel-2": "#202c21", "--line": "#344636", "--muted": "#9cab9d", "--gold": "#4abf52", "--gold-dark": "#216326", "--wall": "#253226", "--floor": "#1a231a"}}, {"id": "t_hvoya", "n": "Хвоя", "v": {"--bg": "#0f1511", "--panel": "#18201b", "--panel-2": "#212c25", "--line": "#35453b", "--muted": "#9caaa1", "--gold": "#51b877", "--gold-dark": "#255f3b", "--wall": "#25312a", "--floor": "#1a231d"}}, {"id": "t_led", "n": "Лёд", "v": {"--bg": "#101314", "--panel": "#191f1f", "--panel-2": "#222a2b", "--line": "#374244", "--muted": "#9ea7a9", "--gold": "#56a7b3", "--gold-dark": "#28565d", "--wall": "#272f30", "--floor": "#1b2122"}}, {"id": "t_rumyanets", "n": "Румянец", "v": {"--bg": "#140f10", "--panel": "#201819", "--panel-2": "#2c2123", "--line": "#453538", "--muted": "#aa9d9f", "--gold": "#cd707f", "--gold-dark": "#772835", "--wall": "#312628", "--floor": "#231a1c"}}, {"id": "t_siren", "n": "Сирень", "v": {"--bg": "#130f15", "--panel": "#1e1820", "--panel-2": "#29212c", "--line": "#413545", "--muted": "#a79caa", "--gold": "#b373c9", "--gold-dark": "#612b73", "--wall": "#2e2531", "--floor": "#211a23"}}, {"id": "t_persik", "n": "Персик", "v": {"--bg": "#15120f", "--panel": "#211c17", "--panel-2": "#2d261f", "--line": "#473d33", "--muted": "#aba39b", "--gold": "#e27e28", "--gold-dark": "#763f0f", "--wall": "#322b24", "--floor": "#241e19"}}, {"id": "t_lavanda", "n": "Лаванда", "v": {"--bg": "#100f15", "--panel": "#1a1821", "--panel-2": "#23202c", "--line": "#393446", "--muted": "#a09cab", "--gold": "#937fd2", "--gold-dark": "#3f2a7e", "--wall": "#282532", "--floor": "#1c1a23"}}, {"id": "t_fistashka", "n": "Фисташка", "v": {"--bg": "#11140f", "--panel": "#1b2018", "--panel-2": "#252c21", "--line": "#3b4535", "--muted": "#a1aa9d", "--gold": "#78b654", "--gold-dark": "#3b5e26", "--wall": "#2a3126", "--floor": "#1d231a"}}, {"id": "t_nebo", "n": "Небо", "v": {"--bg": "#0f1215", "--panel": "#181d20", "--panel-2": "#21272c", "--line": "#353f45", "--muted": "#9ca4aa", "--gold": "#4992c5", "--gold-dark": "#1f4a68", "--wall": "#252c31", "--floor": "#1a1f23"}}, {"id": "t_grafit", "n": "Графит", "v": {"--bg": "#111213", "--panel": "#1b1c1d", "--panel-2": "#242628", "--line": "#3a3c40", "--muted": "#a0a2a7", "--gold": "#858a93", "--gold-dark": "#41444c", "--wall": "#292b2d", "--floor": "#1d1e20"}}, {"id": "t_serebro", "n": "Серебро", "v": {"--bg": "#111213", "--panel": "#1b1c1d", "--panel-2": "#252628", "--line": "#3b3d3f", "--muted": "#a0a3a7", "--gold": "#888c91", "--gold-dark": "#42464a", "--wall": "#2a2b2d", "--floor": "#1d1f20"}}, {"id": "t_neon_rozov", "n": "Неон-розовый", "v": {"--bg": "#160e13", "--panel": "#22161e", "--panel-2": "#2f1e28", "--line": "#493140", "--muted": "#ad99a6", "--gold": "#ff1fad", "--gold-dark": "#8f005a", "--wall": "#34232e", "--floor": "#251820"}}, {"id": "t_neon_zel", "n": "Неон-зелёный", "v": {"--bg": "#0f1510", "--panel": "#182119", "--panel-2": "#202c22", "--line": "#344637", "--muted": "#9cab9e", "--gold": "#0aff33", "--gold-dark": "#008516", "--wall": "#253227", "--floor": "#1a231b"}}, {"id": "t_neon_gol", "n": "Неон-голубой", "v": {"--bg": "#0f1515", "--panel": "#172021", "--panel-2": "#1f2c2d", "--line": "#334547", "--muted": "#9baaab", "--gold": "#0aebff", "--gold-dark": "#007a85", "--wall": "#243132", "--floor": "#192324"}}, {"id": "t_vishnya", "n": "Вишня", "v": {"--bg": "#160d10", "--panel": "#231518", "--panel-2": "#301c21", "--line": "#4c2f36", "--muted": "#af979d", "--gold": "#e35f80", "--gold-dark": "#8a1633", "--wall": "#352126", "--floor": "#27171b"}}, {"id": "t_okean", "n": "Океан", "v": {"--bg": "#0e1316", "--panel": "#151d23", "--panel-2": "#1d282f", "--line": "#303f4a", "--muted": "#98a5ae", "--gold": "#1b96ee", "--gold-dark": "#084c7d", "--wall": "#222d35", "--floor": "#172026"}}, {"id": "t_rzhavchina", "n": "Ржавчина", "v": {"--bg": "#15100e", "--panel": "#221916", "--panel-2": "#2e231f", "--line": "#483832", "--muted": "#ac9f9a", "--gold": "#d96c45", "--gold-dark": "#783117", "--wall": "#332824", "--floor": "#251c18"}}]).forEach(function (t) { COS[t.id] = { cat: 'theme', n: t.n, v: t.v, sw: t.v['--gold'] }; });
+  COS.p_rainbow = { cat: 'theme', n: 'Радуга', prem: 'rainbow', sw: '#e86ad0' };
+  COS.p_breath = { cat: 'theme', n: 'Дыхание', prem: 'breath', sw: '#4ac7e8' };
+  COS.p_day = { cat: 'theme', n: 'Хамелеон', prem: 'day', sw: '#e8a24a' };
+  COS.b_dawn = { cat: 'bg', n: 'Рассвет', key: 'dawn', pv: 'linear-gradient(#ffd9a0, #ff9a6b, #d9577a)' };
+  COS.b_space = { cat: 'bg', n: 'Космос', key: 'space', pv: 'linear-gradient(#1b0f3d, #3a1c63)' };
+  COS.b_winter = { cat: 'bg', n: 'Зима', key: 'winter', pv: 'linear-gradient(#b9cde0, #e6eef6)' };
+  COS.b_city = { cat: 'bg', n: 'Город', key: 'city', pv: 'linear-gradient(#2a2f6b, #e1769a)' };
+  COS.b_library = { cat: 'bg', n: 'Библиотека', key: 'library', pv: 'linear-gradient(90deg, #7a3b2e, #2f5d4a, #c49a3a, #3d4f7a)' };
+  COS.c_round = { cat: 'coin', n: 'Круглая', key: 'round' };
+  COS.c_star = { cat: 'coin', n: 'Звезда', key: 'star' };
+  COS.c_gem = { cat: 'coin', n: 'Кристалл', key: 'gem' };
+  COS.c_heart = { cat: 'coin', n: 'Сердце', key: 'heart' };
+  COS.c_hex = { cat: 'coin', n: 'Шестигранник', key: 'hex' };
+  COS.r_fire = { cat: 'bar', n: 'Огонь', key: 'fire' };
+  COS.r_round = { cat: 'bar', n: 'Скруглённая', key: 'round' };
+  COS.r_neon = { cat: 'bar', n: 'Неон', key: 'neon' };
+  COS.r_stripes = { cat: 'bar', n: 'Полосы', key: 'stripes' };
+  COS.r_dots = { cat: 'bar', n: 'Точки', key: 'dots' };
+  var COS_CATS = [{ k: 'theme', n: 'ЦВЕТ' }, { k: 'bg', n: 'ФОН КОМНАТЫ' }, { k: 'coin', n: 'МОНЕТКА' }, { k: 'bar', n: 'ПОЛОСА ОПЫТА' }];
+  var THEME_KEYS = ['--bg', '--panel', '--panel-2', '--line', '--muted', '--gold', '--gold-dark', '--wall', '--floor'];
+  var RAIN_L = 69;
+  // суперредкие: ev = по событию в приложении (журнал cfg/rare), slot = открывается после N обычных достижений
+  var LEG = [
+    { id: 'z01', ev: 1, d: 'Открыть приложение ровно в 11:11, 12:34 или 22:22', pts: 12, cos: 'b_space' },
+    { id: 'z02', ev: 1, d: 'Быстро нажать на персонажа 15 раз подряд', pts: 10, cos: 'b_winter' },
+    { id: 'z03', val: 'exact', goal: 1, d: 'Записать шаги ровно в размер цели', pts: 12, cos: 'p_breath' },
+    { id: 'z04', val: 'eqDate', goal: 1, d: 'Идеальный день в дату, где число совпадает с месяцем (11.11, 12.12…)', pts: 15, cos: 'b_city' },
+    { id: 'z05', val: 'maxDayReps', goal: 130, d: '130 повторов приседаний и отжиманий за один день', pts: 12, cos: 'p_day' },
+    { id: 'z06', val: 'friBest', goal: 3, d: 'Три идеальные пятницы подряд', pts: 15, cos: 'b_dawn' },
+    { id: 'z07', slot: 4, val: 'perfBest', goal: 21, d: '21 идеальный день подряд', pts: 25, cos: 'p_rainbow' },
+    { id: 'z08', slot: 9, val: 'perfCombo', goal: 1, d: 'Идеальный день, в который ещё и тройной удар', pts: 18, cos: 'b_library' },
+    { id: 'z09', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2200 ккал', pts: 20 },
+    { id: 'z10', slot: 20, val: 'stepStreak', goal: 60, d: '60 дней подряд с выполненной целью по шагам', pts: 25 },
+    { id: 'z11', slot: 27, val: 'meetBest', goal: 4, d: 'Встреча с людьми четыре недели подряд', pts: 18 }
+  ];
+  function cosOf(id) {
+    if (ACH_COS[id]) return ACH_COS[id];
+    for (var i = 0; i < LEG.length; i++) if (LEG[i].id === id) return LEG[i].cos || null;
+    return null;
+  }
+  function unlockedCos() {
+    if (!loaded || !lastGI) return null;
+    var u = {};
+    Object.keys(lastGI.ach).forEach(function (id) { var c = cosOf(id); if (c) u[c] = true; });
+    return u;
+  }
+  var premTimer = null;
+  function hsl(h, sat, l) { return 'hsl(' + Math.round(h) + ',' + sat + '%,' + l + '%)'; }
+  function stopPrem() { if (premTimer) { clearInterval(premTimer); premTimer = null; } }
+  function startPrem(kind) {
+    var root = document.documentElement;
+    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function paint() {
+      var t = Date.now(), h, l = RAIN_L;
+      if (kind === 'rainbow') h = (t / 60) % 360;
+      else if (kind === 'breath') { h = 196; l = 60 + 10 * Math.sin(t / 1100); }
+      else { var H = [240, 248, 256, 264, 280, 310, 8, 28, 42, 52, 58, 66, 76, 96, 126, 158, 178, 190, 200, 214, 224, 230, 235, 240]; h = H[new Date().getHours()]; l = 70; }
+      root.style.setProperty('--gold', hsl(h, 78, l));
+      root.style.setProperty('--gold-dark', hsl(h, 78, 34));
+    }
+    paint();
+    if (!still && kind !== 'day') premTimer = setInterval(paint, 250);
+  }
+  var cachedLook = null;
+  try { cachedLook = JSON.parse(localStorage.getItem('look') || 'null'); } catch (e) {}
+  function applyLook() {
+    var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
+    var un = unlockedCos();
+    function ok(id, cat) { return id && COS[id] && COS[id].cat === cat && (!un || un[id]); }
+    var root = document.documentElement;
+    stopPrem();
+    THEME_KEYS.forEach(function (k) { root.style.removeProperty(k); });
+    if (ok(look.theme, 'theme')) {
+      var th = COS[look.theme];
+      if (th.v) Object.keys(th.v).forEach(function (k) { root.style.setProperty(k, th.v[k]); });
+      if (th.prem) startPrem(th.prem);
+    }
+    root.setAttribute('data-coin', ok(look.coin, 'coin') ? COS[look.coin].key : '');
+    root.setAttribute('data-bar', ok(look.bar, 'bar') ? COS[look.bar].key : '');
+    var st = document.querySelector('.stage');
+    if (st) st.setAttribute('data-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
+  }
+  function setLook(cat, id) {
+    if (!db) return;
+    var nx = Object.assign({}, S.look || cachedLook || {});
+    nx[cat] = id || '';
+    S.look = nx;
+    try { localStorage.setItem('look', JSON.stringify(nx)); } catch (e) {}
+    applyLook(); renderLook();
+    enqueue(function () { return db.doc('cfg/look').set(nx); });
+  }
+  function renderLook() {
+    var box = $('looklist'), un = unlockedCos();
+    if (!box) return;
+    clear(box);
+    var any = false;
+    if (un) Object.keys(un).forEach(function () { any = true; });
+    $('look-h').hidden = !any;
+    if (!any) return;
+    var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
+    var catKey = { theme: 'theme', bg: 'bg', coin: 'coin', bar: 'bar' };
+    COS_CATS.forEach(function (c) {
+      var ids = Object.keys(COS).filter(function (id) { return COS[id].cat === c.k && un[id]; });
+      if (!ids.length) return;
+      var sec = el('div', 'looksec'); sec.appendChild(el('b', null, c.n));
+      var chips = el('div', 'chips');
+      function chip(id, label, pv) {
+        var b = el('button', 'chip'); b.type = 'button';
+        b.setAttribute('aria-pressed', (look[catKey[c.k]] || '') === id ? 'true' : 'false');
+        if (pv) b.appendChild(pv);
+        b.appendChild(document.createTextNode(label));
+        b.addEventListener('click', function () { setLook(catKey[c.k], id); });
+        chips.appendChild(b);
+      }
+      chip('', 'СТАНДАРТ', null);
+      ids.forEach(function (id) {
+        var it = COS[id], pv = null;
+        if (c.k === 'theme') { pv = el('i', 'sw'); pv.style.background = it.sw; }
+        else if (c.k === 'bg') { pv = el('i', 'sw'); pv.style.background = it.pv; }
+        else if (c.k === 'coin') { pv = el('span', 'coin'); pv.setAttribute('data-skin', it.key); }
+        else { pv = el('div', 'bar mini'); pv.setAttribute('data-skin', it.key); for (var z = 0; z < 6; z++) pv.appendChild(el('i', z < 4 ? 'on' : '')); }
+        chip(id, it.n.toUpperCase(), pv);
+      });
+      sec.appendChild(chips); box.appendChild(sec);
+    });
+  }
+  function dq0(day) { return !!(day.q && day.q[2]); }
   function growthInfo(SI, today) {
-    var out = { pts: {}, ach: {}, ups: { squat: [], pushup: [] }, st: null };
+    var out = { slots: {}, pts: {}, ach: {}, ups: { squat: [], pushup: [] }, st: null };
     function give(k, v) { if (v) out.pts[k] = (out.pts[k] || 0) + v; }
     var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0,
+      exact: 0, eqDate: 0, maxDayReps: 0, friRun: 0, friBest: 0, perfCombo: 0, kcalOkRun: 0, kcalOkBest: 0, meetRun: 0, meetBest: 0,
       sets: 0, night: 0, dawn: 0, lucky: 0, doubleSteps: 0, days10k: 0, kcalLog: 0, early: 0, cook: 0, lunch: 0, kcalOk: 0, face: 0, teeth: 0, careDay: 0, foodDay: 0, sunPerfect: 0, stepRun: 0, stepStreak: 0, jar: 0 };
     var jarDates = {};
     (S.jar || []).forEach(function (x) { if (x && x.date) jarDates[x.date] = (jarDates[x.date] || 0) + 1; });
@@ -852,13 +1045,16 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var weighDates = {};
     Object.keys(wkWeigh).forEach(function (m) { weighDates[wkWeigh[m]] = 1; });
     var level = { squat: 1, pushup: 1 };
+    var openedCount = 0;
     var k = first;
     while (k <= today) {
       var day = S.days[k] || {}, q = perDay(k);
       if (day.steps > 0) { st.steps += day.steps; if (day.steps > st.maxDay) st.maxDay = day.steps; }
+      var dayR = 0;
       SK_KEYS.forEach(function (key) {
         for (var i = 0; i < Math.min(q[key].length, SQ_MAX); i++) {
           var r = repsOf(q, key, i);
+          dayR += r;
           st[key === 'squat' ? 'sq' : 'pu'] += r;
           st.sets++;
           var hh = new Date(q[key][i]).getHours();
@@ -872,6 +1068,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         }
       });
       st.reps = st.sq + st.pu;
+      if (dayR > st.maxDayReps) st.maxDayReps = dayR;
       var dq = day.q || [];
       var gl = SI.goals[mondayKey(k)] || 5000;
       if (day.steps >= 10000) st.days10k++;
@@ -879,6 +1076,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (day.steps > 0 && String(day.steps).indexOf('777') >= 0) st.lucky++;
       if (day.steps >= gl) { st.stepRun++; if (st.stepRun > st.stepStreak) st.stepStreak = st.stepRun; } else st.stepRun = 0;
       if (day.kcal > 0) st.kcalLog++;
+      if (day.steps > 0 && day.steps === gl) st.exact++;
+      if (dq0(day)) { st.kcalOkRun++; if (st.kcalOkRun > st.kcalOkBest) st.kcalOkBest = st.kcalOkRun; } else st.kcalOkRun = 0;
       if (dq[0]) st.early++;
       if (dq[1]) st.lunch++;
       if (dq[2]) st.kcalOk++;
@@ -893,17 +1092,31 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (perfect && parseKey(k).getDay() === 0) st.sunPerfect++;
       if (perfect) { st.perf++; st.perfRun++; if (st.perfRun > st.perfBest) st.perfBest = st.perfRun; } else st.perfRun = 0;
       if (day.q && day.q[0]) { st.earlyRun++; if (st.earlyRun > st.earlyBest) st.earlyBest = st.earlyRun; } else st.earlyRun = 0;
-      if (q.squat.length >= SQ_MAX && q.pushup.length >= SQ_MAX && q.workout.length) st.combo++;
+      var tri = q.squat.length >= SQ_MAX && q.pushup.length >= SQ_MAX && q.workout.length > 0;
+      if (tri) st.combo++;
+      if (tri && perfect) st.perfCombo++;
+      var kd = parseKey(k);
+      if (perfect && kd.getDate() === kd.getMonth() + 1) st.eqDate++;
+      if (kd.getDay() === 5) { if (perfect) { st.friRun++; if (st.friRun > st.friBest) st.friBest = st.friRun; } else st.friRun = 0; }
       if (parseKey(k).getDay() === 0) {
         var mk = mondayKey(k);
         if (kcalWeek(mk) === 7) st.kcalW++;
         if (SI.done[mk]) st.stepW++;
       }
-      if (S.weeks[k] && S.weeks[k].meet) st.meets++;
+      if (S.weeks[k] && S.weeks[k].meet) { st.meets++; st.meetRun++; if (st.meetRun > st.meetBest) st.meetBest = st.meetRun; }
+      else if (parseKey(k).getDay() === 1 && k < today) st.meetRun = 0;
       if (weighDates[k]) st.weigh++;
       for (var ai = 0; ai < ACH.length; ai++) {
         var A = ACH[ai];
-        if (out.ach[A.id] === undefined && st[A.val] >= A.goal) { out.ach[A.id] = k; give(k, A.pts); }
+        if (out.ach[A.id] === undefined && st[A.val] >= A.goal) { out.ach[A.id] = k; give(k, A.pts); openedCount++; }
+      }
+      for (var li = 0; li < LEG.length; li++) {
+        var G = LEG[li];
+        if (G.slot && out.slots[G.id] === undefined && openedCount >= G.slot) out.slots[G.id] = k;
+        if (out.ach[G.id] !== undefined) continue;
+        var good = G.ev ? !!(S.rare && S.rare[G.id] && S.rare[G.id] <= k) : st[G.val] >= G.goal;
+        if (G.slot) good = good && out.slots[G.id] !== undefined;
+        if (good) { out.ach[G.id] = k; give(k, G.pts); }
       }
       k = addDays(k, 1);
     }
@@ -1836,7 +2049,18 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   function achEvents() {
     var ev = [];
     if (!lastGI) return ev;
-    ACH.forEach(function (A) { if (lastGI.ach[A.id]) ev.push({ id: 'a:' + A.id, date: lastGI.ach[A.id], kind: 'ДОСТИЖЕНИЕ', big: A.t, text: A.d + '. Награда: +' + A.pts + ' ' + plural(A.pts, 'очко', 'очка', 'очков') + (A.title ? '. Титул «' + A.title + '» теперь под персонажем.' : '.') }); });
+    function rewardText(id, pts, title) {
+      var c = cosOf(id), t = 'Награда: +' + pts + ' ' + plural(pts, 'очко', 'очка', 'очков');
+      if (title) t += ', титул «' + title + '»';
+      if (c && COS[c]) t += ', новое оформление: ' + ({ theme: 'цвет', bg: 'фон комнаты', coin: 'монетка', bar: 'полоса опыта' }[COS[c].cat]) + ' «' + COS[c].n + '». Выбрать можно ниже в разделе «Оформление».';
+      else t += '.';
+      return t;
+    }
+    ACH.forEach(function (A) { if (lastGI.ach[A.id]) ev.push({ id: 'a:' + A.id, date: lastGI.ach[A.id], kind: 'ДОСТИЖЕНИЕ', big: A.t, text: A.d + '. ' + rewardText(A.id, A.pts, A.title) }); });
+    LEG.forEach(function (G) {
+      if (lastGI.slots[G.id] && !G.ev) ev.push({ id: 'sl:' + G.id, date: lastGI.slots[G.id], kind: 'ЧТО-ТО РЕДКОЕ', big: 'Появилась цель', text: G.d + '. Награда секретная.' });
+      if (lastGI.ach[G.id]) ev.push({ id: 'g:' + G.id, date: lastGI.ach[G.id], kind: 'СУПЕРРЕДКОЕ ДОСТИЖЕНИЕ', big: 'Редкая находка', text: G.d + '. ' + rewardText(G.id, G.pts, null) });
+    });
     SK_KEYS.forEach(function (key) {
       lastGI.ups[key].forEach(function (u) {
         var b = SK_BONUS[u.lvl - 1];
@@ -1886,11 +2110,20 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     });
     if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно повторов.'));
     var open = 0;
+    LEG.forEach(function (G) {
+      var d = lastGI.ach[G.id], cc = G.cos;
+      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : ''), '+' + G.pts, true, null, true)); }
+      else if (lastGI.slots[G.id] && !G.ev) {
+        var v = Math.min(lastGI.st[G.val] || 0, G.goal);
+        box.appendChild(questButton('Суперредкая цель: ' + G.d, (G.goal > 1 ? fmt(v) + ' из ' + fmt(G.goal) : 'ещё не выполнено') + ' · награда секретная', '+?', false, null, true));
+      }
+    });
     ACH.forEach(function (A) {
       var d = lastGI.ach[A.id];
       if (d) {
         open++;
-        box.appendChild(questButton('Открыто: ' + A.d, dshort(d) + (A.title ? ' · титул «' + A.title + '»' : ''), '+' + A.pts, true, null, true));
+        var cc = cosOf(A.id);
+        box.appendChild(questButton('Открыто: ' + A.d, dshort(d) + (A.title ? ' · титул «' + A.title + '»' : '') + (cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : ''), '+' + A.pts, true, null, true));
       }
     });
     for (var qi = 0; qi < 11; qi++) box.appendChild(questButton('???', '', '+?', false, null, true));
@@ -1898,9 +2131,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var title = '', best = '';
     ACH.forEach(function (A) { var d = lastGI.ach[A.id]; if (A.title && d && d >= best) { best = d; title = A.title; } });
     document.querySelector('.nametag').textContent = title || 'ТЫ';
+    renderLook();
   }
   function renderAll() {
-    renderPoints(); renderAch(); checkAch(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal();
+    renderPoints(); renderAch(); applyLook(); checkAch(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal();
   }
   function renderGlobal() {
     var box = $('gg-list');
@@ -2146,7 +2380,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (seen[name]) return;
     seen[name] = true;
     pending--;
-    if (pending === 0) loaded = true;
+    if (pending === 0) { loaded = true; setTimeout(timeCheck, 0); }
   }
   function watchCollection(name, apply) {
     db.collection(name).onSnapshot(function (snap) {
@@ -2161,6 +2395,15 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     watchCollection('jar', function (r) { S.jar = r; });
     watchCollection('avito', function (r) { S.avito = r.sort(function (a, c) { return a.ts - c.ts; }); });
     watchCollection('wardrobe', function (r) { S.wardrobe = r; });
+    db.doc('cfg/look').onSnapshot(function (sn) {
+      S.look = sn.exists ? sn.data() : null;
+      if (S.look) { try { localStorage.setItem('look', JSON.stringify(S.look)); } catch (e) {} }
+      firstDone('look'); renderAll();
+    }, function (e) { dbErr(e); });
+    db.doc('cfg/rare').onSnapshot(function (sn) {
+      S.rare = sn.exists ? (sn.data() || {}) : {};
+      firstDone('rare'); renderAll();
+    }, function (e) { dbErr(e); });
     db.doc('cfg/outfit').onSnapshot(function (sn) {
       S.outfit = sn.exists ? sn.data() : null;
       firstDone('outfit'); renderAll();
@@ -2211,7 +2454,26 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       } else { renderPeriodic(); break; }
     }
   }, 1000);
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) renderAll(); });
+  function recordRare(id) {
+    if (!db || !loaded || (S.rare && S.rare[id])) return;
+    var nx = Object.assign({}, S.rare || {});
+    nx[id] = dkey(new Date());
+    S.rare = nx;
+    enqueue(function () { return db.doc('cfg/rare').set(nx); });
+  }
+  function timeCheck() {
+    var d = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    if (hm === '11:11' || hm === '12:34' || hm === '22:22') recordRare('z01');
+  }
+  var heroTaps = [];
+  document.querySelector('.hero').addEventListener('click', function () {
+    var n = Date.now();
+    heroTaps.push(n);
+    heroTaps = heroTaps.filter(function (t) { return n - t < 8000; });
+    if (heroTaps.length >= 15) { heroTaps = []; recordRare('z02'); }
+  });
+  applyLook();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { renderAll(); timeCheck(); } });
 })();
 </script>
 
