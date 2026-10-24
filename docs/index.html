@@ -125,6 +125,71 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .chip .coin { margin: 0; }
 .looksec { display: flex; flex-direction: column; gap: 6px; }
 .looksec > b { font-family: var(--font-display); font-size: 9px; color: var(--muted); font-weight: 400; }
+
+/* ---- оформление, фаза 2 ---- */
+.coin[data-skin="drop"], :root[data-coin="drop"] .coin, :root[data-coin="drop"] .fly { clip-path: polygon(50% 0, 78% 38%, 90% 62%, 78% 88%, 50% 100%, 22% 88%, 10% 62%, 22% 38%); }
+.coin[data-skin="leaf"], :root[data-coin="leaf"] .coin, :root[data-coin="leaf"] .fly { clip-path: polygon(0 100%, 0 42%, 58% 0, 100% 0, 100% 58%, 42% 100%); }
+.coin[data-skin="cross"], :root[data-coin="cross"] .coin, :root[data-coin="cross"] .fly { clip-path: polygon(34% 0, 66% 0, 66% 34%, 100% 34%, 100% 66%, 66% 66%, 66% 100%, 34% 100%, 34% 66%, 0 66%, 0 34%, 34% 34%); }
+:root[data-bar="wave"] .bar i.on, .bar[data-skin="wave"] i.on { background: repeating-linear-gradient(135deg, var(--gold) 0 5px, var(--gold-dark) 5px 10px); background-size: 20px 20px; box-shadow: none; animation: barmove 1s linear infinite; }
+:root[data-bar="pixel"] .bar i.on, .bar[data-skin="pixel"] i.on { box-shadow: inset 2px 2px 0 rgba(255,255,255,.5), inset -2px -2px 0 rgba(0,0,0,.4); }
+:root[data-bar="glow"] .bar i.on, .bar[data-skin="glow"] i.on { animation: barglow 1.6s ease-in-out infinite; }
+@keyframes barmove { to { background-position: 20px 0; } }
+@keyframes barglow { 50% { filter: brightness(1.4); } }
+.stage[data-bg="sunset"] { --wall: #4a2f45; --floor: #33202f; }
+.stage[data-bg="sunset"] .window { background: linear-gradient(#5b2a7a, #c4455e 55%, #ff9a52); }
+.stage[data-bg="sunset"] .moon { top: 62px; left: 30px; background: #ffcf6a; box-shadow: 4px 0 0 #ffcf6a, -4px 0 0 #ffcf6a, 0 4px 0 #ffcf6a, 0 -4px 0 #ffcf6a, 10px 6px 0 #ff9a52, -10px 6px 0 #ff9a52; }
+.stage[data-bg="sunset"] .star { display: none; }
+.stage[data-bg="forest"] { --wall: #27382c; --floor: #1c2820; }
+.stage[data-bg="forest"]::before { content: ""; position: absolute; inset: 0 0 26% 0; background: repeating-linear-gradient(90deg, rgba(0,0,0,.16) 0 10px, transparent 10px 22px); pointer-events: none; }
+.stage[data-bg="forest"] .window { background: radial-gradient(circle at 20% 108%, #1f5a35 40%, transparent 41%), radial-gradient(circle at 72% 112%, #2a6e3f 45%, transparent 46%), radial-gradient(circle at 102% 100%, #184a2c 30%, transparent 31%), linear-gradient(#8fd0a8, #dff0c8); }
+.stage[data-bg="forest"] .moon { background: #fff2a8; box-shadow: 4px 0 0 #fff2a8, -4px 0 0 #fff2a8, 0 4px 0 #fff2a8, 0 -4px 0 #fff2a8; }
+.stage[data-bg="forest"] .star { display: none; }
+.stage[data-bg="beach"] { --wall: #5c7a80; --floor: #8a7a56; }
+.stage[data-bg="beach"] .window { background: linear-gradient(#8fd3ff 0 52%, #2aa3c8 52% 74%, #f2d79b 74%); }
+.stage[data-bg="beach"] .moon { background: #fff2a8; box-shadow: 4px 0 0 #fff2a8, -4px 0 0 #fff2a8, 0 4px 0 #fff2a8, 0 -4px 0 #fff2a8; }
+.stage[data-bg="beach"] .star { display: none; }
+.stage[data-bg="cave"] { --wall: #1d1b26; --floor: #121118; }
+.stage[data-bg="cave"]::before { content: ""; position: absolute; inset: 0 0 26% 0; background: radial-gradient(circle at 15% 40%, rgba(80,220,255,.35), transparent 40%), radial-gradient(circle at 80% 65%, rgba(190,90,255,.35), transparent 38%), radial-gradient(circle at 55% 15%, rgba(80,255,170,.25), transparent 35%); animation: twinkle 4s steps(2) infinite; pointer-events: none; }
+.stage[data-bg="cave"] .window { background: linear-gradient(#0b0b14, #1a1530); }
+.stage[data-bg="cave"] .moon { background: #5fe6ff; box-shadow: 4px 0 0 #5fe6ff, -4px 0 0 #5fe6ff, 0 4px 0 #5fe6ff, 0 -4px 0 #5fe6ff, 0 8px 0 #2fa5c4; }
+.stage[data-bg="rain"] { --wall: #323a44; --floor: #242a32; }
+.stage[data-bg="rain"] .window { background: linear-gradient(#6b7886, #aab4c0); }
+.stage[data-bg="rain"] .moon, .stage[data-bg="rain"] .star { display: none; }
+.stage[data-bg="rain"]::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: repeating-linear-gradient(100deg, transparent 0 9px, rgba(200,220,255,.3) 9px 10px); background-size: 40px 80px; animation: rain .5s linear infinite; }
+@keyframes rain { to { background-position: -20px 80px; } }
+.stage[data-frame="gold"] { border-color: #e8b13c; box-shadow: inset 0 0 0 3px #7a5510; }
+.stage[data-frame="double"] { border: 8px double var(--gold); }
+.stage[data-frame="dash"] { border: 4px dashed var(--gold); }
+.stage[data-frame="neon"] { border-color: var(--gold); box-shadow: 0 0 14px var(--gold), inset 0 0 12px rgba(255,255,255,.12); }
+.stage[data-frame="wood"] { border-color: #8a5a2b; box-shadow: inset 0 0 0 3px #5a3a1a, 0 0 0 2px #3a2410; }
+.stage[data-frame="ice"] { border-color: #bfe6ff; box-shadow: 0 0 12px #8fd0ff, inset 0 0 14px rgba(180,225,255,.25); }
+.stage[data-frame="pixel"] { border-color: var(--gold); box-shadow: 4px 4px 0 var(--gold-dark), inset -4px -4px 0 rgba(0,0,0,.35); }
+.stage[data-frame="vine"] { border: 4px solid #4f8f45; outline: 3px dashed #86c05e; outline-offset: -10px; }
+:root[data-aura="soft"] .hero canvas { filter: drop-shadow(0 0 14px rgba(255,240,200,.55)); }
+:root[data-aura="pulse"] .hero canvas { animation: bob 1.6s steps(1) infinite, aurapulse 2.2s ease-in-out infinite; }
+:root[data-aura="warm"] .hero canvas { filter: drop-shadow(0 0 16px rgba(255,150,60,.65)); }
+:root[data-aura="cold"] .hero canvas { filter: drop-shadow(0 0 16px rgba(80,200,255,.65)); }
+:root[data-aura="violet"] .hero canvas { filter: drop-shadow(0 0 16px rgba(170,100,255,.65)); }
+:root[data-aura="green"] .hero canvas { filter: drop-shadow(0 0 16px rgba(110,220,110,.6)); }
+@keyframes aurapulse { 0%, 100% { filter: drop-shadow(0 0 6px rgba(255,210,100,.35)); } 50% { filter: drop-shadow(0 0 22px rgba(255,210,100,.85)); } }
+:root[data-font="shadow"] :is(h1, h2, .px, .big, .lvl, .lbig, .tab, .dcenter b, .looksec > b) { text-shadow: 2px 2px 0 var(--gold-dark); }
+:root[data-font="outline"] :is(h1, h2, .px, .big, .lvl, .lbig, .tab, .dcenter b, .looksec > b) { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+:root[data-font="neon"] :is(h1, h2, .px, .big, .lbig, .dcenter b) { text-shadow: 0 0 6px currentColor, 0 0 14px currentColor; }
+:root[data-font="wide"] :is(h1, h2, .px, .big, .lvl, .lbig, .tab, .dcenter b) { letter-spacing: 2px; }
+:root[data-font="type"] { --font-body: "Courier New", Courier, monospace; }
+html[data-pat="dots"], html[data-pat="dots"] body { background-image: radial-gradient(rgba(255,255,255,.08) 1.5px, transparent 2px); background-size: 18px 18px; }
+html[data-pat="grid"], html[data-pat="grid"] body { background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 24px 24px; }
+html[data-pat="stripe"], html[data-pat="stripe"] body { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 12px, transparent 12px 24px); }
+html[data-pat="stars"], html[data-pat="stars"] body { background-image: radial-gradient(1.5px 1.5px at 12px 18px, rgba(255,255,255,.35), transparent), radial-gradient(1px 1px at 70px 60px, rgba(255,240,200,.3), transparent), radial-gradient(1.5px 1.5px at 100px 100px, rgba(255,255,255,.3), transparent), radial-gradient(1px 1px at 40px 90px, rgba(200,220,255,.3), transparent); background-size: 120px 120px; }
+html[data-pat="diag"], html[data-pat="diag"] body { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.045) 0 6px, transparent 6px 14px); }
+:root[data-chk="star"] .q[aria-pressed="true"] .box::after { content: "\2605"; width: auto; height: auto; border: 0; transform: none; font-size: 18px; line-height: 1; color: #1a1511; }
+:root[data-chk="heart"] .q[aria-pressed="true"] .box::after { content: "\2665"; width: auto; height: auto; border: 0; transform: none; font-size: 18px; line-height: 1; color: #1a1511; }
+:root[data-chk="bolt"] .q[aria-pressed="true"] .box::after { content: "\2726"; width: auto; height: auto; border: 0; transform: none; font-size: 18px; line-height: 1; color: #1a1511; }
+:root[data-chk="flower"] .q[aria-pressed="true"] .box::after { content: "\273F"; width: auto; height: auto; border: 0; transform: none; font-size: 18px; line-height: 1; color: #1a1511; }
+:root[data-tab="round"] .tab { border-radius: 12px; }
+:root[data-tab="notch"] .tab { clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); }
+.fxp { position: fixed; z-index: 25; pointer-events: none; will-change: transform, opacity; }
+.fxlayer { position: fixed; inset: 0; z-index: 31; pointer-events: none; overflow: hidden; }
 .hint { color: var(--muted); }
 
 .tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr)); gap: 6px; }
@@ -244,7 +309,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 .wbig { font-family: var(--font-display); font-size: 22px; }
 .wbig small { font-size: 11px; color: var(--muted); }
 .wchart { width: 100%; height: auto; display: block; }
-@media (prefers-reduced-motion: reduce) { .stage::before, .hero canvas, .q.just .t b, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .stage::before, .bar i.on, .hero canvas, .hero canvas, .q.just .t b, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
 </style></head><body>
 
 <div class="app">
@@ -900,7 +965,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   ];
 
   // ---- оформление и суперредкие достижения ----
-  var ACH_COS = {"x67": "t_ametist", "x21": "t_rubin", "x18": "t_rzhavchina", "x83": "t_persik", "x61": "t_hvoya", "x01": "t_lavanda", "x80": "t_nefrit", "x47": "t_orhideya", "x07": "t_okean", "x38": "t_izum", "x44": "t_neon_rozov", "x26": "t_lazur", "x49": "t_neon_gol", "x73": "t_grafit", "x36": "t_korall", "x85": "t_fistashka", "x52": "t_med", "x87": "t_led", "x58": "t_vishnya", "x08": "t_biryuza", "x33": "t_malina", "x02": "t_nebo", "x70": "t_siren", "x42": "t_rumyanets", "x75": "t_myata", "x78": "t_neon_zel", "x90": "t_serebro", "x64": "t_laym", "x84": "t_sapfir", "x22": "t_indigo", "x50": "r_round", "x04": "c_gem", "x37": "c_hex", "x43": "r_stripes", "x16": "r_dots", "x65": "r_neon", "x53": "r_fire", "x95": "c_heart", "x14": "c_star", "x45": "c_round"};
+  var ACH_COS = {"x67": "t_ametist", "x21": "t_rubin", "x18": "t_rzhavchina", "x83": "t_persik", "x61": "t_hvoya", "x01": "t_lavanda", "x80": "t_nefrit", "x47": "t_orhideya", "x07": "t_okean", "x38": "t_izum", "x44": "t_neon_rozov", "x26": "t_lazur", "x49": "t_neon_gol", "x73": "t_grafit", "x36": "t_korall", "x85": "t_fistashka", "x52": "t_med", "x87": "t_led", "x58": "t_vishnya", "x08": "t_biryuza", "x33": "t_malina", "x02": "t_nebo", "x70": "t_siren", "x42": "t_rumyanets", "x75": "t_myata", "x78": "t_neon_zel", "x90": "t_serebro", "x64": "t_laym", "x84": "t_sapfir", "x22": "t_indigo", "x50": "r_round", "x04": "c_gem", "x37": "c_hex", "x43": "r_stripes", "x16": "r_dots", "x65": "r_neon", "x53": "r_fire", "x95": "c_heart", "x14": "c_star", "x45": "c_round", "x89": "fx_bubble", "x10": "pa_dots", "x30": "fo_shadow", "x39": "fx_star", "x68": "tb_notch", "x03": "fo_type", "x62": "pa_stripe", "x55": "fr_vine", "x19": "fr_double", "x81": "pa_diag", "x86": "fo_outline", "x09": "ck_star", "x27": "fr_gold", "x48": "fo_wide", "x88": "fx_spark", "x23": "ck_heart", "x76": "fr_dash", "x11": "fr_neon", "x79": "fr_wood", "x69": "fx_conf", "x71": "fx_petal", "x56": "fr_pixel", "x40": "tb_round", "x59": "fo_neon", "x34": "ck_bolt", "x74": "pa_stars", "x28": "fx_coin", "x92": "pa_grid", "x63": "fr_ice", "x31": "ck_flower", "x20": "sn_soft", "x05": "au_green", "x12": "r_pixel", "x24": "sn_8bit", "x94": "au_violet", "x82": "au_soft", "x46": "au_pulse", "x51": "c_drop", "x54": "au_warm", "x41": "sn_arcade", "x77": "sn_bell", "x91": "c_leaf", "x60": "au_cold", "x57": "r_glow", "x29": "r_wave", "x35": "c_cross", "x93": "lv_firework", "x72": "b_sunset", "x66": "lv_ripple", "x32": "lv_bolt", "x06": "b_forest", "x25": "b_cave", "x13": "lv_rain", "x17": "b_beach", "x15": "b_rain"};
   var COS = {};
   ([{"id": "t_malina", "n": "Малина", "v": {"--bg": "#160e11", "--panel": "#22161a", "--panel-2": "#2f1e24", "--line": "#49313a", "--muted": "#ad99a1", "--gold": "#ea538a", "--gold-dark": "#8e103e", "--wall": "#342329", "--floor": "#25181d"}}, {"id": "t_izum", "n": "Изумруд", "v": {"--bg": "#0f1512", "--panel": "#17211c", "--panel-2": "#1f2d27", "--line": "#33473e", "--muted": "#9baba4", "--gold": "#39d08a", "--gold-dark": "#186d45", "--wall": "#24322c", "--floor": "#19241f"}}, {"id": "t_biryuza", "n": "Бирюза", "v": {"--bg": "#0f1515", "--panel": "#172120", "--panel-2": "#1f2d2c", "--line": "#334746", "--muted": "#9babaa", "--gold": "#2fdacf", "--gold-dark": "#13726c", "--wall": "#243231", "--floor": "#192423"}}, {"id": "t_sapfir", "n": "Сапфир", "v": {"--bg": "#0e1115", "--panel": "#161b22", "--panel-2": "#1f252e", "--line": "#323c48", "--muted": "#9aa2ac", "--gold": "#4b8ce2", "--gold-dark": "#144483", "--wall": "#242a33", "--floor": "#181e25"}}, {"id": "t_ametist", "n": "Аметист", "v": {"--bg": "#120e16", "--panel": "#1c1622", "--panel-2": "#261e2f", "--line": "#3c3149", "--muted": "#a399ad", "--gold": "#a574dc", "--gold-dark": "#512088", "--wall": "#2b2334", "--floor": "#1e1825"}}, {"id": "t_rubin", "n": "Рубин", "v": {"--bg": "#160e0e", "--panel": "#231517", "--panel-2": "#2f1d1f", "--line": "#4a3033", "--muted": "#ae989a", "--gold": "#e65b69", "--gold-dark": "#8d131f", "--wall": "#352224", "--floor": "#261719"}}, {"id": "t_laym", "n": "Лайм", "v": {"--bg": "#12150f", "--panel": "#1d2117", "--panel-2": "#282d1f", "--line": "#3f4733", "--muted": "#a5ab9b", "--gold": "#96dd2c", "--gold-dark": "#4c7311", "--wall": "#2d3224", "--floor": "#202419"}}, {"id": "t_myata", "n": "Мята", "v": {"--bg": "#0f1413", "--panel": "#18201e", "--panel-2": "#212c28", "--line": "#354540", "--muted": "#9daaa6", "--gold": "#4abf9c", "--gold-dark": "#216350", "--wall": "#26312e", "--floor": "#1a2320"}}, {"id": "t_lazur", "n": "Лазурь", "v": {"--bg": "#0f1315", "--panel": "#171e21", "--panel-2": "#1f292d", "--line": "#334247", "--muted": "#9ba7ab", "--gold": "#23b2e7", "--gold-dark": "#0c5c79", "--wall": "#242f32", "--floor": "#192124"}}, {"id": "t_indigo", "n": "Индиго", "v": {"--bg": "#0e0e16", "--panel": "#161622", "--panel-2": "#1e1e2f", "--line": "#313249", "--muted": "#999aad", "--gold": "#7f82e1", "--gold-dark": "#202390", "--wall": "#232334", "--floor": "#181825"}}, {"id": "t_orhideya", "n": "Орхидея", "v": {"--bg": "#150e15", "--panel": "#221621", "--panel-2": "#2e1f2d", "--line": "#483247", "--muted": "#ac9aac", "--gold": "#d35acf", "--gold-dark": "#781e75", "--wall": "#332433", "--floor": "#251824"}}, {"id": "t_korall", "n": "Коралл", "v": {"--bg": "#160f0e", "--panel": "#221816", "--panel-2": "#2f211e", "--line": "#493531", "--muted": "#ad9c99", "--gold": "#e86045", "--gold-dark": "#87230f", "--wall": "#342623", "--floor": "#251a18"}}, {"id": "t_med", "n": "Медь", "v": {"--bg": "#15110e", "--panel": "#221b16", "--panel-2": "#2e251f", "--line": "#483b32", "--muted": "#aca19a", "--gold": "#d37536", "--gold-dark": "#6e3a17", "--wall": "#332a24", "--floor": "#251d18"}}, {"id": "t_nefrit", "n": "Нефрит", "v": {"--bg": "#0f150f", "--panel": "#182118", "--panel-2": "#202c21", "--line": "#344636", "--muted": "#9cab9d", "--gold": "#4abf52", "--gold-dark": "#216326", "--wall": "#253226", "--floor": "#1a231a"}}, {"id": "t_hvoya", "n": "Хвоя", "v": {"--bg": "#0f1511", "--panel": "#18201b", "--panel-2": "#212c25", "--line": "#35453b", "--muted": "#9caaa1", "--gold": "#51b877", "--gold-dark": "#255f3b", "--wall": "#25312a", "--floor": "#1a231d"}}, {"id": "t_led", "n": "Лёд", "v": {"--bg": "#101314", "--panel": "#191f1f", "--panel-2": "#222a2b", "--line": "#374244", "--muted": "#9ea7a9", "--gold": "#56a7b3", "--gold-dark": "#28565d", "--wall": "#272f30", "--floor": "#1b2122"}}, {"id": "t_rumyanets", "n": "Румянец", "v": {"--bg": "#140f10", "--panel": "#201819", "--panel-2": "#2c2123", "--line": "#453538", "--muted": "#aa9d9f", "--gold": "#cd707f", "--gold-dark": "#772835", "--wall": "#312628", "--floor": "#231a1c"}}, {"id": "t_siren", "n": "Сирень", "v": {"--bg": "#130f15", "--panel": "#1e1820", "--panel-2": "#29212c", "--line": "#413545", "--muted": "#a79caa", "--gold": "#b373c9", "--gold-dark": "#612b73", "--wall": "#2e2531", "--floor": "#211a23"}}, {"id": "t_persik", "n": "Персик", "v": {"--bg": "#15120f", "--panel": "#211c17", "--panel-2": "#2d261f", "--line": "#473d33", "--muted": "#aba39b", "--gold": "#e27e28", "--gold-dark": "#763f0f", "--wall": "#322b24", "--floor": "#241e19"}}, {"id": "t_lavanda", "n": "Лаванда", "v": {"--bg": "#100f15", "--panel": "#1a1821", "--panel-2": "#23202c", "--line": "#393446", "--muted": "#a09cab", "--gold": "#937fd2", "--gold-dark": "#3f2a7e", "--wall": "#282532", "--floor": "#1c1a23"}}, {"id": "t_fistashka", "n": "Фисташка", "v": {"--bg": "#11140f", "--panel": "#1b2018", "--panel-2": "#252c21", "--line": "#3b4535", "--muted": "#a1aa9d", "--gold": "#78b654", "--gold-dark": "#3b5e26", "--wall": "#2a3126", "--floor": "#1d231a"}}, {"id": "t_nebo", "n": "Небо", "v": {"--bg": "#0f1215", "--panel": "#181d20", "--panel-2": "#21272c", "--line": "#353f45", "--muted": "#9ca4aa", "--gold": "#4992c5", "--gold-dark": "#1f4a68", "--wall": "#252c31", "--floor": "#1a1f23"}}, {"id": "t_grafit", "n": "Графит", "v": {"--bg": "#111213", "--panel": "#1b1c1d", "--panel-2": "#242628", "--line": "#3a3c40", "--muted": "#a0a2a7", "--gold": "#858a93", "--gold-dark": "#41444c", "--wall": "#292b2d", "--floor": "#1d1e20"}}, {"id": "t_serebro", "n": "Серебро", "v": {"--bg": "#111213", "--panel": "#1b1c1d", "--panel-2": "#252628", "--line": "#3b3d3f", "--muted": "#a0a3a7", "--gold": "#888c91", "--gold-dark": "#42464a", "--wall": "#2a2b2d", "--floor": "#1d1f20"}}, {"id": "t_neon_rozov", "n": "Неон-розовый", "v": {"--bg": "#160e13", "--panel": "#22161e", "--panel-2": "#2f1e28", "--line": "#493140", "--muted": "#ad99a6", "--gold": "#ff1fad", "--gold-dark": "#8f005a", "--wall": "#34232e", "--floor": "#251820"}}, {"id": "t_neon_zel", "n": "Неон-зелёный", "v": {"--bg": "#0f1510", "--panel": "#182119", "--panel-2": "#202c22", "--line": "#344637", "--muted": "#9cab9e", "--gold": "#0aff33", "--gold-dark": "#008516", "--wall": "#253227", "--floor": "#1a231b"}}, {"id": "t_neon_gol", "n": "Неон-голубой", "v": {"--bg": "#0f1515", "--panel": "#172021", "--panel-2": "#1f2c2d", "--line": "#334547", "--muted": "#9baaab", "--gold": "#0aebff", "--gold-dark": "#007a85", "--wall": "#243132", "--floor": "#192324"}}, {"id": "t_vishnya", "n": "Вишня", "v": {"--bg": "#160d10", "--panel": "#231518", "--panel-2": "#301c21", "--line": "#4c2f36", "--muted": "#af979d", "--gold": "#e35f80", "--gold-dark": "#8a1633", "--wall": "#352126", "--floor": "#27171b"}}, {"id": "t_okean", "n": "Океан", "v": {"--bg": "#0e1316", "--panel": "#151d23", "--panel-2": "#1d282f", "--line": "#303f4a", "--muted": "#98a5ae", "--gold": "#1b96ee", "--gold-dark": "#084c7d", "--wall": "#222d35", "--floor": "#172026"}}, {"id": "t_rzhavchina", "n": "Ржавчина", "v": {"--bg": "#15100e", "--panel": "#221916", "--panel-2": "#2e231f", "--line": "#483832", "--muted": "#ac9f9a", "--gold": "#d96c45", "--gold-dark": "#783117", "--wall": "#332824", "--floor": "#251c18"}}]).forEach(function (t) { COS[t.id] = { cat: 'theme', n: t.n, v: t.v, sw: t.v['--gold'] }; });
   COS.p_rainbow = { cat: 'theme', n: 'Радуга', prem: 'rainbow', sw: '#e86ad0' };
@@ -983,7 +1048,142 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     root.setAttribute('data-coin', ok(look.coin, 'coin') ? COS[look.coin].key : '');
     root.setAttribute('data-bar', ok(look.bar, 'bar') ? COS[look.bar].key : '');
     var st = document.querySelector('.stage');
-    if (st) st.setAttribute('data-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
+    if (st) {
+      st.setAttribute('data-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
+      st.setAttribute('data-frame', ok(look.frame, 'frame') ? COS[look.frame].key : '');
+    }
+    root.setAttribute('data-aura', ok(look.aura, 'aura') ? COS[look.aura].key : '');
+    root.setAttribute('data-font', ok(look.font, 'font') ? COS[look.font].key : '');
+    root.setAttribute('data-pat', ok(look.pat, 'pat') ? COS[look.pat].key : '');
+    root.setAttribute('data-chk', ok(look.chk, 'chk') ? COS[look.chk].key : '');
+    root.setAttribute('data-tab', ok(look.tab, 'tab') ? COS[look.tab].key : '');
+  }
+
+  var COS2 = [
+    ['fx_spark', 'fx', 'Искры', '#ffe36a'], ['fx_petal', 'fx', 'Лепестки', '#f2a1c2'], ['fx_star', 'fx', 'Звёзды', '#fff0a0'],
+    ['fx_conf', 'fx', 'Конфетти', '#6ad0e8'], ['fx_bubble', 'fx', 'Пузыри', '#a8e0ff'], ['fx_coin', 'fx', 'Монеты', '#e8b13c'],
+    ['lv_firework', 'lv', 'Салют', '#ff7a5a'], ['lv_rain', 'lv', 'Дождь конфетти', '#8be37a'], ['lv_bolt', 'lv', 'Молния', '#fff27a'], ['lv_ripple', 'lv', 'Волны', '#7ad0ff'],
+    ['fr_gold', 'frame', 'Золото', '#e8b13c', 'gold'], ['fr_double', 'frame', 'Двойная', '#d8c070', 'double'], ['fr_dash', 'frame', 'Пунктир', '#c8a050', 'dash'],
+    ['fr_neon', 'frame', 'Неон', '#ff5acd', 'neon'], ['fr_wood', 'frame', 'Дерево', '#8a5a2b', 'wood'], ['fr_ice', 'frame', 'Лёд', '#bfe6ff', 'ice'],
+    ['fr_pixel', 'frame', 'Пиксели', '#e8b13c', 'pixel'], ['fr_vine', 'frame', 'Лоза', '#4f8f45', 'vine'],
+    ['au_soft', 'aura', 'Мягкая', '#fff0c8', 'soft'], ['au_pulse', 'aura', 'Пульс', '#ffd264', 'pulse'], ['au_warm', 'aura', 'Тепло', '#ff963c', 'warm'],
+    ['au_cold', 'aura', 'Холод', '#50c8ff', 'cold'], ['au_violet', 'aura', 'Фиолет', '#aa64ff', 'violet'], ['au_green', 'aura', 'Зелень', '#6edc6e', 'green'],
+    ['fo_shadow', 'font', 'Тень', '#9c6f16', 'shadow'], ['fo_outline', 'font', 'Контур', '#000000', 'outline'], ['fo_neon', 'font', 'Неон', '#7affea', 'neon'],
+    ['fo_wide', 'font', 'Широкий', '#a99a83', 'wide'], ['fo_type', 'font', 'Машинка', '#d8d0c0', 'type'],
+    ['sn_8bit', 'snd', '8 бит', '#e86a6a'], ['sn_soft', 'snd', 'Мягкий', '#a8c8e8'], ['sn_arcade', 'snd', 'Аркада', '#e8a24a'], ['sn_bell', 'snd', 'Колокольчик', '#f0e6a0'],
+    ['pa_dots', 'pat', 'Точки', '#5a4d3d', 'dots'], ['pa_grid', 'pat', 'Сетка', '#5a4d3d', 'grid'], ['pa_stripe', 'pat', 'Полосы', '#5a4d3d', 'stripe'],
+    ['pa_stars', 'pat', 'Звёзды', '#8a8aa0', 'stars'], ['pa_diag', 'pat', 'Диагональ', '#5a4d3d', 'diag'],
+    ['ck_star', 'chk', 'Звезда', '#ffd24a', 'star'], ['ck_heart', 'chk', 'Сердце', '#ef7fa8', 'heart'], ['ck_bolt', 'chk', 'Искра', '#fff27a', 'bolt'], ['ck_flower', 'chk', 'Цветок', '#f2a1c2', 'flower'],
+    ['b_sunset', 'bg', 'Закат', '#ff9a52', 'sunset', 'linear-gradient(#5b2a7a, #c4455e, #ff9a52)'],
+    ['b_forest', 'bg', 'Лес', '#2a6e3f', 'forest', 'linear-gradient(#8fd0a8, #1f5a35)'],
+    ['b_beach', 'bg', 'Пляж', '#2aa3c8', 'beach', 'linear-gradient(#8fd3ff 50%, #2aa3c8 50% 75%, #f2d79b 75%)'],
+    ['b_cave', 'bg', 'Пещера', '#5fe6ff', 'cave', 'linear-gradient(#0b0b14, #5fe6ff)'],
+    ['b_rain', 'bg', 'Дождь', '#6b7886', 'rain', 'linear-gradient(#6b7886, #aab4c0)'],
+    ['c_drop', 'coin', 'Капля', '#e8b13c', 'drop'], ['c_leaf', 'coin', 'Лист', '#e8b13c', 'leaf'], ['c_cross', 'coin', 'Крест', '#e8b13c', 'cross'],
+    ['r_wave', 'bar', 'Волна', '#e8b13c', 'wave'], ['r_pixel', 'bar', 'Пиксельная', '#e8b13c', 'pixel'], ['r_glow', 'bar', 'Свечение', '#e8b13c', 'glow'],
+    ['tb_round', 'tab', 'Скруглённые', '#a99a83', 'round'], ['tb_notch', 'tab', 'Срезанные', '#a99a83', 'notch']
+  ];
+  COS2.forEach(function (c) { COS[c[0]] = { cat: c[1], n: c[2], sw: c[3], key: c[4], pv: c[5] }; });
+  COS_CATS = [{ k: 'theme', n: 'ЦВЕТ' }, { k: 'bg', n: 'ФОН КОМНАТЫ' }, { k: 'frame', n: 'РАМКА КОМНАТЫ' }, { k: 'aura', n: 'АУРА ПЕРСОНАЖА' },
+    { k: 'coin', n: 'МОНЕТКА' }, { k: 'bar', n: 'ПОЛОСА ОПЫТА' }, { k: 'pat', n: 'УЗОР ФОНА' }, { k: 'font', n: 'СТИЛЬ ТЕКСТА' },
+    { k: 'chk', n: 'ГАЛОЧКА' }, { k: 'tab', n: 'ВКЛАДКИ' }, { k: 'fx', n: 'ЭФФЕКТ НАЖАТИЯ' }, { k: 'lv', n: 'ЭФФЕКТ НОВОГО УРОВНЯ' }, { k: 'snd', n: 'ЗВУКИ' }];
+  function lookId(cat) {
+    var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
+    var un = unlockedCos(), id = look[cat];
+    return (id && COS[id] && COS[id].cat === cat && (!un || un[id])) ? id : '';
+  }
+  function reduced() { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  // ---- эффекты нажатия ----
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function particle(x, y, css, frames, dur) {
+    var d = document.createElement('div');
+    d.className = 'fxp';
+    d.style.cssText = 'left:' + x + 'px;top:' + y + 'px;' + css;
+    document.body.appendChild(d);
+    var an = d.animate(frames, { duration: dur, easing: 'ease-out', fill: 'forwards' });
+    an.onfinish = function () { if (d.parentNode) d.parentNode.removeChild(d); };
+  }
+  function fxBurst(id, x, y) {
+    if (!id || reduced() || !document.body.animate) return;
+    var kind = COS[id] && COS[id].cat === 'fx' ? id : '', i, a, r;
+    var cols = ['#ffe36a', '#ff7a5a', '#6ad0e8', '#8be37a', '#f2a1c2', '#ffffff'];
+    if (kind === 'fx_spark') for (i = 0; i < 10; i++) { a = rnd(0, 6.28); r = rnd(28, 60); particle(x - 2, y - 2, 'width:4px;height:4px;background:' + ['#ffe36a', '#fff', '#ffb347'][i % 3], [{ transform: 'translate(0,0)', opacity: 1 }, { transform: 'translate(' + Math.cos(a) * r + 'px,' + Math.sin(a) * r + 'px)', opacity: 0 }], 450); }
+    else if (kind === 'fx_petal') for (i = 0; i < 9; i++) particle(x - 3, y - 6, 'width:7px;height:5px;background:' + (i % 2 ? '#f2a1c2' : '#ffd6e4'), [{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: 'translate(' + rnd(-50, 50) + 'px,' + rnd(30, 70) + 'px) rotate(' + rnd(120, 360) + 'deg)', opacity: 0 }], 900);
+    else if (kind === 'fx_star') for (i = 0; i < 6; i++) particle(x - 6, y - 6, 'color:#ffe36a;font-size:14px;line-height:1', [{ transform: 'translate(0,0) scale(.6)', opacity: 1 }, { transform: 'translate(' + rnd(-24, 24) + 'px,' + rnd(-90, -50) + 'px) scale(1.3)', opacity: 0 }], 800);
+    else if (kind === 'fx_conf') for (i = 0; i < 14; i++) { var cx = rnd(-60, 60); particle(x - 3, y - 3, 'width:6px;height:6px;background:' + cols[i % cols.length], [{ transform: 'translate(0,0)', opacity: 1 }, { transform: 'translate(' + cx * 0.6 + 'px,' + rnd(-70, -30) + 'px)', opacity: 1, offset: 0.4 }, { transform: 'translate(' + cx + 'px,' + rnd(20, 70) + 'px)', opacity: 0 }], 900); }
+    else if (kind === 'fx_bubble') for (i = 0; i < 7; i++) particle(x - 5, y - 5, 'width:10px;height:10px;border:2px solid #a8e0ff;border-radius:50%', [{ transform: 'translate(0,0) scale(.6)', opacity: .9 }, { transform: 'translate(' + rnd(-30, 30) + 'px,' + rnd(-110, -60) + 'px) scale(1.2)', opacity: 0 }], 1000);
+    else if (kind === 'fx_coin') for (i = 0; i < 5; i++) particle(x - 5, y - 5, 'width:10px;height:10px;background:#e8b13c;box-shadow:inset -2px -2px 0 #9c6f16', [{ transform: 'translate(0,0)', opacity: 1 }, { transform: 'translate(' + rnd(-30, 30) + 'px,' + rnd(-70, -40) + 'px)', opacity: 1, offset: 0.5 }, { transform: 'translate(' + rnd(-40, 40) + 'px,10px)', opacity: 0 }], 800);
+  }
+  document.addEventListener('click', function (e) {
+    var q = e.target && e.target.closest ? e.target.closest('.q') : null;
+    if (!q || q.classList.contains('auto')) return;
+    fxBurst(lookId('fx'), e.clientX, e.clientY);
+    playSnd('tap');
+  }, true);
+  // ---- эффекты нового уровня ----
+  function lvFx(id) {
+    if (!id || reduced() || !document.body.animate) return;
+    var layer = document.createElement('div');
+    layer.className = 'fxlayer';
+    document.body.appendChild(layer);
+    var W = window.innerWidth, H = window.innerHeight, i, j;
+    function piece(css, frames, dur, delay) {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:absolute;' + css;
+      layer.appendChild(d);
+      d.animate(frames, { duration: dur, delay: delay || 0, easing: 'ease-out', fill: 'both' });
+    }
+    var cols = ['#ffe36a', '#ff7a5a', '#6ad0e8', '#8be37a', '#f2a1c2', '#ffffff'];
+    if (id === 'lv_firework') {
+      for (i = 0; i < 5; i++) {
+        var bx = rnd(W * .15, W * .85), by = rnd(H * .12, H * .5), c = cols[i % cols.length];
+        for (j = 0; j < 18; j++) { var a = j / 18 * 6.28, r = rnd(50, 95); piece('left:' + bx + 'px;top:' + by + 'px;width:5px;height:5px;background:' + c, [{ transform: 'translate(0,0)', opacity: 1 }, { transform: 'translate(' + Math.cos(a) * r + 'px,' + (Math.sin(a) * r + 20) + 'px)', opacity: 0 }], 900, i * 260); }
+      }
+    } else if (id === 'lv_rain') {
+      for (i = 0; i < 44; i++) piece('left:' + rnd(0, W) + 'px;top:-12px;width:7px;height:7px;background:' + cols[i % cols.length], [{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: 'translate(' + rnd(-40, 40) + 'px,' + (H + 20) + 'px) rotate(' + rnd(180, 540) + 'deg)', opacity: 1 }], rnd(1500, 2600), rnd(0, 700));
+    } else if (id === 'lv_bolt') {
+      for (i = 0; i < 3; i++) {
+        var x0 = rnd(W * .2, W * .8), pts = [], y0 = 0;
+        for (j = 0; j < 9; j++) { pts.push((x0 + rnd(-26, 26)).toFixed(0) + ',' + (y0).toFixed(0)); y0 += H / 8; }
+        var svg = '<svg width="' + W + '" height="' + H + '" style="position:absolute;left:0;top:0"><polyline points="' + pts.join(' ') + '" fill="none" stroke="#fff27a" stroke-width="4" stroke-linejoin="miter"/></svg>';
+        var holder = document.createElement('div');
+        holder.style.cssText = 'position:absolute;inset:0';
+        holder.innerHTML = svg;
+        layer.appendChild(holder);
+        holder.animate([{ opacity: 0 }, { opacity: 1, offset: .1 }, { opacity: 0, offset: .3 }, { opacity: 1, offset: .4 }, { opacity: 0 }], { duration: 700, delay: i * 180, fill: 'both' });
+      }
+    } else if (id === 'lv_ripple') {
+      for (i = 0; i < 4; i++) piece('left:' + (W / 2 - 20) + 'px;top:' + (H / 2 - 20) + 'px;width:40px;height:40px;border:4px solid #7ad0ff;border-radius:50%', [{ transform: 'scale(.3)', opacity: .9 }, { transform: 'scale(' + (Math.max(W, H) / 40) + ')', opacity: 0 }], 1500, i * 300);
+    }
+    setTimeout(function () { if (layer.parentNode) layer.parentNode.removeChild(layer); }, 3600);
+  }
+  // ---- звуки (синтез, без файлов) ----
+  var AC = null;
+  function ac() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = false; } }
+    if (AC && AC.state === 'suspended') { try { AC.resume(); } catch (e) {} }
+    return AC || null;
+  }
+  function tone(f, t0, dur, type, vol) {
+    var a = ac(); if (!a) return;
+    var o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+  var SND = {
+    sn_8bit: { type: 'square', vol: 0.05, tap: [880], ach: [659, 784, 988], lvl: [523, 659, 784, 1047, 1319] },
+    sn_soft: { type: 'sine', vol: 0.12, tap: [523], ach: [392, 523, 659], lvl: [330, 392, 494, 659, 784] },
+    sn_arcade: { type: 'sawtooth', vol: 0.04, tap: [740], ach: [440, 880, 660], lvl: [262, 330, 392, 523, 784, 1047] },
+    sn_bell: { type: 'triangle', vol: 0.1, tap: [1175], ach: [784, 1175, 1568], lvl: [523, 784, 1047, 1319, 1568] }
+  };
+  function playSnd(ev, forceId) {
+    var id = forceId || lookId('snd'), p = SND[id];
+    if (!p) return;
+    p[ev].forEach(function (f, i) { tone(f, ev === 'tap' ? 0 : i * 0.11, ev === 'tap' ? 0.09 : 0.24, p.type, p.vol); });
   }
   function setLook(cat, id) {
     if (!db) return;
@@ -1003,7 +1203,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('look-h').hidden = !any;
     if (!any) return;
     var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
-    var catKey = { theme: 'theme', bg: 'bg', coin: 'coin', bar: 'bar' };
     COS_CATS.forEach(function (c) {
       var ids = Object.keys(COS).filter(function (id) { return COS[id].cat === c.k && un[id]; });
       if (!ids.length) return;
@@ -1011,10 +1210,16 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       var chips = el('div', 'chips');
       function chip(id, label, pv) {
         var b = el('button', 'chip'); b.type = 'button';
-        b.setAttribute('aria-pressed', (look[catKey[c.k]] || '') === id ? 'true' : 'false');
+        b.setAttribute('aria-pressed', (look[c.k] || '') === id ? 'true' : 'false');
         if (pv) b.appendChild(pv);
         b.appendChild(document.createTextNode(label));
-        b.addEventListener('click', function () { setLook(catKey[c.k], id); });
+        b.addEventListener('click', function (ev) {
+          setLook(c.k, id);
+          var rc = b.getBoundingClientRect();
+          if (c.k === 'fx') fxBurst(id, rc.left + rc.width / 2, rc.top + rc.height / 2);
+          else if (c.k === 'lv') lvFx(id);
+          else if (c.k === 'snd') playSnd('lvl', id);
+        });
         chips.appendChild(b);
       }
       chip('', 'СТАНДАРТ', null);
@@ -1023,7 +1228,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         if (c.k === 'theme') { pv = el('i', 'sw'); pv.style.background = it.sw; }
         else if (c.k === 'bg') { pv = el('i', 'sw'); pv.style.background = it.pv; }
         else if (c.k === 'coin') { pv = el('span', 'coin'); pv.setAttribute('data-skin', it.key); }
-        else { pv = el('div', 'bar mini'); pv.setAttribute('data-skin', it.key); for (var z = 0; z < 6; z++) pv.appendChild(el('i', z < 4 ? 'on' : '')); }
+        else if (c.k === 'bar') { pv = el('div', 'bar mini'); pv.setAttribute('data-skin', it.key); for (var z = 0; z < 6; z++) pv.appendChild(el('i', z < 4 ? 'on' : '')); }
+        else { pv = el('i', 'sw'); pv.style.background = it.sw; }
         chip(id, it.n.toUpperCase(), pv);
       });
       sec.appendChild(chips); box.appendChild(sec);
@@ -1295,6 +1501,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('lvup').hidden = false;
     $('lv-ok').focus();
     burst();
+    lvFx(lookId('lv'));
+    playSnd('lvl');
   }
   function burst() {
     var app = document.querySelector('.app');
@@ -2052,7 +2260,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     function rewardText(id, pts, title) {
       var c = cosOf(id), t = 'Награда: +' + pts + ' ' + plural(pts, 'очко', 'очка', 'очков');
       if (title) t += ', титул «' + title + '»';
-      if (c && COS[c]) t += ', новое оформление: ' + ({ theme: 'цвет', bg: 'фон комнаты', coin: 'монетка', bar: 'полоса опыта' }[COS[c].cat]) + ' «' + COS[c].n + '». Выбрать можно ниже в разделе «Оформление».';
+      if (c && COS[c]) t += ', новое оформление: ' + ({ theme: 'цвет', bg: 'фон комнаты', coin: 'монетка', bar: 'полоса опыта', fx: 'эффект нажатия', lv: 'эффект нового уровня', frame: 'рамка комнаты', aura: 'аура персонажа', font: 'стиль текста', snd: 'звуки', pat: 'узор фона', chk: 'галочка', tab: 'вкладки' }[COS[c].cat]) + ' «' + COS[c].n + '». Выбрать можно ниже в разделе «Оформление».';
       else t += '.';
       return t;
     }
@@ -2080,6 +2288,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('achup').hidden = false;
     $('ac-ok').focus();
     burst();
+    playSnd('ach');
   }
   function checkAch() {
     if (!loaded || !lastGI) return;
