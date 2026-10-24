@@ -126,6 +126,16 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .looksec { display: flex; flex-direction: column; gap: 6px; }
 .looksec > b { font-family: var(--font-display); font-size: 9px; color: var(--muted); font-weight: 400; }
 
+
+/* ---- фаза 3: анимированные награды ---- */
+.stage[data-frame="rgb"] { animation: framehue 5s linear infinite; border-style: solid; }
+@keyframes framehue { 0% { border-color: #ff5a5a; box-shadow: 0 0 12px #ff5a5a; } 17% { border-color: #ffd24a; box-shadow: 0 0 12px #ffd24a; } 34% { border-color: #6aff8a; box-shadow: 0 0 12px #6aff8a; } 51% { border-color: #4ac7ff; box-shadow: 0 0 12px #4ac7ff; } 68% { border-color: #a46aff; box-shadow: 0 0 12px #a46aff; } 85% { border-color: #ff5acd; box-shadow: 0 0 12px #ff5acd; } 100% { border-color: #ff5a5a; box-shadow: 0 0 12px #ff5a5a; } }
+:root[data-aura="flame"] .hero canvas { animation: bob 1.6s steps(1) infinite, flame .7s ease-in-out infinite alternate; }
+@keyframes flame { 0% { filter: drop-shadow(0 0 8px rgba(255,120,30,.8)) drop-shadow(0 -4px 10px rgba(255,60,0,.5)); } 100% { filter: drop-shadow(0 0 16px rgba(255,200,60,.9)) drop-shadow(0 -8px 14px rgba(255,90,0,.7)); } }
+.stage[data-bg="aurora"] { --wall: #0f1d2a; --floor: #0a1219; }
+.stage[data-bg="aurora"]::before { content: ""; position: absolute; inset: 0 0 26% 0; background: linear-gradient(100deg, transparent 10%, rgba(80,255,170,.32) 30%, rgba(90,140,255,.3) 50%, rgba(190,90,255,.3) 70%, transparent 90%); background-size: 220% 100%; animation: auroramove 9s ease-in-out infinite alternate; pointer-events: none; }
+@keyframes auroramove { to { background-position: 100% 0; } }
+.stage[data-bg="aurora"] .window { background: linear-gradient(#050b16, #123a44); }
 /* ---- оформление, фаза 2 ---- */
 .coin[data-skin="drop"], :root[data-coin="drop"] .coin, :root[data-coin="drop"] .fly { clip-path: polygon(50% 0, 78% 38%, 90% 62%, 78% 88%, 50% 100%, 22% 88%, 10% 62%, 22% 38%); }
 .coin[data-skin="leaf"], :root[data-coin="leaf"] .coin, :root[data-coin="leaf"] .fly { clip-path: polygon(0 100%, 0 42%, 58% 0, 100% 0, 100% 58%, 42% 100%); }
@@ -309,7 +319,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 .wbig { font-family: var(--font-display); font-size: 22px; }
 .wbig small { font-size: 11px; color: var(--muted); }
 .wchart { width: 100%; height: auto; display: block; }
-@media (prefers-reduced-motion: reduce) { .stage::before, .bar i.on, .hero canvas, .hero canvas, .q.just .t b, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .stage, .stage::before, .bar i.on, .hero canvas, .hero canvas, .q.just .t b, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
 </style></head><body>
 
 <div class="app">
@@ -999,9 +1009,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'z06', val: 'friBest', goal: 3, d: 'Три идеальные пятницы подряд', pts: 15, cos: 'b_dawn' },
     { id: 'z07', slot: 4, val: 'perfBest', goal: 21, d: '21 идеальный день подряд', pts: 25, cos: 'p_rainbow' },
     { id: 'z08', slot: 9, val: 'perfCombo', goal: 1, d: 'Идеальный день, в который ещё и тройной удар', pts: 18, cos: 'b_library' },
-    { id: 'z09', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2200 ккал', pts: 20 },
-    { id: 'z10', slot: 20, val: 'stepStreak', goal: 60, d: '60 дней подряд с выполненной целью по шагам', pts: 25 },
-    { id: 'z11', slot: 27, val: 'meetBest', goal: 4, d: 'Встреча с людьми четыре недели подряд', pts: 18 }
+    { id: 'z09', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2200 ккал', pts: 20, cos: 'b_aurora' },
+    { id: 'z10', slot: 20, val: 'stepStreak', goal: 60, d: '60 дней подряд с выполненной целью по шагам', pts: 25, cos: 'au_flame' },
+    { id: 'z11', slot: 27, val: 'meetBest', goal: 4, d: 'Встреча с людьми четыре недели подряд', pts: 18, cos: 'fr_rgb' }
   ];
   function cosOf(id) {
     if (ACH_COS[id]) return ACH_COS[id];
@@ -1083,6 +1093,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     ['r_wave', 'bar', 'Волна', '#e8b13c', 'wave'], ['r_pixel', 'bar', 'Пиксельная', '#e8b13c', 'pixel'], ['r_glow', 'bar', 'Свечение', '#e8b13c', 'glow'],
     ['tb_round', 'tab', 'Скруглённые', '#a99a83', 'round'], ['tb_notch', 'tab', 'Срезанные', '#a99a83', 'notch']
   ];
+  COS2.push(['fr_rgb', 'frame', 'Переливы', '#a46aff', 'rgb'], ['au_flame', 'aura', 'Пламя', '#ff7a1e', 'flame'],
+    ['b_aurora', 'bg', 'Северное сияние', '#50ffaa', 'aurora', 'linear-gradient(100deg, #050b16, #50ffaa, #a46aff)']);
   COS2.forEach(function (c) { COS[c[0]] = { cat: c[1], n: c[2], sw: c[3], key: c[4], pv: c[5] }; });
   COS_CATS = [{ k: 'theme', n: 'ЦВЕТ' }, { k: 'bg', n: 'ФОН КОМНАТЫ' }, { k: 'frame', n: 'РАМКА КОМНАТЫ' }, { k: 'aura', n: 'АУРА ПЕРСОНАЖА' },
     { k: 'coin', n: 'МОНЕТКА' }, { k: 'bar', n: 'ПОЛОСА ОПЫТА' }, { k: 'pat', n: 'УЗОР ФОНА' }, { k: 'font', n: 'СТИЛЬ ТЕКСТА' },
