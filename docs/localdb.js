@@ -278,6 +278,7 @@
   function renderMenu() {
     menu.textContent = '';
     menu.appendChild(el('div', 'pl-t', 'СИНХРОНИЗАЦИЯ'));
+    if (window.APP_VERSION) menu.appendChild(el('div', 'pl-s', 'Версия ' + window.APP_VERSION));
     var line = status.text || (!navigator.onLine ? 'Нет сети: всё сохранено на телефоне' : (meta.signed ? fmtAgo(meta.lastSync) : 'Данные только на этом телефоне'));
     menu.appendChild(el('div', 'pl-s', line));
     var b;

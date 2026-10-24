@@ -562,7 +562,23 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="hint">Версия: __BUILD__</div>
+    <h2>ВЕРСИЯ __VER__</h2>
+    <div class="hint">Сборка __BUILD__</div>
+    <div class="goal vhist">
+      <div class="hint"><b>0.13</b> · 24.10 · Обновление берёт свежие файлы</div>
+      <div class="hint"><b>0.12</b> · 24.10 · Настройки (шестерёнка), звук, номер версии</div>
+      <div class="hint"><b>0.11</b> · 24.10 · Мемные достижения и титулы</div>
+      <div class="hint"><b>0.10</b> · 24.10 · Оформление-награды и суперредкие достижения</div>
+      <div class="hint"><b>0.9</b> · 24.10 · Достижения и скрытые навыки</div>
+      <div class="hint"><b>0.8</b> · 24.10 · Отжимания на коленях</div>
+      <div class="hint"><b>0.7</b> · 23.10 · Недельный квест: 7 дней в пределах 2200 ккал</div>
+      <div class="hint"><b>0.6</b> · 22.10 · Долги не считаются доходом</div>
+      <div class="hint"><b>0.5</b> · 22.10 · Офлайн-приложение и Google Таблица</div>
+      <div class="hint"><b>0.4</b> · 21.10 · Цена улучшения зависит от стоимости</div>
+      <div class="hint"><b>0.3</b> · 20.10 · Уровни, штрафы, приседания и тренировка</div>
+      <div class="hint"><b>0.2</b> · 19.10 · Уход, шаги, гардероб</div>
+      <div class="hint"><b>0.1</b> · 18.10 · Первый план: квесты и очки</div>
+    </div>
     <div class="hint" id="look-none">Оформление появится, когда что-то откроется.</div>
   </div>
 </div>
@@ -584,7 +600,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>
+<script>window.APP_VERSION = "__VER__";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
