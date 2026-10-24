@@ -706,15 +706,16 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   var SQ_MAX = 3, SQ_GAP = 2 * 3600000;
   // скрытые навыки: пороги по сумме повторов, награда за подход зависит от его размера
   var SK = {
-    squat: { name: 'Приседания', what: 'приседаний', th: [100, 400, 1000, 2500] },
-    pushup: { name: 'Отжимания на коленях', what: 'отжиманий на коленях', th: [100, 300, 800, 2000] }
+    squat: { name: 'Приседания', what: 'приседаний', th: [100, 400, 1000, 2500, 5000, 10000, 20000, 40000, 70000, 100000] },
+    pushup: { name: 'Отжимания на коленях', what: 'отжиманий на коленях', th: [100, 300, 800, 2000, 4500, 9000, 18000, 35000, 60000, 100000] }
   };
   var SK_KEYS = ['squat', 'pushup'];
-  var SK_ROMAN = ['I', 'II', 'III', 'IV', 'V'];
-  var SK_BONUS = [0, 1, 2, 3, 5];
-  var SK_SETREW = [[0.5, 0.5, 1], [1, 1, 1], [1, 1.5, 1.5], [1.5, 1.5, 1.5], [2, 1.5, 1.5]];
+  var SK_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+  var SK_BONUS = [0, 1, 2, 3, 5, 6, 8, 10, 15, 20, 30];
+  var SK_SETREW = [[0.5, 0.5, 1], [1, 1, 1], [1, 1.5, 1.5], [1.5, 1.5, 1.5], [2, 1.5, 1.5], [2, 2, 1.5], [2, 2, 2], [2.5, 2, 2], [2.5, 2.5, 2], [2.5, 2.5, 2.5]];
+  function skillCap(lvl) { return Math.min(lvl, 10); }
   function repsOf(q, key, i) { var r = q[key + 'R'] && q[key + 'R'][i]; return r > 0 ? r : 10; }
-  function sizeIdx(reps) { return Math.max(0, Math.min(4, Math.round(reps / 10) - 1)); }
+  function sizeIdx(reps) { return Math.max(0, Math.min(9, Math.round(reps / 10) - 1)); }
   function skillLevel(key, total) { var n = 1; SK[key].th.forEach(function (t) { if (total >= t) n++; }); return n; }
   function skillTotal(key) {
     var t = 0, today = dkey(new Date());
@@ -749,19 +750,49 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'steps100', t: 'Стотысячник', d: 'Пройти суммарно 100 000 шагов', val: 'steps', goal: 100000, pts: 2, secret: 1, h: 'Что-то связано с общим числом шагов' },
     { id: 'steps250', t: 'Марафонец', d: 'Пройти суммарно 250 000 шагов', val: 'steps', goal: 250000, pts: 3, secret: 1, title: 'МАРАФОНЕЦ', h: 'Долгая дорога, много шагов' },
     { id: 'steps500', t: 'Паломник', d: 'Пройти суммарно 500 000 шагов', val: 'steps', goal: 500000, pts: 5, secret: 1, title: 'ПАЛОМНИК', h: 'Очень долгая дорога' },
+    { id: 'steps750', t: 'Кругосветка', d: 'Пройти суммарно 750 000 шагов', val: 'steps', goal: 750000, pts: 8, secret: 1, h: 'Дорога, которая почти не кончается' },
+    { id: 'steps1m', t: 'Миллионер шагов', d: 'Пройти суммарно 1 000 000 шагов', val: 'steps', goal: 1000000, pts: 15, secret: 1, title: 'ВЕЧНЫЙ СТРАННИК', h: 'Самый длинный путь' },
     { id: 'bigday', t: 'Рывок', d: '15 000 шагов за один день', val: 'maxDay', goal: 15000, pts: 1, secret: 1, h: 'Один день, много шагов' },
-    { id: 'reps1000', t: 'Тысяча повторов', d: '1000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 1000, pts: 3, secret: 1, h: 'Приседания и отжимания копятся вместе' },
+    { id: 'bigday2', t: 'Сверхдистанция', d: '20 000 шагов за один день', val: 'maxDay', goal: 20000, pts: 2, secret: 1, h: 'Один день, ещё больше шагов' },
+    { id: 'bigday3', t: 'Ультра', d: '30 000 шагов за один день', val: 'maxDay', goal: 30000, pts: 4, secret: 1, title: 'УЛЬТРА', h: 'Один день, почти невозможно' },
+    { id: 'reps1000', t: 'Тысяча повторов', d: '1000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 1000, pts: 3 },
+    { id: 'reps5000', t: 'Пять тысяч повторов', d: '5000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 5000, pts: 5, secret: 1, h: 'Приседания и отжимания копятся вместе' },
+    { id: 'reps25000', t: 'Кузница', d: '25 000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 25000, pts: 10, secret: 1, h: 'Повторов становится очень много' },
+    { id: 'reps100000', t: 'Кованый', d: '100 000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 100000, pts: 20, secret: 1, title: 'КОВАНЫЙ', h: 'Сто тысяч, и это только половина пути' },
+    { id: 'sq10k', t: 'Десять тысяч приседаний', d: '10 000 приседаний', val: 'sq', goal: 10000, pts: 5, secret: 1, h: 'Приседания, много приседаний' },
+    { id: 'pu10k', t: 'Десять тысяч отжиманий', d: '10 000 отжиманий на коленях', val: 'pu', goal: 10000, pts: 5, secret: 1, h: 'Отжимания, много отжиманий' },
+    { id: 'sq100k', t: 'Колосс', d: '100 000 приседаний', val: 'sq', goal: 100000, pts: 25, secret: 1, title: 'КОЛОСС', h: 'Ноги, годы работы' },
+    { id: 'pu100k', t: 'Титан', d: '100 000 отжиманий на коленях', val: 'pu', goal: 100000, pts: 25, secret: 1, title: 'ТИТАН', h: 'Руки, годы работы' },
     { id: 'wk5', t: 'Пять тренировок', d: 'Пять тренировок по приложению', val: 'wk', goal: 5, pts: 1 },
     { id: 'wk20', t: 'Железный', d: 'Двадцать тренировок по приложению', val: 'wk', goal: 20, pts: 3, secret: 1, title: 'ЖЕЛЕЗНЫЙ', h: 'Тренировки, и их нужно много' },
+    { id: 'wk50', t: 'Полсотни тренировок', d: '50 тренировок по приложению', val: 'wk', goal: 50, pts: 5, secret: 1, h: 'Тренировки, уже полсотни' },
+    { id: 'wk100', t: 'Сотня потов', d: '100 тренировок по приложению', val: 'wk', goal: 100, pts: 10, secret: 1, title: 'ЛЕГЕНДА ЗАЛА', h: 'Тренировки, сотня' },
+    { id: 'wk250', t: 'Неудержимый', d: '250 тренировок по приложению', val: 'wk', goal: 250, pts: 20, secret: 1, title: 'НЕУДЕРЖИМЫЙ', h: 'Тренировки, больше года работы' },
     { id: 'perf3', t: 'Три идеальных дня', d: 'Три дня подряд закрыть все 7 ежедневных квестов', val: 'perfBest', goal: 3, pts: 2 },
     { id: 'perf7', t: 'Неделя без осечек', d: 'Семь идеальных дней подряд', val: 'perfBest', goal: 7, pts: 4, secret: 1, title: 'НЕСГИБАЕМЫЙ', h: 'Идеальные дни, один за другим' },
+    { id: 'perf14', t: 'Две недели без осечек', d: 'Четырнадцать идеальных дней подряд', val: 'perfBest', goal: 14, pts: 7, secret: 1, h: 'Идеальные дни, две недели подряд' },
+    { id: 'perf30', t: 'Месяц без осечек', d: 'Тридцать идеальных дней подряд', val: 'perfBest', goal: 30, pts: 15, secret: 1, title: 'ГЕРОЙ', h: 'Идеальный месяц' },
     { id: 'perf10', t: 'Десять идеальных', d: 'Десять идеальных дней, не обязательно подряд', val: 'perf', goal: 10, pts: 3, secret: 1, h: 'Идеальные дни копятся' },
-    { id: 'early7', t: 'Жаворонок', d: 'Семь дней подряд вставать до 10:00', val: 'earlyBest', goal: 7, pts: 2, secret: 1, title: 'ЖАВОРОНОК', h: 'Что-то про утро' },
-    { id: 'kcal3', t: 'Ровное питание', d: 'Три недели, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 3, pts: 3, secret: 1, h: 'Недели с едой в пределах нормы' },
-    { id: 'stepw2', t: 'Шаг за шагом', d: 'Две недели, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 2, pts: 2, secret: 1, h: 'Идеальные недели по шагам' },
-    { id: 'meets5', t: 'Душа компании', d: 'Пять встреч с людьми не по работе', val: 'meets', goal: 5, pts: 3, secret: 1, title: 'ДУША КОМПАНИИ', h: 'Люди и встречи' },
-    { id: 'combo', t: 'Тройной удар', d: 'За один день три подхода приседаний, три подхода отжиманий и тренировка', val: 'combo', goal: 1, pts: 2, secret: 1, h: 'Один день, три вида нагрузки' },
-    { id: 'weigh4', t: 'Контроль', d: 'Взвешиваться четыре недели', val: 'weigh', goal: 4, pts: 1 }
+    { id: 'perf50', t: 'Полсотни идеальных', d: '50 идеальных дней, не обязательно подряд', val: 'perf', goal: 50, pts: 8, secret: 1, h: 'Идеальных дней набирается много' },
+    { id: 'perf100', t: 'Сотня идеальных', d: '100 идеальных дней, не обязательно подряд', val: 'perf', goal: 100, pts: 15, secret: 1, title: 'МАСТЕР РЕЖИМА', h: 'Сотня идеальных дней' },
+    { id: 'early7', t: 'Жаворонок', d: 'Семь дней подряд вставать до 10:00', val: 'earlyBest', goal: 7, pts: 2 },
+    { id: 'early30', t: 'Месяц ранних подъёмов', d: '30 дней подряд вставать до 10:00', val: 'earlyBest', goal: 30, pts: 6, secret: 1, title: 'ЖАВОРОНОК', h: 'Утро, целый месяц' },
+    { id: 'early100', t: 'Хозяин утра', d: '100 дней подряд вставать до 10:00', val: 'earlyBest', goal: 100, pts: 15, secret: 1, title: 'ХОЗЯИН УТРА', h: 'Утро, очень долго' },
+    { id: 'kcal3', t: 'Ровное питание', d: 'Три недели, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 3, pts: 3 },
+    { id: 'kcal8', t: 'Два месяца в норме', d: 'Восемь недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 8, pts: 6, secret: 1, h: 'Недели с едой в пределах нормы, уже много' },
+    { id: 'kcal26', t: 'Полгода в норме', d: '26 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 26, pts: 15, secret: 1, title: 'РОВНЫЙ', h: 'Недели с едой в пределах нормы, полгода' },
+    { id: 'stepw2', t: 'Шаг за шагом', d: 'Две недели, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 2, pts: 2 },
+    { id: 'stepw6', t: 'Шесть недель в движении', d: 'Шесть недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 6, pts: 6, secret: 1, h: 'Идеальные недели по шагам, много' },
+    { id: 'stepw26', t: 'Полгода в движении', d: '26 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 26, pts: 15, secret: 1, title: 'НЕУТОМИМЫЙ', h: 'Идеальные недели по шагам, полгода' },
+    { id: 'meets5', t: 'Душа компании', d: 'Пять встреч с людьми не по работе', val: 'meets', goal: 5, pts: 3, title: 'ДУША КОМПАНИИ' },
+    { id: 'meets15', t: 'Свой везде', d: '15 встреч с людьми не по работе', val: 'meets', goal: 15, pts: 5, secret: 1, h: 'Люди и встречи, их много' },
+    { id: 'meets50', t: 'Лидер', d: '50 встреч с людьми не по работе', val: 'meets', goal: 50, pts: 15, secret: 1, title: 'ЛИДЕР', h: 'Люди и встречи, целая жизнь' },
+    { id: 'weigh4', t: 'Контроль', d: 'Взвешиваться четыре недели', val: 'weigh', goal: 4, pts: 1 },
+    { id: 'weigh12', t: 'Три месяца контроля', d: 'Взвешиваться 12 недель', val: 'weigh', goal: 12, pts: 3, secret: 1, h: 'Регулярность на весах' },
+    { id: 'weigh26', t: 'Полгода контроля', d: 'Взвешиваться 26 недель', val: 'weigh', goal: 26, pts: 6, secret: 1, h: 'Регулярность на весах, полгода' },
+    { id: 'combo', t: 'Тройной удар', d: 'За один день три подхода приседаний, три подхода отжиманий и тренировка', val: 'combo', goal: 1, pts: 2 },
+    { id: 'combo10', t: 'Десять тройных', d: 'Десять таких дней, не обязательно подряд', val: 'combo', goal: 10, pts: 6, secret: 1, h: 'Тяжёлые дни, десяток' },
+    { id: 'combo50', t: 'Машина', d: '50 таких дней, не обязательно подряд', val: 'combo', goal: 50, pts: 15, secret: 1, title: 'МАШИНА', h: 'Тяжёлые дни, полсотни' }
   ];
   function growthInfo(SI, today) {
     var out = { pts: {}, ach: {}, ups: { squat: [], pushup: [] }, st: null };
@@ -1080,7 +1111,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     SK_KEYS.forEach(function (key) {
       var ex = { key: key, act: key === 'squat' ? doSquat : doPushup, undo: key === 'squat' ? undoSquat : undoPushup,
         undoText: key === 'squat' ? 'Отменить последнее выполнение приседаний' : 'Отменить последнее выполнение отжиманий' };
-      var lvl = skillLevel(key, skillTotal(key)), size = lvl * 10;
+      var lvl = skillCap(skillLevel(key, skillTotal(key))), size = lvl * 10;
       var arrE = q[key];
       var c = Math.min(arrE.length, SQ_MAX);
       var last = arrE.length ? arrE[arrE.length - 1] : 0;
@@ -1743,7 +1774,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       lastGI.ups[key].forEach(function (u) {
         var b = SK_BONUS[u.lvl - 1];
         ev.push({ id: 's:' + key + ':' + u.lvl, date: u.date, kind: 'СЕКРЕТНЫЙ НАВЫК ОТКРЫТ', big: SK[key].name + ' ' + SK_ROMAN[u.lvl - 1],
-          text: 'Теперь доступен подход по ' + u.lvl * 10 + ' повторов, и за него дают больше очков. Награда за навык: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
+          text: 'Теперь доступен подход по ' + skillCap(u.lvl) * 10 + ' повторов' + (u.lvl > 10 ? ', размер подхода больше не растёт, но навык даёт очки' : ', и за него дают больше очков') + '. Награда за навык: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
       });
     });
     return ev;
@@ -1783,7 +1814,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     SK_KEYS.forEach(function (key) {
       lastGI.ups[key].forEach(function (u) {
         any = true;
-        sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], 'подход по ' + u.lvl * 10 + ' повторов, открыто ' + dshort(u.date), '✓', true, null, true));
+        sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], 'подход по ' + skillCap(u.lvl) * 10 + ' повторов, открыто ' + dshort(u.date), '✓', true, null, true));
       });
     });
     if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно повторов. Подсказок нет.'));
@@ -1849,7 +1880,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (!db) return;
     var k = dkey(new Date()), q = perDay(k), cur = q[key];
     if (cur.length >= SQ_MAX) return;
-    var maxSize = skillLevel(key, skillTotal(key)) * 10;
+    var maxSize = skillCap(skillLevel(key, skillTotal(key))) * 10;
     reps = Math.min(maxSize, Math.max(10, Math.round((reps || 10) / 10) * 10));
     var last = cur.length ? cur[cur.length - 1] : 0;
     if (last + SQ_GAP > Date.now()) return;
