@@ -279,7 +279,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
     <h2 id="ach-h">ДОСТИЖЕНИЯ</h2>
     <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <div class="note">Достижения считаются сами по записанным данным, считать ничего не нужно. Часть скрыта, они откроются, когда условие выполнится. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
+    <div class="note">Все достижения скрыты, условия неизвестны и перемешаны по всему приложению. Они откроются сами, когда условие выполнится, считать ничего не нужно. Скрытых больше, чем строк со знаками вопроса. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
   </section>
 
   <section class="panel" id="goals" data-g="a">
@@ -747,58 +747,104 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     return out;
   }
   var ACH = [
-    { id: 'steps50', t: 'Пятьдесят тысяч', d: 'Пройти суммарно 50 000 шагов', val: 'steps', goal: 50000, pts: 1 },
-    { id: 'steps100', t: 'Стотысячник', d: 'Пройти суммарно 100 000 шагов', val: 'steps', goal: 100000, pts: 2, secret: 1, h: 'Что-то связано с общим числом шагов' },
-    { id: 'steps250', t: 'Марафонец', d: 'Пройти суммарно 250 000 шагов', val: 'steps', goal: 250000, pts: 3, secret: 1, title: 'МАРАФОНЕЦ', h: 'Долгая дорога, много шагов' },
-    { id: 'steps500', t: 'Паломник', d: 'Пройти суммарно 500 000 шагов', val: 'steps', goal: 500000, pts: 5, secret: 1, title: 'ПАЛОМНИК', h: 'Очень долгая дорога' },
-    { id: 'steps750', t: 'Кругосветка', d: 'Пройти суммарно 750 000 шагов', val: 'steps', goal: 750000, pts: 8, secret: 1, h: 'Дорога, которая почти не кончается' },
-    { id: 'steps1m', t: 'Миллионер шагов', d: 'Пройти суммарно 1 000 000 шагов', val: 'steps', goal: 1000000, pts: 15, secret: 1, title: 'ВЕЧНЫЙ СТРАННИК', h: 'Самый длинный путь' },
-    { id: 'bigday', t: 'Рывок', d: '15 000 шагов за один день', val: 'maxDay', goal: 15000, pts: 1, secret: 1, h: 'Один день, много шагов' },
-    { id: 'bigday2', t: 'Сверхдистанция', d: '20 000 шагов за один день', val: 'maxDay', goal: 20000, pts: 2, secret: 1, h: 'Один день, ещё больше шагов' },
-    { id: 'bigday3', t: 'Ультра', d: '30 000 шагов за один день', val: 'maxDay', goal: 30000, pts: 4, secret: 1, title: 'УЛЬТРА', h: 'Один день, почти невозможно' },
-    { id: 'reps1000', t: 'Тысяча повторов', d: '1000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 1000, pts: 3 },
-    { id: 'reps5000', t: 'Пять тысяч повторов', d: '5000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 5000, pts: 5, secret: 1, h: 'Приседания и отжимания копятся вместе' },
-    { id: 'reps25000', t: 'Кузница', d: '25 000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 25000, pts: 10, secret: 1, h: 'Повторов становится очень много' },
-    { id: 'reps100000', t: 'Кованый', d: '100 000 повторов приседаний и отжиманий вместе', val: 'reps', goal: 100000, pts: 20, secret: 1, title: 'КОВАНЫЙ', h: 'Сто тысяч, и это только половина пути' },
-    { id: 'sq10k', t: 'Десять тысяч приседаний', d: '10 000 приседаний', val: 'sq', goal: 10000, pts: 5, secret: 1, h: 'Приседания, много приседаний' },
-    { id: 'pu10k', t: 'Десять тысяч отжиманий', d: '10 000 отжиманий на коленях', val: 'pu', goal: 10000, pts: 5, secret: 1, h: 'Отжимания, много отжиманий' },
-    { id: 'sq100k', t: 'Колосс', d: '100 000 приседаний', val: 'sq', goal: 100000, pts: 25, secret: 1, title: 'КОЛОСС', h: 'Ноги, годы работы' },
-    { id: 'pu100k', t: 'Титан', d: '100 000 отжиманий на коленях', val: 'pu', goal: 100000, pts: 25, secret: 1, title: 'ТИТАН', h: 'Руки, годы работы' },
-    { id: 'wk5', t: 'Пять тренировок', d: 'Пять тренировок по приложению', val: 'wk', goal: 5, pts: 1 },
-    { id: 'wk20', t: 'Железный', d: 'Двадцать тренировок по приложению', val: 'wk', goal: 20, pts: 3, secret: 1, title: 'ЖЕЛЕЗНЫЙ', h: 'Тренировки, и их нужно много' },
-    { id: 'wk50', t: 'Полсотни тренировок', d: '50 тренировок по приложению', val: 'wk', goal: 50, pts: 5, secret: 1, h: 'Тренировки, уже полсотни' },
-    { id: 'wk100', t: 'Сотня потов', d: '100 тренировок по приложению', val: 'wk', goal: 100, pts: 10, secret: 1, title: 'ЛЕГЕНДА ЗАЛА', h: 'Тренировки, сотня' },
-    { id: 'wk250', t: 'Неудержимый', d: '250 тренировок по приложению', val: 'wk', goal: 250, pts: 20, secret: 1, title: 'НЕУДЕРЖИМЫЙ', h: 'Тренировки, больше года работы' },
-    { id: 'perf3', t: 'Три идеальных дня', d: 'Три дня подряд закрыть все 7 ежедневных квестов', val: 'perfBest', goal: 3, pts: 2 },
-    { id: 'perf7', t: 'Неделя без осечек', d: 'Семь идеальных дней подряд', val: 'perfBest', goal: 7, pts: 4, secret: 1, title: 'НЕСГИБАЕМЫЙ', h: 'Идеальные дни, один за другим' },
-    { id: 'perf14', t: 'Две недели без осечек', d: 'Четырнадцать идеальных дней подряд', val: 'perfBest', goal: 14, pts: 7, secret: 1, h: 'Идеальные дни, две недели подряд' },
-    { id: 'perf30', t: 'Месяц без осечек', d: 'Тридцать идеальных дней подряд', val: 'perfBest', goal: 30, pts: 15, secret: 1, title: 'ГЕРОЙ', h: 'Идеальный месяц' },
-    { id: 'perf10', t: 'Десять идеальных', d: 'Десять идеальных дней, не обязательно подряд', val: 'perf', goal: 10, pts: 3, secret: 1, h: 'Идеальные дни копятся' },
-    { id: 'perf50', t: 'Полсотни идеальных', d: '50 идеальных дней, не обязательно подряд', val: 'perf', goal: 50, pts: 8, secret: 1, h: 'Идеальных дней набирается много' },
-    { id: 'perf100', t: 'Сотня идеальных', d: '100 идеальных дней, не обязательно подряд', val: 'perf', goal: 100, pts: 15, secret: 1, title: 'МАСТЕР РЕЖИМА', h: 'Сотня идеальных дней' },
-    { id: 'early7', t: 'Жаворонок', d: 'Семь дней подряд вставать до 10:00', val: 'earlyBest', goal: 7, pts: 2 },
-    { id: 'early30', t: 'Месяц ранних подъёмов', d: '30 дней подряд вставать до 10:00', val: 'earlyBest', goal: 30, pts: 6, secret: 1, title: 'ЖАВОРОНОК', h: 'Утро, целый месяц' },
-    { id: 'early100', t: 'Хозяин утра', d: '100 дней подряд вставать до 10:00', val: 'earlyBest', goal: 100, pts: 15, secret: 1, title: 'ХОЗЯИН УТРА', h: 'Утро, очень долго' },
-    { id: 'kcal3', t: 'Ровное питание', d: 'Три недели, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 3, pts: 3 },
-    { id: 'kcal8', t: 'Два месяца в норме', d: 'Восемь недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 8, pts: 6, secret: 1, h: 'Недели с едой в пределах нормы, уже много' },
-    { id: 'kcal26', t: 'Полгода в норме', d: '26 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 26, pts: 15, secret: 1, title: 'РОВНЫЙ', h: 'Недели с едой в пределах нормы, полгода' },
-    { id: 'stepw2', t: 'Шаг за шагом', d: 'Две недели, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 2, pts: 2 },
-    { id: 'stepw6', t: 'Шесть недель в движении', d: 'Шесть недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 6, pts: 6, secret: 1, h: 'Идеальные недели по шагам, много' },
-    { id: 'stepw26', t: 'Полгода в движении', d: '26 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 26, pts: 15, secret: 1, title: 'НЕУТОМИМЫЙ', h: 'Идеальные недели по шагам, полгода' },
-    { id: 'meets5', t: 'Душа компании', d: 'Пять встреч с людьми не по работе', val: 'meets', goal: 5, pts: 3, title: 'ДУША КОМПАНИИ' },
-    { id: 'meets15', t: 'Свой везде', d: '15 встреч с людьми не по работе', val: 'meets', goal: 15, pts: 5, secret: 1, h: 'Люди и встречи, их много' },
-    { id: 'meets50', t: 'Лидер', d: '50 встреч с людьми не по работе', val: 'meets', goal: 50, pts: 15, secret: 1, title: 'ЛИДЕР', h: 'Люди и встречи, целая жизнь' },
-    { id: 'weigh4', t: 'Контроль', d: 'Взвешиваться четыре недели', val: 'weigh', goal: 4, pts: 1 },
-    { id: 'weigh12', t: 'Три месяца контроля', d: 'Взвешиваться 12 недель', val: 'weigh', goal: 12, pts: 3, secret: 1, h: 'Регулярность на весах' },
-    { id: 'weigh26', t: 'Полгода контроля', d: 'Взвешиваться 26 недель', val: 'weigh', goal: 26, pts: 6, secret: 1, h: 'Регулярность на весах, полгода' },
-    { id: 'combo', t: 'Тройной удар', d: 'За один день три подхода приседаний, три подхода отжиманий и тренировка', val: 'combo', goal: 1, pts: 2 },
-    { id: 'combo10', t: 'Десять тройных', d: 'Десять таких дней, не обязательно подряд', val: 'combo', goal: 10, pts: 6, secret: 1, h: 'Тяжёлые дни, десяток' },
-    { id: 'combo50', t: 'Машина', d: '50 таких дней, не обязательно подряд', val: 'combo', goal: 50, pts: 15, secret: 1, title: 'МАШИНА', h: 'Тяжёлые дни, полсотни' }
+    { id: 'x01', t: 'Скрытое достижение', d: 'Пройти суммарно 43 700 шагов', val: 'steps', goal: 43700, pts: 1 },
+    { id: 'x02', t: 'Скрытое достижение', d: 'Пройти суммарно 118 400 шагов', val: 'steps', goal: 118400, pts: 2 },
+    { id: 'x03', t: 'Скрытое достижение', d: 'Пройти суммарно 267 900 шагов', val: 'steps', goal: 267900, pts: 3 },
+    { id: 'x04', t: 'Скрытое достижение', d: 'Пройти суммарно 531 200 шагов', val: 'steps', goal: 531200, pts: 5 },
+    { id: 'x05', t: 'Скрытое достижение', d: 'Пройти суммарно 874 600 шагов', val: 'steps', goal: 874600, pts: 9 },
+    { id: 'x06', t: 'Скрытое достижение', d: 'Пройти суммарно 1 187 300 шагов', val: 'steps', goal: 1187300, pts: 15, title: 'ВЕЧНЫЙ СТРАННИК' },
+    { id: 'x07', t: 'Скрытое достижение', d: '13 400 шагов за один день', val: 'maxDay', goal: 13400, pts: 1 },
+    { id: 'x08', t: 'Скрытое достижение', d: '19 300 шагов за один день', val: 'maxDay', goal: 19300, pts: 2 },
+    { id: 'x09', t: 'Скрытое достижение', d: '27 700 шагов за один день', val: 'maxDay', goal: 27700, pts: 4, title: 'УЛЬТРА' },
+    { id: 'x10', t: 'Скрытое достижение', d: '1 370 повторов приседаний и отжиманий вместе', val: 'reps', goal: 1370, pts: 3 },
+    { id: 'x11', t: 'Скрытое достижение', d: '5 280 повторов приседаний и отжиманий вместе', val: 'reps', goal: 5280, pts: 5 },
+    { id: 'x12', t: 'Скрытое достижение', d: '23 500 повторов приседаний и отжиманий вместе', val: 'reps', goal: 23500, pts: 10 },
+    { id: 'x13', t: 'Скрытое достижение', d: '97 300 повторов приседаний и отжиманий вместе', val: 'reps', goal: 97300, pts: 20, title: 'КОВАНЫЙ' },
+    { id: 'x14', t: 'Скрытое достижение', d: '8 650 приседаний всего', val: 'sq', goal: 8650, pts: 5 },
+    { id: 'x15', t: 'Скрытое достижение', d: '93 200 приседаний всего', val: 'sq', goal: 93200, pts: 25, title: 'КОЛОСС' },
+    { id: 'x16', t: 'Скрытое достижение', d: '7 900 отжиманий на коленях всего', val: 'pu', goal: 7900, pts: 5 },
+    { id: 'x17', t: 'Скрытое достижение', d: '88 700 отжиманий на коленях всего', val: 'pu', goal: 88700, pts: 25, title: 'ТИТАН' },
+    { id: 'x18', t: 'Скрытое достижение', d: '29 подходов приседаний и отжиманий', val: 'sets', goal: 29, pts: 1 },
+    { id: 'x19', t: 'Скрытое достижение', d: '117 подходов приседаний и отжиманий', val: 'sets', goal: 117, pts: 3 },
+    { id: 'x20', t: 'Скрытое достижение', d: '463 подходов приседаний и отжиманий', val: 'sets', goal: 463, pts: 8 },
+    { id: 'x21', t: 'Скрытое достижение', d: '7 тренировок по приложению', val: 'wk', goal: 7, pts: 1 },
+    { id: 'x22', t: 'Скрытое достижение', d: '23 тренировок по приложению', val: 'wk', goal: 23, pts: 3 },
+    { id: 'x23', t: 'Скрытое достижение', d: '58 тренировок по приложению', val: 'wk', goal: 58, pts: 5 },
+    { id: 'x24', t: 'Скрытое достижение', d: '112 тренировок по приложению', val: 'wk', goal: 112, pts: 10, title: 'ЛЕГЕНДА ЗАЛА' },
+    { id: 'x25', t: 'Скрытое достижение', d: '241 тренировок по приложению', val: 'wk', goal: 241, pts: 20, title: 'НЕУДЕРЖИМЫЙ' },
+    { id: 'x26', t: 'Скрытое достижение', d: '4 идеальных дней подряд', val: 'perfBest', goal: 4, pts: 2 },
+    { id: 'x27', t: 'Скрытое достижение', d: '9 идеальных дней подряд', val: 'perfBest', goal: 9, pts: 4 },
+    { id: 'x28', t: 'Скрытое достижение', d: '16 идеальных дней подряд', val: 'perfBest', goal: 16, pts: 7 },
+    { id: 'x29', t: 'Скрытое достижение', d: '33 идеальных дней подряд', val: 'perfBest', goal: 33, pts: 15, title: 'ГЕРОЙ' },
+    { id: 'x30', t: 'Скрытое достижение', d: '13 идеальных дней', val: 'perf', goal: 13, pts: 3 },
+    { id: 'x31', t: 'Скрытое достижение', d: '47 идеальных дней', val: 'perf', goal: 47, pts: 8 },
+    { id: 'x32', t: 'Скрытое достижение', d: '119 идеальных дней', val: 'perf', goal: 119, pts: 15, title: 'МАСТЕР РЕЖИМА' },
+    { id: 'x33', t: 'Скрытое достижение', d: '8 дней подряд вставать до 10:00', val: 'earlyBest', goal: 8, pts: 2 },
+    { id: 'x34', t: 'Скрытое достижение', d: '31 дней подряд вставать до 10:00', val: 'earlyBest', goal: 31, pts: 6, title: 'ЖАВОРОНОК' },
+    { id: 'x35', t: 'Скрытое достижение', d: '104 дней подряд вставать до 10:00', val: 'earlyBest', goal: 104, pts: 15, title: 'ХОЗЯИН УТРА' },
+    { id: 'x36', t: 'Скрытое достижение', d: '17 раз встать до 10:00', val: 'early', goal: 17, pts: 2 },
+    { id: 'x37', t: 'Скрытое достижение', d: '63 раз встать до 10:00', val: 'early', goal: 63, pts: 5 },
+    { id: 'x38', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 11 раз', val: 'cook', goal: 11, pts: 1 },
+    { id: 'x39', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 37 раз', val: 'cook', goal: 37, pts: 3 },
+    { id: 'x40', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 91 раз', val: 'cook', goal: 91, pts: 6 },
+    { id: 'x41', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 203 раз', val: 'cook', goal: 203, pts: 12, title: 'ШЕФ' },
+    { id: 'x42', t: 'Скрытое достижение', d: '19 раз пообедать не меньше 20 минут', val: 'lunch', goal: 19, pts: 2 },
+    { id: 'x43', t: 'Скрытое достижение', d: '66 раз пообедать не меньше 20 минут', val: 'lunch', goal: 66, pts: 5 },
+    { id: 'x44', t: 'Скрытое достижение', d: '14 дней в пределах 2200 ккал', val: 'kcalOk', goal: 14, pts: 2 },
+    { id: 'x45', t: 'Скрытое достижение', d: '59 дней в пределах 2200 ккал', val: 'kcalOk', goal: 59, pts: 5 },
+    { id: 'x46', t: 'Скрытое достижение', d: '148 дней в пределах 2200 ккал', val: 'kcalOk', goal: 148, pts: 10 },
+    { id: 'x47', t: 'Скрытое достижение', d: 'Записать калории 10 дней', val: 'kcalLog', goal: 10, pts: 1 },
+    { id: 'x48', t: 'Скрытое достижение', d: 'Записать калории 44 дней', val: 'kcalLog', goal: 44, pts: 4 },
+    { id: 'x49', t: 'Скрытое достижение', d: 'Уход за лицом 21 дней', val: 'face', goal: 21, pts: 2 },
+    { id: 'x50', t: 'Скрытое достижение', d: 'Уход за лицом 73 дней', val: 'face', goal: 73, pts: 5 },
+    { id: 'x51', t: 'Скрытое достижение', d: 'Уход за лицом 160 дней', val: 'face', goal: 160, pts: 10 },
+    { id: 'x52', t: 'Скрытое достижение', d: 'Уход за зубами 16 дней', val: 'teeth', goal: 16, pts: 2 },
+    { id: 'x53', t: 'Скрытое достижение', d: 'Уход за зубами 54 дней', val: 'teeth', goal: 54, pts: 5 },
+    { id: 'x54', t: 'Скрытое достижение', d: 'Уход за зубами 142 дней', val: 'teeth', goal: 142, pts: 10 },
+    { id: 'x55', t: 'Скрытое достижение', d: '4 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 4, pts: 3 },
+    { id: 'x56', t: 'Скрытое достижение', d: '9 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 9, pts: 6 },
+    { id: 'x57', t: 'Скрытое достижение', d: '22 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 22, pts: 15, title: 'РОВНЫЙ' },
+    { id: 'x58', t: 'Скрытое достижение', d: '3 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 3, pts: 2 },
+    { id: 'x59', t: 'Скрытое достижение', d: '7 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 7, pts: 6 },
+    { id: 'x60', t: 'Скрытое достижение', d: '19 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 19, pts: 15, title: 'НЕУТОМИМЫЙ' },
+    { id: 'x61', t: 'Скрытое достижение', d: '5 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 5, pts: 1 },
+    { id: 'x62', t: 'Скрытое достижение', d: '12 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 12, pts: 3 },
+    { id: 'x63', t: 'Скрытое достижение', d: '27 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 27, pts: 8 },
+    { id: 'x64', t: 'Скрытое достижение', d: '4 встреч с людьми не по работе', val: 'meets', goal: 4, pts: 3 },
+    { id: 'x65', t: 'Скрытое достижение', d: '13 встреч с людьми не по работе', val: 'meets', goal: 13, pts: 5, title: 'ДУША КОМПАНИИ' },
+    { id: 'x66', t: 'Скрытое достижение', d: '41 встреч с людьми не по работе', val: 'meets', goal: 41, pts: 15, title: 'ЛИДЕР' },
+    { id: 'x67', t: 'Скрытое достижение', d: 'Взвешиваться 5 недель', val: 'weigh', goal: 5, pts: 1 },
+    { id: 'x68', t: 'Скрытое достижение', d: 'Взвешиваться 14 недель', val: 'weigh', goal: 14, pts: 3 },
+    { id: 'x69', t: 'Скрытое достижение', d: 'Взвешиваться 31 недель', val: 'weigh', goal: 31, pts: 6 },
+    { id: 'x70', t: 'Скрытое достижение', d: '2 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 2, pts: 2 },
+    { id: 'x71', t: 'Скрытое достижение', d: '9 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 9, pts: 6 },
+    { id: 'x72', t: 'Скрытое достижение', d: '37 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 37, pts: 15, title: 'МАШИНА' },
+    { id: 'x73', t: 'Скрытое достижение', d: '12 дней, когда сделаны и подъём до 10:00, и уход за лицом, и уход за зубами', val: 'careDay', goal: 12, pts: 2 },
+    { id: 'x74', t: 'Скрытое достижение', d: '45 дней, когда сделаны и подъём до 10:00, и уход за лицом, и уход за зубами', val: 'careDay', goal: 45, pts: 6 },
+    { id: 'x75', t: 'Скрытое достижение', d: '6 дней, когда сделаны обед, готовка и еда в пределах нормы', val: 'foodDay', goal: 6, pts: 2 },
+    { id: 'x76', t: 'Скрытое достижение', d: '28 дней, когда сделаны обед, готовка и еда в пределах нормы', val: 'foodDay', goal: 28, pts: 5 },
+    { id: 'x77', t: 'Скрытое достижение', d: '89 дней, когда сделаны обед, готовка и еда в пределах нормы', val: 'foodDay', goal: 89, pts: 12 },
+    { id: 'x78', t: 'Скрытое достижение', d: '2 воскресений с идеальным днём', val: 'sunPerfect', goal: 2, pts: 2 },
+    { id: 'x79', t: 'Скрытое достижение', d: '7 воскресений с идеальным днём', val: 'sunPerfect', goal: 7, pts: 6 },
+    { id: 'x80', t: 'Скрытое достижение', d: '3 дней по 10 000 шагов и больше', val: 'days10k', goal: 3, pts: 1 },
+    { id: 'x81', t: 'Скрытое достижение', d: '17 дней по 10 000 шагов и больше', val: 'days10k', goal: 17, pts: 4 },
+    { id: 'x82', t: 'Скрытое достижение', d: '61 дней по 10 000 шагов и больше', val: 'days10k', goal: 61, pts: 10 },
+    { id: 'x83', t: 'Скрытое достижение', d: 'Кинуть в копилку 3 раз', val: 'jar', goal: 3, pts: 1 },
+    { id: 'x84', t: 'Скрытое достижение', d: 'Кинуть в копилку 8 раз', val: 'jar', goal: 8, pts: 3 },
+    { id: 'x85', t: 'Скрытое достижение', d: 'Сделать подход приседаний или отжиманий глубокой ночью', val: 'night', goal: 1, pts: 2 },
+    { id: 'x86', t: 'Скрытое достижение', d: 'Пять подходов приседаний или отжиманий глубокой ночью', val: 'night', goal: 5, pts: 4, title: 'СОВА' },
+    { id: 'x87', t: 'Скрытое достижение', d: 'Сделать подход приседаний или отжиманий рано утром', val: 'dawn', goal: 1, pts: 2 },
+    { id: 'x88', t: 'Скрытое достижение', d: 'Семь подходов приседаний или отжиманий рано утром', val: 'dawn', goal: 7, pts: 4, title: 'РАННЯЯ ПТАХА' },
+    { id: 'x89', t: 'Скрытое достижение', d: 'Записать шаги, где есть три семёрки подряд', val: 'lucky', goal: 1, pts: 3 },
+    { id: 'x90', t: 'Скрытое достижение', d: 'За один день пройти вдвое больше цели по шагам', val: 'doubleSteps', goal: 1, pts: 2 }
   ];
   function growthInfo(SI, today) {
     var out = { pts: {}, ach: {}, ups: { squat: [], pushup: [] }, st: null };
     function give(k, v) { if (v) out.pts[k] = (out.pts[k] || 0) + v; }
-    var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0 };
+    var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0,
+      sets: 0, night: 0, dawn: 0, lucky: 0, doubleSteps: 0, days10k: 0, kcalLog: 0, early: 0, cook: 0, lunch: 0, kcalOk: 0, face: 0, teeth: 0, careDay: 0, foodDay: 0, sunPerfect: 0, stepRun: 0, stepStreak: 0, jar: 0 };
+    var jarDates = {};
+    (S.jar || []).forEach(function (x) { if (x && x.date) jarDates[x.date] = (jarDates[x.date] || 0) + 1; });
     var first = START_KEY;
     Object.keys(S.days).concat(Object.keys(S.per)).forEach(function (k) { if (k < first) first = k; });
     var wkWeigh = {};
@@ -814,6 +860,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         for (var i = 0; i < Math.min(q[key].length, SQ_MAX); i++) {
           var r = repsOf(q, key, i);
           st[key === 'squat' ? 'sq' : 'pu'] += r;
+          st.sets++;
+          var hh = new Date(q[key][i]).getHours();
+          if (hh >= 23 || hh < 4) st.night++; else if (hh >= 4 && hh < 7) st.dawn++;
           var lv = skillLevel(key, st[key === 'squat' ? 'sq' : 'pu']);
           while (level[key] < lv) {
             level[key]++;
@@ -823,8 +872,25 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         }
       });
       st.reps = st.sq + st.pu;
+      var dq = day.q || [];
+      var gl = SI.goals[mondayKey(k)] || 5000;
+      if (day.steps >= 10000) st.days10k++;
+      if (day.steps >= 2 * gl) st.doubleSteps++;
+      if (day.steps > 0 && String(day.steps).indexOf('777') >= 0) st.lucky++;
+      if (day.steps >= gl) { st.stepRun++; if (st.stepRun > st.stepStreak) st.stepStreak = st.stepRun; } else st.stepRun = 0;
+      if (day.kcal > 0) st.kcalLog++;
+      if (dq[0]) st.early++;
+      if (dq[1]) st.lunch++;
+      if (dq[2]) st.kcalOk++;
+      if (dq[3]) st.cook++;
+      if (dq[4]) st.face++;
+      if (dq[5]) st.teeth++;
+      if (dq[0] && dq[4] && dq[5]) st.careDay++;
+      if (dq[1] && dq[2] && dq[3]) st.foodDay++;
+      if (jarDates[k]) st.jar += jarDates[k];
       if (q.workout.length) st.wk++;
       var perfect = dayCount(k, SI) >= QDEF.length + 1;
+      if (perfect && parseKey(k).getDay() === 0) st.sunPerfect++;
       if (perfect) { st.perf++; st.perfRun++; if (st.perfRun > st.perfBest) st.perfBest = st.perfRun; } else st.perfRun = 0;
       if (day.q && day.q[0]) { st.earlyRun++; if (st.earlyRun > st.earlyBest) st.earlyBest = st.earlyRun; } else st.earlyRun = 0;
       if (q.squat.length >= SQ_MAX && q.pushup.length >= SQ_MAX && q.workout.length) st.combo++;
@@ -1818,26 +1884,17 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], 'подход по ' + skillCap(u.lvl) * 10 + ' повторов, открыто ' + dshort(u.date), '✓', true, null, true));
       });
     });
-    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно повторов. Подсказок нет.'));
-    var open = 0, locked = [], hidden = [];
+    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно повторов.'));
+    var open = 0;
     ACH.forEach(function (A) {
       var d = lastGI.ach[A.id];
       if (d) {
         open++;
-        box.appendChild(questButton(A.t, A.d + ' · ' + dshort(d) + (A.title ? ' · титул «' + A.title + '»' : ''), '+' + A.pts, true, null, true));
-      } else if (!A.secret) locked.push(A); else hidden.push(A);
+        box.appendChild(questButton('Открыто: ' + A.d, dshort(d) + (A.title ? ' · титул «' + A.title + '»' : ''), '+' + A.pts, true, null, true));
+      }
     });
-    locked.forEach(function (A) {
-      var v = Math.min(lastGI.st[A.val] || 0, A.goal);
-      box.appendChild(questButton(A.t, A.d + ' (' + fmt(v) + ' из ' + fmt(A.goal) + ')', '+' + A.pts, false, null, true));
-    });
-    if (hidden.length) {
-      var hk = dkey(new Date()), hs = 0;
-      for (var i = 0; i < hk.length; i++) hs = (hs * 31 + hk.charCodeAt(i)) % 9973;
-      var hh = hidden[hs % hidden.length];
-      box.appendChild(questButton('???', 'Скрытые достижения ещё есть. Подсказка дня: ' + hh.h, '+?', false, null, true));
-    }
-    $('ach-h').textContent = 'ДОСТИЖЕНИЯ: ОТКРЫТО ' + open;
+    for (var qi = 0; qi < 11; qi++) box.appendChild(questButton('???', '', '+?', false, null, true));
+    $('ach-h').textContent = open ? 'ДОСТИЖЕНИЯ: ОТКРЫТО ' + open : 'ДОСТИЖЕНИЯ';
     var title = '', best = '';
     ACH.forEach(function (A) { var d = lastGI.ach[A.id]; if (A.title && d && d >= best) { best = d; title = A.title; } });
     document.querySelector('.nametag').textContent = title || 'ТЫ';
