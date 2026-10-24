@@ -39,6 +39,13 @@ body {
 h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: balance; }
 .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .top h1 { font-size: 16px; margin: 0; letter-spacing: 1px; }
+.topr { display: flex; align-items: center; gap: 8px; }
+.gear { font-family: var(--font-display); font-size: 16px; line-height: 1; width: 32px; height: 30px; padding: 0; background: var(--panel-2); color: var(--fg); border: 3px solid var(--line); cursor: pointer; }
+.setup { position: fixed; inset: 0; z-index: 28; background: rgba(10, 7, 4, .88); overflow-y: auto; padding: 12px; }
+.setup[hidden] { display: none; }
+.setup .sbox { background: var(--bg); border: 4px solid var(--line); max-width: 520px; margin: 0 auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.setup .shead { display: flex; align-items: center; justify-content: space-between; font-family: var(--font-display); font-size: 12px; }
+.setup .sbox h2 { margin: 6px 0 0; }
 .lvl { font-family: var(--font-display); font-size: 10px; background: var(--gold); color: #1a1511; padding: 6px 8px; box-shadow: 3px 3px 0 var(--gold-dark); }
 .offline { border: 3px solid var(--bad); padding: 10px 12px; color: var(--bad); }
 
@@ -325,7 +332,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 <div class="app">
   <div class="top">
     <h1>ПЛАН</h1>
-    <span class="lvl" id="lvl">УР. 1</span>
+    <span class="topr"><span class="lvl" id="lvl">УР. 1</span><button class="gear" id="gear" type="button" aria-label="Настройки">&#9881;</button></span>
   </div>
   <div class="daysw" id="pgsw" role="tablist">
     <button type="button" id="pg-btn-a" role="tab" aria-selected="true" aria-pressed="true">ИГРА</button>
@@ -407,8 +414,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
     <h2 id="ach-h">ДОСТИЖЕНИЯ</h2>
     <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
-    <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <div class="note">Все достижения скрыты, условия неизвестны и перемешаны по всему приложению. Они откроются сами, когда условие выполнится, считать ничего не нужно. Скрытых больше, чем строк со знаками вопроса. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
   </section>
 
@@ -440,15 +445,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div id="gg-list" style="display:flex;flex-direction:column;gap:10px"></div>
     <div class="row"><input id="gg-name" type="text" placeholder="Новая глобальная цель"><button class="btn go" id="gg-add" type="button">ДОБАВИТЬ</button></div>
     <div class="hint">Отмечаешь, когда цель выполнена. Не связано с деньгами.</div>
-    <h2>ЭФФЕКТЫ</h2>
-    <div class="goal">
-      <div class="row">
-        <label class="hint" style="flex:1 1 140px">Тряска<br><select id="fx-shake"><option value="off">выкл</option><option value="weak">слабая</option><option value="strong">сильная</option></select></label>
-        <label class="hint" style="flex:1 1 140px">Яркость вспышки<br><select id="fx-flash"><option value="off">выкл</option><option value="weak">слабая</option><option value="strong">сильная</option></select></label>
-      </div>
-      <button class="btn alt" type="button" id="fx-test" style="cursor:pointer">ПОКАЗАТЬ ПОВЫШЕНИЕ УРОВНЯ</button>
-      <div class="hint">Настройка хранится на этом устройстве.</div>
-    </div>
   </section>
 
   <section class="panel" id="wardrobe" data-g="a">
@@ -550,6 +546,24 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 </div>
 <div class="toast" id="toast" hidden></div>
 <div class="flash" id="flash"></div>
+<div class="setup" id="setup" hidden role="dialog" aria-modal="true" aria-label="Настройки">
+  <div class="sbox">
+    <div class="shead"><b>НАСТРОЙКИ</b><button class="gear" id="setup-x" type="button" aria-label="Закрыть">&#10005;</button></div>
+    <h2>ЭФФЕКТЫ</h2>
+    <div class="goal">
+      <div class="row">
+        <label class="hint" style="flex:1 1 140px">Тряска<br><select id="fx-shake"><option value="off">выкл</option><option value="weak">слабая</option><option value="strong">сильная</option></select></label>
+        <label class="hint" style="flex:1 1 140px">Яркость вспышки<br><select id="fx-flash"><option value="off">выкл</option><option value="weak">слабая</option><option value="strong">сильная</option></select></label>
+        <label class="hint" style="flex:1 1 140px">Звук<br><select id="fx-sound"><option value="on">включён</option><option value="off">выкл</option></select></label>
+      </div>
+      <button class="btn alt" type="button" id="fx-test" style="cursor:pointer">ПОКАЗАТЬ ПОВЫШЕНИЕ УРОВНЯ</button>
+      <div class="hint">Настройки эффектов хранятся на этом устройстве.</div>
+    </div>
+    <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
+    <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
+    <div class="hint" id="look-none">Оформление появится, когда что-то откроется.</div>
+  </div>
+</div>
 <div class="lvup" id="lvup" hidden role="dialog" aria-modal="true" aria-label="Новый уровень">
   <div class="lbox">
     <div class="lbig" id="lv-big"></div>
@@ -1201,6 +1215,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     sn_bell: { type: 'triangle', vol: 0.1, tap: [1175], ach: [784, 1175, 1568], lvl: [523, 784, 1047, 1319, 1568] }
   };
   function playSnd(ev, forceId) {
+    if (FX.sound === 'off' && !forceId) return;
     var id = forceId || lookId('snd'), p = SND[id];
     if (!p) return;
     p[ev].forEach(function (f, i) { tone(f, ev === 'tap' ? 0 : i * 0.11, ev === 'tap' ? 0.09 : 0.24, p.type, p.vol); });
@@ -1237,6 +1252,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var tl = titleList();
     if (tl.length) any = true;
     $('look-h').hidden = !any;
+    if ($('look-none')) $('look-none').hidden = any;
     if (!any) return;
     var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
     if (tl.length) {
@@ -1492,10 +1508,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 
   // ---- render -------------------------------------------------------
   var fx = null, lastL = null, lastP = null, lvlSeen = null;
-  var FX = { shake: 'weak', flash: 'weak' };
+  var FX = { shake: 'weak', flash: 'weak', sound: 'on' };
   try {
     var fs = JSON.parse(localStorage.getItem('fxset') || 'null');
-    if (fs) { FX.shake = fs.shake || FX.shake; FX.flash = fs.flash || FX.flash; }
+    if (fs) { FX.shake = fs.shake || FX.shake; FX.flash = fs.flash || FX.flash; FX.sound = fs.sound || FX.sound; }
     else if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { FX.shake = 'off'; FX.flash = 'off'; }
   } catch (e) {}
   function saveFx() { try { localStorage.setItem('fxset', JSON.stringify(FX)); } catch (e) {} }
@@ -2461,6 +2477,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   $('fx-shake').value = FX.shake;
   $('fx-flash').value = FX.flash;
   $('fx-shake').addEventListener('change', function () { FX.shake = $('fx-shake').value; saveFx(); });
+  $('fx-sound').value = FX.sound;
+  $('fx-sound').addEventListener('change', function () { FX.sound = $('fx-sound').value; saveFx(); });
+  $('gear').addEventListener('click', function () { $('setup').hidden = false; });
+  $('setup-x').addEventListener('click', function () { $('setup').hidden = true; });
+  $('setup').addEventListener('click', function (e) { if (e.target === $('setup')) $('setup').hidden = true; });
   $('fx-flash').addEventListener('change', function () { FX.flash = $('fx-flash').value; saveFx(); });
   $('fx-test').addEventListener('click', function () {
     var pi = loaded ? pointsInfo() : { L: 1, avail: 0 };
