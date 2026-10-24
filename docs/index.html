@@ -62,7 +62,7 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .wopen { position: absolute; left: 12px; top: 12px; z-index: 3; font-family: var(--font-display); font-size: 9px; background: var(--panel); color: var(--fg); border: 3px solid var(--line); padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .wopen:hover { border-color: var(--gold); }
 .wopen:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
-.nametag { position: absolute; left: 12px; bottom: 12px; font-family: var(--font-display); font-size: 9px; background: var(--panel); border: 3px solid var(--line); padding: 6px 8px; z-index: 2; }
+.nametag { max-width: 62%; line-height: 1.3; position: absolute; left: 12px; bottom: 12px; font-family: var(--font-display); font-size: 9px; background: var(--panel); border: 3px solid var(--line); padding: 6px 8px; z-index: 2; }
 
 .points { background: var(--panel); border: 4px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .points-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -1009,17 +1009,17 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   var RAIN_L = 69;
   // суперредкие: ev = по событию в приложении (журнал cfg/rare), slot = открывается после N обычных достижений
   var LEG = [
-    { id: 'z01', ev: 1, d: 'Открыть приложение ровно в 11:11, 12:34 или 22:22', pts: 12, cos: 'b_space' },
-    { id: 'z02', ev: 1, d: 'Быстро нажать на персонажа 15 раз подряд', pts: 10, cos: 'b_winter' },
-    { id: 'z03', val: 'exact', goal: 1, d: 'Записать шаги ровно в размер цели', pts: 12, cos: 'p_breath' },
-    { id: 'z04', val: 'eqDate', goal: 1, d: 'Идеальный день в дату, где число совпадает с месяцем (11.11, 12.12…)', pts: 15, cos: 'b_city' },
-    { id: 'z05', val: 'maxDayReps', goal: 130, d: '130 повторов приседаний и отжиманий за один день', pts: 12, cos: 'p_day' },
-    { id: 'z06', val: 'friBest', goal: 3, d: 'Три идеальные пятницы подряд', pts: 15, cos: 'b_dawn' },
-    { id: 'z07', slot: 4, val: 'perfBest', goal: 21, d: '21 идеальный день подряд', pts: 25, cos: 'p_rainbow' },
-    { id: 'z08', slot: 9, val: 'perfCombo', goal: 1, d: 'Идеальный день, в который ещё и тройной удар', pts: 18, cos: 'b_library' },
-    { id: 'z09', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2200 ккал', pts: 20, cos: 'b_aurora' },
-    { id: 'z10', slot: 20, val: 'stepStreak', goal: 60, d: '60 дней подряд с выполненной целью по шагам', pts: 25, cos: 'au_flame' },
-    { id: 'z11', slot: 27, val: 'meetBest', goal: 4, d: 'Встреча с людьми четыре недели подряд', pts: 18, cos: 'fr_rgb' }
+    { id: 'z01', title: 'ЧАСОВЩИК', ev: 1, d: 'Открыть приложение ровно в 11:11, 12:34 или 22:22', pts: 12, cos: 'b_space' },
+    { id: 'z02', title: 'КЛИКЕР', ev: 1, d: 'Быстро нажать на персонажа 15 раз подряд', pts: 10, cos: 'b_winter' },
+    { id: 'z03', title: 'СНАЙПЕР', val: 'exact', goal: 1, d: 'Записать шаги ровно в размер цели', pts: 12, cos: 'p_breath' },
+    { id: 'z04', title: 'ДВОЙНИК', val: 'eqDate', goal: 1, d: 'Идеальный день в дату, где число совпадает с месяцем (11.11, 12.12…)', pts: 15, cos: 'b_city' },
+    { id: 'z05', title: 'ПЕРЕГРУЗКА', val: 'maxDayReps', goal: 130, d: '130 повторов приседаний и отжиманий за один день', pts: 12, cos: 'p_day' },
+    { id: 'z06', title: 'ПЯТНИЧНЫЙ БОГ', val: 'friBest', goal: 3, d: 'Три идеальные пятницы подряд', pts: 15, cos: 'b_dawn' },
+    { id: 'z07', title: 'НЕПОБЕДИМЫЙ', slot: 4, val: 'perfBest', goal: 21, d: '21 идеальный день подряд', pts: 25, cos: 'p_rainbow' },
+    { id: 'z08', title: 'ТРОЙНАЯ УГРОЗА', slot: 9, val: 'perfCombo', goal: 1, d: 'Идеальный день, в который ещё и тройной удар', pts: 18, cos: 'b_library' },
+    { id: 'z09', title: 'ЖЕЛЕЗНЫЙ РЕЖИМ', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2200 ккал', pts: 20, cos: 'b_aurora' },
+    { id: 'z10', title: 'МАРАФОНЕЦ', slot: 20, val: 'stepStreak', goal: 60, d: '60 дней подряд с выполненной целью по шагам', pts: 25, cos: 'au_flame' },
+    { id: 'z11', title: 'СОЦИАЛЬНЫЙ ГИГАНТ', slot: 27, val: 'meetBest', goal: 4, d: 'Встреча с людьми четыре недели подряд', pts: 18, cos: 'fr_rgb' }
   ];
   function cosOf(id) {
     if (ACH_COS[id]) return ACH_COS[id];
@@ -1211,8 +1211,22 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     nx[cat] = id || '';
     S.look = nx;
     try { localStorage.setItem('look', JSON.stringify(nx)); } catch (e) {}
-    applyLook(); renderLook();
+    applyLook(); updateNameTag(); renderLook();
     enqueue(function () { return db.doc('cfg/look').set(nx); });
+  }
+  function titleList() {
+    var out = [];
+    if (!lastGI) return out;
+    LEG.concat(ACH).forEach(function (A) { var d = lastGI.ach[A.id]; if (A.title && d) out.push({ id: A.id, title: A.title, date: d }); });
+    out.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    return out;
+  }
+  function updateNameTag() {
+    var nt = document.querySelector('.nametag'), list = titleList(), look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {}), t = '', i;
+    if (!nt) return;
+    for (i = 0; i < list.length; i++) if (list[i].id === look.title) t = list[i].title;
+    if (!t && list.length) t = list[list.length - 1].title;
+    nt.textContent = t || 'ТЫ';
   }
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
@@ -1220,9 +1234,26 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     clear(box);
     var any = false;
     if (un) Object.keys(un).forEach(function () { any = true; });
+    var tl = titleList();
+    if (tl.length) any = true;
     $('look-h').hidden = !any;
     if (!any) return;
     var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
+    if (tl.length) {
+      var tsec = el('div', 'looksec'); tsec.appendChild(el('b', null, 'ТИТУЛ'));
+      var tch = el('div', 'chips'), cur = '';
+      tl.forEach(function (x) { if (x.id === look.title) cur = x.id; });
+      function tchip(id, label) {
+        var b = el('button', 'chip'); b.type = 'button';
+        b.setAttribute('aria-pressed', (cur || '') === id ? 'true' : 'false');
+        b.appendChild(document.createTextNode(label));
+        b.addEventListener('click', function () { setLook('title', id); });
+        tch.appendChild(b);
+      }
+      tchip('', 'ПОСЛЕДНИЙ');
+      tl.forEach(function (x) { tchip(x.id, x.title); });
+      tsec.appendChild(tch); box.appendChild(tsec);
+    }
     COS_CATS.forEach(function (c) {
       var ids = Object.keys(COS).filter(function (id) { return COS[id].cat === c.k && un[id]; });
       if (!ids.length) return;
@@ -2287,7 +2318,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     ACH.forEach(function (A) { if (lastGI.ach[A.id]) ev.push({ id: 'a:' + A.id, date: lastGI.ach[A.id], kind: 'ДОСТИЖЕНИЕ', big: A.t, text: A.d + '. ' + rewardText(A.id, A.pts, A.title) }); });
     LEG.forEach(function (G) {
       if (lastGI.slots[G.id] && !G.ev) ev.push({ id: 'sl:' + G.id, date: lastGI.slots[G.id], kind: 'ЧТО-ТО РЕДКОЕ', big: 'Появилась цель', text: G.d + '. Награда секретная.' });
-      if (lastGI.ach[G.id]) ev.push({ id: 'g:' + G.id, date: lastGI.ach[G.id], kind: 'СУПЕРРЕДКОЕ ДОСТИЖЕНИЕ', big: 'Редкая находка', text: G.d + '. ' + rewardText(G.id, G.pts, null) });
+      if (lastGI.ach[G.id]) ev.push({ id: 'g:' + G.id, date: lastGI.ach[G.id], kind: 'СУПЕРРЕДКОЕ ДОСТИЖЕНИЕ', big: 'Редкая находка', text: G.d + '. ' + rewardText(G.id, G.pts, G.title) });
     });
     SK_KEYS.forEach(function (key) {
       lastGI.ups[key].forEach(function (u) {
@@ -2341,7 +2372,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var open = 0;
     LEG.forEach(function (G) {
       var d = lastGI.ach[G.id], cc = G.cos;
-      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : ''), '+' + G.pts, true, null, true)); }
+      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : ''), '+' + G.pts, true, null, true)); }
       else if (lastGI.slots[G.id] && !G.ev) {
         var v = Math.min(lastGI.st[G.val] || 0, G.goal);
         box.appendChild(questButton('Суперредкая цель: ' + G.d, (G.goal > 1 ? fmt(v) + ' из ' + fmt(G.goal) : 'ещё не выполнено') + ' · награда секретная', '+?', false, null, true));
@@ -2357,9 +2388,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     });
     for (var qi = 0; qi < 11; qi++) box.appendChild(questButton('???', '', '+?', false, null, true));
     $('ach-h').textContent = open ? 'ДОСТИЖЕНИЯ: ОТКРЫТО ' + open : 'ДОСТИЖЕНИЯ';
-    var title = '', best = '';
-    ACH.forEach(function (A) { var d = lastGI.ach[A.id]; if (A.title && d && d >= best) { best = d; title = A.title; } });
-    document.querySelector('.nametag').textContent = title || 'ТЫ';
+    updateNameTag();
     renderLook();
   }
   function renderAll() {
