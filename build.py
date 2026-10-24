@@ -9,6 +9,7 @@ os.makedirs(DIST)
 
 # --- index.html
 g = open(f'{SRC}/game.html', encoding='utf-8').read()
+g = g.replace('__BUILD__', hashlib.sha256((g + open(f'{SRC}/localdb.js', encoding='utf-8').read()).encode()).hexdigest()[:6])
 i = g.index('</style>') + len('</style>')
 head_part, body_part = g[:i], g[i:]
 head_part = head_part.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '')
