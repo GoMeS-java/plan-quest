@@ -690,10 +690,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   function need(L) { return 40 + 20 * (L - 1); }
   function fmtP(x) { return String(Math.round(x * 10) / 10).replace('.', ','); }
   function addDays(k, n) { var d = parseKey(k); d.setDate(d.getDate() + n); return dkey(d); }
-  function perDay(k) { var q = S.per[k] || {}; return { squat: q.squat || [], workout: q.workout || [] }; }
+  function perDay(k) { var q = S.per[k] || {}; return { squat: q.squat || [], pushup: q.pushup || [], workout: q.workout || [] }; }
   function periodicGain(k) {
     var q = perDay(k), g = 0, i;
     for (i = 0; i < Math.min(q.squat.length, SQ_MAX); i++) g += SQ_REW[i];
+    for (i = 0; i < Math.min(q.pushup.length, SQ_MAX); i++) g += SQ_REW[i];
     if (q.workout.length) g += 1;
     return g;
   }
@@ -961,23 +962,29 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var box = $('plist');
     clear(box);
     var k = dkey(new Date()), q = perDay(k);
-    var c = Math.min(q.squat.length, SQ_MAX);
-    var last = q.squat.length ? q.squat[q.squat.length - 1] : 0;
-    var wait = last + SQ_GAP - Date.now();
-    var sub, pts, pressed = false, click = null, timer = false;
-    if (c >= SQ_MAX) { sub = 'на сегодня всё, 3 из 3'; pts = '✓'; pressed = true; }
-    else if (wait > 0) { sub = 'сегодня ' + c + ' из 3. Следующий через ' + remaining(wait); pts = '+' + fmtP(SQ_REW[c]); pressed = true; timer = true; }
-    else { sub = 'сегодня ' + c + ' из 3'; pts = '+' + fmtP(SQ_REW[c]); click = doSquat; }
-    var btn = questButton('10 приседаний', sub, pts, pressed, click, !click);
-    if (timer) btn.setAttribute('data-ptimer', String(last + SQ_GAP));
-    if (fresh(fx) && fx.sq && fx.n === q.squat.length) { btn.classList.add('just'); flyCoin(btn.querySelector('.box')); fx = null; }
-    box.appendChild(btn);
-    if (q.squat.length) {
-      var u = el('button', 'linkbtn', 'Отменить последнее выполнение приседаний');
-      u.type = 'button';
-      u.addEventListener('click', undoSquat);
-      box.appendChild(u);
-    }
+    [
+      { key: 'squat', title: '10 приседаний', act: doSquat, undo: undoSquat, undoText: 'Отменить последнее выполнение приседаний' },
+      { key: 'pushup', title: '10 отжиманий на коленях', act: doPushup, undo: undoPushup, undoText: 'Отменить последнее выполнение отжиманий' }
+    ].forEach(function (ex) {
+      var arrE = q[ex.key];
+      var c = Math.min(arrE.length, SQ_MAX);
+      var last = arrE.length ? arrE[arrE.length - 1] : 0;
+      var wait = last + SQ_GAP - Date.now();
+      var sub, pts, pressed = false, click = null, timer = false;
+      if (c >= SQ_MAX) { sub = 'на сегодня всё, 3 из 3'; pts = '✓'; pressed = true; }
+      else if (wait > 0) { sub = 'сегодня ' + c + ' из 3. Следующий через ' + remaining(wait); pts = '+' + fmtP(SQ_REW[c]); pressed = true; timer = true; }
+      else { sub = 'сегодня ' + c + ' из 3'; pts = '+' + fmtP(SQ_REW[c]); click = ex.act; }
+      var btn = questButton(ex.title, sub, pts, pressed, click, !click);
+      if (timer) { btn.setAttribute('data-ptimer', String(last + SQ_GAP)); btn.setAttribute('data-pkey', ex.key); }
+      if (fresh(fx) && fx.sq === ex.key && fx.n === arrE.length) { btn.classList.add('just'); flyCoin(btn.querySelector('.box')); fx = null; }
+      box.appendChild(btn);
+      if (arrE.length) {
+        var u = el('button', 'linkbtn', ex.undoText);
+        u.type = 'button';
+        u.addEventListener('click', ex.undo);
+        box.appendChild(u);
+      }
+    });
     box.appendChild(questButton('Тренировка', 'отмечается по скриншоту из приложения', '+1', q.workout.length > 0, null, true));
   }
   function renderWeek() {
@@ -1632,23 +1639,31 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (q[i]) fx = { q: i, k: k, t: Date.now() };
     enqueue(function () { return db.doc('days/' + k).set({ q: q, kcal: cur.kcal == null ? null : cur.kcal, steps: cur.steps == null ? null : cur.steps }); });
   }
-  function doSquat() {
+  function doExercise(key) {
     if (!db) return;
-    var k = dkey(new Date()), q = perDay(k);
-    if (q.squat.length >= SQ_MAX) return;
-    var last = q.squat.length ? q.squat[q.squat.length - 1] : 0;
+    var k = dkey(new Date()), q = perDay(k), cur = q[key];
+    if (cur.length >= SQ_MAX) return;
+    var last = cur.length ? cur[cur.length - 1] : 0;
     if (last + SQ_GAP > Date.now()) return;
-    var arr = q.squat.concat([Date.now()]);
-    fx = { sq: true, n: arr.length, t: Date.now() };
-    enqueue(function () { return db.doc('per/' + k).set({ squat: arr, workout: q.workout }); });
+    var arr = cur.concat([Date.now()]);
+    fx = { sq: key, n: arr.length, t: Date.now() };
+    saveExercise(k, q, key, arr);
   }
-  function undoSquat() {
+  function undoExercise(key) {
     if (!db) return;
     var k = dkey(new Date()), q = perDay(k);
-    if (!q.squat.length) return;
-    var arr = q.squat.slice(0, -1);
-    enqueue(function () { return db.doc('per/' + k).set({ squat: arr, workout: q.workout }); });
+    if (!q[key].length) return;
+    saveExercise(k, q, key, q[key].slice(0, -1));
   }
+  function saveExercise(k, q, key, arr) {
+    var doc = { squat: q.squat, pushup: q.pushup, workout: q.workout };
+    doc[key] = arr;
+    enqueue(function () { return db.doc('per/' + k).set(doc); });
+  }
+  function doSquat() { doExercise('squat'); }
+  function undoSquat() { undoExercise('squat'); }
+  function doPushup() { doExercise('pushup'); }
+  function undoPushup() { undoExercise('pushup'); }
   $('d-today').addEventListener('click', function () { viewBack = 0; renderToday(); });
   $('d-yest').addEventListener('click', function () { viewBack = 1; renderToday(); });
   $('fx-shake').value = FX.shake;
@@ -1885,14 +1900,16 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     else renderShop();
   }, 1000);
   setInterval(function () {
-    var t = document.querySelector('[data-ptimer]');
-    if (!t) return;
-    var wait = Number(t.getAttribute('data-ptimer')) - Date.now();
-    if (wait > 0) {
-      var sp = t.querySelector('.t span');
-      var c = Math.min(perDay(dkey(new Date())).squat.length, SQ_MAX);
-      if (sp) sp.textContent = 'сегодня ' + c + ' из 3. Следующий через ' + remaining(wait);
-    } else renderPeriodic();
+    var ts = document.querySelectorAll('[data-ptimer]');
+    for (var ti = 0; ti < ts.length; ti++) {
+      var t = ts[ti];
+      var wait = Number(t.getAttribute('data-ptimer')) - Date.now();
+      if (wait > 0) {
+        var sp = t.querySelector('.t span');
+        var c = Math.min(perDay(dkey(new Date()))[t.getAttribute('data-pkey') || 'squat'].length, SQ_MAX);
+        if (sp) sp.textContent = 'сегодня ' + c + ' из 3. Следующий через ' + remaining(wait);
+      } else { renderPeriodic(); break; }
+    }
   }, 1000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) renderAll(); });
 })();
