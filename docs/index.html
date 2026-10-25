@@ -58,11 +58,6 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .window::after { top: 50%; left: 0; right: 0; height: 4px; margin-top: -2px; }
 .moon { position: absolute; top: 12px; left: 12px; width: 14px; height: 14px; background: #f1e7c7; box-shadow: 4px 0 0 #f1e7c7, -4px 0 0 #f1e7c7, 0 4px 0 #f1e7c7, 0 -4px 0 #f1e7c7; z-index: 1; }
 .star { position: absolute; width: 4px; height: 4px; background: #cfd7ee; z-index: 1; }
-.shelf { position: absolute; left: 20px; top: 70px; width: 84px; height: 8px; background: #6a5640; }
-.shelf i { position: absolute; bottom: 8px; width: 14px; background: var(--gold); }
-.shelf i:nth-child(1) { left: 8px; height: 18px; }
-.shelf i:nth-child(2) { left: 28px; height: 26px; background: #7a9a6a; }
-.shelf i:nth-child(3) { left: 50px; height: 14px; background: #b5675a; }
 .hero { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); }
 .hero canvas { display: block; width: 192px; height: 312px; image-rendering: pixelated; animation: bob 1.6s steps(1) infinite; }
 .hero-shadow { position: absolute; left: 50%; bottom: 10px; width: 150px; height: 14px; transform: translateX(-50%); background: rgba(0,0,0,.35); }
@@ -82,8 +77,39 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .bar i.on { background: var(--gold); box-shadow: inset 0 -4px 0 var(--gold-dark); }
 
 
+
+/* ---- комната: постер, стеллаж, стол ---- */
+.poster { position: absolute; left: 14px; top: 52px; width: 40px; height: 58px; background: #15171c; padding: 3px; z-index: 0; }
+.poster i { display: block; width: 100%; height: 100%; background: linear-gradient(#5f9bd6 0 55%, #3f7bb5 55% 70%, #2c4f6b 70%); position: relative; }
+.poster i::before { content: ""; position: absolute; left: 4px; top: 7px; width: 14px; height: 4px; background: #e7f2fb; box-shadow: 8px 6px 0 #dcebf7, -2px 12px 0 #cfe3f3; }
+.cube { position: absolute; left: 10px; bottom: 76px; width: 86px; height: 78px; background: #eceae3; box-shadow: inset -3px -3px 0 #c9c5ba; padding: 3px; z-index: 0; }
+.cube u { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 3px; width: 100%; height: 100%; text-decoration: none; }
+.cube u i { background: #bdb7a8; box-shadow: inset 2px 2px 0 rgba(0,0,0,.18); position: relative; overflow: hidden; }
+.cube u i::after { content: ""; position: absolute; bottom: 2px; left: 4px; width: 14px; height: 7px; }
+.cube u i:nth-child(1)::after { background: #6a4aa8; box-shadow: 14px 0 0 #3a3250, 6px -5px 0 #5a3a98; }
+.cube u i:nth-child(2)::after { background: #cfd3d8; width: 16px; box-shadow: 8px -3px 0 #8a7ab8; }
+.cube u i:nth-child(3)::after { background: #6b5a7a; width: 18px; box-shadow: 8px 0 0 #3b3550; }
+.cube u i:nth-child(4)::after { background: #1b1b20; width: 20px; height: 9px; box-shadow: 10px -4px 0 #8a2a3a; }
+.cube u i:nth-child(5)::after { background: #4a4a52; width: 12px; height: 12px; box-shadow: 14px 0 0 #e8e5dc; }
+.cube u i:nth-child(6)::after { background: #b8323c; width: 22px; height: 10px; box-shadow: 8px -4px 0 #c9a04a; }
+.cube-top { position: absolute; left: 6px; bottom: 100%; width: 40px; height: 20px; }
+.cube-top::before { content: ""; position: absolute; left: 0; bottom: 0; width: 8px; height: 17px; background: #5a8a9a; box-shadow: 11px 3px 0 #b03030, 21px 0 0 #c8a050, 21px 10px 0 #c8a050, 31px 2px 0 #2f3550; }
+.desk { position: absolute; right: 2px; bottom: 76px; width: 108px; height: 54px; z-index: 0; }
+.dtop { position: absolute; left: 0; right: 0; top: 0; height: 8px; background: #34343f; border-bottom: 3px solid #d03a46; }
+.dleg { position: absolute; top: 7px; bottom: 0; width: 5px; background: #18181d; }
+.dleg.l1 { left: 4px; } .dleg.l2 { right: 4px; }
+.pc { position: absolute; right: 10px; bottom: 0; width: 22px; height: 40px; background: #121218; box-shadow: inset 0 0 0 2px #25252e; }
+.pc::before { content: ""; position: absolute; left: 3px; top: 4px; width: 16px; height: 20px; background: linear-gradient(#1b2840, #101827); }
+.pc::after { content: ""; position: absolute; left: 9px; bottom: 6px; width: 4px; height: 4px; background: #4ac7ff; box-shadow: 0 0 6px #4ac7ff; }
+.mon { position: absolute; bottom: 100%; margin-bottom: -8px; background: #0b0b10; border: 2px solid #3d3d4a; box-shadow: inset 0 0 0 1px #000; }
+.mon::before { content: ""; position: absolute; inset: 2px; background: linear-gradient(135deg, #172033, #0d1220 60%, #1a2540); }
+.mon::after { content: ""; position: absolute; left: 50%; top: 100%; width: 6px; height: 7px; margin-left: -3px; background: #25252e; }
+.m1 { left: 2px; width: 46px; height: 30px; }
+.m2 { left: 54px; width: 50px; height: 36px; }
+.kb { position: absolute; left: 34px; top: -4px; width: 30px; height: 4px; background: #2d2d36; box-shadow: 0 -1px 0 #4a4a58; }
+.can { position: absolute; left: 94px; top: -10px; width: 8px; height: 10px; background: #d0402a; box-shadow: inset 0 3px 0 #8a1f12; }
 /* ---- песочные часы: время до цели ---- */
-.hg { position: absolute; left: 34px; top: 112px; width: 40px; z-index: 1; display: flex; flex-direction: column; align-items: center; --f: 0; }
+.hg { position: absolute; left: 44px; bottom: 156px; width: 40px; z-index: 1; display: flex; flex-direction: column; align-items: center; --f: 0; transform: scale(.78); transform-origin: bottom center; }
 .hg-cap { display: block; width: 40px; height: 5px; background: #6a5640; box-shadow: inset 0 -2px 0 rgba(0,0,0,.35); }
 .hg-top, .hg-bot { display: block; width: 32px; height: 28px; background: rgba(190,225,255,.16); position: relative; }
 .hg-top { clip-path: polygon(0 0, 100% 0, 56% 100%, 44% 100%); background: linear-gradient(to top, #e8b13c var(--t, 90%), rgba(190,225,255,.16) var(--t, 90%)); }
@@ -91,7 +117,7 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .hg-str { display: block; width: 2px; height: 0; background: repeating-linear-gradient(#e8b13c 0 2px, transparent 2px 4px); position: absolute; top: 33px; left: 50%; margin-left: -1px; }
 .hg.run .hg-str { height: 26px; animation: sandfall .5s linear infinite; }
 @keyframes sandfall { to { background-position: 0 4px; } }
-.hg-d { margin-top: 3px; font-family: var(--font-display); font-size: 8px; color: var(--hg-c, #86c05e); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+.hg-d { order: -1; margin-bottom: 3px; font-family: var(--font-display); font-size: 8px; color: var(--hg-c, #86c05e); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
 #ac-text { white-space: pre-line; }
 /* ---- оформление: награды за достижения ---- */
 .coin[data-skin="round"], :root[data-coin="round"] .coin, :root[data-coin="round"] .fly { border-radius: 50%; }
@@ -391,7 +417,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   <div class="page" id="pg-a">
   <div class="stage" aria-label="Твой пиксельный персонаж в комнате">
     <div class="window"><div class="moon"></div><span class="star" style="top:60px;left:60px"></span><span class="star" style="top:20px;right:14px"></span><span class="star" style="top:84px;left:16px"></span></div>
-    <div class="shelf"><i></i><i></i><i></i></div>
+    <div class="poster"><i></i></div>
+    <div class="cube"><b class="cube-top"></b><u><i></i><i></i><i></i><i></i><i></i><i></i></u></div>
+    <div class="desk"><b class="dtop"></b><b class="dleg l1"></b><b class="dleg l2"></b><b class="pc"></b><b class="mon m1"></b><b class="mon m2"></b><b class="kb"></b><b class="can"></b></div>
     <div class="hg" id="hg" role="img" aria-label="Песочные часы: время до цели"><b class="hg-cap"></b><i class="hg-top"></i><i class="hg-str"></i><i class="hg-bot"></i><b class="hg-cap"></b><span class="hg-d" id="hg-d"></span></div>
     <div class="hero-shadow"></div>
     <div class="hero"><canvas id="hero" width="32" height="52"></canvas></div>
@@ -645,9 +673,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.29</h2>
-    <div class="hint">Сборка 2936a7</div>
+    <h2>ВЕРСИЯ 0.30</h2>
+    <div class="hint">Сборка f09cc8</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.30</b> · 26.10 · В комнате стол с двумя мониторами и компьютером, стеллаж с песочными часами, постер</div>
       <div class="hint"><b>0.29</b> · 26.10 · Навыки теперь улучшают прокачку: сложные нормы за больше очков, тяжёлые спонтанные дела</div>
       <div class="hint"><b>0.28</b> · 26.10 · Песочные часы на стене, недельная сводка по средам</div>
       <div class="hint"><b>0.27</b> · 26.10 · Кубок: навыки и достижения отдельно, калории перенесены в «Сегодня»</div>
@@ -699,7 +728,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.29";
+<script>window.APP_VERSION = "0.30";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
