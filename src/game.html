@@ -388,6 +388,13 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <div id="plist" style="display:flex;flex-direction:column;gap:10px"></div>
       <div class="hint">Штрафа за них нет. Приседания и отжимания: 3 подхода в день с паузой 2 часа, награда растёт с каждым подходом. Тренировка: раз в день, отмечается по скриншоту из приложения.</div>
     </div>
+    <div id="ssec">
+      <h2>СПОНТАННЫЕ</h2>
+      <div id="slist2" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div id="spresets" class="hint"></div>
+      <div class="row"><input id="sp-name" type="text" placeholder="Что сделать: уборка, посуда…"><button class="btn go" id="sp-add" type="button">ДОБАВИТЬ</button></div>
+      <div class="hint" id="sp-hint"></div>
+    </div>
     <h2>ПОСЛЕДНИЕ 14 ДНЕЙ</h2>
     <div class="strip" id="strip" aria-hidden="true"></div>
     <div class="hint">Чем зеленее клетка, тем больше квестов закрыто в тот день.</div>
@@ -590,6 +597,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.22</b> · 26.10 · Спонтанные квесты на вкладке «Сегодня», новые скрытые навыки</div>
       <div class="hint"><b>0.21</b> · 26.10 · Новые ежедневные квесты (душ, английский), недельный английский, весь прогресс целей во вкладке «Цели»</div>
       <div class="hint"><b>0.20</b> · 26.10 · Недельный квест про встречи убран</div>
       <div class="hint"><b>0.19</b> · 25.10 · Строки долгов и Авито переносятся нормально</div>
@@ -884,8 +892,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   }
 
   // ---- state --------------------------------------------------------
-  var S = { rare: {}, look: null, opening: null, wardrobe: [], outfit: null, tx: [], items: [], avito: [], jar: [], days: {}, per: {}, weeks: {}, weights: [], buys: [], cart: null };
-  var db = null, loaded = false, pending = 16;
+  var S = { rare: {}, look: null, opening: null, wardrobe: [], outfit: null, tx: [], items: [], avito: [], jar: [], days: {}, per: {}, weeks: {}, weights: [], buys: [], cart: null, spont: [] };
+  var db = null, loaded = false, pending = 17;
   var chain = Promise.resolve();
   function enqueue(fn) {
     chain = chain.then(fn).catch(dbErr);
@@ -931,6 +939,22 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     pushup: { name: 'Отжимания на коленях', what: 'отжиманий на коленях', th: [73, 264, 641, 1520, 3180, 6870, 13950, 28300, 52700, 91200] }
   };
   var SK_KEYS = ['squat', 'pushup'];
+  var PSK = [
+    { key: 'p_steps', name: 'Выносливость', val: 'steps', th: [40000, 120000, 300000, 650000, 1200000] },
+    { key: 'p_eng', name: 'Язык', val: 'eng', th: [7, 21, 50, 100, 180] },
+    { key: 'p_cook', name: 'Кулинария', val: 'cook', th: [5, 17, 40, 80, 150] },
+    { key: 'p_care', name: 'Самоуход', val: 'careAll', th: [30, 90, 200, 400, 800] },
+    { key: 'p_food', name: 'Дисциплина питания', val: 'kcalOk', th: [6, 20, 45, 90, 160] },
+    { key: 'p_home', name: 'Хозяйство', val: 'spont', th: [5, 15, 35, 70, 130] }
+  ];
+  var PSK_BONUS = [0, 1, 2, 3, 5, 8];
+  var SPONT_MAX = 3;
+  function spontByDate() {
+    var m = {};
+    S.spont.forEach(function (x) { if (x.done && x.date) m[x.date] = (m[x.date] || 0) + 1; });
+    Object.keys(m).forEach(function (k) { m[k] = Math.min(SPONT_MAX, m[k]); });
+    return m;
+  }
   var SK_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
   var SK_BONUS = [0, 1, 2, 3, 5, 6, 8, 10, 15, 20, 30];
   var SK_SETREW = [[0.5, 0.5, 1], [1, 1, 1], [1, 1.5, 1.5], [1.5, 1.5, 1.5], [2, 1.5, 1.5], [2, 2, 1.5], [2, 2, 2], [2.5, 2, 2], [2.5, 2.5, 2], [2.5, 2.5, 2.5]];
@@ -1385,11 +1409,13 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   }
   function dq0(day) { return !!(day.q && day.q[2]); }
   function growthInfo(SI, today) {
-    var out = { slots: {}, pts: {}, ach: {}, ups: { squat: [], pushup: [] }, st: null };
+    var out = { slots: {}, pts: {}, ach: {}, ups: { squat: [], pushup: [] }, pups: {}, st: null };
+    var spD = spontByDate(), plevel = {};
+    PSK.forEach(function (P) { out.pups[P.key] = []; plevel[P.key] = 1; });
     function give(k, v) { if (v) out.pts[k] = (out.pts[k] || 0) + v; }
     var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0,
       exact: 0, eqDate: 0, maxDayReps: 0, friRun: 0, friBest: 0, perfCombo: 0, kcalOkRun: 0, kcalOkBest: 0, meetRun: 0, meetBest: 0,
-      sets: 0, night: 0, dawn: 0, lucky: 0, doubleSteps: 0, days10k: 0, kcalLog: 0, early: 0, cook: 0, lunch: 0, kcalOk: 0, face: 0, teeth: 0, careDay: 0, foodDay: 0, shower: 0, eng: 0, engRun: 0, engBest: 0, sunPerfect: 0, stepRun: 0, stepStreak: 0, jar: 0 };
+      sets: 0, night: 0, dawn: 0, lucky: 0, doubleSteps: 0, days10k: 0, kcalLog: 0, early: 0, cook: 0, lunch: 0, kcalOk: 0, face: 0, teeth: 0, careDay: 0, foodDay: 0, shower: 0, eng: 0, engRun: 0, engBest: 0, careAll: 0, spont: 0, sunPerfect: 0, stepRun: 0, stepStreak: 0, jar: 0 };
     var jarDates = {};
     (S.jar || []).forEach(function (x) { if (x && x.date) jarDates[x.date] = (jarDates[x.date] || 0) + 1; });
     var first = START_KEY;
@@ -1440,9 +1466,20 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (dq[0] && dq[4] && dq[5]) st.careDay++;
       if (dq[2] && dq[3]) st.foodDay++;
       if (dq[6]) st.shower++;
+      st.careAll += (dq[4] ? 1 : 0) + (dq[5] ? 1 : 0) + (dq[6] ? 1 : 0);
+      st.spont += spD[k] || 0;
       if (dq[7]) { st.eng++; st.engRun++; if (st.engRun > st.engBest) st.engBest = st.engRun; } else st.engRun = 0;
       if (jarDates[k]) st.jar += jarDates[k];
       if (q.workout.length) st.wk++;
+      PSK.forEach(function (P) {
+        var lv = 1;
+        P.th.forEach(function (t) { if (st[P.val] >= t) lv++; });
+        while (plevel[P.key] < lv) {
+          plevel[P.key]++;
+          out.pups[P.key].push({ lvl: plevel[P.key], date: k });
+          give(k, PSK_BONUS[plevel[P.key] - 1]);
+        }
+      });
       var perfect = dayCount(k, SI) >= reqTotal(k);
       if (perfect && parseKey(k).getDay() === 0) st.sunPerfect++;
       if (perfect) { st.perf++; st.perfRun++; if (st.perfRun > st.perfBest) st.perfBest = st.perfRun; } else st.perfRun = 0;
@@ -1492,6 +1529,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     Object.keys(SI.done).forEach(function (k) { if (SI.done[k]) add(addDays(k, 6), 2); });
     var kw = mondayKey('2026-10-19'), kcur = mondayKey(today);
     while (kw <= kcur) { if (kcalWeek(kw) === 7) add(addDays(kw, 6), 3); kw = addDays(kw, 7); }
+    var spD2 = spontByDate();
+    Object.keys(spD2).forEach(function (k) { add(k, spD2[k]); });
     var ew = mondayKey(ENG_START);
     while (ew <= kcur) { if (engWeek(ew) === 7) add(addDays(ew, 6), 3); ew = addDays(ew, 7); }
     var wk = {};
@@ -1740,6 +1779,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('d-yest').setAttribute('aria-pressed', viewBack === 1 ? 'true' : 'false');
     $('qh').textContent = viewBack === 0 ? 'КВЕСТЫ ДНЯ' : 'КВЕСТЫ ВЧЕРА, ' + dshort(k);
     $('psec').hidden = viewBack !== 0;
+    $('ssec').hidden = viewBack !== 0;
+    renderSpont();
     var day = S.days[k] || { q: [false, false, false, false], kcal: null };
     var list = $('qlist');
     clear(list);
@@ -1776,6 +1817,52 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       strip.appendChild(cell);
     }
   }
+  var SP_DEF = ['Прибраться', 'Помыть посуду', 'Постирать', 'Вынести мусор'];
+  function renderSpont() {
+    var k = dkey(new Date());
+    var box = $('slist2');
+    if (!box) return;
+    clear(box);
+    var mine = S.spont.filter(function (x) { return x.date === k; }).sort(function (a, c) { return (a.ts || 0) - (c.ts || 0); });
+    var doneN = 0;
+    mine.forEach(function (x) {
+      if (x.done) doneN++;
+      var counted = x.done && doneN <= SPONT_MAX;
+      var row = el('div');
+      row.appendChild(questButton(x.name, x.done ? (counted ? 'сделано' : 'сделано, но очки за сегодня закончились') : 'отметь, когда сделаешь', counted ? '+1' : (x.done ? '0' : '+1'), !!x.done, function () {
+        if (!db) return;
+        enqueue(function () { return db.doc('spont/' + x.id).update({ done: !x.done }); });
+      }));
+      if (!x.done) {
+        var rm = el('button', 'linkbtn', 'убрать «' + x.name + '»');
+        rm.type = 'button';
+        rm.addEventListener('click', function () { enqueue(function () { return db.doc('spont/' + x.id).delete(); }); });
+        row.appendChild(rm);
+      }
+      box.appendChild(row);
+    });
+    if (!mine.length) box.appendChild(el('div', 'hint', 'На сегодня спонтанных дел пока нет.'));
+    $('sp-hint').textContent = 'Каждое сделанное дело даёт +1, штрафа нет. Очки считаются за ' + SPONT_MAX + ' дела в день. Сегодня засчитано ' + Math.min(doneN, SPONT_MAX) + ' из ' + SPONT_MAX + '.';
+    var pr = $('spresets');
+    clear(pr);
+    var names = SP_DEF.slice();
+    S.spont.slice().sort(function (a, c) { return (c.ts || 0) - (a.ts || 0); }).forEach(function (x) { if (names.indexOf(x.name) < 0 && names.length < 8) names.push(x.name); });
+    pr.appendChild(document.createTextNode('Быстро добавить: '));
+    names.forEach(function (n) {
+      if (mine.some(function (x) { return x.name === n; })) return;
+      var b = el('button', 'linkbtn', n);
+      b.type = 'button';
+      b.addEventListener('click', function () { addSpont(n); });
+      pr.appendChild(b); pr.appendChild(document.createTextNode(' '));
+    });
+  }
+  function addSpont(name) {
+    if (!db) return;
+    var v = (name || '').trim();
+    if (!v) return;
+    enqueue(function () { return db.collection('spont').add({ name: v, date: dkey(new Date()), done: false, ts: Date.now() }); });
+  }
+  $('sp-add').addEventListener('click', function () { addSpont($('sp-name').value); $('sp-name').value = ''; });
   function renderPeriodic() {
     var box = $('plist');
     clear(box);
@@ -2493,6 +2580,13 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
           text: 'Теперь доступен подход по ' + skillCap(u.lvl) * 10 + ' повторов' + (u.lvl > 10 ? ', размер подхода больше не растёт, но навык даёт очки' : ', и за него дают больше очков') + '. Награда за навык: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
       });
     });
+    PSK.forEach(function (P) {
+      (lastGI.pups[P.key] || []).forEach(function (u) {
+        var b = PSK_BONUS[u.lvl - 1];
+        ev.push({ id: 's:' + P.key + ':' + u.lvl, date: u.date, kind: 'СЕКРЕТНЫЙ НАВЫК ОТКРЫТ', big: P.name + ' ' + SK_ROMAN[u.lvl - 1],
+          text: 'Навык вырос от того, что ты делаешь каждый день. Награда: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
+      });
+    });
     return ev;
   }
   function showNextAch() {
@@ -2539,7 +2633,13 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], 'подход по ' + skillCap(u.lvl) * 10 + ' повторов, открыто ' + dshort(u.date), '✓', true, null, true));
       });
     });
-    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно повторов.'));
+    PSK.forEach(function (P) {
+      (lastGI.pups[P.key] || []).forEach(function (u) {
+        any = true;
+        sk.appendChild(questButton(P.name + ' ' + SK_ROMAN[u.lvl - 1], 'открыто ' + dshort(u.date), '✓', true, null, true));
+      });
+    });
+    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно практики.'));
     var open = 0;
     LEG.forEach(function (G) {
       var d = lastGI.ach[G.id], cc = G.cos;
@@ -2864,6 +2964,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     watchCollection('days', function (r) { S.days = {}; r.forEach(function (d) { S.days[d.id] = d; }); });
     watchCollection('weeks', function (r) { S.weeks = {}; r.forEach(function (d) { S.weeks[d.id] = d; }); });
     watchCollection('goals', function (r) { S.gg = r; });
+    watchCollection('spont', function (r) { S.spont = r; });
     watchCollection('per', function (r) { S.per = {}; r.forEach(function (d) { S.per[d.id] = d; }); });
     db.doc('cfg/opening').onSnapshot(function (s) {
       S.opening = s.exists ? s.data() : null;
