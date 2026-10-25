@@ -52,15 +52,15 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 
 .stage { position: relative; height: 330px; overflow: hidden; border: 4px solid var(--line); background: linear-gradient(var(--floor), var(--floor)) bottom / 100% 26% no-repeat, var(--wall); }
 .stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(0,0,0,.28) 46px 48px); }
-.window { position: absolute; top: 22px; right: 22px; width: 96px; height: 110px; border: 5px solid #6a5640; background: linear-gradient(var(--sky-2), var(--sky)); }
+.window { position: absolute; top: 18px; right: 12px; width: 78px; height: 92px; border: 5px solid #6a5640; background: linear-gradient(var(--sky-2), var(--sky)); }
 .window::before, .window::after { content: ""; position: absolute; background: #6a5640; }
 .window::before { left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; }
 .window::after { top: 50%; left: 0; right: 0; height: 4px; margin-top: -2px; }
 .moon { position: absolute; top: 12px; left: 12px; width: 14px; height: 14px; background: #f1e7c7; box-shadow: 4px 0 0 #f1e7c7, -4px 0 0 #f1e7c7, 0 4px 0 #f1e7c7, 0 -4px 0 #f1e7c7; z-index: 1; }
 .star { position: absolute; width: 4px; height: 4px; background: #cfd7ee; z-index: 1; }
 .hero { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); }
-.hero canvas { display: block; width: 192px; height: 312px; image-rendering: pixelated; animation: bob 1.6s steps(1) infinite; }
-.hero-shadow { position: absolute; left: 50%; bottom: 10px; width: 150px; height: 14px; transform: translateX(-50%); background: rgba(0,0,0,.35); }
+.hero canvas { display: block; width: min(168px, 44vw); height: auto; aspect-ratio: 192 / 312; image-rendering: pixelated; animation: bob 1.6s steps(1) infinite; }
+.hero-shadow { position: absolute; left: 50%; bottom: 10px; width: 128px; height: 14px; transform: translateX(-50%); background: rgba(0,0,0,.35); }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 .wopen { position: absolute; left: 12px; top: 12px; z-index: 3; font-family: var(--font-display); font-size: 9px; background: var(--panel); color: var(--fg); border: 3px solid var(--line); padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .wopen:hover { border-color: var(--gold); }
@@ -79,9 +79,9 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 
 
 /* ---- комната: постер, стеллаж, стол ---- */
-.poster { position: absolute; left: 14px; top: 52px; width: 40px; height: 58px; background: #15171c; padding: 3px; z-index: 0; }
+.poster { position: absolute; left: 20px; top: 62px; width: 40px; height: 58px; background: #15171c; padding: 3px; z-index: 0; }
 .poster i { display: block; width: 100%; height: 100%; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 26' shape-rendering='crispEdges' preserveAspectRatio='none'><rect width='17' height='26' fill='%232e2a5e'/><rect y='8' width='17' height='4' fill='%235a3a7a'/><rect y='12' width='17' height='4' fill='%23b2507a'/><rect y='16' width='17' height='4' fill='%23e8895a'/><rect x='11' y='12' width='3' height='3' fill='%23ffd27a'/><rect x='12' y='11' width='1' height='1' fill='%23ffd27a'/><g fill='%23ffffff'><rect x='3' y='2' width='1' height='1'/><rect x='12' y='3' width='1' height='1'/><rect x='8' y='5' width='1' height='1'/><rect x='14' y='7' width='1' height='1'/><rect x='5' y='8' width='1' height='1'/></g><polygon fill='%234a3f78' points='0%2C19 0%2C14 3%2C11 5%2C13 8%2C8 11%2C12 13%2C10 17%2C14 17%2C19'/><rect x='7' y='9' width='3' height='1' fill='%23e9e4f5'/><rect x='8' y='8' width='1' height='1' fill='%23e9e4f5'/><rect x='2' y='12' width='2' height='1' fill='%23cfc8e6'/><polygon fill='%232a2550' points='0%2C26 0%2C19 4%2C16 7%2C19 10%2C17 17%2C21 17%2C26'/><polygon fill='%2314122a' points='0%2C26 0%2C22 6%2C21 12%2C22 17%2C20 17%2C26'/><g fill='%2307060e'><rect x='12' y='16' width='1' height='1'/><rect x='11' y='17' width='3' height='1'/><rect x='11' y='18' width='3' height='3'/><rect x='10' y='21' width='5' height='1'/></g><rect x='15' y='15' width='1' height='7' fill='%238a6a4a'/></svg>") center / 100% 100% no-repeat; image-rendering: pixelated; position: relative; }
-.cube { position: absolute; left: 10px; bottom: 76px; width: 86px; height: 78px; background: #eceae3; box-shadow: inset -3px -3px 0 #c9c5ba; padding: 3px; z-index: 0; }
+.cube { position: absolute; left: 6px; bottom: 76px; width: 86px; height: 78px; transform: scale(.82); transform-origin: bottom left; background: #eceae3; box-shadow: inset -3px -3px 0 #c9c5ba; padding: 3px; z-index: 0; }
 .cube u { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 3px; width: 100%; height: 100%; text-decoration: none; }
 .cube u i { background: #bdb7a8; box-shadow: inset 2px 2px 0 rgba(0,0,0,.18); position: relative; overflow: hidden; }
 .cube u i::after { content: ""; position: absolute; bottom: 2px; left: 4px; width: 14px; height: 7px; }
@@ -93,7 +93,7 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .cube u i:nth-child(6)::after { background: #b8323c; width: 22px; height: 10px; box-shadow: 8px -4px 0 #c9a04a; }
 .cube-top { position: absolute; left: 6px; bottom: 100%; width: 40px; height: 20px; }
 .cube-top::before { content: ""; position: absolute; left: 0; bottom: 0; width: 8px; height: 17px; background: #5a8a9a; box-shadow: 11px 3px 0 #b03030, 21px 0 0 #c8a050, 21px 10px 0 #c8a050, 31px 2px 0 #2f3550; }
-.desk { position: absolute; right: 2px; bottom: 76px; width: 108px; height: 54px; z-index: 0; }
+.desk { position: absolute; right: 2px; bottom: 76px; width: 108px; height: 54px; z-index: 0; transform: scale(.78); transform-origin: bottom right; }
 .dtop { position: absolute; left: 0; right: 0; top: 0; height: 8px; background: #34343f; border-bottom: 3px solid #d03a46; }
 .dleg { position: absolute; top: 7px; bottom: 0; width: 5px; background: #18181d; }
 .dleg.l1 { left: 4px; } .dleg.l2 { right: 4px; }
@@ -108,7 +108,7 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .kb { position: absolute; left: 34px; top: -4px; width: 30px; height: 4px; background: #2d2d36; box-shadow: 0 -1px 0 #4a4a58; }
 .can { position: absolute; left: 94px; top: -10px; width: 8px; height: 10px; background: #d0402a; box-shadow: inset 0 3px 0 #8a1f12; }
 /* ---- песочные часы: время до цели ---- */
-.hg { position: absolute; left: 44px; bottom: 156px; width: 40px; z-index: 1; display: flex; flex-direction: column; align-items: center; --f: 0; transform: scale(.78); transform-origin: bottom center; }
+.hg { position: absolute; left: 40px; bottom: 140px; width: 40px; z-index: 0; display: flex; flex-direction: column; align-items: center; --f: 0; transform: scale(.7); transform-origin: bottom center; }
 .hg-cap { display: block; width: 40px; height: 5px; background: #6a5640; box-shadow: inset 0 -2px 0 rgba(0,0,0,.35); }
 .hg-top, .hg-bot { display: block; width: 32px; height: 28px; background: rgba(190,225,255,.16); position: relative; }
 .hg-top { clip-path: polygon(0 0, 100% 0, 56% 100%, 44% 100%); background: linear-gradient(to top, #e8b13c var(--t, 90%), rgba(190,225,255,.16) var(--t, 90%)); }
@@ -672,9 +672,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.31</h2>
-    <div class="hint">Сборка b96820</div>
+    <h2>ВЕРСИЯ 0.32</h2>
+    <div class="hint">Сборка 6bef73</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.32</b> · 26.10 · Комната разгружена: мебель стоит по бокам и не перекрывается персонажем, песочные часы стоят на полке</div>
       <div class="hint"><b>0.31</b> · 26.10 · На стене новый постер: путник на фоне гор</div>
       <div class="hint"><b>0.30</b> · 26.10 · В комнате стол с двумя мониторами и компьютером, стеллаж с песочными часами, постер</div>
       <div class="hint"><b>0.29</b> · 26.10 · Навыки теперь улучшают прокачку: сложные нормы за больше очков, тяжёлые спонтанные дела</div>
@@ -728,7 +729,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.31";
+<script>window.APP_VERSION = "0.32";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
