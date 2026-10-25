@@ -80,6 +80,18 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .bar i { height: 16px; background: var(--panel-2); border: 2px solid #1a1511; }
 .bar i.on { background: var(--gold); box-shadow: inset 0 -4px 0 var(--gold-dark); }
 
+
+/* ---- песочные часы: время до цели ---- */
+.hg { position: absolute; left: 34px; top: 112px; width: 40px; z-index: 1; display: flex; flex-direction: column; align-items: center; --f: 0; }
+.hg-cap { display: block; width: 40px; height: 5px; background: #6a5640; box-shadow: inset 0 -2px 0 rgba(0,0,0,.35); }
+.hg-top, .hg-bot { display: block; width: 32px; height: 28px; background: rgba(190,225,255,.16); position: relative; }
+.hg-top { clip-path: polygon(0 0, 100% 0, 56% 100%, 44% 100%); background: linear-gradient(to top, #e8b13c var(--t, 90%), rgba(190,225,255,.16) var(--t, 90%)); }
+.hg-bot { clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%); background: linear-gradient(to top, #e8b13c var(--b, 4%), rgba(190,225,255,.16) var(--b, 4%)); }
+.hg-str { display: block; width: 2px; height: 0; background: repeating-linear-gradient(#e8b13c 0 2px, transparent 2px 4px); position: absolute; top: 33px; left: 50%; margin-left: -1px; }
+.hg.run .hg-str { height: 26px; animation: sandfall .5s linear infinite; }
+@keyframes sandfall { to { background-position: 0 4px; } }
+.hg-d { margin-top: 3px; font-family: var(--font-display); font-size: 8px; color: var(--hg-c, #86c05e); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+#ac-text { white-space: pre-line; }
 /* ---- оформление: награды за достижения ---- */
 .coin[data-skin="round"], :root[data-coin="round"] .coin, :root[data-coin="round"] .fly { border-radius: 50%; }
 .coin[data-skin="star"], :root[data-coin="star"] .coin, :root[data-coin="star"] .fly { clip-path: polygon(50% 0, 62% 36%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 36%); }
@@ -379,6 +391,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   <div class="stage" aria-label="Твой пиксельный персонаж в комнате">
     <div class="window"><div class="moon"></div><span class="star" style="top:60px;left:60px"></span><span class="star" style="top:20px;right:14px"></span><span class="star" style="top:84px;left:16px"></span></div>
     <div class="shelf"><i></i><i></i><i></i></div>
+    <div class="hg" id="hg" role="img" aria-label="Песочные часы: время до цели"><b class="hg-cap"></b><i class="hg-top"></i><i class="hg-str"></i><i class="hg-bot"></i><b class="hg-cap"></b><span class="hg-d" id="hg-d"></span></div>
     <div class="hero-shadow"></div>
     <div class="hero"><canvas id="hero" width="32" height="52"></canvas></div>
     <button class="wopen" id="wopen" type="button" aria-label="Открыть гардероб">&#128084; ГАРДЕРОБ</button>
@@ -633,6 +646,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.28</b> · 26.10 · Песочные часы на стене, недельная сводка по средам</div>
       <div class="hint"><b>0.27</b> · 26.10 · Кубок: навыки и достижения отдельно, калории перенесены в «Сегодня»</div>
       <div class="hint"><b>0.26</b> · 26.10 · График веса наверху вкладки «Похудение»</div>
       <div class="hint"><b>0.25</b> · 26.10 · Обновлены редкие находки</div>
@@ -2757,7 +2771,71 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     }
   }
   function renderAll() {
-    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal();
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); weeklySummary(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass();
+  }
+
+  function renderHourglass() {
+    var hg = $('hg');
+    if (!hg) return;
+    var gone = Math.max(0, Math.min(TOTAL_DAYS, Math.floor((Date.now() - START.getTime()) / 86400000)));
+    var left = TOTAL_DAYS - gone, f = gone / TOTAL_DAYS;
+    hg.style.setProperty('--t', Math.max(3, Math.round((1 - f) * 100)) + '%');
+    hg.style.setProperty('--b', Math.max(4, Math.round(f * 100)) + '%');
+    hg.style.setProperty('--hg-c', f < 0.4 ? '#86c05e' : f < 0.75 ? '#e8b13c' : '#ef6a5a');
+    hg.classList.toggle('run', left > 0);
+    $('hg-d').textContent = left + ' ДН';
+    hg.setAttribute('aria-label', 'Осталось ' + left + ' из ' + TOTAL_DAYS + ' дней, срок 19.04.2027');
+    hg.title = 'Осталось ' + left + ' из ' + TOTAL_DAYS + ' дней';
+  }
+  function capitalNow() {
+    if (!loaded || !S.opening) return null;
+    var b = balances();
+    return b.cash + b.card + listSum('comm') + listSum('subs') - oweActive() + listSum('debts', 'owed');
+  }
+  function weeklySummary() {
+    if (!loaded || !lastGI) return;
+    var today = dkey(new Date());
+    if (today < '2026-10-28') return;
+    var dow = (new Date().getDay() + 6) % 7;
+    if (dow < 2) return;
+    var wk = mondayKey(today), seenW = null;
+    try { seenW = localStorage.getItem('wsum'); } catch (e) {}
+    if (seenW === wk) return;
+    var SI = stepInfo(), from = addDays(today, -7), to = addDays(today, -1);
+    var inc = 0, out = 0;
+    S.tx.forEach(function (t) {
+      if (!t.counted || !t.date || t.date < from || t.date > to) return;
+      if (t.kind === 'in' && t.cat !== 'Долг') inc += t.amt;
+      else if (t.kind === 'out') out += t.amt;
+    });
+    var kc = 0, st = 0, en = 0, pf = 0, d = from;
+    for (var i = 0; i < 7; i++, d = addDays(d, 1)) {
+      var day = S.days[d] || {}, g = SI.goals[mondayKey(d)] || 5000;
+      if (day.q && day.q[2]) kc++;
+      if (day.steps >= g) st++;
+      if (d >= NEW_Q && day.q && day.q[7]) en++;
+      if (dayCount(d, SI) >= reqTotal(d)) pf++;
+    }
+    var gone = Math.floor((Date.now() - START.getTime()) / 86400000);
+    var left = Math.max(0, TOTAL_DAYS - gone);
+    var lines = ['Осталось дней: ' + left + ' из ' + TOTAL_DAYS];
+    var cap = capitalNow();
+    lines.push('Пришло ' + fmt(inc) + ' ₽, потрачено ' + fmt(out) + ' ₽, разница ' + (inc - out >= 0 ? '+' : '−') + fmt(Math.abs(inc - out)) + ' ₽.' + (cap == null ? '' : ' Капитал сейчас ' + fmt(Math.max(0, cap)) + ' ₽.'));
+    if (S.weights.length) {
+      var wNow = S.weights[S.weights.length - 1], wOld = null;
+      S.weights.forEach(function (w) { if (w.date <= from) wOld = w; });
+      if (!wOld) wOld = S.weights[0];
+      var dl = Math.round((wNow.kg - wOld.kg) * 10) / 10;
+      lines.push('Вес ' + String(wNow.kg).replace('.', ',') + ' кг' + (wOld !== wNow ? ', за неделю ' + (dl > 0 ? '+' : dl < 0 ? '−' : '') + String(Math.abs(dl)).replace('.', ',') + ' кг.' : '.'));
+    }
+    lines.push('Калории в норме: ' + kc + ' из 7 дней.');
+    lines.push('Шаги по цели: ' + st + ' из 7 дней.');
+    if (to >= NEW_Q) lines.push('Английский: ' + en + ' из 7 дней.');
+    lines.push('Идеальных дней: ' + pf + ' из 7.');
+    try { localStorage.setItem('wsum', wk); } catch (e) {}
+    var wn = Math.floor(gone / 7);
+    achQueue.push({ id: 'ws:' + wk, date: today, kind: 'СВОДКА НЕДЕЛИ', big: 'Прошла неделя ' + wn + ' из ' + Math.round(TOTAL_DAYS / 7), text: lines.join('\n') });
+    showNextAch();
   }
   function renderGlobal() {
     var box = $('gg-list');
