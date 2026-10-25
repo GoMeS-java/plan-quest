@@ -433,10 +433,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div class="note">Провал квеста про калории стоит −3, серия от 3 дней даёт бонус к очкам, каждые 5 дней серии дают щит от штрафа. Награды за недоедание нет: цель именно в пределах нормы.</div>
     <h2>ПОХУДЕНИЕ</h2>
     <div class="goal">
-      <div class="goal-head"><b>Вес 120 кг</b><span class="pct" id="pct-weight">0%</span></div>
-      <div class="bar" id="bar-weight" aria-hidden="true"></div>
-      <div class="hint">Сейчас <span id="cur-weight"></span> кг, старт 165 кг, цель 120 кг</div>
-      <div class="need">Нужный темп: <b id="need-weight"></b> кг в неделю. Контрольные точки: 160, 150, 140, 130, 120 кг. <span id="w-next"></span></div>
+      <div class="goal-head"><b>Запись веса</b></div>
+      <div class="hint">Прогресс по весу и контрольные точки смотри во вкладке «Цели».</div>
       <div class="row"><input id="in-weight" type="number" step="0.1" inputmode="decimal" placeholder="Вес сейчас, кг"><button class="btn go" type="button" id="w-add">ЗАПИСАТЬ</button></div>
       <div id="spark"></div>
       <ul class="log" id="l-weight"></ul>
@@ -449,8 +447,20 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <div class="goal-head"><b>Капитал, 10 млн ₽</b><span class="pct" id="pct-money">0%</span></div>
       <div class="bar" id="bar-money" aria-hidden="true"></div>
       <div class="hint">Накоплено <span id="cur-money"></span> из 10 000 000 ₽</div>
+      <div class="hint" id="money-next"></div>
       <div class="need">Чтобы успеть к 19.04.2027, нужно откладывать <b id="need-money"></b> ₽ в месяц.</div>
       <div class="hint">Считается как свободные деньги плюс то, что тебе должны.</div>
+    </div>
+    <div class="goal">
+      <div class="goal-head"><b>Вес 120 кг</b><span class="pct" id="pct-weight">0%</span></div>
+      <div class="bar" id="bar-weight" aria-hidden="true"></div>
+      <div class="hint">Сейчас <span id="cur-weight"></span> кг, старт 165 кг, цель 120 кг</div>
+      <div class="need">Нужный темп: <b id="need-weight"></b> кг в неделю. Контрольные точки: 160, 150, 140, 130, 120 кг. <span id="w-next"></span></div>
+    </div>
+    <div class="goal">
+      <div class="goal-head"><b>Английский</b><span class="pct" id="pct-eng">0%</span></div>
+      <div class="bar" id="bar-eng" aria-hidden="true"></div>
+      <div class="hint" id="eng-line"></div>
     </div>
     <div class="goal">
       <div class="goal-head"><b>Время</b><span class="pct" id="pct-time">0%</span></div>
@@ -458,10 +468,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <div class="hint">Прошло <span id="days-gone"></span> из 182 дней, срок 19.04.2027</div>
     </div>
     <div class="note">Проценты считаются от старта 19.10.2026.</div>
-    <h2>ГЛОБАЛЬНЫЕ ЦЕЛИ</h2>
+    <h2>ГЛОБАЛЬНЫЕ ЦЕЛИ И ШАГИ</h2>
     <div id="gg-list" style="display:flex;flex-direction:column;gap:10px"></div>
     <div class="row"><input id="gg-name" type="text" placeholder="Новая глобальная цель"><button class="btn go" id="gg-add" type="button">ДОБАВИТЬ</button></div>
-    <div class="hint">Отмечаешь, когда цель выполнена. Не связано с деньгами.</div>
+    <div class="hint">Отмечаешь, когда шаг или цель выполнены. Не связано с деньгами.</div>
   </section>
 
   <section class="panel" id="wardrobe" data-g="a">
@@ -578,9 +588,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.20</h2>
-    <div class="hint">Сборка d4c612</div>
+    <h2>ВЕРСИЯ 0.21</h2>
+    <div class="hint">Сборка 50b679</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.21</b> · 26.10 · Новые ежедневные квесты (душ, английский), недельный английский, весь прогресс целей во вкладке «Цели»</div>
       <div class="hint"><b>0.20</b> · 26.10 · Недельный квест про встречи убран</div>
       <div class="hint"><b>0.19</b> · 25.10 · Строки долгов и Авито переносятся нормально</div>
       <div class="hint"><b>0.18</b> · 25.10 · Стадии персонажа снова скрыты</div>
@@ -623,7 +634,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.20";
+<script>window.APP_VERSION = "0.21";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -888,8 +899,19 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { t: 'Еда в пределах 2200 ккал', s: 'любая еда, дома или из магазина' },
     { t: 'Приготовил еду на завтра', s: 'вечерний квест' },
     { t: 'Уход за лицом', s: 'утром и вечером по твоей схеме, по понедельникам энзимная пудра' },
-    { t: 'Уход за зубами', s: 'утром и вечером, отбеливающий гель по схеме' }
+    { t: 'Уход за зубами', s: 'утром и вечером, отбеливающий гель по схеме' },
+    { t: 'Принял душ', s: 'каждый день' },
+    { t: 'Английский', s: 'отметь, когда позанимался' },
+    { t: 'Лёг до 00:00', s: 'необязательно, штрафа нет', opt: true }
   ];
+  var NEW_Q = '2026-10-26', ENG_START = '2026-10-26';
+  function activeIdx(k) { return k < NEW_Q ? [0, 1, 2, 3, 4, 5] : [0, 2, 3, 4, 5, 6, 7]; }
+  function reqTotal(k) { return activeIdx(k).length + 1; }
+  function engMin(k) {
+    var w = Math.round((parseKey(mondayKey(k)) - parseKey(ENG_START)) / 604800000);
+    return Math.min(45, 10 + 5 * Math.max(0, w));
+  }
+  function qTitle(i, k) { return i === 7 ? 'Английский, ' + engMin(k) + ' минут' : QDEF[i].t; }
   var SHOP = [
     { id: 'perfume', name: 'Духи' },
     { id: 'periph', name: 'Периферия' },
@@ -940,7 +962,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   }
   function missedList(k, SI) {
     var day = S.days[k] || {}, out = [];
-    QDEF.forEach(function (q, i) { if (!(day.q && day.q[i])) out.push(q.t); });
+    activeIdx(k).forEach(function (i) { if (!(day.q && day.q[i])) out.push(qTitle(i, k)); });
     var g = SI.goals[mondayKey(k)] || 5000;
     if (!(day.steps >= g)) out.push(fmt(g) + ' шагов');
     return out;
@@ -987,8 +1009,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'x39', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 37 раз', val: 'cook', goal: 37, pts: 3 },
     { id: 'x40', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 91 раз', val: 'cook', goal: 91, pts: 6 },
     { id: 'x41', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 203 раз', val: 'cook', goal: 203, pts: 12, title: 'ШЕФ' },
-    { id: 'x42', t: 'Скрытое достижение', d: '19 раз пообедать не меньше 20 минут', val: 'lunch', goal: 19, pts: 2 },
-    { id: 'x43', t: 'Скрытое достижение', d: '66 раз пообедать не меньше 20 минут', val: 'lunch', goal: 66, pts: 5 },
+    { id: 'x42', t: 'Скрытое достижение', d: 'Принять душ 19 раз', val: 'shower', goal: 19, pts: 2 },
+    { id: 'x43', t: 'Скрытое достижение', d: 'Позаниматься английским 66 раз', val: 'eng', goal: 66, pts: 5 },
     { id: 'x44', t: 'Скрытое достижение', d: '14 дней в пределах 2200 ккал', val: 'kcalOk', goal: 14, pts: 2 },
     { id: 'x45', t: 'Скрытое достижение', d: '59 дней в пределах 2200 ккал', val: 'kcalOk', goal: 59, pts: 5 },
     { id: 'x46', t: 'Скрытое достижение', d: '148 дней в пределах 2200 ккал', val: 'kcalOk', goal: 148, pts: 10 },
@@ -1020,9 +1042,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'x72', t: 'Скрытое достижение', d: '37 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 37, pts: 15, title: 'МАШИНА' },
     { id: 'x73', t: 'Скрытое достижение', d: '12 дней, когда сделаны и подъём до 10:00, и уход за лицом, и уход за зубами', val: 'careDay', goal: 12, pts: 2 },
     { id: 'x74', t: 'Скрытое достижение', d: '45 дней, когда сделаны и подъём до 10:00, и уход за лицом, и уход за зубами', val: 'careDay', goal: 45, pts: 6 },
-    { id: 'x75', t: 'Скрытое достижение', d: '6 дней, когда сделаны обед, готовка и еда в пределах нормы', val: 'foodDay', goal: 6, pts: 2 },
-    { id: 'x76', t: 'Скрытое достижение', d: '28 дней, когда сделаны обед, готовка и еда в пределах нормы', val: 'foodDay', goal: 28, pts: 5 },
-    { id: 'x77', t: 'Скрытое достижение', d: '89 дней, когда сделаны обед, готовка и еда в пределах нормы', val: 'foodDay', goal: 89, pts: 12 },
+    { id: 'x75', t: 'Скрытое достижение', d: '6 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 6, pts: 2 },
+    { id: 'x76', t: 'Скрытое достижение', d: '28 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 28, pts: 5 },
+    { id: 'x77', t: 'Скрытое достижение', d: '89 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 89, pts: 12 },
     { id: 'x78', t: 'Скрытое достижение', d: '2 воскресений с идеальным днём', val: 'sunPerfect', goal: 2, pts: 2 },
     { id: 'x79', t: 'Скрытое достижение', d: '7 воскресений с идеальным днём', val: 'sunPerfect', goal: 7, pts: 6 },
     { id: 'x80', t: 'Скрытое достижение', d: '3 дней по 10 000 шагов и больше', val: 'days10k', goal: 3, pts: 1 },
@@ -1049,7 +1071,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'x101', t: 'Скрытое достижение', d: '4 200 отжиманий всего', val: 'pu', goal: 4200, pts: 9, title: 'ГИГАЧАД' },
     { id: 'x102', t: 'Скрытое достижение', d: 'Кинуть в копилку 42 раза', val: 'jar', goal: 42, pts: 8, title: 'СКРУДЖ' },
     { id: 'x104', t: 'Скрытое достижение', d: '14 дней подряд в пределах 2200 ккал', val: 'kcalOkBest', goal: 14, pts: 8, title: 'СЧЁТОВОД' },
-    { id: 'x103', t: 'Скрытое достижение', d: '33 тренировки', val: 'wk', goal: 33, pts: 10, title: 'ТРИДЦАТЬ ТРИ БОГАТЫРЯ' }
+    { id: 'x103', t: 'Скрытое достижение', d: '33 тренировки', val: 'wk', goal: 33, pts: 10, title: 'ТРИДЦАТЬ ТРИ БОГАТЫРЯ' },
+    { id: 'x105', t: 'Скрытое достижение', d: '9 дней английского подряд', val: 'engBest', goal: 9, pts: 3 },
+    { id: 'x106', t: 'Скрытое достижение', d: 'Английский 31 раз', val: 'eng', goal: 31, pts: 6 },
+    { id: 'x107', t: 'Скрытое достижение', d: '27 дней английского подряд', val: 'engBest', goal: 27, pts: 10 },
+    { id: 'x108', t: 'Скрытое достижение', d: 'Английский 101 раз', val: 'eng', goal: 101, pts: 15, title: 'ПОЛИГЛОТ' }
   ];
 
   // ---- оформление и суперредкие достижения ----
@@ -1364,7 +1390,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     function give(k, v) { if (v) out.pts[k] = (out.pts[k] || 0) + v; }
     var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0,
       exact: 0, eqDate: 0, maxDayReps: 0, friRun: 0, friBest: 0, perfCombo: 0, kcalOkRun: 0, kcalOkBest: 0, meetRun: 0, meetBest: 0,
-      sets: 0, night: 0, dawn: 0, lucky: 0, doubleSteps: 0, days10k: 0, kcalLog: 0, early: 0, cook: 0, lunch: 0, kcalOk: 0, face: 0, teeth: 0, careDay: 0, foodDay: 0, sunPerfect: 0, stepRun: 0, stepStreak: 0, jar: 0 };
+      sets: 0, night: 0, dawn: 0, lucky: 0, doubleSteps: 0, days10k: 0, kcalLog: 0, early: 0, cook: 0, lunch: 0, kcalOk: 0, face: 0, teeth: 0, careDay: 0, foodDay: 0, shower: 0, eng: 0, engRun: 0, engBest: 0, sunPerfect: 0, stepRun: 0, stepStreak: 0, jar: 0 };
     var jarDates = {};
     (S.jar || []).forEach(function (x) { if (x && x.date) jarDates[x.date] = (jarDates[x.date] || 0) + 1; });
     var first = START_KEY;
@@ -1408,16 +1434,17 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (day.steps > 0 && day.steps === gl) st.exact++;
       if (dq0(day)) { st.kcalOkRun++; if (st.kcalOkRun > st.kcalOkBest) st.kcalOkBest = st.kcalOkRun; } else st.kcalOkRun = 0;
       if (dq[0]) st.early++;
-      if (dq[1]) st.lunch++;
       if (dq[2]) st.kcalOk++;
       if (dq[3]) st.cook++;
       if (dq[4]) st.face++;
       if (dq[5]) st.teeth++;
       if (dq[0] && dq[4] && dq[5]) st.careDay++;
-      if (dq[1] && dq[2] && dq[3]) st.foodDay++;
+      if (dq[2] && dq[3]) st.foodDay++;
+      if (dq[6]) st.shower++;
+      if (dq[7]) { st.eng++; st.engRun++; if (st.engRun > st.engBest) st.engBest = st.engRun; } else st.engRun = 0;
       if (jarDates[k]) st.jar += jarDates[k];
       if (q.workout.length) st.wk++;
-      var perfect = dayCount(k, SI) >= QDEF.length + 1;
+      var perfect = dayCount(k, SI) >= reqTotal(k);
       if (perfect && parseKey(k).getDay() === 0) st.sunPerfect++;
       if (perfect) { st.perf++; st.perfRun++; if (st.perfRun > st.perfBest) st.perfBest = st.perfRun; } else st.perfRun = 0;
       if (day.q && day.q[0]) { st.earlyRun++; if (st.earlyRun > st.earlyBest) st.earlyBest = st.earlyRun; } else st.earlyRun = 0;
@@ -1466,6 +1493,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     Object.keys(SI.done).forEach(function (k) { if (SI.done[k]) add(addDays(k, 6), 2); });
     var kw = mondayKey('2026-10-19'), kcur = mondayKey(today);
     while (kw <= kcur) { if (kcalWeek(kw) === 7) add(addDays(kw, 6), 3); kw = addDays(kw, 7); }
+    var ew = mondayKey(ENG_START);
+    while (ew <= kcur) { if (engWeek(ew) === 7) add(addDays(ew, 6), 3); ew = addDays(ew, 7); }
     var wk = {};
     S.weights.forEach(function (w) { var m = mondayKey(w.date); if (!wk[m] || w.date < wk[m]) wk[m] = w.date; });
     Object.keys(wk).forEach(function (m) { add(wk[m], 2); });
@@ -1478,7 +1507,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       var g = ev[k] || 0;
       var n = dayCount(k, SI);
       if (n) {
-        g += n;
+        g += n + dayBonus(k);
         if (prev && Math.round((parseKey(k) - parseKey(prev)) / 86400000) > 1) g += 3;
         prev = k;
       }
@@ -1491,7 +1520,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       P += g;
       while (P >= need(L)) { P -= need(L); L++; }
       if (k >= PEN_START && k < today) {
-        var loss = Math.max(0, QDEF.length + 1 - n), used = false;
+        var loss = Math.max(0, reqTotal(k) - n), used = false;
         if (k >= KCAL_START && !kok) {
           if (shields > 0) { shields--; loss = Math.max(0, loss - 1); used = true; }
           else { loss += KCAL_EXTRA; kRun = 0; }
@@ -1505,7 +1534,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var kToday = (today >= KCAL_START && !tok) ? (shields > 0 ? -1 : KCAL_EXTRA) : 0;
     return { L: L, P: P, need: need(L), upgrades: L - 1, avail: L - 1 - spent(), lossY: lossY, missY: missY,
              kRun: kRun, shields: shields, shieldUsedY: shieldUsedY,
-             missToday: Math.max(0, QDEF.length + 1 - dayCount(today, SI) + kToday) };
+             missToday: Math.max(0, reqTotal(today) - dayCount(today, SI) + kToday) };
   }
   function spent() { var n = 0; S.buys.forEach(function (b) { n += (b.cost || 1); }); return n; }
   function costOf(price) { return price > 0 ? Math.max(1, Math.ceil(price / 20000)) : 0; }
@@ -1569,10 +1598,24 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   function dayCount(k, SI) {
     var day = S.days[k];
     if (!day) return 0;
-    var n = (day.q || []).filter(Boolean).length;
+    var n = 0, qq = day.q || [];
+    activeIdx(k).forEach(function (i) { if (qq[i]) n++; });
     var g = SI.goals[mondayKey(k)] || 5000;
     if (day.steps >= g) n++;
     return n;
+  }
+  function dayBonus(k) {
+    var day = S.days[k];
+    return (k >= NEW_Q && day && day.q && day.q[8]) ? 1 : 0;
+  }
+  function engWeek(mk) {
+    var cnt = 0, d = parseKey(mk);
+    for (var i = 0; i < 7; i++) {
+      var day = S.days[dkey(d)];
+      if (day && day.q && day.q[7]) cnt++;
+      d.setDate(d.getDate() + 1);
+    }
+    return cnt;
   }
 
   // ---- render -------------------------------------------------------
@@ -1702,16 +1745,19 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var list = $('qlist');
     clear(list);
     var justBtn = null;
-    QDEF.forEach(function (q, i) {
+    function qBtn(i) {
+      var q = QDEF[i];
       var on = !!(day.q && day.q[i]);
-      var btn = questButton(q.t, q.s, '+1', on, function () { toggleQ(i); });
+      var btn = questButton(qTitle(i, k), q.s, '+1', on, function () { toggleQ(i); });
       if (on && fresh(fx) && fx.q === i && fx.k === k) { btn.classList.add('just'); justBtn = btn; fx = null; }
       list.appendChild(btn);
-    });
+    }
+    activeIdx(k).forEach(qBtn);
     var SI = stepInfo();
     var sg = SI.goals[mondayKey(k)] || 5000;
     var st = day.steps == null ? 0 : day.steps;
     list.appendChild(questButton(fmt(sg) + ' шагов', (viewBack ? 'за день ' : 'сегодня ') + fmt(st) + ', засчитывается само', '+1', st >= sg, null, true));
+    if (k >= NEW_Q) qBtn(8);
     if (justBtn) flyCoin(justBtn.querySelector('.box'));
     var sc = $('steps');
     if (document.activeElement !== sc) sc.value = day.steps == null ? '' : day.steps;
@@ -1727,7 +1773,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       var dk = dkey(dt);
       var n = dayCount(dk, SI);
       var cell = el('i', 'c' + (n === 0 ? 0 : n <= 2 ? 1 : 3));
-      cell.title = dshort(dk) + ': ' + n + ' из ' + (QDEF.length + 1);
+      cell.title = dshort(dk) + ': ' + n + ' из ' + reqTotal(dk);
       strip.appendChild(cell);
     }
   }
@@ -1791,6 +1837,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     }
     list.appendChild(questButton('Каждый день по ' + fmt(sg) + ' шагов', cnt + ' из 7 дней. Если выполнишь все семь, цель вырастет на 1 000', '+2', !!SI.done[mk], null, true));
     var kc = kcalWeek(mk);
+    var ec = engWeek(mk);
+    list.appendChild(questButton('Английский каждый день', ec + ' из 7 дней. Отмечай квест «Английский» каждый день', '+3', ec === 7, null, true));
     list.appendChild(questButton('Неделя в пределах 2200 ккал', kc + ' из 7 дней подряд. Отмечай квест «Еда в пределах 2200 ккал» каждый день', '+3', kc === 7, null, true));
   }
   function remaining(ms) {
@@ -2112,6 +2160,18 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('cur-money').textContent = fmt(Math.max(0, money)) + ' ₽';
     $('pct-money').textContent = pc(rm);
     fillBar('bar-money', rm);
+    (function () {
+      var m = Math.max(0, money), nxm = Math.floor(m / 1000000) + 1;
+      $('money-next').textContent = nxm <= 10 ? 'Следующая ступень: ' + nxm + ' млн ₽, осталось ' + fmt(nxm * 1000000 - m) + ' ₽.' : 'Все ступени пройдены.';
+      var ed = 0, ek = Object.keys(S.days);
+      ek.forEach(function (kk) { if (kk >= NEW_Q && S.days[kk] && S.days[kk].q && S.days[kk].q[7]) ed++; });
+      var steps = [10, 30, 60, 100, 180], nxe = null;
+      for (var zi = 0; zi < steps.length; zi++) if (ed < steps[zi]) { nxe = steps[zi]; break; }
+      var tgt = nxe || 180;
+      $('pct-eng').textContent = pc(Math.min(1, ed / tgt));
+      fillBar('bar-eng', Math.min(1, ed / tgt));
+      $('eng-line').textContent = 'Занятий: ' + ed + (nxe ? '. Следующая ступень: ' + nxe + ', осталось ' + (nxe - ed) + '.' : '. Все ступени пройдены.');
+    })();
     $('need-money').textContent = left > 0 ? fmt(Math.max(0, 10000000 - money) / (left / 30.4)) : '0';
     var wt = currentWeight();
     var rw = (165 - wt) / 45;
