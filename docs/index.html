@@ -563,9 +563,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.13</h2>
-    <div class="hint">Сборка 0801eb</div>
+    <h2>ВЕРСИЯ 0.14</h2>
+    <div class="hint">Сборка dfe30a</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.14</b> · 25.10 · Штрафы и бонусы за калории</div>
       <div class="hint"><b>0.13</b> · 24.10 · Обновление берёт свежие файлы</div>
       <div class="hint"><b>0.12</b> · 24.10 · Настройки (шестерёнка), звук, номер версии</div>
       <div class="hint"><b>0.11</b> · 24.10 · Мемные достижения и титулы</div>
@@ -601,7 +602,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.13";
+<script>window.APP_VERSION = "0.14";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -866,7 +867,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   ];
 
   // ---- computed -----------------------------------------------------
-  var START_KEY = '2026-10-19', PEN_START = '2026-10-20';
+  var START_KEY = '2026-10-19', PEN_START = '2026-10-20', KCAL_START = '2026-10-25', KCAL_EXTRA = 2, SHIELD_MAX = 3;
   var SQ_MAX = 3, SQ_GAP = 2 * 3600000;
   // скрытые навыки: пороги по сумме повторов, награда за подход зависит от его размера
   var SK = {
@@ -1012,6 +1013,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'x100', t: 'Скрытое достижение', d: '14 дней подряд вставать до 10:00', val: 'earlyBest', goal: 14, pts: 6, title: 'СИГМА' },
     { id: 'x101', t: 'Скрытое достижение', d: '4 200 отжиманий всего', val: 'pu', goal: 4200, pts: 9, title: 'ГИГАЧАД' },
     { id: 'x102', t: 'Скрытое достижение', d: 'Кинуть в копилку 42 раза', val: 'jar', goal: 42, pts: 8, title: 'СКРУДЖ' },
+    { id: 'x104', t: 'Скрытое достижение', d: '14 дней подряд в пределах 2200 ккал', val: 'kcalOkBest', goal: 14, pts: 8, title: 'СЧЁТОВОД' },
     { id: 'x103', t: 'Скрытое достижение', d: '33 тренировки', val: 'wk', goal: 33, pts: 10, title: 'ТРИДЦАТЬ ТРИ БОГАТЫРЯ' }
   ];
 
@@ -1434,7 +1436,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     Object.keys(wk).forEach(function (m) { add(wk[m], 2); });
     var first = START_KEY;
     Object.keys(ev).concat(Object.keys(S.days)).forEach(function (k) { if (k < first) first = k; });
-    var L = 1, P = 0, prev = null, lossY = 0, missY = [];
+    var L = 1, P = 0, prev = null, lossY = 0, missY = [], kRun = 0, shields = 0, shieldUsedY = false;
     var yest = addDays(today, -1);
     var k = first;
     while (k <= today) {
@@ -1445,17 +1447,30 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         if (prev && Math.round((parseKey(k) - parseKey(prev)) / 86400000) > 1) g += 3;
         prev = k;
       }
+      var kok = !!(S.days[k] && S.days[k].q && S.days[k].q[2]);
+      if (k >= KCAL_START && kok) {
+        kRun++;
+        g += kRun >= 7 ? 2 : kRun >= 3 ? 1 : 0;
+        if (kRun % 5 === 0 && shields < SHIELD_MAX) shields++;
+      }
       P += g;
       while (P >= need(L)) { P -= need(L); L++; }
       if (k >= PEN_START && k < today) {
-        var loss = Math.max(0, QDEF.length + 1 - n);
+        var loss = Math.max(0, QDEF.length + 1 - n), used = false;
+        if (k >= KCAL_START && !kok) {
+          if (shields > 0) { shields--; loss = Math.max(0, loss - 1); used = true; }
+          else { loss += KCAL_EXTRA; kRun = 0; }
+        }
         P = Math.max(0, P - loss);
-        if (k === yest) { lossY = loss; missY = missedList(k, SI); }
+        if (k === yest) { lossY = loss; missY = missedList(k, SI); shieldUsedY = used; }
       }
       k = addDays(k, 1);
     }
+    var tk = S.days[today], tok = !!(tk && tk.q && tk.q[2]);
+    var kToday = (today >= KCAL_START && !tok) ? (shields > 0 ? -1 : KCAL_EXTRA) : 0;
     return { L: L, P: P, need: need(L), upgrades: L - 1, avail: L - 1 - spent(), lossY: lossY, missY: missY,
-             missToday: Math.max(0, QDEF.length + 1 - dayCount(today, SI)) };
+             kRun: kRun, shields: shields, shieldUsedY: shieldUsedY,
+             missToday: Math.max(0, QDEF.length + 1 - dayCount(today, SI) + kToday) };
   }
   function spent() { var n = 0; S.buys.forEach(function (b) { n += (b.cost || 1); }); return n; }
   function costOf(price) { return price > 0 ? Math.max(1, Math.ceil(price / 20000)) : 0; }
@@ -1553,6 +1568,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var parts = [];
     if (p.lossY > 0) parts.push('Вчера −' + p.lossY + ': ' + p.missY.join(', ') + '.');
     if (p.missToday > 0) parts.push('Сегодня пока не закрыто: ' + p.missToday + '. Если не успеешь, завтра будет −' + p.missToday + '.');
+    if (p.shieldUsedY) parts.push('Щит спас от штрафа за калории.');
+    if (p.kRun > 0 || p.shields > 0) parts.push('Калории: серия ' + p.kRun + ' ' + plural(p.kRun, 'день', 'дня', 'дней') + (p.shields > 0 ? ', щитов: ' + p.shields : '') + '.');
     loss.hidden = !parts.length;
     loss.textContent = parts.join(' ');
     var bar = $('bar');
