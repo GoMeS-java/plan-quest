@@ -367,6 +367,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   <div class="top">
     <div class="topl"><h1>ПЛАН</h1><span id="plslot"></span></div>
     <span class="lvl" id="lvl">УР. 1</span>
+    <button class="gear" id="trophy-btn" type="button" aria-label="Навыки и достижения">&#127942;</button>
     <button class="gear" id="gear" type="button" aria-label="Настройки">&#9881;</button>
   </div>
   <div class="daysw" id="pgsw" role="tablist">
@@ -400,7 +401,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <button class="tab" role="tab" aria-selected="true" data-t="today">СЕГОДНЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="week">НЕДЕЛЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="shop" style="font-size:7px">УЛУЧШЕНИЯ</button>
-    <button class="tab" role="tab" aria-selected="false" data-t="ach" style="font-size:7px">ДОСТИЖЕНИЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="diet" style="font-size:7px">ПОХУДЕНИЕ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="goals">ЦЕЛИ</button>
   </div>
@@ -416,6 +416,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <div class="goal-head"><b>Шаги за день</b><span class="pct" id="steps-show"></span></div>
       <input id="steps" type="number" inputmode="numeric" placeholder="Сколько шагов прошёл сегодня">
       <div class="hint">Больше цели тоже можно записывать. Сохраняется, когда выходишь из поля.</div>
+    </div>
+    <div class="goal">
+      <div class="goal-head"><b>Калории за день</b><span class="pct" id="kcal-show"></span></div>
+      <input id="kcal" type="number" inputmode="numeric" placeholder="Сколько ккал съел сегодня">
+      <div class="hint">Сохраняется, когда выходишь из поля.</div>
     </div>
     <div id="psec">
       <h2>ПЕРИОДИЧЕСКИЕ, НЕОБЯЗАТЕЛЬНЫЕ</h2>
@@ -447,14 +452,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div class="note">Покупка до 20 000 ₽ стоит одно очко улучшения, свыше 20 000 ₽ два, свыше 40 000 ₽ три, и так далее: плюс очко за каждые 20 000 ₽. Очко даётся за новый уровень. Выбрал награду, и покупка открывается только через 24 часа.</div>
   </section>
 
-  <section class="panel" id="ach" data-g="a">
-    <h2>НАВЫКИ</h2>
-    <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <h2 id="ach-h">ДОСТИЖЕНИЯ</h2>
-    <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <div class="note">Все достижения скрыты, условия неизвестны и перемешаны по всему приложению. Они откроются сами, когда условие выполнится, считать ничего не нужно. Скрытых больше, чем строк со знаками вопроса. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
-  </section>
-
   <section class="panel" id="diet" data-g="a">
     <h2>ПОХУДЕНИЕ</h2>
     <div class="goal">
@@ -466,11 +463,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
   
     <h2>КАЛОРИИ</h2>
-    <div class="goal">
-      <div class="goal-head"><b>Калории за день</b><span class="pct" id="kcal-show"></span></div>
-      <input id="kcal" type="number" inputmode="numeric" placeholder="Сколько ккал съел сегодня">
-      <div class="hint">Сохраняется, когда выходишь из поля.</div>
-    </div>
     <div class="goal" id="diet-sum">
       <div class="goal-head"><b>Серия «в пределах 2200»</b><span class="pct" id="d-run"></span></div>
       <div class="hint" id="d-line1"></div>
@@ -614,6 +606,16 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 </div>
 <div class="toast" id="toast" hidden></div>
 <div class="flash" id="flash"></div>
+<div class="setup" id="trophy" hidden role="dialog" aria-modal="true" aria-label="Навыки и достижения">
+  <div class="sbox">
+    <div class="shead"><b>НАВЫКИ И ДОСТИЖЕНИЯ</b><button class="gear" id="trophy-x" type="button" aria-label="Закрыть">&#10005;</button></div>
+    <h2>НАВЫКИ</h2>
+    <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
+    <h2 id="ach-h">ДОСТИЖЕНИЯ</h2>
+    <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="note">Все достижения скрыты, условия неизвестны и перемешаны по всему приложению. Они откроются сами, когда условие выполнится, считать ничего не нужно. Скрытых больше, чем строк со знаками вопроса. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
+  </div>
+</div>
 <div class="setup" id="setup" hidden role="dialog" aria-modal="true" aria-label="Настройки">
   <div class="sbox">
     <div class="shead"><b>НАСТРОЙКИ</b><button class="gear" id="setup-x" type="button" aria-label="Закрыть">&#10005;</button></div>
@@ -629,9 +631,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.26</h2>
-    <div class="hint">Сборка 9f437e</div>
+    <h2>ВЕРСИЯ 0.27</h2>
+    <div class="hint">Сборка 76b163</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.27</b> · 26.10 · Кубок: навыки и достижения отдельно, калории перенесены в «Сегодня»</div>
       <div class="hint"><b>0.26</b> · 26.10 · График веса наверху вкладки «Похудение»</div>
       <div class="hint"><b>0.25</b> · 26.10 · Обновлены редкие находки</div>
       <div class="hint"><b>0.24</b> · 26.10 · Новые награды-оформления</div>
@@ -680,7 +683,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.26";
+<script>window.APP_VERSION = "0.27";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -989,6 +992,17 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { key: 'p_fin', name: 'Финансовый контроль', val: 'recon', th: [7, 21, 50, 100, 180] }
   ];
   var PSK_BONUS = [0, 1, 2, 3, 5, 8];
+  var SK_DESC = {
+    squat: 'Растёт от общего числа приседаний за всё время. С новым уровнем открывается подход побольше и даются очки.',
+    pushup: 'Растёт от общего числа отжиманий за всё время. С новым уровнем открывается подход побольше и даются очки.',
+    p_steps: 'Растёт от шагов, которые ты записываешь каждый день.',
+    p_eng: 'Растёт от занятий английским, когда отмечаешь квест.',
+    p_cook: 'Растёт от квеста «Приготовил еду на завтра».',
+    p_care: 'Растёт от ухода за лицом, ухода за зубами и душа.',
+    p_food: 'Растёт от дней, когда еда уложилась в 2200 ккал.',
+    p_home: 'Растёт от спонтанных дел, которые ты отмечаешь.',
+    p_fin: 'Растёт от ежедневной сверки трат.'
+  };
   var SPONT_MAX = 2;
   function spontByDate() {
     var m = {};
@@ -2646,7 +2660,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       (lastGI.pups[P.key] || []).forEach(function (u) {
         var b = PSK_BONUS[u.lvl - 1];
         ev.push({ id: 's:' + P.key + ':' + u.lvl, date: u.date, kind: 'СЕКРЕТНЫЙ НАВЫК ОТКРЫТ', big: P.name + ' ' + SK_ROMAN[u.lvl - 1],
-          text: 'Навык вырос от того, что ты делаешь каждый день. Награда: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
+          text: SK_DESC[P.key] + ' Награда: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
       });
     });
     return ev;
@@ -2690,16 +2704,18 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     clear(box); clear(sk);
     var any = false;
     SK_KEYS.forEach(function (key) {
-      lastGI.ups[key].forEach(function (u) {
-        any = true;
-        sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], 'подход по ' + skillCap(u.lvl) * 10 + ' повторов, открыто ' + dshort(u.date), '✓', true, null, true));
-      });
+      var arr = lastGI.ups[key];
+      if (!arr.length) return;
+      var u = arr[arr.length - 1];
+      any = true;
+      sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], SK_DESC[key] + ' Сейчас доступен подход по ' + skillCap(u.lvl) * 10 + '. Уровень открыт ' + dshort(u.date) + '.', '✓', true, null, true));
     });
     PSK.forEach(function (P) {
-      (lastGI.pups[P.key] || []).forEach(function (u) {
-        any = true;
-        sk.appendChild(questButton(P.name + ' ' + SK_ROMAN[u.lvl - 1], 'открыто ' + dshort(u.date), '✓', true, null, true));
-      });
+      var arr = lastGI.pups[P.key] || [];
+      if (!arr.length) return;
+      var u = arr[arr.length - 1], b = PSK_BONUS[u.lvl - 1];
+      any = true;
+      sk.appendChild(questButton(P.name + ' ' + SK_ROMAN[u.lvl - 1], SK_DESC[P.key] + ' За этот уровень дали +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '. Открыт ' + dshort(u.date) + '. Следующие уровни скрыты.', '✓', true, null, true));
     });
     if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно практики.'));
     var open = 0;
@@ -2814,6 +2830,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   $('fx-sound').value = FX.sound;
   $('fx-sound').addEventListener('change', function () { FX.sound = $('fx-sound').value; saveFx(); });
   $('gear').addEventListener('click', function () { $('setup').hidden = false; });
+  $('trophy-btn').addEventListener('click', function () { $('trophy').hidden = false; });
+  $('trophy-x').addEventListener('click', function () { $('trophy').hidden = true; });
   $('setup-x').addEventListener('click', function () { $('setup').hidden = true; });
   $('setup').addEventListener('click', function (e) { if (e.target === $('setup')) $('setup').hidden = true; });
   $('fx-flash').addEventListener('change', function () { FX.flash = $('fx-flash').value; saveFx(); });

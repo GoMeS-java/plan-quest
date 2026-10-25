@@ -326,6 +326,7 @@
       menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu();
     };
     var bar = el('div', 'pl-bar'); bar.appendChild(chip);
+    var tbtn = document.getElementById('trophy-btn'); if (tbtn) bar.appendChild(tbtn);
     var gear = document.getElementById('gear'); if (gear) bar.appendChild(gear);
     var slot = document.getElementById('plslot');
     if (slot) slot.appendChild(bar); else { bar.style.cssText = 'position:absolute;top:12px;left:84px;z-index:9999'; document.body.appendChild(bar); }
