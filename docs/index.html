@@ -79,8 +79,6 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 
 
 /* ---- комната: постер, стеллаж, стол ---- */
-.poster { position: absolute; left: 20px; top: 62px; width: 40px; height: 58px; background: #15171c; padding: 3px; z-index: 0; }
-.poster i { display: block; width: 100%; height: 100%; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 26' shape-rendering='crispEdges' preserveAspectRatio='none'><rect width='17' height='26' fill='%232e2a5e'/><rect y='8' width='17' height='4' fill='%235a3a7a'/><rect y='12' width='17' height='4' fill='%23b2507a'/><rect y='16' width='17' height='4' fill='%23e8895a'/><rect x='11' y='12' width='3' height='3' fill='%23ffd27a'/><rect x='12' y='11' width='1' height='1' fill='%23ffd27a'/><g fill='%23ffffff'><rect x='3' y='2' width='1' height='1'/><rect x='12' y='3' width='1' height='1'/><rect x='8' y='5' width='1' height='1'/><rect x='14' y='7' width='1' height='1'/><rect x='5' y='8' width='1' height='1'/></g><polygon fill='%234a3f78' points='0%2C19 0%2C14 3%2C11 5%2C13 8%2C8 11%2C12 13%2C10 17%2C14 17%2C19'/><rect x='7' y='9' width='3' height='1' fill='%23e9e4f5'/><rect x='8' y='8' width='1' height='1' fill='%23e9e4f5'/><rect x='2' y='12' width='2' height='1' fill='%23cfc8e6'/><polygon fill='%232a2550' points='0%2C26 0%2C19 4%2C16 7%2C19 10%2C17 17%2C21 17%2C26'/><polygon fill='%2314122a' points='0%2C26 0%2C22 6%2C21 12%2C22 17%2C20 17%2C26'/><g fill='%2307060e'><rect x='12' y='16' width='1' height='1'/><rect x='11' y='17' width='3' height='1'/><rect x='11' y='18' width='3' height='3'/><rect x='10' y='21' width='5' height='1'/></g><rect x='15' y='15' width='1' height='7' fill='%238a6a4a'/></svg>") center / 100% 100% no-repeat; image-rendering: pixelated; position: relative; }
 .cube { position: absolute; left: 6px; bottom: 76px; width: 86px; height: 78px; transform: scale(.82); transform-origin: bottom left; background: #eceae3; box-shadow: inset -3px -3px 0 #c9c5ba; padding: 3px; z-index: 0; }
 .cube u { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 3px; width: 100%; height: 100%; text-decoration: none; }
 .cube u i { background: #bdb7a8; box-shadow: inset 2px 2px 0 rgba(0,0,0,.18); position: relative; overflow: hidden; }
@@ -402,7 +400,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 /* ---- расширенная комната: всё внутри уменьшено, комната шире и выше ---- */
 .rm { position: absolute; left: 0; top: 0; width: 172.4%; height: 172.4%; transform: scale(.58); transform-origin: 0 0; }
 .rm .window { top: 70px; right: 40px; width: 96px; height: 110px; transform: scale(1.3); transform-origin: top right; }
-.rm .poster { left: 24px; top: 100px; transform: scale(1.5); transform-origin: top left; }
 .rm .cube { left: 10px; bottom: 126px; transform: scale(1.5); transform-origin: bottom left; }
 .rm .desk { right: 8px; bottom: 126px; transform: scale(1.3); transform-origin: bottom right; }
 .rm .hg { left: 85px; bottom: 243px; transform: none; }
@@ -410,6 +407,14 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 .rm .hero { bottom: 30px; }
 .rm .hero canvas { width: 192px; height: 312px; aspect-ratio: auto; }
 .rm .hero-shadow { bottom: 22px; width: 150px; }
+.rm .hgp { position: absolute; left: 73px; bottom: 235px; width: 64px; height: 8px; background: #6a5640; box-shadow: inset 0 -3px 0 rgba(0,0,0,.35), 0 5px 0 rgba(0,0,0,.25); }
+.rm.hs .hgp { display: none; }
+.rm:not(.hs) .cube { display: none; }
+.rm:not(.hd) .dtop, .rm:not(.hd) .dleg, .rm:not(.hd) .kb, .rm:not(.hd) .can { display: none; }
+.rm:not(.hm) .mon { display: none; }
+.rm:not(.hp) .pc { display: none; }
+.rm:not(.hd) .mon { margin-bottom: -54px; }
+.rm:not(.hd):not(.hm):not(.hp) .desk { display: none; }
 .rmi { position: absolute; image-rendering: pixelated; pointer-events: none; }
 .rmi i { position: absolute; inset: 0; background-size: 100% 100%; background-repeat: no-repeat; image-rendering: pixelated; }
 .rmi.rep i { background-repeat: repeat-x; background-size: auto 100%; }
@@ -420,6 +425,24 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 @keyframes rmB { 0%, 49% { opacity: 0; } 50%, 100% { opacity: 1; } }
 @keyframes rswing { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
 @media (prefers-reduced-motion: reduce) { .rmi i, .rmi.sw { animation: none; } .rmi i + i { opacity: 0; } }
+/* ---- оформление за интерьер ---- */
+.stage[data-bg="attic"] { --wall: #3a2a1c; --floor: #261a10; }
+.stage[data-bg="attic"] .window { background: linear-gradient(#e8c98a, #b98a4a); }
+.stage[data-bg="attic"] .moon, .stage[data-bg="attic"] .star { display: none; }
+.stage[data-bg="attic"]::before { content: ""; position: absolute; inset: 0 0 26% 0; pointer-events: none; background: radial-gradient(2px 2px at 20% 30%, rgba(255,230,170,.8), transparent), radial-gradient(2px 2px at 60% 60%, rgba(255,230,170,.7), transparent), radial-gradient(1.5px 1.5px at 80% 20%, rgba(255,230,170,.8), transparent), radial-gradient(1.5px 1.5px at 40% 80%, rgba(255,230,170,.6), transparent); animation: dust 7s ease-in-out infinite alternate; }
+@keyframes dust { 0% { transform: translate(0, 0); opacity: .5; } 100% { transform: translate(14px, -18px); opacity: 1; } }
+.stage[data-bg="peaks"] { --wall: #232c44; --floor: #181e30; }
+.stage[data-bg="peaks"] .window { background: linear-gradient(135deg, transparent 54%, #46547a 54% 100%) 0 100% / 60% 45% no-repeat, linear-gradient(225deg, transparent 46%, #34406a 46% 100%) 100% 100% / 70% 60% no-repeat, linear-gradient(#2a3c68, #8fb0dc); animation: peakssky 12s ease-in-out infinite alternate; }
+.stage[data-bg="peaks"] .moon { top: 14px; left: 50px; background: #f4f1d8; }
+@keyframes peakssky { 0% { filter: brightness(.8); } 100% { filter: brightness(1.2); } }
+:root[data-aura="focus"] .hero canvas { animation: bob 1.6s steps(1) infinite, focusp 2s ease-in-out infinite alternate; }
+@keyframes focusp { 0% { filter: drop-shadow(0 0 3px rgba(74,199,255,.5)); } 100% { filter: drop-shadow(0 0 14px rgba(74,199,255,.95)) drop-shadow(0 0 4px #fff); } }
+:root[data-aura="orbit"] .hero::before { content: ""; position: absolute; left: 50%; top: 50%; width: 0; height: 0; box-shadow: 120px 0 0 5px #b48cff, -120px 0 0 5px #8cd0ff, 0 -150px 0 4px #ffd27a; animation: orbitspin 6s linear infinite; pointer-events: none; }
+@keyframes orbitspin { to { transform: rotate(360deg); } }
+.stage[data-frame="scan"] { border-style: solid; border-width: 5px; animation: scanb 2.4s steps(4) infinite; }
+@keyframes scanb { 0% { border-color: #39ff9a; box-shadow: inset 0 0 14px #39ff9a; } 50% { border-color: #4ac7ff; box-shadow: inset 0 0 14px #4ac7ff; } 100% { border-color: #39ff9a; box-shadow: inset 0 0 14px #39ff9a; } }
+.stage[data-frame="sunset"] { border-style: solid; border-width: 6px; animation: sunsetb 5s ease-in-out infinite alternate; }
+@keyframes sunsetb { 0% { border-color: #ffb454; box-shadow: 0 0 12px #ff8a4a; } 50% { border-color: #ff6a8a; box-shadow: 0 0 14px #ff5a7a; } 100% { border-color: #a46aff; box-shadow: 0 0 12px #8a5aff; } }
 .rmw { display: flex; flex-wrap: wrap; gap: 8px; }
 </style></head><body>
 
@@ -440,7 +463,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   <div class="stage" aria-label="Твой пиксельный персонаж в комнате">
     <div class="rm" id="rm">
     <div class="window"><div class="moon"></div><span class="star" style="top:60px;left:60px"></span><span class="star" style="top:20px;right:14px"></span><span class="star" style="top:84px;left:16px"></span></div>
-    <div class="poster"><i></i></div>
+    <div class="hgp"></div>
     <div class="cube"><b class="cube-top"></b><u><i></i><i></i><i></i><i></i><i></i><i></i></u></div>
     <div class="desk"><b class="dtop"></b><b class="dleg l1"></b><b class="dleg l2"></b><b class="pc"></b><b class="mon m1"></b><b class="mon m2"></b><b class="kb"></b><b class="can"></b></div>
     <div class="hg" id="hg" role="img" aria-label="Песочные часы: время до цели"><b class="hg-cap"></b><i class="hg-top"></i><i class="hg-str"></i><i class="hg-bot"></i><b class="hg-cap"></b><span class="hg-d" id="hg-d"></span></div>
@@ -701,9 +724,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.33</h2>
-    <div class="hint">Сборка 5665dd</div>
+    <h2>ВЕРСИЯ 0.34</h2>
+    <div class="hint">Сборка 7cc997</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.34</b> · 26.10 · Стеллаж, стол, мониторы, компьютер и постеры теперь тоже открываются редкими достижениями, у каждого свой титул и оформление</div>
       <div class="hint"><b>0.33</b> · 26.10 · Комната стала просторнее, всё в ней меньше. За суперредкие достижения в комнате появляются предметы, их можно убирать в гардеробе, раздел «Интерьер»</div>
       <div class="hint"><b>0.32</b> · 26.10 · Комната разгружена: мебель стоит по бокам и не перекрывается персонажем, песочные часы стоят на полке</div>
       <div class="hint"><b>0.31</b> · 26.10 · На стене новый постер: путник на фоне гор</div>
@@ -759,7 +783,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.33";
+<script>window.APP_VERSION = "0.34";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -1282,6 +1306,13 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'z17', title: 'НОЧНОЙ ДОЗОР', ev: 1, d: 'Открыть приложение ровно в 03:33 или 05:55', pts: 12, cos: 'b_watch' },
     { id: 'z19', title: 'ИДЕАЛИСТ', val: 'perf', goal: 25, d: 'Двадцать пять идеальных дней за всё время', pts: 20, cos: 'au_nebula' },
     { id: 'z20', title: 'ГРОМОВЕРЖЕЦ', val: 'sets', goal: 150, d: 'Сто пятьдесят подходов приседаний и отжиманий', pts: 18, cos: 'b_storm' },
+    { id: 'z21', title: 'КЛАДОВЩИК', ev: 1, d: 'Открыть приложение ровно в 07:07 или 17:17', pts: 12, cos: 'b_attic' },
+    { id: 'z22', title: 'ТРУДОГОЛИК', val: 'perf', goal: 10, d: 'Десять идеальных дней за всё время', pts: 16, cos: 'au_focus' },
+    { id: 'z23', title: 'ДВОЙНОЙ ЭКРАН', ev: 1, d: 'Открыть приложение ровно в 16:16 или 23:23', pts: 12, cos: 'fr_scan' },
+    { id: 'z24', title: 'СИСАДМИН', val: 'weigh', goal: 5, d: 'Взвешиваться пять недель', pts: 16, cos: 'p_matrix' },
+    { id: 'z25', title: 'ПУТНИК', val: 'kcalOkBest', goal: 14, d: '14 дней подряд в пределах нормы калорий', pts: 18, cos: 'b_peaks' },
+    { id: 'z26', title: 'ЗАКАТНИК', ev: 1, d: 'Открыть приложение ровно в 19:19', pts: 12, cos: 'fr_sunset' },
+    { id: 'z27', title: 'АСТРОНАВТ', val: 'reconBest', goal: 10, d: '10 дней подряд со сверкой трат', pts: 18, cos: 'au_orbit' },
     { id: 'z18', title: 'ПАЛИНДРОМ', ev: 1, d: 'Открыть приложение ровно в 10:01, 15:51, 20:02 или 21:12', pts: 12, cos: 'p_mirror' }
   ];
 
@@ -1294,6 +1325,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     return 'url("data:image/svg+xml,' + encodeURIComponent(x + '</svg>') + '")';
   }
   var ROOM_ITEMS = {
+    shelf: { n: 'Стеллаж', cls: 'hs' }, desk: { n: 'Стол', cls: 'hd' }, monitors: { n: 'Мониторы', cls: 'hm' }, pc: { n: 'Компьютер', cls: 'hp' },
+    poster1: { n: 'Постер: путник', w: 15, h: 22, k: 4, pad: 4, slot: 'left:24px;top:100px', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 26" shape-rendering="crispEdges" preserveAspectRatio="none"><rect width="17" height="26" fill="#2e2a5e"/><rect y="8" width="17" height="4" fill="#5a3a7a"/><rect y="12" width="17" height="4" fill="#b2507a"/><rect y="16" width="17" height="4" fill="#e8895a"/><rect x="11" y="12" width="3" height="3" fill="#ffd27a"/><rect x="12" y="11" width="1" height="1" fill="#ffd27a"/><g fill="#ffffff"><rect x="3" y="2" width="1" height="1"/><rect x="12" y="3" width="1" height="1"/><rect x="8" y="5" width="1" height="1"/><rect x="14" y="7" width="1" height="1"/><rect x="5" y="8" width="1" height="1"/></g><polygon fill="#4a3f78" points="0,19 0,14 3,11 5,13 8,8 11,12 13,10 17,14 17,19"/><rect x="7" y="9" width="3" height="1" fill="#e9e4f5"/><rect x="8" y="8" width="1" height="1" fill="#e9e4f5"/><rect x="2" y="12" width="2" height="1" fill="#cfc8e6"/><polygon fill="#2a2550" points="0,26 0,19 4,16 7,19 10,17 17,21 17,26"/><polygon fill="#14122a" points="0,26 0,22 6,21 12,22 17,20 17,26"/><g fill="#07060e"><rect x="12" y="16" width="1" height="1"/><rect x="11" y="17" width="3" height="1"/><rect x="11" y="18" width="3" height="3"/><rect x="10" y="21" width="5" height="1"/></g><rect x="15" y="15" width="1" height="7" fill="#8a6a4a"/></svg>' },
+    poster2: { n: 'Постер: закат', w: 14, h: 10, k: 4, slot: 'left:100px;top:100px', f: [CC(RR('#15171c', '0 0 14 10'), RR('#f2a65a', '1 1 12 4'), RR('#e8745a', '1 3 12 2'), RR('#fff1b0', '8 2 3 2'), RR('#2f6f9a', '1 5 12 4'), RR('#ffd98a', '8 6 3 1;9 7 1 1'))] },
+    poster3: { n: 'Постер: планета', w: 10, h: 13, k: 4, slot: 'left:24px;top:200px', f: [CC(RR('#15171c', '0 0 10 13'), RR('#10142e', '1 1 8 11'), RR('#c97a4a', '3 4 4 4;2 5 6 2'), RR('#e8c98a', '1 6 8 1'), RR('#ffffff', '2 2 1 1;7 3 1 1;3 10 1 1;7 9 1 1'))] },
     clock: { n: 'Настенные часы', w: 14, h: 14, k: 4, slot: 'left:calc(50% - 28px);top:120px', f: [
       CC(RR('#3a2a1a', '4 0 6 1;2 1 2 1;10 1 2 1;1 2 1 2;12 2 1 2;0 4 1 6;13 4 1 6;1 10 1 2;12 10 1 2;2 12 2 1;10 12 2 1;4 13 6 1'), RR('#f1e6cc', '4 1 6 1;2 2 10 2;1 4 12 6;2 10 10 2;4 12 6 1'), RR('#3a2a1a', '7 1 1 1;7 12 1 1;1 7 1 1;12 7 1 1'), RR('#b3261e', '7 3 1 5;7 7 4 1')),
       CC(RR('#3a2a1a', '4 0 6 1;2 1 2 1;10 1 2 1;1 2 1 2;12 2 1 2;0 4 1 6;13 4 1 6;1 10 1 2;12 10 1 2;2 12 2 1;10 12 2 1;4 13 6 1'), RR('#f1e6cc', '4 1 6 1;2 2 10 2;1 4 12 6;2 10 10 2;4 12 6 1'), RR('#3a2a1a', '7 1 1 1;7 12 1 1;1 7 1 1;12 7 1 1'), RR('#b3261e', '7 7 1 4;4 7 4 1'))] },
@@ -1344,16 +1379,16 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     tapestry: { n: 'Гобелен', w: 10, h: 14, k: 4, slot: 'right:20px;top:6px', f: [
       CC(RR('#c9a04a', '0 0 10 1'), RR('#2f5d7a', '1 1 8 11'), RR('#e8b13c', '4 3 2 1;3 4 4 1;2 5 6 1;3 6 4 1;4 7 2 1'), RR('#2f5d7a', '4 5 2 1'), RR('#e8b13c', '1 12 8 1;1 13 1 1;4 13 1 1;8 13 1 1'))] }
   };
-  var ROOM_OF = { z01: 'clock', z02: 'cat', z03: 'dart', z04: 'mirror', z05: 'bag', z06: 'garland', z07: 'trophy', z08: 'pennant', z09: 'kettle', z10: 'medal', z11: 'scale', z12: 'lamp', z13: 'safe', z14: 'globe', z15: 'rug', z17: 'owl', z19: 'banner', z20: 'bolt', z18: 'tapestry' };
-  var ROOM_BASE = [
-    { w: 14, h: 10, k: 4, slot: 'left:100px;top:100px', f: [CC(RR('#15171c', '0 0 14 10'), RR('#f2a65a', '1 1 12 4'), RR('#e8745a', '1 3 12 2'), RR('#fff1b0', '8 2 3 2'), RR('#2f6f9a', '1 5 12 4'), RR('#ffd98a', '8 6 3 1;9 7 1 1'))] },
-    { w: 10, h: 13, k: 4, slot: 'left:24px;top:200px', f: [CC(RR('#15171c', '0 0 10 13'), RR('#10142e', '1 1 8 11'), RR('#c97a4a', '3 4 4 4;2 5 6 2'), RR('#e8c98a', '1 6 8 1'), RR('#ffffff', '2 2 1 1;7 3 1 1;3 10 1 1;7 9 1 1'))] }
-  ];
+  var ROOM_OF = { z01: 'clock', z02: 'cat', z03: 'dart', z04: 'mirror', z05: 'bag', z06: 'garland', z07: 'trophy', z08: 'pennant', z09: 'kettle', z10: 'medal', z11: 'scale', z12: 'lamp', z13: 'safe', z14: 'globe', z15: 'rug', z17: 'owl', z19: 'banner', z20: 'bolt', z18: 'tapestry', z21: 'shelf', z22: 'desk', z23: 'monitors', z24: 'pc', z25: 'poster1', z26: 'poster2', z27: 'poster3' };
   function roomEl(it) {
     var d = document.createElement('div');
     d.className = 'rmi' + (it.rep ? ' rep' : '') + (it.sw ? ' sw' : '');
     d.style.cssText = 'width:' + (it.w * it.k) + 'px;height:' + (it.h * it.k) + 'px;' + it.slot;
-    it.f.forEach(function (ops) { var i = document.createElement('i'); i.style.backgroundImage = svgUri(ops, it.w, it.h); d.appendChild(i); });
+    if (it.svg) {
+      d.style.background = '#15171c';
+      var pi = document.createElement('i'); pi.style.inset = it.pad + 'px';
+      pi.style.backgroundImage = 'url("data:image/svg+xml,' + encodeURIComponent(it.svg) + '")'; d.appendChild(pi);
+    } else it.f.forEach(function (ops) { var i = document.createElement('i'); i.style.backgroundImage = svgUri(ops, it.w, it.h); d.appendChild(i); });
     return d;
   }
   function roomOwned() {
@@ -1371,13 +1406,14 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   function renderRoom() {
     var base = $('rm-base'), box = $('rm-items');
     if (!base || !box) return;
-    if (!base.firstChild) ROOM_BASE.forEach(function (b) { base.appendChild(roomEl(b)); });
     var own = roomOwned(), hid = roomHidden();
     var key = own.map(function (o) { return o.id + (hid[o.id] ? '-' : '+'); }).join(',');
     if (key === roomKey) return;
     roomKey = key;
     clear(box);
-    own.forEach(function (o) { if (!hid[o.id]) box.appendChild(roomEl(o.it)); });
+    var rm = $('rm'), cl = { hs: 0, hd: 0, hm: 0, hp: 0 };
+    own.forEach(function (o) { if (hid[o.id]) return; if (o.it.cls) cl[o.it.cls] = 1; else box.appendChild(roomEl(o.it)); });
+    Object.keys(cl).forEach(function (c) { rm.classList.toggle(c, !!cl[c]); });
     var w = $('wd-room');
     if (w) {
       clear(w);
@@ -1417,6 +1453,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (kind === 'rainbow') h = (t / 60) % 360;
       else if (kind === 'gold') { h = 44 + 5 * Math.sin(t / 700); l = 64 + 12 * Math.sin(t / 330); }
       else if (kind === 'mirror') { var ph = (t / 5200) % 2; ph = ph > 1 ? 2 - ph : ph; h = 185 + 130 * ph; l = 62 + 8 * ph; }
+      else if (kind === 'matrix') { h = 128 + 18 * Math.sin(t / 900); l = 56 + 10 * Math.sin(t / 420); }
       else if (kind === 'breath') { h = 196; l = 60 + 10 * Math.sin(t / 1100); }
       else { var H = [240, 248, 256, 264, 280, 310, 8, 28, 42, 52, 58, 66, 76, 96, 126, 158, 178, 190, 200, 214, 224, 230, 235, 240]; h = H[new Date().getHours()]; l = 70; }
       root.style.setProperty('--gold', hsl(h, 78, l));
@@ -1482,7 +1519,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   COS2.push(['b_sunrise', 'bg', 'Золотой рассвет', '#ffb454', 'sunrise', 'linear-gradient(#1b2a5a, #ff8a4a, #ffd77a)'],
     ['b_watch', 'bg', 'Ночной дозор', '#d9d6b4', 'watch', 'linear-gradient(#02030a, #101a3d)'],
     ['b_storm', 'bg', 'Гроза', '#9fb4ff', 'storm', 'linear-gradient(#07091a, #2a3568)'], ['au_nebula', 'aura', 'Туманность', '#b48cff', 'nebula'],
-    ['fr_vitrage', 'frame', 'Витраж', '#ff5acd', 'vitrage'], ['au_hearth', 'aura', 'Очаг', '#ffb454', 'hearth']);
+    ['fr_vitrage', 'frame', 'Витраж', '#ff5acd', 'vitrage'], ['au_hearth', 'aura', 'Очаг', '#ffb454', 'hearth'],
+    ['b_attic', 'bg', 'Чердак', '#d9a25a', 'attic', 'linear-gradient(#3a2a1c, #1c130c)'], ['b_peaks', 'bg', 'Вершины', '#8fb4e8', 'peaks', 'linear-gradient(#2a3c68, #6f8fc0)'],
+    ['au_focus', 'aura', 'Фокус', '#4ac7ff', 'focus'], ['au_orbit', 'aura', 'Орбита', '#b48cff', 'orbit'],
+    ['fr_scan', 'frame', 'Сканер', '#39ff9a', 'scan'], ['fr_sunset', 'frame', 'Закатная рамка', '#ff8a5a', 'sunset']);
+  COS.p_matrix = { cat: 'theme', n: 'Матрица', prem: 'matrix', sw: '#39ff6a' };
   COS2.forEach(function (c) { COS[c[0]] = { cat: c[1], n: c[2], sw: c[3], key: c[4], pv: c[5] }; });
   COS.p_gold = { cat: 'theme', n: 'Казна', prem: 'gold', sw: '#f2c14e' };
   COS.p_mirror = { cat: 'theme', n: 'Зеркало', prem: 'mirror', sw: '#4ac7e8' };
@@ -3413,6 +3454,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var d = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
     if (hm === '11:11' || hm === '12:34' || hm === '22:22') recordRare('z01');
     if (hm === '03:33' || hm === '05:55') recordRare('z17');
+    if (hm === '07:07' || hm === '17:17') recordRare('z21');
+    if (hm === '16:16' || hm === '23:23') recordRare('z23');
+    if (hm === '19:19') recordRare('z26');
     if (hm === '10:01' || hm === '15:51' || hm === '20:02' || hm === '21:12') recordRare('z18');
   }
   var heroTaps = [];
