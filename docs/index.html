@@ -578,10 +578,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.17</h2>
-    <div class="hint">Сборка dcf4c2</div>
+    <h2>ВЕРСИЯ 0.18</h2>
+    <div class="hint">Сборка 4f7b2a</div>
     <div class="goal vhist">
-      <div class="hint"><b>0.17</b> · 25.10 · Контрольные точки веса: 160, 150, 140, 130, 120, на каждой новая форма персонажа</div>
+      <div class="hint"><b>0.18</b> · 25.10 · Стадии персонажа снова скрыты</div>
+      <div class="hint"><b>0.17</b> · 25.10 · Контрольные точки веса: 160, 150, 140, 130, 120</div>
       <div class="hint"><b>0.16</b> · 25.10 · Персонаж меняет форму от веса</div>
       <div class="hint"><b>0.15</b> · 25.10 · Вкладка «Похудение»: калории, серия, вес</div>
       <div class="hint"><b>0.14</b> · 25.10 · Штрафы и бонусы за калории</div>
@@ -620,7 +621,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.17";
+<script>window.APP_VERSION = "0.18";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -2230,7 +2231,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       outer: ids.outer && ids.outer !== 'none' ? itemById(list, ids.outer) : null
     };
   }
-  var BODY_TH = [160, 150, 140, 130, 120];
+  var BODY_TH = [158.3, 151.6, 144.2, 136.9, 128.4];
   function bodyStage() {
     if (!S.weights || !S.weights.length) return 0;
     var today = dkey(new Date()), from = addDays(today, -14), t = null, last = null;
