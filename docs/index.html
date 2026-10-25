@@ -578,9 +578,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.19</h2>
-    <div class="hint">Сборка 6da836</div>
+    <h2>ВЕРСИЯ 0.20</h2>
+    <div class="hint">Сборка d4c612</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.20</b> · 26.10 · Недельный квест про встречи убран</div>
       <div class="hint"><b>0.19</b> · 25.10 · Строки долгов и Авито переносятся нормально</div>
       <div class="hint"><b>0.18</b> · 25.10 · Стадии персонажа снова скрыты</div>
       <div class="hint"><b>0.17</b> · 25.10 · Контрольные точки веса: 160, 150, 140, 130, 120</div>
@@ -622,7 +623,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.19";
+<script>window.APP_VERSION = "0.20";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -1008,9 +1009,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'x61', t: 'Скрытое достижение', d: '5 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 5, pts: 1 },
     { id: 'x62', t: 'Скрытое достижение', d: '12 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 12, pts: 3 },
     { id: 'x63', t: 'Скрытое достижение', d: '27 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 27, pts: 8 },
-    { id: 'x64', t: 'Скрытое достижение', d: '4 встреч с людьми не по работе', val: 'meets', goal: 4, pts: 3 },
-    { id: 'x65', t: 'Скрытое достижение', d: '13 встреч с людьми не по работе', val: 'meets', goal: 13, pts: 5, title: 'ДУША КОМПАНИИ' },
-    { id: 'x66', t: 'Скрытое достижение', d: '41 встреч с людьми не по работе', val: 'meets', goal: 41, pts: 15, title: 'ЛИДЕР' },
+    { id: 'x64', t: 'Скрытое достижение', d: 'Записать калории 17 дней', val: 'kcalLog', goal: 17, pts: 3 },
+    { id: 'x65', t: 'Скрытое достижение', d: '40 дней в пределах 2200 ккал', val: 'kcalOk', goal: 40, pts: 5, title: 'ЖЕЛЕЗНАЯ ВОЛЯ' },
+    { id: 'x66', t: 'Скрытое достижение', d: '200 идеальных дней', val: 'perf', goal: 200, pts: 15, title: 'ЛИДЕР' },
     { id: 'x67', t: 'Скрытое достижение', d: 'Взвешиваться 5 недель', val: 'weigh', goal: 5, pts: 1 },
     { id: 'x68', t: 'Скрытое достижение', d: 'Взвешиваться 14 недель', val: 'weigh', goal: 14, pts: 3 },
     { id: 'x69', t: 'Скрытое достижение', d: 'Взвешиваться 31 недель', val: 'weigh', goal: 31, pts: 6 },
@@ -1088,7 +1089,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'z08', title: 'ТРОЙНАЯ УГРОЗА', slot: 9, val: 'perfCombo', goal: 1, d: 'Идеальный день, в который ещё и тройной удар', pts: 18, cos: 'b_library' },
     { id: 'z09', title: 'ЖЕЛЕЗНЫЙ РЕЖИМ', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2200 ккал', pts: 20, cos: 'b_aurora' },
     { id: 'z10', title: 'МАРАФОНЕЦ', slot: 20, val: 'stepStreak', goal: 60, d: '60 дней подряд с выполненной целью по шагам', pts: 25, cos: 'au_flame' },
-    { id: 'z11', title: 'СОЦИАЛЬНЫЙ ГИГАНТ', slot: 27, val: 'meetBest', goal: 4, d: 'Встреча с людьми четыре недели подряд', pts: 18, cos: 'fr_rgb' }
+    { id: 'z11', title: 'НА ВЕСАХ', slot: 27, val: 'weigh', goal: 8, d: 'Взвешиваться восемь недель', pts: 18, cos: 'fr_rgb' }
   ];
   function cosOf(id) {
     if (ACH_COS[id]) return ACH_COS[id];
@@ -1461,7 +1462,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var GI = growthInfo(SI, today);
     lastGI = GI;
     Object.keys(GI.pts).forEach(function (k) { add(k, GI.pts[k]); });
-    Object.keys(S.weeks).forEach(function (k) { if (S.weeks[k].meet) add(k, 5); });
+    Object.keys(S.weeks).forEach(function (k) { if (S.weeks[k].meet && k < '2026-10-26') add(k, 5); });
     Object.keys(SI.done).forEach(function (k) { if (SI.done[k]) add(addDays(k, 6), 2); });
     var kw = mondayKey('2026-10-19'), kcur = mondayKey(today);
     while (kw <= kcur) { if (kcalWeek(kw) === 7) add(addDays(kw, 6), 3); kw = addDays(kw, 7); }
@@ -1779,8 +1780,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var weighed = S.weights.some(function (w) { return mondayKey(w.date) === mk; });
     var list = $('wlist');
     clear(list);
-    list.appendChild(questButton('Встреча с людьми не по работе', 'кино в одиночку не считается', '+5', meet, function () { toggleMeet(); }));
-    list.appendChild(questButton('Взвешивание раз в неделю', weighed ? 'вес записан на этой неделе' : 'запиши вес во вкладке «Цели»', '+2', weighed, null, true));
+    list.appendChild(questButton('Взвешивание раз в неделю', weighed ? 'вес записан на этой неделе' : 'запиши вес во вкладке «Похудение»', '+2', weighed, null, true));
     var SI = stepInfo();
     var sg = SI.goals[mk] || 5000;
     var cnt = 0, dd = parseKey(mk);
