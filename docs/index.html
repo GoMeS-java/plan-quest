@@ -595,9 +595,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.22</h2>
-    <div class="hint">Сборка 5ae09e</div>
+    <h2>ВЕРСИЯ 0.23</h2>
+    <div class="hint">Сборка c6595c</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.23</b> · 26.10 · Ежедневная сверка трат, спонтанные дела до 2 в день, новые суперредкие</div>
       <div class="hint"><b>0.22</b> · 26.10 · Спонтанные квесты на вкладке «Сегодня», новые скрытые навыки</div>
       <div class="hint"><b>0.21</b> · 26.10 · Новые ежедневные квесты (душ, английский), недельный английский, весь прогресс целей во вкладке «Цели»</div>
       <div class="hint"><b>0.20</b> · 26.10 · Недельный квест про встречи убран</div>
@@ -642,7 +643,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.22";
+<script>window.APP_VERSION = "0.23";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -910,10 +911,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { t: 'Уход за зубами', s: 'утром и вечером, отбеливающий гель по схеме' },
     { t: 'Принял душ', s: 'каждый день' },
     { t: 'Английский', s: 'отметь, когда позанимался' },
-    { t: 'Лёг до 00:00', s: 'необязательно, штрафа нет', opt: true }
+    { t: 'Лёг до 00:00', s: 'необязательно, штрафа нет', opt: true },
+    { t: 'Сверка трат', s: 'записал траты за день, баланс сошёлся с банком' }
   ];
   var NEW_Q = '2026-10-26', ENG_START = '2026-10-26';
-  function activeIdx(k) { return k < NEW_Q ? [0, 1, 2, 3, 4, 5] : [0, 2, 3, 4, 5, 6, 7]; }
+  function activeIdx(k) { return k < NEW_Q ? [0, 1, 2, 3, 4, 5] : [0, 2, 3, 4, 5, 6, 7, 9]; }
   function reqTotal(k) { return activeIdx(k).length + 1; }
   function engMin(k) {
     var w = Math.round((parseKey(mondayKey(k)) - parseKey(ENG_START)) / 604800000);
@@ -946,10 +948,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { key: 'p_cook', name: 'Кулинария', val: 'cook', th: [5, 17, 40, 80, 150] },
     { key: 'p_care', name: 'Самоуход', val: 'careAll', th: [30, 90, 200, 400, 800] },
     { key: 'p_food', name: 'Дисциплина питания', val: 'kcalOk', th: [6, 20, 45, 90, 160] },
-    { key: 'p_home', name: 'Хозяйство', val: 'spont', th: [5, 15, 35, 70, 130] }
+    { key: 'p_home', name: 'Хозяйство', val: 'spont', th: [5, 15, 35, 70, 130] },
+    { key: 'p_fin', name: 'Финансовый контроль', val: 'recon', th: [7, 21, 50, 100, 180] }
   ];
   var PSK_BONUS = [0, 1, 2, 3, 5, 8];
-  var SPONT_MAX = 3;
+  var SPONT_MAX = 2;
   function spontByDate() {
     var m = {};
     S.spont.forEach(function (x) { if (x.done && x.date) m[x.date] = (m[x.date] || 0) + 1; });
@@ -1099,6 +1102,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'x105', t: 'Скрытое достижение', d: '9 дней английского подряд', val: 'engBest', goal: 9, pts: 3 },
     { id: 'x106', t: 'Скрытое достижение', d: 'Английский 31 раз', val: 'eng', goal: 31, pts: 6 },
     { id: 'x107', t: 'Скрытое достижение', d: '27 дней английского подряд', val: 'engBest', goal: 27, pts: 10 },
+    { id: 'x109', t: 'Скрытое достижение', d: 'Сверка трат 7 раз', val: 'recon', goal: 7, pts: 2 },
+    { id: 'x110', t: 'Скрытое достижение', d: 'Сверка трат 31 раз', val: 'recon', goal: 31, pts: 5 },
+    { id: 'x111', t: 'Скрытое достижение', d: '12 дней подряд со сверкой трат', val: 'reconBest', goal: 12, pts: 8 },
+    { id: 'x112', t: 'Скрытое достижение', d: 'Сверка трат 101 раз', val: 'recon', goal: 101, pts: 14, title: 'СВЕРЩИК' },
     { id: 'x108', t: 'Скрытое достижение', d: 'Английский 101 раз', val: 'eng', goal: 101, pts: 15, title: 'ПОЛИГЛОТ' }
   ];
 
@@ -1139,7 +1146,14 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'z08', title: 'ТРОЙНАЯ УГРОЗА', slot: 9, val: 'perfCombo', goal: 1, d: 'Идеальный день, в который ещё и тройной удар', pts: 18, cos: 'b_library' },
     { id: 'z09', title: 'ЖЕЛЕЗНЫЙ РЕЖИМ', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2200 ккал', pts: 20, cos: 'b_aurora' },
     { id: 'z10', title: 'МАРАФОНЕЦ', slot: 20, val: 'stepStreak', goal: 60, d: '60 дней подряд с выполненной целью по шагам', pts: 25, cos: 'au_flame' },
-    { id: 'z11', title: 'НА ВЕСАХ', slot: 27, val: 'weigh', goal: 8, d: 'Взвешиваться восемь недель', pts: 18, cos: 'fr_rgb' }
+    { id: 'z11', title: 'НА ВЕСАХ', slot: 27, val: 'weigh', goal: 8, d: 'Взвешиваться восемь недель', pts: 18, cos: 'fr_rgb' },
+    { id: 'z12', title: 'ПЕРВЫЙ ЛУЧ', slot: 12, val: 'earlyBest', goal: 21, d: '21 день подряд вставать до 10:00', pts: 20 },
+    { id: 'z13', title: 'КАЗНАЧЕЙ', slot: 17, val: 'reconBest', goal: 21, d: '21 день подряд со сверкой трат', pts: 22 },
+    { id: 'z14', title: 'ЯЗЫКОВОЙ ГЕНИЙ', slot: 24, val: 'engBest', goal: 30, d: '30 дней подряд английского', pts: 24 },
+    { id: 'z15', title: 'ДОМОВОЙ', val: 'spont', goal: 21, d: 'Сделать спонтанные дела 21 раз', pts: 12 },
+    { id: 'z16', title: 'ТЫСЯЧНИК', val: 'days10k', goal: 7, d: 'Семь дней с 10 000 шагов и больше', pts: 16 },
+    { id: 'z17', title: 'НОЧНОЙ ДОЗОР', ev: 1, d: 'Открыть приложение ровно в 03:33 или 05:55', pts: 12 },
+    { id: 'z18', title: 'ПАЛИНДРОМ', ev: 1, d: 'Открыть приложение ровно в 10:01, 15:51, 20:02 или 21:12', pts: 12 }
   ];
   function cosOf(id) {
     if (ACH_COS[id]) return ACH_COS[id];
@@ -1416,7 +1430,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     function give(k, v) { if (v) out.pts[k] = (out.pts[k] || 0) + v; }
     var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0,
       exact: 0, eqDate: 0, maxDayReps: 0, friRun: 0, friBest: 0, perfCombo: 0, kcalOkRun: 0, kcalOkBest: 0, meetRun: 0, meetBest: 0,
-      sets: 0, night: 0, dawn: 0, lucky: 0, doubleSteps: 0, days10k: 0, kcalLog: 0, early: 0, cook: 0, lunch: 0, kcalOk: 0, face: 0, teeth: 0, careDay: 0, foodDay: 0, shower: 0, eng: 0, engRun: 0, engBest: 0, careAll: 0, spont: 0, sunPerfect: 0, stepRun: 0, stepStreak: 0, jar: 0 };
+      sets: 0, night: 0, dawn: 0, lucky: 0, doubleSteps: 0, days10k: 0, kcalLog: 0, early: 0, cook: 0, lunch: 0, kcalOk: 0, face: 0, teeth: 0, careDay: 0, foodDay: 0, shower: 0, eng: 0, engRun: 0, engBest: 0, careAll: 0, spont: 0, recon: 0, reconRun: 0, reconBest: 0, sunPerfect: 0, stepRun: 0, stepStreak: 0, jar: 0 };
     var jarDates = {};
     (S.jar || []).forEach(function (x) { if (x && x.date) jarDates[x.date] = (jarDates[x.date] || 0) + 1; });
     var first = START_KEY;
@@ -1467,6 +1481,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (dq[0] && dq[4] && dq[5]) st.careDay++;
       if (dq[2] && dq[3]) st.foodDay++;
       if (dq[6]) st.shower++;
+      if (dq[9]) { st.recon++; st.reconRun++; if (st.reconRun > st.reconBest) st.reconBest = st.reconRun; } else st.reconRun = 0;
       st.careAll += (dq[4] ? 1 : 0) + (dq[5] ? 1 : 0) + (dq[6] ? 1 : 0);
       st.spont += spD[k] || 0;
       if (dq[7]) { st.eng++; st.engRun++; if (st.engRun > st.engBest) st.engBest = st.engRun; } else st.engRun = 0;
@@ -3017,6 +3032,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   function timeCheck() {
     var d = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
     if (hm === '11:11' || hm === '12:34' || hm === '22:22') recordRare('z01');
+    if (hm === '03:33' || hm === '05:55') recordRare('z17');
+    if (hm === '10:01' || hm === '15:51' || hm === '20:02' || hm === '21:12') recordRare('z18');
   }
   var heroTaps = [];
   document.querySelector('.hero').addEventListener('click', function () {
