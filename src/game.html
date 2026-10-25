@@ -397,6 +397,29 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 .wbig small { font-size: 11px; color: var(--muted); }
 .wchart { width: 100%; height: auto; display: block; }
 @media (prefers-reduced-motion: reduce) { .stage, .stage::before, .bar i.on, .hero canvas, .hero canvas, .q.just .t b, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
+
+/* ---- расширенная комната: всё внутри уменьшено, комната шире и выше ---- */
+.rm { position: absolute; left: 0; top: 0; width: 172.4%; height: 172.4%; transform: scale(.58); transform-origin: 0 0; }
+.rm .window { top: 70px; right: 40px; width: 96px; height: 110px; transform: scale(1.3); transform-origin: top right; }
+.rm .poster { left: 24px; top: 100px; transform: scale(1.5); transform-origin: top left; }
+.rm .cube { left: 10px; bottom: 126px; transform: scale(1.5); transform-origin: bottom left; }
+.rm .desk { right: 8px; bottom: 126px; transform: scale(1.3); transform-origin: bottom right; }
+.rm .hg { left: 85px; bottom: 243px; transform: none; }
+.rm .hg-d { font-size: 9px; }
+.rm .hero { bottom: 30px; }
+.rm .hero canvas { width: 192px; height: 312px; aspect-ratio: auto; }
+.rm .hero-shadow { bottom: 22px; width: 150px; }
+.rmi { position: absolute; image-rendering: pixelated; pointer-events: none; }
+.rmi i { position: absolute; inset: 0; background-size: 100% 100%; background-repeat: no-repeat; image-rendering: pixelated; }
+.rmi.rep i { background-repeat: repeat-x; background-size: auto 100%; }
+.rmi i + i { animation: rmB 1.4s steps(1) infinite; }
+.rmi i:first-child:not(:last-child) { animation: rmA 1.4s steps(1) infinite; }
+.rmi.sw { transform-origin: 50% 0; animation: rswing 3.2s ease-in-out infinite; }
+@keyframes rmA { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes rmB { 0%, 49% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@keyframes rswing { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+@media (prefers-reduced-motion: reduce) { .rmi i, .rmi.sw { animation: none; } .rmi i + i { opacity: 0; } }
+.rmw { display: flex; flex-wrap: wrap; gap: 8px; }
 </style>
 
 <div class="app">
@@ -414,13 +437,16 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 
   <div class="page" id="pg-a">
   <div class="stage" aria-label="Твой пиксельный персонаж в комнате">
+    <div class="rm" id="rm">
     <div class="window"><div class="moon"></div><span class="star" style="top:60px;left:60px"></span><span class="star" style="top:20px;right:14px"></span><span class="star" style="top:84px;left:16px"></span></div>
     <div class="poster"><i></i></div>
     <div class="cube"><b class="cube-top"></b><u><i></i><i></i><i></i><i></i><i></i><i></i></u></div>
     <div class="desk"><b class="dtop"></b><b class="dleg l1"></b><b class="dleg l2"></b><b class="pc"></b><b class="mon m1"></b><b class="mon m2"></b><b class="kb"></b><b class="can"></b></div>
     <div class="hg" id="hg" role="img" aria-label="Песочные часы: время до цели"><b class="hg-cap"></b><i class="hg-top"></i><i class="hg-str"></i><i class="hg-bot"></i><b class="hg-cap"></b><span class="hg-d" id="hg-d"></span></div>
+    <div id="rm-base"></div><div id="rm-items"></div>
     <div class="hero-shadow"></div>
     <div class="hero"><canvas id="hero" width="32" height="52"></canvas></div>
+    </div>
     <button class="wopen" id="wopen" type="button" aria-label="Открыть гардероб">&#128084; ГАРДЕРОБ</button>
     <div class="nametag">ТЫ</div>
   </div>
@@ -556,6 +582,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div class="wgrid" id="wd-top"></div>
     <h2>НИЗ</h2>
     <div class="wgrid" id="wd-bottom"></div>
+    <h2>ИНТЕРЬЕР</h2>
+    <div class="hint">Предметы, которые появляются в комнате за редкие находки. Нажми, чтобы убрать или вернуть.</div>
+    <div class="rmw" id="wd-room"></div>
     <div class="note">Купил новую вещь? Скинь мне фото, я нарисую её и добавлю сюда.</div>
   </section>
 
@@ -674,6 +703,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.33</b> · 26.10 · Комната стала просторнее, всё в ней меньше. За суперредкие достижения в комнате появляются предметы, их можно убирать в гардеробе, раздел «Интерьер»</div>
       <div class="hint"><b>0.32</b> · 26.10 · Комната разгружена: мебель стоит по бокам и не перекрывается персонажем, песочные часы стоят на полке</div>
       <div class="hint"><b>0.31</b> · 26.10 · На стене новый постер: путник на фоне гор</div>
       <div class="hint"><b>0.30</b> · 26.10 · В комнате стол с двумя мониторами и компьютером, стеллаж с песочными часами, постер</div>
@@ -1253,6 +1283,117 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     { id: 'z20', title: 'ГРОМОВЕРЖЕЦ', val: 'sets', goal: 150, d: 'Сто пятьдесят подходов приседаний и отжиманий', pts: 18, cos: 'b_storm' },
     { id: 'z18', title: 'ПАЛИНДРОМ', ev: 1, d: 'Открыть приложение ровно в 10:01, 15:51, 20:02 или 21:12', pts: 12, cos: 'p_mirror' }
   ];
+
+  // ---- интерьер комнаты: предмет за каждое суперредкое достижение ----
+  function RR(c, str) { return str.split(';').map(function (q) { var a = q.trim().split(/\s+/).map(Number); return [a[0], a[1], a[2], a[3], c]; }); }
+  function CC() { var o = []; for (var i = 0; i < arguments.length; i++) o = o.concat(arguments[i]); return o; }
+  function svgUri(ops, w, h) {
+    var x = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '" shape-rendering="crispEdges">';
+    ops.forEach(function (o) { x += '<rect x="' + o[0] + '" y="' + o[1] + '" width="' + o[2] + '" height="' + o[3] + '" fill="' + o[4] + '"/>'; });
+    return 'url("data:image/svg+xml,' + encodeURIComponent(x + '</svg>') + '")';
+  }
+  var ROOM_ITEMS = {
+    clock: { n: 'Настенные часы', w: 14, h: 14, k: 4, slot: 'left:calc(50% - 28px);top:120px', f: [
+      CC(RR('#3a2a1a', '4 0 6 1;2 1 2 1;10 1 2 1;1 2 1 2;12 2 1 2;0 4 1 6;13 4 1 6;1 10 1 2;12 10 1 2;2 12 2 1;10 12 2 1;4 13 6 1'), RR('#f1e6cc', '4 1 6 1;2 2 10 2;1 4 12 6;2 10 10 2;4 12 6 1'), RR('#3a2a1a', '7 1 1 1;7 12 1 1;1 7 1 1;12 7 1 1'), RR('#b3261e', '7 3 1 5;7 7 4 1')),
+      CC(RR('#3a2a1a', '4 0 6 1;2 1 2 1;10 1 2 1;1 2 1 2;12 2 1 2;0 4 1 6;13 4 1 6;1 10 1 2;12 10 1 2;2 12 2 1;10 12 2 1;4 13 6 1'), RR('#f1e6cc', '4 1 6 1;2 2 10 2;1 4 12 6;2 10 10 2;4 12 6 1'), RR('#3a2a1a', '7 1 1 1;7 12 1 1;1 7 1 1;12 7 1 1'), RR('#b3261e', '7 7 1 4;4 7 4 1'))] },
+    cat: { n: 'Кот на подоконнике', w: 14, h: 11, k: 4, slot: 'right:78px;top:169px', f: [
+      CC(RR('#e08a3c', '2 0 1 2;3 1 1 1;7 1 2 1;8 0 1 1;2 2 7 5;1 6 9 5;10 9 3 2;12 6 2 4'), RR('#a85a20', '5 2 1 2;3 8 1 3;6 8 1 3'), RR('#6bd36b', '3 4 1 1;6 4 1 1'), RR('#f08aa0', '4 5 1 1')),
+      CC(RR('#e08a3c', '2 0 1 2;3 1 1 1;7 1 2 1;8 0 1 1;2 2 7 5;1 6 9 5;10 8 3 2;12 5 2 3'), RR('#a85a20', '5 2 1 2;3 8 1 3;6 8 1 3'), RR('#a85a20', '3 4 1 1;6 4 1 1'), RR('#f08aa0', '4 5 1 1'))] },
+    dart: { n: 'Дартс', w: 12, h: 12, k: 4, slot: 'left:calc(50% - 130px);top:120px', f: [
+      CC(RR('#1d1d22', '4 0 4 1;2 1 8 1;1 2 10 1;0 3 12 6;1 9 10 1;2 10 8 1;4 11 4 1'), RR('#c8333b', '4 1 4 1;2 2 8 1;1 3 10 6;2 9 8 1;3 10 6 1'), RR('#eadfc3', '3 3 6 6'), RR('#2e8b4a', '4 4 4 4'), RR('#c8333b', '5 5 2 2'), RR('#2b6cff', '8 3 1 1;9 2 1 1;10 1 1 1'), RR('#e8e8e8', '10 0 2 1;11 1 1 1'))] },
+    mirror: { n: 'Зеркало', w: 9, h: 20, k: 4, slot: 'left:154px;top:190px', f: [
+      CC(RR('#8a5a2b', '0 0 9 20'), RR('#9fd4ea', '1 1 7 18'), RR('#6aa6c4', '1 14 7 5'), RR('#e9fbff', '2 2 1 4;3 2 1 1;2 7 1 2;5 11 1 3'))] },
+    bag: { n: 'Боксёрская груша', w: 10, h: 22, k: 4, slot: 'left:205px;top:14px', sw: 1, f: [
+      CC(RR('#8a8a94', '4 0 2 4'), RR('#c0392b', '1 4 8 15;2 3 6 1;2 19 6 1'), RR('#8a2218', '7 4 2 15'), RR('#2b2b32', '1 7 8 1;1 15 8 1'), RR('#e0705f', '2 5 1 4'))] },
+    garland: { n: 'Гирлянда', w: 24, h: 8, k: 4, rep: 1, slot: 'left:0;top:0;width:100%;height:32px', f: [
+      CC(RR('#2b2b32', '0 0 24 1'), RR('#e8453c', '3 1 2 3'), RR('#ffd84a', '11 1 2 3'), RR('#4aa8ff', '19 1 2 3'), RR('#ffffff', '3 1 1 1;11 1 1 1;19 1 1 1')),
+      CC(RR('#2b2b32', '0 0 24 1'), RR('#4aa8ff', '3 1 2 3'), RR('#e8453c', '11 1 2 3'), RR('#ffd84a', '19 1 2 3'), RR('#ffffff', '3 1 1 1;11 1 1 1;19 1 1 1'))] },
+    trophy: { n: 'Кубок на полке', w: 12, h: 13, k: 4, slot: 'right:20px;top:240px', f: [
+      CC(RR('#e8b13c', '3 1 6 1;3 2 6 3;4 5 4 1;5 6 2 3;4 9 4 1;2 2 1 2;9 2 1 2'), RR('#fff2a8', '4 2 1 2'), RR('#7a5a3a', '0 10 12 3')),
+      CC(RR('#e8b13c', '3 1 6 1;3 2 6 3;4 5 4 1;5 6 2 3;4 9 4 1;2 2 1 2;9 2 1 2'), RR('#fff2a8', '4 2 1 2;10 0 1 1;1 4 1 1;9 5 1 1'), RR('#7a5a3a', '0 10 12 3'))] },
+    pennant: { n: 'Вымпелы', w: 14, h: 5, k: 4, slot: 'right:80px;top:6px', f: [
+      CC(RR('#cbb78a', '0 0 14 1'), RR('#d9453c', '0 1 4 1;1 2 2 1;1 3 1 1'), RR('#e8b13c', '5 1 4 1;6 2 2 1;6 3 1 1'), RR('#3a7bd5', '10 1 4 1;11 2 2 1;11 3 1 1'))] },
+    kettle: { n: 'Гиря', w: 11, h: 12, k: 4, slot: 'right:112px;bottom:24px', f: [
+      CC(RR('#2a2a30', '3 0 5 1;2 1 1 2;8 1 1 2;3 3 1 1;7 3 1 1'), RR('#3a3a44', '1 4 9 6;2 3 7 1;2 10 7 1;3 11 5 1'), RR('#6a6a78', '2 5 2 3'), RR('#c24a2a', '4 7 3 2'))] },
+    medal: { n: 'Медаль', w: 10, h: 14, k: 4, slot: 'right:84px;top:240px', f: [
+      CC(RR('#2b6cb0', '3 0 4 5'), RR('#f4f4f4', '4 0 2 5'), RR('#e8b13c', '3 5 4 1;2 6 6 4;3 10 4 1'), RR('#b8861a', '4 7 2 2'), RR('#fff2a8', '3 6 1 1')),
+      CC(RR('#2b6cb0', '3 0 4 5'), RR('#f4f4f4', '4 0 2 5'), RR('#e8b13c', '3 5 4 1;2 6 6 4;3 10 4 1'), RR('#b8861a', '4 7 2 2'), RR('#fff2a8', '3 6 1 1;8 5 1 1;1 9 1 1'))] },
+    scale: { n: 'Весы', w: 14, h: 7, k: 4, slot: 'left:112px;bottom:24px', f: [
+      CC(RR('#cfd2d8', '0 0 14 6'), RR('#8a8d96', '2 5 3 2;9 5 3 2'), RR('#2b2b32', '4 1 6 3'), RR('#7ee081', '5 2 1 1;7 2 2 1;10 2 1 1')),
+      CC(RR('#cfd2d8', '0 0 14 6'), RR('#8a8d96', '2 5 3 2;9 5 3 2'), RR('#2b2b32', '4 1 6 3'), RR('#7ee081', '5 2 2 1;8 2 1 1;9 2 1 1'))] },
+    lamp: { n: 'Лампа-абажур', w: 12, h: 18, k: 4, slot: 'left:calc(50% - 24px);top:0', f: [
+      CC(RR('#2b2b32', '5 0 2 7'), RR('#e8a33a', '4 7 4 1;3 8 6 1;2 9 8 1;1 10 10 1;0 11 12 1'), RR('#b97a1e', '0 11 12 1'), RR('#fff4b0', '4 12 4 2'), RR('rgba(255,244,176,.25)', '2 14 8 4')),
+      CC(RR('#2b2b32', '5 0 2 7'), RR('#e8a33a', '4 7 4 1;3 8 6 1;2 9 8 1;1 10 10 1;0 11 12 1'), RR('#b97a1e', '0 11 12 1'), RR('#fff4b0', '3 12 6 2'), RR('rgba(255,244,176,.35)', '1 14 10 4'))] },
+    owl: { n: 'Сова-ночник', w: 10, h: 12, k: 4, slot: 'left:calc(50% + 70px);top:120px', f: [
+      CC(RR('#6a4a3a', '1 2 8 9;2 1 6 1;2 11 6 1;1 0 2 2;7 0 2 2'), RR('#c9a77f', '3 6 4 4'), RR('#f4f4f4', '2 3 2 2;6 3 2 2'), RR('#111111', '3 4 1 1;7 4 1 1'), RR('#e8b13c', '4 5 2 1;3 11 1 1;6 11 1 1')),
+      CC(RR('#6a4a3a', '1 2 8 9;2 1 6 1;2 11 6 1;1 0 2 2;7 0 2 2'), RR('#c9a77f', '3 6 4 4'), RR('#111111', '2 4 2 1;6 4 2 1'), RR('#e8b13c', '4 5 2 1;3 11 1 1;6 11 1 1'))] },
+    banner: { n: 'Знамя со звездой', w: 10, h: 24, k: 4, slot: 'right:150px;top:218px', f: [
+      CC(RR('#c9a04a', '0 0 10 1'), RR('#8a2a3a', '1 1 8 19'), RR('#e8b13c', '4 5 2 1;4 6 2 1;1 7 8 1;2 8 6 1;3 9 4 1;3 10 1 2;6 10 1 2;1 20 8 1;1 21 1 2;4 21 1 2;8 21 1 2'))] },
+    rug: { n: 'Ковёр', w: 36, h: 8, k: 6, slot: 'left:calc(50% - 108px);bottom:12px', f: [
+      CC(RR('#7a3b2e', '6 0 24 1;3 1 30 1;1 2 34 4;3 6 30 1;6 7 24 1'), RR('#e6c98a', '8 1 20 1;4 2 28 1;4 5 28 1;8 6 20 1'), RR('#2f5d4a', '8 2 20 3'), RR('#e6c98a', '12 3 12 1'))] },
+    globe: { n: 'Глобус', w: 12, h: 15, k: 4, slot: 'left:148px;bottom:126px', f: [
+      CC(RR('#2f7fc4', '4 0 4 1;2 1 8 1;1 2 10 6;2 8 8 1;4 9 4 1'), RR('#5aa84a', '3 2 3 2;7 4 3 2;4 6 3 2'), RR('#9fd0ff', '3 1 1 1'), RR('#8a5a2b', '5 10 2 3;3 13 6 2')),
+      CC(RR('#2f7fc4', '4 0 4 1;2 1 8 1;1 2 10 6;2 8 8 1;4 9 4 1'), RR('#5aa84a', '5 2 3 2;2 4 3 2;6 6 3 2'), RR('#9fd0ff', '3 1 1 1'), RR('#8a5a2b', '5 10 2 3;3 13 6 2'))] },
+    safe: { n: 'Сейф', w: 12, h: 13, k: 4, slot: 'right:148px;bottom:126px', f: [
+      CC(RR('#5a5f6a', '0 0 12 12;1 12 2 1;9 12 2 1'), RR('#7b818f', '1 1 10 10'), RR('#e8b13c', '4 4 4 4'), RR('#2b2b32', '5 5 2 2;9 4 1 4'), RR('#fff2a8', '4 4 1 1')),
+      CC(RR('#5a5f6a', '0 0 12 12;1 12 2 1;9 12 2 1'), RR('#7b818f', '1 1 10 10'), RR('#e8b13c', '4 4 4 4'), RR('#2b2b32', '5 5 2 2;9 4 1 4'), RR('#fff2a8', '7 7 1 1'))] },
+    bolt: { n: 'Неоновая молния', w: 10, h: 18, k: 4, slot: 'right:200px;top:14px', f: [
+      CC(RR('#8a8a94', '4 0 1 4;6 0 1 4'), RR('#ffe14a', '5 4 3 2;4 6 3 2;3 8 5 2;5 10 2 2;4 12 2 2;3 14 2 2;2 16 2 2'), RR('#fff6a8', '5 4 1 2;4 6 1 2')),
+      CC(RR('#8a8a94', '4 0 1 4;6 0 1 4'), RR('#b89a22', '5 4 3 2;4 6 3 2;3 8 5 2;5 10 2 2;4 12 2 2;3 14 2 2;2 16 2 2'))] },
+    tapestry: { n: 'Гобелен', w: 10, h: 14, k: 4, slot: 'right:20px;top:6px', f: [
+      CC(RR('#c9a04a', '0 0 10 1'), RR('#2f5d7a', '1 1 8 11'), RR('#e8b13c', '4 3 2 1;3 4 4 1;2 5 6 1;3 6 4 1;4 7 2 1'), RR('#2f5d7a', '4 5 2 1'), RR('#e8b13c', '1 12 8 1;1 13 1 1;4 13 1 1;8 13 1 1'))] }
+  };
+  var ROOM_OF = { z01: 'clock', z02: 'cat', z03: 'dart', z04: 'mirror', z05: 'bag', z06: 'garland', z07: 'trophy', z08: 'pennant', z09: 'kettle', z10: 'medal', z11: 'scale', z12: 'lamp', z13: 'safe', z14: 'globe', z15: 'rug', z17: 'owl', z19: 'banner', z20: 'bolt', z18: 'tapestry' };
+  var ROOM_BASE = [
+    { w: 14, h: 10, k: 4, slot: 'left:100px;top:100px', f: [CC(RR('#15171c', '0 0 14 10'), RR('#f2a65a', '1 1 12 4'), RR('#e8745a', '1 3 12 2'), RR('#fff1b0', '8 2 3 2'), RR('#2f6f9a', '1 5 12 4'), RR('#ffd98a', '8 6 3 1;9 7 1 1'))] },
+    { w: 10, h: 13, k: 4, slot: 'left:24px;top:200px', f: [CC(RR('#15171c', '0 0 10 13'), RR('#10142e', '1 1 8 11'), RR('#c97a4a', '3 4 4 4;2 5 6 2'), RR('#e8c98a', '1 6 8 1'), RR('#ffffff', '2 2 1 1;7 3 1 1;3 10 1 1;7 9 1 1'))] }
+  ];
+  function roomEl(it) {
+    var d = document.createElement('div');
+    d.className = 'rmi' + (it.rep ? ' rep' : '') + (it.sw ? ' sw' : '');
+    d.style.cssText = 'width:' + (it.w * it.k) + 'px;height:' + (it.h * it.k) + 'px;' + it.slot;
+    it.f.forEach(function (ops) { var i = document.createElement('i'); i.style.backgroundImage = svgUri(ops, it.w, it.h); d.appendChild(i); });
+    return d;
+  }
+  function roomOwned() {
+    var out = [];
+    if (!lastGI) return out;
+    LEG.forEach(function (G) { var k = ROOM_OF[G.id]; if (k && (lastGI.ach[G.id] || window.__ROOM_ALL)) out.push({ id: G.id, key: k, it: ROOM_ITEMS[k] }); });
+    return out;
+  }
+  function roomHidden() {
+    var l = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
+    var o = {}; String(l.rmoff || '').split(',').forEach(function (x) { if (x) o[x] = true; });
+    return o;
+  }
+  var roomKey = '';
+  function renderRoom() {
+    var base = $('rm-base'), box = $('rm-items');
+    if (!base || !box) return;
+    if (!base.firstChild) ROOM_BASE.forEach(function (b) { base.appendChild(roomEl(b)); });
+    var own = roomOwned(), hid = roomHidden();
+    var key = own.map(function (o) { return o.id + (hid[o.id] ? '-' : '+'); }).join(',');
+    if (key === roomKey) return;
+    roomKey = key;
+    clear(box);
+    own.forEach(function (o) { if (!hid[o.id]) box.appendChild(roomEl(o.it)); });
+    var w = $('wd-room');
+    if (w) {
+      clear(w);
+      if (!own.length) w.appendChild(el('div', 'hint', 'Пока пусто. Предметы будут появляться сами.'));
+      own.forEach(function (o) {
+        var b = el('button', 'chip'); b.type = 'button';
+        b.setAttribute('aria-pressed', hid[o.id] ? 'false' : 'true');
+        b.appendChild(document.createTextNode(o.it.n));
+        b.addEventListener('click', function () {
+          var h2 = roomHidden();
+          if (h2[o.id]) delete h2[o.id]; else h2[o.id] = true;
+          setLook('rmoff', Object.keys(h2).join(','));
+        });
+        w.appendChild(b);
+      });
+    }
+  }
   function cosOf(id) {
     if (ACH_COS[id]) return ACH_COS[id];
     for (var i = 0; i < LEG.length; i++) if (LEG[i].id === id) return LEG[i].cos || null;
@@ -1452,7 +1593,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     nx[cat] = id || '';
     S.look = nx;
     try { localStorage.setItem('look', JSON.stringify(nx)); } catch (e) {}
-    applyLook(); updateNameTag(); renderLook();
+    applyLook(); renderRoom(); updateNameTag(); renderLook();
     enqueue(function () { return db.doc('cfg/look').set(nx); });
   }
   function titleList() {
@@ -2734,6 +2875,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (title) t += ', титул «' + title + '»';
       if (c && COS[c]) t += ', новое оформление: ' + ({ theme: 'цвет', bg: 'фон комнаты', coin: 'монетка', bar: 'полоса опыта', fx: 'эффект нажатия', lv: 'эффект нового уровня', frame: 'рамка комнаты', aura: 'аура персонажа', font: 'стиль текста', snd: 'звуки', pat: 'узор фона', chk: 'галочка', tab: 'вкладки' }[COS[c].cat]) + ' «' + COS[c].n + '». Выбрать можно ниже в разделе «Оформление».';
       else t += '.';
+      if (ROOM_OF[id]) t = t.replace(/\.$/, '') + '; в комнате появился предмет «' + ROOM_ITEMS[ROOM_OF[id]].n + '».';
       return t;
     }
     ACH.forEach(function (A) { if (lastGI.ach[A.id]) ev.push({ id: 'a:' + A.id, date: lastGI.ach[A.id], kind: 'ДОСТИЖЕНИЕ', big: A.t, text: A.d + '. ' + rewardText(A.id, A.pts, A.title) }); });
@@ -2811,7 +2953,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var open = 0;
     LEG.forEach(function (G) {
       var d = lastGI.ach[G.id], cc = G.cos;
-      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : ''), '+' + G.pts, true, null, true)); }
+      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : '') + (ROOM_OF[G.id] ? ' · предмет «' + ROOM_ITEMS[ROOM_OF[G.id]].n + '»' : ''), '+' + G.pts, true, null, true)); }
       else if (lastGI.slots[G.id] && !G.ev) {
         var v = Math.min(lastGI.st[G.val] || 0, G.goal);
         box.appendChild(questButton('Суперредкая цель: ' + G.d, (G.goal > 1 ? fmt(v) + ' из ' + fmt(G.goal) : 'ещё не выполнено') + ' · награда секретная', '+?', false, null, true));
@@ -2848,7 +2990,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     }
   }
   function renderAll() {
-    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); weeklySummary(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass();
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass();
   }
 
   function renderHourglass() {
