@@ -80,8 +80,7 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 
 /* ---- комната: постер, стеллаж, стол ---- */
 .poster { position: absolute; left: 14px; top: 52px; width: 40px; height: 58px; background: #15171c; padding: 3px; z-index: 0; }
-.poster i { display: block; width: 100%; height: 100%; background: linear-gradient(#5f9bd6 0 55%, #3f7bb5 55% 70%, #2c4f6b 70%); position: relative; }
-.poster i::before { content: ""; position: absolute; left: 4px; top: 7px; width: 14px; height: 4px; background: #e7f2fb; box-shadow: 8px 6px 0 #dcebf7, -2px 12px 0 #cfe3f3; }
+.poster i { display: block; width: 100%; height: 100%; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 26' shape-rendering='crispEdges' preserveAspectRatio='none'><rect width='17' height='26' fill='%232e2a5e'/><rect y='8' width='17' height='4' fill='%235a3a7a'/><rect y='12' width='17' height='4' fill='%23b2507a'/><rect y='16' width='17' height='4' fill='%23e8895a'/><rect x='11' y='12' width='3' height='3' fill='%23ffd27a'/><rect x='12' y='11' width='1' height='1' fill='%23ffd27a'/><g fill='%23ffffff'><rect x='3' y='2' width='1' height='1'/><rect x='12' y='3' width='1' height='1'/><rect x='8' y='5' width='1' height='1'/><rect x='14' y='7' width='1' height='1'/><rect x='5' y='8' width='1' height='1'/></g><polygon fill='%234a3f78' points='0%2C19 0%2C14 3%2C11 5%2C13 8%2C8 11%2C12 13%2C10 17%2C14 17%2C19'/><rect x='7' y='9' width='3' height='1' fill='%23e9e4f5'/><rect x='8' y='8' width='1' height='1' fill='%23e9e4f5'/><rect x='2' y='12' width='2' height='1' fill='%23cfc8e6'/><polygon fill='%232a2550' points='0%2C26 0%2C19 4%2C16 7%2C19 10%2C17 17%2C21 17%2C26'/><polygon fill='%2314122a' points='0%2C26 0%2C22 6%2C21 12%2C22 17%2C20 17%2C26'/><g fill='%2307060e'><rect x='12' y='16' width='1' height='1'/><rect x='11' y='17' width='3' height='1'/><rect x='11' y='18' width='3' height='3'/><rect x='10' y='21' width='5' height='1'/></g><rect x='15' y='15' width='1' height='7' fill='%238a6a4a'/></svg>") center / 100% 100% no-repeat; image-rendering: pixelated; position: relative; }
 .cube { position: absolute; left: 10px; bottom: 76px; width: 86px; height: 78px; background: #eceae3; box-shadow: inset -3px -3px 0 #c9c5ba; padding: 3px; z-index: 0; }
 .cube u { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 3px; width: 100%; height: 100%; text-decoration: none; }
 .cube u i { background: #bdb7a8; box-shadow: inset 2px 2px 0 rgba(0,0,0,.18); position: relative; overflow: hidden; }
@@ -673,9 +672,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.30</h2>
-    <div class="hint">Сборка f09cc8</div>
+    <h2>ВЕРСИЯ 0.31</h2>
+    <div class="hint">Сборка b96820</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.31</b> · 26.10 · На стене новый постер: путник на фоне гор</div>
       <div class="hint"><b>0.30</b> · 26.10 · В комнате стол с двумя мониторами и компьютером, стеллаж с песочными часами, постер</div>
       <div class="hint"><b>0.29</b> · 26.10 · Навыки теперь улучшают прокачку: сложные нормы за больше очков, тяжёлые спонтанные дела</div>
       <div class="hint"><b>0.28</b> · 26.10 · Песочные часы на стене, недельная сводка по средам</div>
@@ -728,7 +728,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.30";
+<script>window.APP_VERSION = "0.31";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
