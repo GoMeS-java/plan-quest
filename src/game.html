@@ -295,9 +295,9 @@ html[data-pat="diag"], html[data-pat="diag"] body { background-image: repeating-
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 input, select { font: inherit; background: var(--bg); color: var(--fg); border: 3px solid var(--line); padding: 8px 10px; min-width: 0; flex: 1 1 100px; }
 .log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.log li { display: flex; justify-content: space-between; gap: 10px; background: var(--panel); border: 3px solid var(--line); padding: 8px 12px; }
-.log li > span:first-child { min-width: 0; overflow-wrap: anywhere; }
-.log li > span:last-child { white-space: nowrap; }
+.log li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 10px; background: var(--panel); border: 3px solid var(--line); padding: 8px 12px; }
+.log li > span:first-child { flex: 1 1 9em; min-width: 0; overflow-wrap: break-word; word-break: normal; }
+.log li > span:last-child { flex: 0 1 auto; display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .log .in { color: var(--good); }
 .log .out { color: var(--fg); }
 .log .tag { color: var(--muted); }
@@ -580,6 +580,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.19</b> · 25.10 · Строки долгов и Авито переносятся нормально</div>
       <div class="hint"><b>0.18</b> · 25.10 · Стадии персонажа снова скрыты</div>
       <div class="hint"><b>0.17</b> · 25.10 · Контрольные точки веса: 160, 150, 140, 130, 120</div>
       <div class="hint"><b>0.16</b> · 25.10 · Персонаж меняет форму от веса</div>
