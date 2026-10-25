@@ -444,6 +444,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <div id="slist2" style="display:flex;flex-direction:column;gap:10px"></div>
       <div id="spresets" class="hint"></div>
       <div class="row"><input id="sp-name" type="text" placeholder="Что сделать: уборка, посуда…"><button class="btn go" id="sp-add" type="button">ДОБАВИТЬ</button></div>
+      <label class="hint" id="sp-heavy-l" hidden><input type="checkbox" id="sp-heavy"> тяжёлое дело (даёт больше очков)</label>
       <div class="hint" id="sp-hint"></div>
     </div>
     <h2>ПОСЛЕДНИЕ 14 ДНЕЙ</h2>
@@ -646,6 +647,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.29</b> · 26.10 · Навыки теперь улучшают прокачку: сложные нормы за больше очков, тяжёлые спонтанные дела</div>
       <div class="hint"><b>0.28</b> · 26.10 · Песочные часы на стене, недельная сводка по средам</div>
       <div class="hint"><b>0.27</b> · 26.10 · Кубок: навыки и достижения отдельно, калории перенесены в «Сегодня»</div>
       <div class="hint"><b>0.26</b> · 26.10 · График веса наверху вкладки «Похудение»</div>
@@ -995,34 +997,35 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     pushup: { name: 'Отжимания на коленях', what: 'отжиманий на коленях', th: [73, 264, 641, 1520, 3180, 6870, 13950, 28300, 52700, 91200] }
   };
   var SK_KEYS = ['squat', 'pushup'];
-  var PSK = [
-    { key: 'p_steps', name: 'Выносливость', val: 'steps', th: [40000, 120000, 300000, 650000, 1200000] },
-    { key: 'p_eng', name: 'Язык', val: 'eng', th: [7, 21, 50, 100, 180] },
-    { key: 'p_cook', name: 'Кулинария', val: 'cook', th: [5, 17, 40, 80, 150] },
-    { key: 'p_care', name: 'Самоуход', val: 'careAll', th: [30, 90, 200, 400, 800] },
-    { key: 'p_food', name: 'Дисциплина питания', val: 'kcalOk', th: [6, 20, 45, 90, 160] },
-    { key: 'p_home', name: 'Хозяйство', val: 'spont', th: [5, 15, 35, 70, 130] },
-    { key: 'p_fin', name: 'Финансовый контроль', val: 'recon', th: [7, 21, 50, 100, 180] }
+  var NSK = [
+    { key: 'n_walk', name: 'Ходок', desc: function (L) {
+      var a = []; for (var t = 1; t <= L; t++) a.push('в ' + (t + 1) + ' раза больше недельной цели по шагам даёт +' + (t + 1) + ' вместо +1');
+      return 'Открылись повышенные нормы шагов: ' + a.join('; ') + '. Обычная норма по-прежнему даёт +1.'; } },
+    { key: 'n_eng', name: 'Лингвист', desc: function (L) {
+      var a = ['занятие вдвое дольше даёт +2']; if (L >= 2) a.push('втрое дольше даёт +3'); if (L >= 3) a.push('вчетверо дольше даёт +4');
+      return 'В квесте «Английский» появились сложные кнопки: ' + a.join(', ') + '. Обычная норма даёт +1.'; } },
+    { key: 'n_cook', name: 'Заготовщик', desc: function (L) {
+      var a = ['«приготовил на два дня» даёт +2']; if (L >= 2) a.push('«на три дня» даёт +3');
+      return 'В квесте про готовку появились сложные кнопки: ' + a.join(', ') + '. Обычная кнопка даёт +1.'; } },
+    { key: 'n_home', name: 'Хозяин', desc: function (L) {
+      return 'В день засчитывается ' + (2 + L) + ' ' + plural(2 + L, 'спонтанное дело', 'спонтанных дела', 'спонтанных дел') + '. Дело можно пометить тяжёлым: оно даёт +' + (L >= 3 ? 3 : 2) + ' вместо +1.'; } }
   ];
-  var PSK_BONUS = [0, 1, 2, 3, 5, 8];
+  function nskLevels(st) {
+    var out = {}, t = [[70000, 11000], [250000, 16000], [600000, 22000]], n = 0;
+    for (var i = 0; i < t.length; i++) { if (st.steps >= t[i][0] || st.maxDay >= t[i][1]) n = i + 1; else break; }
+    out.n_walk = n;
+    function byTh(v, th) { var c = 0; th.forEach(function (x) { if (v >= x) c++; }); return c; }
+    out.n_eng = byTh(st.eng, [14, 45, 110]);
+    out.n_cook = byTh(st.cook, [9, 28]);
+    out.n_home = byTh(st.spont, [12, 35, 80]);
+    return out;
+  }
+  function nlev(key) { return (lastGI && lastGI.nlev && lastGI.nlev[key]) || 0; }
+  function spHeavyPts(L) { return L >= 3 ? 3 : 2; }
   var SK_DESC = {
     squat: 'Растёт от общего числа приседаний за всё время. С новым уровнем открывается подход побольше и даются очки.',
-    pushup: 'Растёт от общего числа отжиманий за всё время. С новым уровнем открывается подход побольше и даются очки.',
-    p_steps: 'Растёт от шагов, которые ты записываешь каждый день.',
-    p_eng: 'Растёт от занятий английским, когда отмечаешь квест.',
-    p_cook: 'Растёт от квеста «Приготовил еду на завтра».',
-    p_care: 'Растёт от ухода за лицом, ухода за зубами и душа.',
-    p_food: 'Растёт от дней, когда еда уложилась в 2200 ккал.',
-    p_home: 'Растёт от спонтанных дел, которые ты отмечаешь.',
-    p_fin: 'Растёт от ежедневной сверки трат.'
+    pushup: 'Растёт от общего числа отжиманий за всё время. С новым уровнем открывается подход побольше и даются очки.'
   };
-  var SPONT_MAX = 2;
-  function spontByDate() {
-    var m = {};
-    S.spont.forEach(function (x) { if (x.done && x.date) m[x.date] = (m[x.date] || 0) + 1; });
-    Object.keys(m).forEach(function (k) { m[k] = Math.min(SPONT_MAX, m[k]); });
-    return m;
-  }
   var SK_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
   var SK_BONUS = [0, 1, 2, 3, 5, 6, 8, 10, 15, 20, 30];
   var SK_SETREW = [[0.5, 0.5, 1], [1, 1, 1], [1, 1.5, 1.5], [1.5, 1.5, 1.5], [2, 1.5, 1.5], [2, 2, 1.5], [2, 2, 2], [2.5, 2, 2], [2.5, 2.5, 2], [2.5, 2.5, 2.5]];
@@ -1497,9 +1500,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   }
   function dq0(day) { return !!(day.q && day.q[2]); }
   function growthInfo(SI, today) {
-    var out = { slots: {}, pts: {}, ach: {}, ups: { squat: [], pushup: [] }, pups: {}, st: null };
-    var spD = spontByDate(), plevel = {};
-    PSK.forEach(function (P) { out.pups[P.key] = []; plevel[P.key] = 1; });
+    var out = { slots: {}, pts: {}, ach: {}, ups: { squat: [], pushup: [] }, st: null };
+    var spDone = {}, nl = {};
+    S.spont.forEach(function (x) { if (x.done && x.date) (spDone[x.date] = spDone[x.date] || []).push(x); });
+    out.nups = {}; out.nlev = nl;
+    NSK.forEach(function (N) { out.nups[N.key] = []; nl[N.key] = 0; });
     function give(k, v) { if (v) out.pts[k] = (out.pts[k] || 0) + v; }
     var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0,
       exact: 0, eqDate: 0, maxDayReps: 0, friRun: 0, friBest: 0, perfCombo: 0, kcalOkRun: 0, kcalOkBest: 0, meetRun: 0, meetBest: 0,
@@ -1556,19 +1561,26 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (dq[6]) st.shower++;
       if (dq[9]) { st.recon++; st.reconRun++; if (st.reconRun > st.reconBest) st.reconBest = st.reconRun; } else st.reconRun = 0;
       st.careAll += (dq[4] ? 1 : 0) + (dq[5] ? 1 : 0) + (dq[6] ? 1 : 0);
-      st.spont += spD[k] || 0;
+      st.spont += Math.min(3, (spDone[k] || []).length);
       if (dq[7]) { st.eng++; st.engRun++; if (st.engRun > st.engBest) st.engBest = st.engRun; } else st.engRun = 0;
       if (jarDates[k]) st.jar += jarDates[k];
       if (q.workout.length) st.wk++;
-      PSK.forEach(function (P) {
-        var lv = 1;
-        P.th.forEach(function (t) { if (st[P.val] >= t) lv++; });
-        while (plevel[P.key] < lv) {
-          plevel[P.key]++;
-          out.pups[P.key].push({ lvl: plevel[P.key], date: k });
-          give(k, PSK_BONUS[plevel[P.key] - 1]);
-        }
+      var lvls = nskLevels(st);
+      NSK.forEach(function (N) {
+        while (nl[N.key] < lvls[N.key]) { nl[N.key]++; out.nups[N.key].push({ lvl: nl[N.key], date: k }); }
       });
+      if (day.steps >= gl && nl.n_walk) {
+        var mw = 0;
+        for (var tw = 1; tw <= nl.n_walk; tw++) if (day.steps >= gl * (tw + 1)) mw = tw;
+        give(k, mw);
+      }
+      var exd = day.ex || {};
+      if (dq[7] && exd.eng >= 2 && exd.eng <= nl.n_eng + 1) give(k, exd.eng - 1);
+      if (dq[3] && exd.cook >= 2 && exd.cook <= nl.n_cook + 1) give(k, exd.cook - 1);
+      var sl = (spDone[k] || []).slice().sort(function (a, c) { return (a.ts || 0) - (c.ts || 0); });
+      var spCap = 2 + nl.n_home, spPts = 0;
+      for (var si = 0; si < Math.min(sl.length, spCap); si++) spPts += (sl[si].heavy && nl.n_home >= 1) ? spHeavyPts(nl.n_home) : 1;
+      give(k, spPts);
       var perfect = dayCount(k, SI) >= reqTotal(k);
       if (perfect && parseKey(k).getDay() === 0) st.sunPerfect++;
       if (perfect) { st.perf++; st.perfRun++; if (st.perfRun > st.perfBest) st.perfBest = st.perfRun; } else st.perfRun = 0;
@@ -1618,8 +1630,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     Object.keys(SI.done).forEach(function (k) { if (SI.done[k]) add(addDays(k, 6), 2); });
     var kw = mondayKey('2026-10-19'), kcur = mondayKey(today);
     while (kw <= kcur) { if (kcalWeek(kw) === 7) add(addDays(kw, 6), 3); kw = addDays(kw, 7); }
-    var spD2 = spontByDate();
-    Object.keys(spD2).forEach(function (k) { add(k, spD2[k]); });
     var ew = mondayKey(ENG_START);
     while (ew <= kcur) { if (engWeek(ew) === 7) add(addDays(ew, 6), 3); ew = addDays(ew, 7); }
     var wk = {};
@@ -1874,9 +1884,29 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var list = $('qlist');
     clear(list);
     var justBtn = null;
+    var exv = day.ex || {};
+    var TIERW = ['', '', 'вдвое', 'втрое', 'вчетверо'], TIERC = ['', '', 'на два дня', 'на три дня'];
+    function tierBtn(i, key, m, title, sub) {
+      var onT = !!(day.q && day.q[i]) && (exv[key] || 1) === m;
+      var b = questButton(title, sub, '+' + m, onT, function () { setTier(i, key, m); });
+      if (onT && fresh(fx) && fx.q === i && fx.k === k) { b.classList.add('just'); justBtn = b; fx = null; }
+      return b;
+    }
     function qBtn(i) {
       var q = QDEF[i];
       var on = !!(day.q && day.q[i]);
+      if (i === 7 && nlev('n_eng') >= 1) {
+        var ln = nlev('n_eng'), mn = engMin(k);
+        list.appendChild(tierBtn(7, 'eng', 1, 'Английский, ' + mn + ' минут', q.s));
+        for (var m1 = 2; m1 <= ln + 1; m1++) list.appendChild(tierBtn(7, 'eng', m1, 'Английский ' + TIERW[m1] + ' дольше, ' + (mn * m1) + ' минут', 'сложная норма'));
+        return;
+      }
+      if (i === 3 && nlev('n_cook') >= 1) {
+        var lc = nlev('n_cook');
+        list.appendChild(tierBtn(3, 'cook', 1, q.t, q.s));
+        for (var m2 = 2; m2 <= lc + 1; m2++) list.appendChild(tierBtn(3, 'cook', m2, 'Приготовил еду ' + TIERC[m2], 'сложная норма'));
+        return;
+      }
       var btn = questButton(qTitle(i, k), q.s, '+1', on, function () { toggleQ(i); });
       if (on && fresh(fx) && fx.q === i && fx.k === k) { btn.classList.add('just'); justBtn = btn; fx = null; }
       list.appendChild(btn);
@@ -1885,7 +1915,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var SI = stepInfo();
     var sg = SI.goals[mondayKey(k)] || 5000;
     var st = day.steps == null ? 0 : day.steps;
-    list.appendChild(questButton(fmt(sg) + ' шагов', (viewBack ? 'за день ' : 'сегодня ') + fmt(st) + ', засчитывается само', '+1', st >= sg, null, true));
+    var lw = nlev('n_walk'), mwt = 0, tierTxt = [];
+    for (var tw = 1; tw <= lw; tw++) { tierTxt.push(fmt(sg * (tw + 1)) + ' шагов: +' + (tw + 1)); if (st >= sg * (tw + 1)) mwt = tw; }
+    list.appendChild(questButton(fmt(sg) + ' шагов', (viewBack ? 'за день ' : 'сегодня ') + fmt(st) + ', засчитывается само' + (lw ? '. Повышенные нормы: ' + tierTxt.join(', ') : ''), '+' + (st >= sg ? 1 + mwt : 1), st >= sg, null, true));
     if (k >= NEW_Q) qBtn(8);
     if (justBtn) flyCoin(justBtn.querySelector('.box'));
     var sc = $('steps');
@@ -1912,26 +1944,41 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var box = $('slist2');
     if (!box) return;
     clear(box);
+    var L = nlev('n_home'), cap = 2 + L;
+    var hl = $('sp-heavy-l');
+    if (hl) hl.hidden = L < 1;
     var mine = S.spont.filter(function (x) { return x.date === k; }).sort(function (a, c) { return (a.ts || 0) - (c.ts || 0); });
-    var doneN = 0;
+    var doneN = 0, got = 0;
     mine.forEach(function (x) {
-      if (x.done) doneN++;
-      var counted = x.done && doneN <= SPONT_MAX;
+      var counted = false, val = 1;
+      if (x.done) { doneN++; counted = doneN <= cap; }
+      if (x.heavy && L >= 1) val = spHeavyPts(L);
+      if (counted) got += val;
       var row = el('div');
-      row.appendChild(questButton(x.name, x.done ? (counted ? 'сделано' : 'сделано, но очки за сегодня закончились') : 'отметь, когда сделаешь', counted ? '+1' : (x.done ? '0' : '+1'), !!x.done, function () {
+      var sub = x.done ? (counted ? 'сделано' : 'сделано, но очки за сегодня закончились') : 'отметь, когда сделаешь';
+      if (x.heavy && L >= 1) sub += ', тяжёлое';
+      row.appendChild(questButton(x.name, sub, x.done && !counted ? '0' : '+' + val, !!x.done, function () {
         if (!db) return;
         enqueue(function () { return db.doc('spont/' + x.id).update({ done: !x.done }); });
       }));
+      var ctr = el('div', 'hint');
+      if (L >= 1) {
+        var hb = el('button', 'linkbtn', x.heavy ? 'сделать обычным' : 'сделать тяжёлым');
+        hb.type = 'button';
+        hb.addEventListener('click', function () { enqueue(function () { return db.doc('spont/' + x.id).update({ heavy: !x.heavy }); }); });
+        ctr.appendChild(hb); ctr.appendChild(document.createTextNode(' '));
+      }
       if (!x.done) {
-        var rm = el('button', 'linkbtn', 'убрать «' + x.name + '»');
+        var rm = el('button', 'linkbtn', 'убрать');
         rm.type = 'button';
         rm.addEventListener('click', function () { enqueue(function () { return db.doc('spont/' + x.id).delete(); }); });
-        row.appendChild(rm);
+        ctr.appendChild(rm);
       }
+      if (ctr.childNodes.length) row.appendChild(ctr);
       box.appendChild(row);
     });
     if (!mine.length) box.appendChild(el('div', 'hint', 'На сегодня спонтанных дел пока нет.'));
-    $('sp-hint').textContent = 'Каждое сделанное дело даёт +1, штрафа нет. Очки считаются за ' + SPONT_MAX + ' дела в день. Сегодня засчитано ' + Math.min(doneN, SPONT_MAX) + ' из ' + SPONT_MAX + '.';
+    $('sp-hint').textContent = 'Каждое сделанное дело даёт +1, штрафа нет. Очки считаются за ' + cap + ' ' + plural(cap, 'дело', 'дела', 'дел') + ' в день. Сегодня засчитано ' + Math.min(doneN, cap) + ' из ' + cap + '.';
     var pr = $('spresets');
     clear(pr);
     var names = SP_DEF.slice();
@@ -1941,17 +1988,19 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (mine.some(function (x) { return x.name === n; })) return;
       var b = el('button', 'linkbtn', n);
       b.type = 'button';
-      b.addEventListener('click', function () { addSpont(n); });
+      b.addEventListener('click', function () { addSpont(n, false); });
       pr.appendChild(b); pr.appendChild(document.createTextNode(' '));
     });
   }
-  function addSpont(name) {
+  function addSpont(name, heavy) {
     if (!db) return;
     var v = (name || '').trim();
     if (!v) return;
-    enqueue(function () { return db.collection('spont').add({ name: v, date: dkey(new Date()), done: false, ts: Date.now() }); });
+    var o = { name: v, date: dkey(new Date()), done: false, ts: Date.now() };
+    if (heavy) o.heavy = true;
+    enqueue(function () { return db.collection('spont').add(o); });
   }
-  $('sp-add').addEventListener('click', function () { addSpont($('sp-name').value); $('sp-name').value = ''; });
+  $('sp-add').addEventListener('click', function () { addSpont($('sp-name').value, $('sp-heavy').checked); $('sp-name').value = ''; $('sp-heavy').checked = false; });
   function renderPeriodic() {
     var box = $('plist');
     clear(box);
@@ -2669,11 +2718,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
           text: 'Теперь доступен подход по ' + skillCap(u.lvl) * 10 + ' повторов' + (u.lvl > 10 ? ', размер подхода больше не растёт, но навык даёт очки' : ', и за него дают больше очков') + '. Награда за навык: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
       });
     });
-    PSK.forEach(function (P) {
-      (lastGI.pups[P.key] || []).forEach(function (u) {
-        var b = PSK_BONUS[u.lvl - 1];
-        ev.push({ id: 's:' + P.key + ':' + u.lvl, date: u.date, kind: 'СЕКРЕТНЫЙ НАВЫК ОТКРЫТ', big: P.name + ' ' + SK_ROMAN[u.lvl - 1],
-          text: SK_DESC[P.key] + ' Награда: +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '.' });
+    NSK.forEach(function (N) {
+      (lastGI.nups[N.key] || []).forEach(function (u) {
+        ev.push({ id: 's:' + N.key + ':' + u.lvl, date: u.date, kind: 'СЕКРЕТНЫЙ НАВЫК ОТКРЫТ', big: N.name + ' ' + SK_ROMAN[u.lvl - 1], text: N.desc(u.lvl) });
       });
     });
     return ev;
@@ -2723,14 +2770,14 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       any = true;
       sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], SK_DESC[key] + ' Сейчас доступен подход по ' + skillCap(u.lvl) * 10 + '. Уровень открыт ' + dshort(u.date) + '.', '✓', true, null, true));
     });
-    PSK.forEach(function (P) {
-      var arr = lastGI.pups[P.key] || [];
+    NSK.forEach(function (N) {
+      var arr = lastGI.nups[N.key] || [];
       if (!arr.length) return;
-      var u = arr[arr.length - 1], b = PSK_BONUS[u.lvl - 1];
+      var u = arr[arr.length - 1];
       any = true;
-      sk.appendChild(questButton(P.name + ' ' + SK_ROMAN[u.lvl - 1], SK_DESC[P.key] + ' За этот уровень дали +' + b + ' ' + plural(b, 'очко', 'очка', 'очков') + '. Открыт ' + dshort(u.date) + '. Следующие уровни скрыты.', '✓', true, null, true));
+      sk.appendChild(questButton(N.name + ' ' + SK_ROMAN[u.lvl - 1], N.desc(u.lvl) + ' Открыт ' + dshort(u.date) + '. Следующие уровни скрыты.', '✓', true, null, true));
     });
-    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накапливается достаточно практики.'));
+    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накопится достаточно или ты сделаешь рекорд.'));
     var open = 0;
     LEG.forEach(function (G) {
       var d = lastGI.ach[G.id], cc = G.cos;
@@ -2867,7 +2914,26 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     for (var z = 0; z < QDEF.length; z++) q[z] = !!q[z];
     q[i] = !q[i];
     if (q[i]) fx = { q: i, k: k, t: Date.now() };
-    enqueue(function () { return db.doc('days/' + k).set({ q: q, kcal: cur.kcal == null ? null : cur.kcal, steps: cur.steps == null ? null : cur.steps }); });
+    dayWrite(k, cur, { q: q });
+  }
+  function dayWrite(k, cur, over) {
+    var o = { q: cur.q || [false, false, false, false], kcal: cur.kcal == null ? null : cur.kcal, steps: cur.steps == null ? null : cur.steps };
+    if (cur.ex) o.ex = cur.ex;
+    Object.keys(over).forEach(function (n) { o[n] = over[n]; });
+    if (o.ex && !Object.keys(o.ex).length) delete o.ex;
+    enqueue(function () { return db.doc('days/' + k).set(o); });
+  }
+  function setTier(i, key, m) {
+    if (!db) return;
+    var k = curKey();
+    var cur = S.days[k] || { q: [false, false, false, false], kcal: null };
+    var q = (cur.q || []).slice();
+    for (var z = 0; z < QDEF.length; z++) q[z] = !!q[z];
+    var ex = Object.assign({}, cur.ex || {});
+    var curM = ex[key] || 1;
+    if (q[i] && curM === m) { q[i] = false; delete ex[key]; }
+    else { q[i] = true; if (m > 1) ex[key] = m; else delete ex[key]; fx = { q: i, k: k, t: Date.now() }; }
+    dayWrite(k, cur, { q: q, ex: ex });
   }
   function doExercise(key, reps) {
     if (!db) return;
@@ -2935,7 +3001,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var k = curKey();
     var cur = S.days[k] || { q: [false, false, false, false] };
     var v = $('kcal').value === '' ? null : Number($('kcal').value);
-    enqueue(function () { return db.doc('days/' + k).set({ q: cur.q || [false, false, false, false], kcal: v, steps: cur.steps == null ? null : cur.steps }); });
+    dayWrite(k, cur, { kcal: v });
   });
   $('steps').addEventListener('change', function () {
     if (!db) return;
@@ -2943,7 +3009,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var cur = S.days[k] || { q: [false, false, false, false] };
     var v = $('steps').value === '' ? null : Math.round(Number($('steps').value));
     if (v != null && !(v >= 0)) return;
-    enqueue(function () { return db.doc('days/' + k).set({ q: cur.q || [false, false, false, false], kcal: cur.kcal == null ? null : cur.kcal, steps: v }); });
+    dayWrite(k, cur, { steps: v });
   });
   function buy(it) {
     if (!db || !S.cart) return;
