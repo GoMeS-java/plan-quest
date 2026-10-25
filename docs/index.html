@@ -436,7 +436,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <div class="goal-head"><b>Вес 120 кг</b><span class="pct" id="pct-weight">0%</span></div>
       <div class="bar" id="bar-weight" aria-hidden="true"></div>
       <div class="hint">Сейчас <span id="cur-weight"></span> кг, старт 165 кг, цель 120 кг</div>
-      <div class="need">Нужный темп: <b id="need-weight"></b> кг в неделю. Контрольные точки: 150 кг, 135 кг, 120 кг.</div>
+      <div class="need">Нужный темп: <b id="need-weight"></b> кг в неделю. Контрольные точки: 160, 150, 140, 130, 120 кг. <span id="w-next"></span></div>
       <div class="row"><input id="in-weight" type="number" step="0.1" inputmode="decimal" placeholder="Вес сейчас, кг"><button class="btn go" type="button" id="w-add">ЗАПИСАТЬ</button></div>
       <div id="spark"></div>
       <ul class="log" id="l-weight"></ul>
@@ -578,9 +578,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.16</h2>
-    <div class="hint">Сборка 86711b</div>
+    <h2>ВЕРСИЯ 0.17</h2>
+    <div class="hint">Сборка dcf4c2</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.17</b> · 25.10 · Контрольные точки веса: 160, 150, 140, 130, 120, на каждой новая форма персонажа</div>
       <div class="hint"><b>0.16</b> · 25.10 · Персонаж меняет форму от веса</div>
       <div class="hint"><b>0.15</b> · 25.10 · Вкладка «Похудение»: калории, серия, вес</div>
       <div class="hint"><b>0.14</b> · 25.10 · Штрафы и бонусы за калории</div>
@@ -619,7 +620,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.16";
+<script>window.APP_VERSION = "0.17";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -2115,6 +2116,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('cur-weight').textContent = String(wt).replace('.', ',');
     $('pct-weight').textContent = pc(rw);
     fillBar('bar-weight', rw);
+    (function () {
+      var pts = [160, 150, 140, 130, 120], nx = null;
+      for (var i = 0; i < pts.length; i++) if (wt > pts[i]) { nx = pts[i]; break; }
+      $('w-next').textContent = nx ? 'Следующая: ' + nx + ' кг, осталось ' + (wt - nx).toFixed(1).replace('.', ',') + ' кг.' : 'Все точки пройдены.';
+    })();
     $('need-weight').textContent = left > 0 ? (Math.max(0, wt - 120) / (left / 7)).toFixed(1).replace('.', ',') : '0';
     $('days-gone').textContent = gone;
     $('pct-time').textContent = pc(gone / TOTAL_DAYS);
@@ -2224,7 +2230,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       outer: ids.outer && ids.outer !== 'none' ? itemById(list, ids.outer) : null
     };
   }
-  var BODY_TH = [158.3, 151.6, 144.2, 136.9, 128.4];
+  var BODY_TH = [160, 150, 140, 130, 120];
   function bodyStage() {
     if (!S.weights || !S.weights.length) return 0;
     var today = dkey(new Date()), from = addDays(today, -14), t = null, last = null;
