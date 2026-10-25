@@ -578,9 +578,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.15</h2>
-    <div class="hint">Сборка de526b</div>
+    <h2>ВЕРСИЯ 0.16</h2>
+    <div class="hint">Сборка 86711b</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.16</b> · 25.10 · Персонаж меняет форму от веса</div>
       <div class="hint"><b>0.15</b> · 25.10 · Вкладка «Похудение»: калории, серия, вес</div>
       <div class="hint"><b>0.14</b> · 25.10 · Штрафы и бонусы за калории</div>
       <div class="hint"><b>0.13</b> · 24.10 · Обновление берёт свежие файлы</div>
@@ -618,7 +619,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.15";
+<script>window.APP_VERSION = "0.16";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -784,6 +785,19 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     else if (it.shape === 'puffer') drawPuffer(it.c);
     else if (it.shape === 'plaid') drawPlaid(it.c);
   }
+  var BODY_F = [1, 0.95, 0.9, 0.85, 0.8, 0.76], bodyStageNow = 0;
+  function squeezeBody() {
+    var f = BODY_F[bodyStageNow] || 1;
+    if (f >= 1) return;
+    var src = g.slice(), cx = 15.5, y, x;
+    for (y = 13; y < H; y++) {
+      var k = y < 17 ? 1 - (1 - f) * ((y - 12) / 5) : f;
+      for (x = 0; x < W; x++) {
+        var sx = Math.round(cx + (x - cx) / k);
+        g[y * W + x] = (sx >= 0 && sx < W) ? src[y * W + sx] : null;
+      }
+    }
+  }
   function buildSprite(o) {
     g = new Array(W * H).fill(null);
     drawPants(o.bottom.c);
@@ -792,6 +806,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     drawTop(o.top);
     if (o.outer) drawOuter(o.outer);
     drawSocks();
+    squeezeBody();
     var out = g.slice();
     for (var yy = 0; yy < H; yy++) for (var xx = 0; xx < W; xx++) {
       if (g[yy * W + xx]) continue;
@@ -2209,10 +2224,25 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       outer: ids.outer && ids.outer !== 'none' ? itemById(list, ids.outer) : null
     };
   }
+  var BODY_TH = [158.3, 151.6, 144.2, 136.9, 128.4];
+  function bodyStage() {
+    if (!S.weights || !S.weights.length) return 0;
+    var today = dkey(new Date()), from = addDays(today, -14), t = null, last = null;
+    S.weights.forEach(function (w) {
+      if (w.date > today) return;
+      if (!last || w.date >= last.date) last = w;
+      if (w.date >= from && (t === null || w.kg < t)) t = w.kg;
+    });
+    if (t === null) t = last ? last.kg : 165;
+    var n = 0;
+    BODY_TH.forEach(function (x) { if (t <= x) n++; });
+    return n;
+  }
   function renderWardrobe() {
+    bodyStageNow = bodyStage();
     var ids = outfitIds();
     var list = allItems();
-    var key = JSON.stringify([ids, list.map(function (i) { return i.id; })]);
+    var key = JSON.stringify([ids, bodyStageNow, list.map(function (i) { return i.id; })]);
     if (key === wardKey) return;
     wardKey = key;
     paintSprite($('hero'), buildSprite(outfitFrom(list, ids)));
@@ -2423,6 +2453,11 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (e.date >= addDays(today, -1)) achQueue.push(e);
     });
     if (changed || !had) writeAchSeen(seen);
+    try {
+      var bs = bodyStage(), bseen = localStorage.getItem('bodySeen');
+      if (bseen !== null && bs > +bseen) achQueue.push({ id: 'body:' + bs, date: today, kind: 'ФОРМА ИЗМЕНИЛАСЬ', big: 'Персонаж стал стройнее', text: 'Изменения в весе заметны: модель персонажа обновилась.' });
+      if (bseen === null || bs !== +bseen) localStorage.setItem('bodySeen', String(bs));
+    } catch (e) {}
     showNextAch();
   }
   $('ac-ok').addEventListener('click', function () { $('achup').hidden = true; achShowing = false; showNextAch(); });
