@@ -456,6 +456,15 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </section>
 
   <section class="panel" id="diet" data-g="a">
+    <h2>ПОХУДЕНИЕ</h2>
+    <div class="goal">
+      <div class="goal-head"><b>График веса</b></div>
+      <div id="spark"></div>
+      <div class="hint">Прогресс по весу и контрольные точки смотри во вкладке «Цели». Вес записывается ниже.</div>
+      <div class="row"><input id="in-weight" type="number" step="0.1" inputmode="decimal" placeholder="Вес сейчас, кг"><button class="btn go" type="button" id="w-add">ЗАПИСАТЬ</button></div>
+      <ul class="log" id="l-weight"></ul>
+    </div>
+  
     <h2>КАЛОРИИ</h2>
     <div class="goal">
       <div class="goal-head"><b>Калории за день</b><span class="pct" id="kcal-show"></span></div>
@@ -471,14 +480,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <div class="hint">Последние 14 дней: зелёная клетка, если квест про калории закрыт.</div>
     </div>
     <div class="note">Провал квеста про калории стоит −3, серия от 3 дней даёт бонус к очкам, каждые 5 дней серии дают щит от штрафа. Награды за недоедание нет: цель именно в пределах нормы.</div>
-    <h2>ПОХУДЕНИЕ</h2>
-    <div class="goal">
-      <div class="goal-head"><b>Запись веса</b></div>
-      <div class="hint">Прогресс по весу и контрольные точки смотри во вкладке «Цели».</div>
-      <div class="row"><input id="in-weight" type="number" step="0.1" inputmode="decimal" placeholder="Вес сейчас, кг"><button class="btn go" type="button" id="w-add">ЗАПИСАТЬ</button></div>
-      <div id="spark"></div>
-      <ul class="log" id="l-weight"></ul>
-    </div>
   </section>
 
   <section class="panel" id="goals" data-g="a">
@@ -628,9 +629,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.25</h2>
-    <div class="hint">Сборка 192a0d</div>
+    <h2>ВЕРСИЯ 0.26</h2>
+    <div class="hint">Сборка 9f437e</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.26</b> · 26.10 · График веса наверху вкладки «Похудение»</div>
       <div class="hint"><b>0.25</b> · 26.10 · Обновлены редкие находки</div>
       <div class="hint"><b>0.24</b> · 26.10 · Новые награды-оформления</div>
       <div class="hint"><b>0.23</b> · 26.10 · Ежедневная сверка трат, спонтанные дела до 2 в день, новые суперредкие</div>
@@ -678,7 +680,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.25";
+<script>window.APP_VERSION = "0.26";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
