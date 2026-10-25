@@ -367,6 +367,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <button class="tab" role="tab" aria-selected="false" data-t="week">НЕДЕЛЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="shop" style="font-size:7px">УЛУЧШЕНИЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="ach" style="font-size:7px">ДОСТИЖЕНИЯ</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="diet" style="font-size:7px">ПОХУДЕНИЕ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="goals">ЦЕЛИ</button>
   </div>
 
@@ -382,11 +383,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <input id="steps" type="number" inputmode="numeric" placeholder="Сколько шагов прошёл сегодня">
       <div class="hint">Больше цели тоже можно записывать. Сохраняется, когда выходишь из поля.</div>
     </div>
-    <div class="goal">
-      <div class="goal-head"><b>Калории за день</b><span class="pct" id="kcal-show"></span></div>
-      <input id="kcal" type="number" inputmode="numeric" placeholder="Сколько ккал съел сегодня">
-      <div class="hint">Сохраняется, когда выходишь из поля.</div>
-    </div>
     <div id="psec">
       <h2>ПЕРИОДИЧЕСКИЕ, НЕОБЯЗАТЕЛЬНЫЕ</h2>
       <div id="plist" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -400,7 +396,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   <section class="panel" id="week" data-g="a">
     <h2>КВЕСТЫ НЕДЕЛИ</h2>
     <div id="wlist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <div class="note">Взвешивание засчитывается само, когда ты записываешь вес во вкладке «Цели». Неделя идёт с понедельника.</div>
+    <div class="note">Взвешивание засчитывается само, когда ты записываешь вес во вкладке «Похудение». Неделя идёт с понедельника.</div>
   </section>
 
   <section class="panel" id="shop" data-g="a">
@@ -418,15 +414,23 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div class="note">Все достижения скрыты, условия неизвестны и перемешаны по всему приложению. Они откроются сами, когда условие выполнится, считать ничего не нужно. Скрытых больше, чем строк со знаками вопроса. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
   </section>
 
-  <section class="panel" id="goals" data-g="a">
-    <h2>ЦЕЛИ НА ПОЛГОДА</h2>
+  <section class="panel" id="diet" data-g="a">
+    <h2>КАЛОРИИ</h2>
     <div class="goal">
-      <div class="goal-head"><b>Капитал, 10 млн ₽</b><span class="pct" id="pct-money">0%</span></div>
-      <div class="bar" id="bar-money" aria-hidden="true"></div>
-      <div class="hint">Накоплено <span id="cur-money"></span> из 10 000 000 ₽</div>
-      <div class="need">Чтобы успеть к 19.04.2027, нужно откладывать <b id="need-money"></b> ₽ в месяц.</div>
-      <div class="hint">Считается как свободные деньги плюс то, что тебе должны.</div>
+      <div class="goal-head"><b>Калории за день</b><span class="pct" id="kcal-show"></span></div>
+      <input id="kcal" type="number" inputmode="numeric" placeholder="Сколько ккал съел сегодня">
+      <div class="hint">Сохраняется, когда выходишь из поля.</div>
     </div>
+    <div class="goal" id="diet-sum">
+      <div class="goal-head"><b>Серия «в пределах 2200»</b><span class="pct" id="d-run"></span></div>
+      <div class="hint" id="d-line1"></div>
+      <div class="hint" id="d-line2"></div>
+      <div class="hint" id="d-line3"></div>
+      <div class="strip" id="d-strip" aria-hidden="true"></div>
+      <div class="hint">Последние 14 дней: зелёная клетка, если квест про калории закрыт.</div>
+    </div>
+    <div class="note">Провал квеста про калории стоит −3, серия от 3 дней даёт бонус к очкам, каждые 5 дней серии дают щит от штрафа. Награды за недоедание нет: цель именно в пределах нормы.</div>
+    <h2>ПОХУДЕНИЕ</h2>
     <div class="goal">
       <div class="goal-head"><b>Вес 120 кг</b><span class="pct" id="pct-weight">0%</span></div>
       <div class="bar" id="bar-weight" aria-hidden="true"></div>
@@ -435,6 +439,17 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       <div class="row"><input id="in-weight" type="number" step="0.1" inputmode="decimal" placeholder="Вес сейчас, кг"><button class="btn go" type="button" id="w-add">ЗАПИСАТЬ</button></div>
       <div id="spark"></div>
       <ul class="log" id="l-weight"></ul>
+    </div>
+  </section>
+
+  <section class="panel" id="goals" data-g="a">
+    <h2>ЦЕЛИ НА ПОЛГОДА</h2>
+    <div class="goal">
+      <div class="goal-head"><b>Капитал, 10 млн ₽</b><span class="pct" id="pct-money">0%</span></div>
+      <div class="bar" id="bar-money" aria-hidden="true"></div>
+      <div class="hint">Накоплено <span id="cur-money"></span> из 10 000 000 ₽</div>
+      <div class="need">Чтобы успеть к 19.04.2027, нужно откладывать <b id="need-money"></b> ₽ в месяц.</div>
+      <div class="hint">Считается как свободные деньги плюс то, что тебе должны.</div>
     </div>
     <div class="goal">
       <div class="goal-head"><b>Время</b><span class="pct" id="pct-time">0%</span></div>
@@ -565,6 +580,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.15</b> · 25.10 · Вкладка «Похудение»: калории, серия, вес</div>
       <div class="hint"><b>0.14</b> · 25.10 · Штрафы и бонусы за калории</div>
       <div class="hint"><b>0.13</b> · 24.10 · Обновление берёт свежие файлы</div>
       <div class="hint"><b>0.12</b> · 24.10 · Настройки (шестерёнка), звук, номер версии</div>
@@ -1554,9 +1570,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (m >= 11 && m <= 14) return c;
     return d === 1 ? a : (d >= 2 && d <= 4) ? b : c;
   }
+  var lastPI = null;
   function renderPoints() {
     if (!loaded) { $('pts').textContent = '…'; return; }
-    var p = pointsInfo();
+    var p = pointsInfo(); lastPI = p;
     $('pts').textContent = fmtP(p.P);
     $('goal').textContent = '/ ' + p.need;
     $('lvl').textContent = 'УР. ' + p.L;
@@ -2442,8 +2459,25 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     updateNameTag();
     renderLook();
   }
+  function renderDiet() {
+    var p = lastPI; if (!p) return;
+    var today = dkey(new Date()), st = lastGI && lastGI.st ? lastGI.st : {};
+    $('d-run').textContent = p.kRun + ' ' + plural(p.kRun, 'день', 'дня', 'дней');
+    $('d-line1').textContent = 'Щитов от штрафа: ' + p.shields + ' из ' + SHIELD_MAX + '. На этой неделе закрыто ' + kcalWeek(mondayKey(today)) + ' из 7.';
+    var nx = p.kRun < 3 ? [3, '+1'] : p.kRun < 7 ? [7, '+2'] : null;
+    $('d-line2').textContent = nx ? 'До бонуса ' + nx[1] + ' к квесту осталось ' + (nx[0] - p.kRun) + ' ' + plural(nx[0] - p.kRun, 'день', 'дня', 'дней') + '. ' : 'Максимальный бонус +2 к квесту каждый день серии.';
+    var toS = 5 - (p.kRun % 5);
+    $('d-line3').textContent = (p.shields < SHIELD_MAX ? 'До нового щита ' + toS + ' ' + plural(toS, 'день', 'дня', 'дней') + '. ' : 'Щиты заполнены. ') + (st.kcalOkBest ? 'Лучшая серия за всё время: ' + st.kcalOkBest + '.' : '');
+    var strip = $('d-strip'); clear(strip);
+    var d = parseKey(today); d.setDate(d.getDate() - 13);
+    for (var i = 0; i < 14; i++) {
+      var k = dkey(d), dd = S.days[k], c = el('i', dd && dd.q && dd.q[2] ? 'c4' : '');
+      c.title = dshort(k) + (dd && dd.kcal != null ? ': ' + fmt(dd.kcal) + ' ккал' : '');
+      strip.appendChild(c); d.setDate(d.getDate() + 1);
+    }
+  }
   function renderAll() {
-    renderPoints(); renderAch(); applyLook(); checkAch(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal();
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal();
   }
   function renderGlobal() {
     var box = $('gg-list');
