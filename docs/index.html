@@ -724,9 +724,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.35</h2>
-    <div class="hint">Сборка 6372e3</div>
+    <h2>ВЕРСИЯ 0.36</h2>
+    <div class="hint">Сборка e920f5</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.36</b> · 26.10 · Убран квест «Тренировка»: остаются приседания и отжимания</div>
       <div class="hint"><b>0.35</b> · 26.10 · Недельные награды: калории +3, английский +1, взвешивание как раньше +2</div>
       <div class="hint"><b>0.34</b> · 26.10 · Стеллаж, стол, мониторы, компьютер и постеры теперь тоже открываются редкими достижениями, у каждого свой титул и оформление</div>
       <div class="hint"><b>0.33</b> · 26.10 · Комната стала просторнее, всё в ней меньше. За суперредкие достижения в комнате появляются предметы, их можно убирать в гардеробе, раздел «Интерьер»</div>
@@ -784,7 +785,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.35";
+<script>window.APP_VERSION = "0.36";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -1799,7 +1800,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
       if (perfect && parseKey(k).getDay() === 0) st.sunPerfect++;
       if (perfect) { st.perf++; st.perfRun++; if (st.perfRun > st.perfBest) st.perfBest = st.perfRun; } else st.perfRun = 0;
       if (day.q && day.q[0]) { st.earlyRun++; if (st.earlyRun > st.earlyBest) st.earlyBest = st.earlyRun; } else st.earlyRun = 0;
-      var tri = q.squat.length >= SQ_MAX && q.pushup.length >= SQ_MAX && q.workout.length > 0;
+      var tri = q.squat.length >= SQ_MAX && q.pushup.length >= SQ_MAX && !!(day.q && day.q[7]);
       if (tri) st.combo++;
       if (tri && perfect) st.perfCombo++;
       var kd = parseKey(k);
@@ -2255,7 +2256,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         box.appendChild(u);
       }
     });
-    box.appendChild(questButton('Тренировка', 'отмечается по скриншоту из приложения', '+1', q.workout.length > 0, null, true));
   }
   function renderWeek() {
     var today = dkey(new Date());
