@@ -726,7 +726,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
-      <div class="hint"><b>0.35</b> · 26.10 · Недельные награды: взвешивание +3, английский +1</div>
+      <div class="hint"><b>0.35</b> · 26.10 · Недельные награды: калории +3, английский +1, взвешивание как раньше +2</div>
       <div class="hint"><b>0.34</b> · 26.10 · Стеллаж, стол, мониторы, компьютер и постеры теперь тоже открываются редкими достижениями, у каждого свой титул и оформление</div>
       <div class="hint"><b>0.33</b> · 26.10 · Комната стала просторнее, всё в ней меньше. За суперредкие достижения в комнате появляются предметы, их можно убирать в гардеробе, раздел «Интерьер»</div>
       <div class="hint"><b>0.32</b> · 26.10 · Комната разгружена: мебель стоит по бокам и не перекрывается персонажем, песочные часы стоят на полке</div>
@@ -1847,7 +1847,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     while (ew <= kcur) { if (engWeek(ew) === 7) add(addDays(ew, 6), 1); ew = addDays(ew, 7); }
     var wk = {};
     S.weights.forEach(function (w) { var m = mondayKey(w.date); if (!wk[m] || w.date < wk[m]) wk[m] = w.date; });
-    Object.keys(wk).forEach(function (m) { add(wk[m], 3); });
+    Object.keys(wk).forEach(function (m) { add(wk[m], 2); });
     var first = START_KEY;
     Object.keys(ev).concat(Object.keys(S.days)).forEach(function (k) { if (k < first) first = k; });
     var L = 1, P = 0, prev = null, lossY = 0, missY = [], kRun = 0, shields = 0, shieldUsedY = false;
@@ -2263,7 +2263,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var weighed = S.weights.some(function (w) { return mondayKey(w.date) === mk; });
     var list = $('wlist');
     clear(list);
-    list.appendChild(questButton('Взвешивание раз в неделю', weighed ? 'вес записан на этой неделе' : 'запиши вес во вкладке «Похудение»', '+3', weighed, null, true));
+    list.appendChild(questButton('Взвешивание раз в неделю', weighed ? 'вес записан на этой неделе' : 'запиши вес во вкладке «Похудение»', '+2', weighed, null, true));
     var SI = stepInfo();
     var sg = SI.goals[mk] || 5000;
     var cnt = 0, dd = parseKey(mk);
