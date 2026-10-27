@@ -1,4 +1,4 @@
-<title>План Квест</title>
+<title>Заклятие</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -116,7 +116,8 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 
 .points { background: var(--panel); border: 4px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .points-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.coin { display: inline-block; width: 14px; height: 14px; background: var(--gold); box-shadow: inset -3px -3px 0 var(--gold-dark); margin-right: 8px; vertical-align: -1px; }
+.coin { display: inline-block; width: 14px; height: 14px; background: #a9bbea; box-shadow: inset -3px -3px 0 #3c4a78; margin-right: 8px; vertical-align: -1px; }
+:root:where([data-coin=""]) .coin, :root:where([data-coin=""]) .fly { clip-path: polygon(50% 0, 82% 22%, 100% 68%, 58% 100%, 16% 82%, 0 34%); }
 .big { font-family: var(--font-display); font-size: 20px; }
 .big small { font-size: 10px; color: var(--muted); }
 .bar { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; }
@@ -360,7 +361,7 @@ html[data-pat="diag"], html[data-pat="diag"] body { background-image: repeating-
 @keyframes pop { 50% { transform: scale(1.35); } }
 .stash { position: fixed; top: 14px; right: 12px; z-index: 19; display: flex; align-items: center; gap: 6px; padding: 5px 9px; background: rgba(20,16,30,.85); border: 2px solid var(--gold); font: 700 13px/1 inherit; color: var(--gold); pointer-events: none; }
 .stash[hidden] { display: none; }
-.fly { position: fixed; z-index: 20; width: 14px; height: 14px; background: var(--gold); box-shadow: inset -3px -3px 0 var(--gold-dark); pointer-events: none; }
+.fly { position: fixed; z-index: 20; width: 14px; height: 14px; background: #a9bbea; box-shadow: inset -3px -3px 0 #3c4a78; pointer-events: none; }
 .points.bump { animation: bump .4s steps(8); }
 @keyframes bump { 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
 .bar i.glow { animation: glow .8s; }
@@ -508,19 +509,19 @@ html,body{overflow-anchor:none}
 
 <div class="app">
   <div class="top">
-    <div class="topl"><h1>СИСТЕМА</h1><span id="plslot"></span></div>
-    <span class="lvl" id="lvl">УР. 1</span>
-    <button class="gear" id="trophy-btn" type="button" aria-label="Навыки и достижения">&#127942;</button>
+    <div class="topl"><h1>ЗАКЛЯТИЕ</h1><span id="plslot"></span></div>
+    <span class="lvl" id="lvl">РАНГ 1</span>
+    <button class="gear" id="trophy-btn" type="button" aria-label="Аспекты и отметины">&#127942;</button>
     <button class="gear" id="gear" type="button" aria-label="Настройки">&#9881;</button>
   </div>
   <div class="daysw" id="pgsw" role="tablist">
-    <button type="button" id="pg-btn-a" role="tab" aria-selected="true" aria-pressed="true">ИГРА</button>
-    <button type="button" id="pg-btn-b" role="tab" aria-selected="false" aria-pressed="false">ФИНАНСЫ</button>
+    <button type="button" id="pg-btn-a" role="tab" aria-selected="true" aria-pressed="true">СНОВИДЕНИЕ</button>
+    <button type="button" id="pg-btn-b" role="tab" aria-selected="false" aria-pressed="false">ДОБЫЧА</button>
   </div>
-  <div class="offline" id="offline" hidden>[СИСТЕМА] Сохранение недоступно. Игрок, открой страницу из своего аккаунта Claude, и данные появятся.</div>
+  <div class="offline" id="offline" hidden>[ЗАКЛЯТИЕ] Сохранение недоступно. Спящий, открой страницу из своего аккаунта Claude, и данные появятся.</div>
 
   <div class="page" id="pg-a">
-  <div class="stage" aria-label="Твой пиксельный персонаж в комнате">
+  <div class="stage" aria-label="Твой персонаж в убежище">
     <div class="rm" id="rm">
     <div class="window"><div class="moon"></div><span class="star" style="top:60px;left:60px"></span><span class="star" style="top:20px;right:14px"></span><span class="star" style="top:84px;left:16px"></span></div>
     <div class="hgp"></div>
@@ -531,8 +532,8 @@ html,body{overflow-anchor:none}
     <div class="hero-shadow"></div>
     <div class="hero"><canvas id="hero" width="32" height="52"></canvas></div>
     </div>
-    <button class="wopen" id="wopen" type="button" aria-label="Открыть гардероб">&#128084; ГАРДЕРОБ</button>
-    <div class="nametag">ИГРОК</div>
+    <button class="wopen" id="wopen" type="button" aria-label="Открыть оболочку">&#128084; ОБОЛОЧКА</button>
+    <div class="nametag">СПЯЩИЙ</div>
     <div id="ttimer" hidden></div>
   </div>
 
@@ -542,17 +543,17 @@ html,body{overflow-anchor:none}
       <div class="hint" id="left"></div>
     </div>
     <div class="bar" id="bar" aria-hidden="true"></div>
-    <div class="upg"><span class="hint">Очки улучшения:</span><b id="upg">0</b></div>
+    <div class="upg"><span class="hint">Ядра души:</span><b id="upg">0</b></div>
     <div class="hint" id="loss" hidden></div>
-    <div class="hint">Правила Системы: каждый невыполненный ежедневный квест забирает 1 очко. Ниже нуля очки не уходят, уровень не падает. Если вернёшься после пропущенного дня, Система начислит +3.</div>
+    <div class="hint">Правила Заклятия: каждая невыполненная ежедневная задача забирает 1 осколок. Ниже нуля осколки не уходят, ранг не падает. Если вернёшься после пропущенного дня, Заклятие начислит +3.</div>
   </div>
 
   <div class="tabs" role="tablist" data-g="a">
     <button class="tab" role="tab" aria-selected="true" data-t="today">СЕГОДНЯ</button>
-    <button class="tab" role="tab" aria-selected="false" data-t="week">НЕДЕЛЯ</button>
-    <button class="tab" role="tab" aria-selected="false" data-t="shop" style="font-size:7px">УЛУЧШЕНИЯ</button>
-    <button class="tab" role="tab" aria-selected="false" data-t="diet" style="font-size:7px">ПОХУДЕНИЕ</button>
-    <button class="tab" role="tab" aria-selected="false" data-t="goals">ЦЕЛИ</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="week">ХРОНИКА</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="shop" style="font-size:6px">ВОСПОМИНАНИЯ</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="diet" style="font-size:7px">ТЕЛО</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="goals">ПУТЬ</button>
   </div>
 
   <section class="panel active" id="today" data-g="a">
@@ -560,18 +561,18 @@ html,body{overflow-anchor:none}
       <button type="button" id="d-today" aria-pressed="true">СЕГОДНЯ</button>
       <button type="button" id="d-yest" aria-pressed="false">ВЧЕРА</button>
     </div>
-    <h2 id="qh">КВЕСТЫ ДНЯ</h2>
+    <h2 id="qh">ЗАДАЧИ ЗАКЛЯТИЯ</h2>
     <div id="trialbox"></div>
     <div id="qlist" style="display:flex;flex-direction:column;gap:10px"></div>
     <div class="goal">
       <div class="goal-head"><b>Шаги за день</b><span class="pct" id="steps-show"></span></div>
       <input id="steps" type="number" inputmode="numeric" placeholder="Сколько шагов прошёл сегодня">
-      <div class="hint">Игрок, можно записывать и больше цели. Система сохранит значение, когда ты выйдешь из поля.</div>
+      <div class="hint">Спящий, можно записывать и больше цели. Заклятие сохранит значение, когда ты выйдешь из поля.</div>
     </div>
     <div class="goal">
       <div class="goal-head"><b>Калории за день</b><span class="pct" id="kcal-show"></span></div>
       <input id="kcal" type="number" inputmode="numeric" placeholder="Сколько ккал съел сегодня">
-      <div class="hint">Система сохранит значение, когда ты выйдешь из поля.</div>
+      <div class="hint">Заклятие сохранит значение, когда ты выйдешь из поля.</div>
     </div>
     <div id="psec">
       <h2>ПЕРИОДИЧЕСКИЕ, НЕОБЯЗАТЕЛЬНЫЕ</h2>
@@ -583,33 +584,33 @@ html,body{overflow-anchor:none}
       <div id="slist2" style="display:flex;flex-direction:column;gap:10px"></div>
       <div id="spresets" class="hint"></div>
       <div class="row"><input id="sp-name" type="text" placeholder="Что сделать: уборка, посуда…"><button class="btn go" id="sp-add" type="button">ДОБАВИТЬ</button></div>
-      <label class="hint" id="sp-heavy-l" hidden><input type="checkbox" id="sp-heavy"> тяжёлое дело (даёт больше очков)</label>
+      <label class="hint" id="sp-heavy-l" hidden><input type="checkbox" id="sp-heavy"> тяжёлое дело (даёт больше осколков)</label>
       <div class="hint" id="sp-hint"></div>
     </div>
     <h2>ПОСЛЕДНИЕ 14 ДНЕЙ</h2>
     <div class="strip" id="strip" aria-hidden="true"></div>
-    <div class="hint">Система отмечает дни: чем зеленее клетка, тем больше квестов ты закрыл.</div>
+    <div class="hint">Заклятие отмечает дни: чем зеленее клетка, тем больше задач ты закрыл.</div>
   </section>
 
   <section class="panel" id="week" data-g="a">
     <h2>КВЕСТЫ НЕДЕЛИ</h2>
     <div id="wlist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <div class="note">Система засчитает взвешивание сама, когда ты запишешь вес во вкладке «Похудение». Неделя идёт с понедельника.</div>
+    <div class="note">Заклятие засчитает взвешивание само, когда ты запишешь вес во вкладке «Тело». Неделя идёт с понедельника.</div>
   </section>
 
   <section class="panel" id="shop" data-g="a">
-    <h2>УЛУЧШЕНИЯ</h2>
-    <div class="upg"><span>Очков улучшения:</span><b id="upg2">0</b></div>
+    <h2>ВОСПОМИНАНИЯ</h2>
+    <div class="upg"><span>Ядра души:</span><b id="upg2">0</b></div>
     <div id="slist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <div class="note">Покупка до 20 000 ₽ стоит одно очко улучшения, свыше 20 000 ₽ два, свыше 40 000 ₽ три, и так далее: плюс очко за каждые 20 000 ₽. Очко даётся за новый уровень. Выбрал награду, и покупка открывается только через 24 часа.</div>
+    <div class="note">Покупка до 20 000 ₽ стоит одно ядро души, свыше 20 000 ₽ два, свыше 40 000 ₽ три, и так далее: плюс ядро за каждые 20 000 ₽. Ядро даётся за новый ранг. Выбрал награду, и покупка открывается только через 24 часа.</div>
   </section>
 
   <section class="panel" id="diet" data-g="a">
-    <h2>ПОХУДЕНИЕ</h2>
+    <h2>ТЕЛО</h2>
     <div class="goal">
       <div class="goal-head"><b>График веса</b></div>
       <div id="spark"></div>
-      <div class="hint">Прогресс по весу и контрольные точки смотри во вкладке «Цели». Вес записывается ниже.</div>
+      <div class="hint">Прогресс по весу и контрольные точки смотри во вкладке «Путь». Вес записывается ниже.</div>
       <div class="row"><input id="in-weight" type="number" step="0.1" inputmode="decimal" placeholder="Вес сейчас, кг"><button class="btn go" type="button" id="w-add">ЗАПИСАТЬ</button></div>
       <ul class="log" id="l-weight"></ul>
     </div>
@@ -621,13 +622,13 @@ html,body{overflow-anchor:none}
       <div class="hint" id="d-line2"></div>
       <div class="hint" id="d-line3"></div>
       <div class="strip" id="d-strip" aria-hidden="true"></div>
-      <div class="hint">Последние 14 дней: зелёная клетка, если квест про калории закрыт.</div>
+      <div class="hint">Последние 14 дней: зелёная клетка, если задача про калории закрыта.</div>
     </div>
-    <div class="note">Провал квеста про калории стоит −3, серия от 3 дней даёт бонус к очкам, каждые 5 дней серии дают щит от штрафа. Награды за недоедание нет: цель именно в пределах нормы.</div>
+    <div class="note">Провал задачи про калории стоит −3, серия от 3 дней даёт бонус к осколкам, каждые 5 дней серии дают щит от штрафа. Награды за недоедание нет: цель именно в пределах нормы.</div>
   </section>
 
   <section class="panel" id="goals" data-g="a">
-    <h2>ЦЕЛИ НА ПОЛГОДА</h2>
+    <h2>ПУТЬ НА ПОЛГОДА</h2>
     <div class="goal">
       <div class="goal-head"><b>Капитал, 10 млн ₽</b><span class="pct" id="pct-money">0%</span></div>
       <div class="bar" id="bar-money" aria-hidden="true"></div>
@@ -653,25 +654,25 @@ html,body{overflow-anchor:none}
       <div class="hint">Прошло <span id="days-gone"></span> из 182 дней, срок 19.04.2027</div>
     </div>
     <div class="note">Проценты считаются от старта 19.10.2026.</div>
-    <h2>ГЛОБАЛЬНЫЕ ЦЕЛИ И ШАГИ</h2>
+    <h2>ГЛОБАЛЬНЫЙ ПУТЬ И ШАГИ</h2>
     <div id="gg-list" style="display:flex;flex-direction:column;gap:10px"></div>
     <div class="row"><input id="gg-name" type="text" placeholder="Новая глобальная цель"><button class="btn go" id="gg-add" type="button">ДОБАВИТЬ</button></div>
     <div class="hint">Отмечаешь, когда шаг или цель выполнены. Не связано с деньгами.</div>
   </section>
 
   <section class="panel" id="wardrobe" data-g="a">
-    <h2>ГАРДЕРОБ</h2>
-    <div class="hint">Игрок, выбери экипировку, и твой персонаж наверху сразу изменится.</div>
+    <h2>ОБОЛОЧКА</h2>
+    <div class="hint">Спящий, выбери экипировку, и твой персонаж наверху сразу изменится.</div>
     <h2>ВЕРХНЯЯ ОДЕЖДА</h2>
     <div class="wgrid" id="wd-outer"></div>
     <h2>ВЕРХ</h2>
     <div class="wgrid" id="wd-top"></div>
     <h2>НИЗ</h2>
     <div class="wgrid" id="wd-bottom"></div>
-    <h2>ИНТЕРЬЕР</h2>
-    <div class="hint">Предметы, которые Система выдаёт за редкие находки. Нажми на предмет, чтобы убрать его из комнаты или вернуть.</div>
+    <h2>УБЕЖИЩЕ</h2>
+    <div class="hint">Предметы, которые Заклятие выдаёт за судьбоносные находки. Нажми на предмет, чтобы убрать его из убежища или вернуть.</div>
     <div class="rmw" id="wd-room"></div>
-    <div class="note">Купил новую вещь? Пришли фото, и Система добавит её в твою экипировку.</div>
+    <div class="note">Купил новую вещь? Пришли фото, и Заклятие добавит её в твою экипировку.</div>
   </section>
 
   </div>
@@ -758,18 +759,18 @@ html,body{overflow-anchor:none}
   </section>
   </div>
 
-  <div class="foot">Система сохраняет данные автоматически. Они доступны на всех твоих устройствах.</div>
+  <div class="foot">Заклятие сохраняет данные автоматически. Они доступны на всех твоих устройствах.</div>
 </div>
 <div class="toast" id="toast" hidden></div>
 <div class="flash" id="flash"></div>
-<div class="setup" id="trophy" hidden role="dialog" aria-modal="true" aria-label="Навыки и достижения">
+<div class="setup" id="trophy" hidden role="dialog" aria-modal="true" aria-label="Аспекты и отметины">
   <div class="sbox">
-    <div class="shead"><b>НАВЫКИ И ДОСТИЖЕНИЯ</b><button class="gear" id="trophy-x" type="button" aria-label="Закрыть">&#10005;</button></div>
-    <h2>НАВЫКИ</h2>
+    <div class="shead"><b>АСПЕКТЫ И ОТМЕТИНЫ</b><button class="gear" id="trophy-x" type="button" aria-label="Закрыть">&#10005;</button></div>
+    <h2>АСПЕКТЫ</h2>
     <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <h2 id="ach-h">ДОСТИЖЕНИЯ</h2>
+    <h2 id="ach-h">ОТМЕТИНЫ</h2>
     <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <div class="note">Система скрывает условия достижений. Они откроются сами, когда ты их выполнишь, считать ничего не нужно. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
+    <div class="note">Заклятие скрывает условия отметин. Они откроются сами, когда ты их выполнишь, считать ничего не нужно. Каждое даёт осколки один раз, некоторые ещё и титул под персонажем.</div>
   </div>
 </div>
 <div class="setup" id="setup" hidden role="dialog" aria-modal="true" aria-label="Настройки">
@@ -782,7 +783,7 @@ html,body{overflow-anchor:none}
         <label class="hint" style="flex:1 1 140px">Яркость вспышки<br><select id="fx-flash"><option value="off">выкл</option><option value="weak">слабая</option><option value="strong">сильная</option></select></label>
         <label class="hint" style="flex:1 1 140px">Звук<br><select id="fx-sound"><option value="on">включён</option><option value="off">выкл</option></select></label>
       </div>
-      <button class="btn alt" type="button" id="fx-test" style="cursor:pointer">ПОКАЗАТЬ ПОВЫШЕНИЕ УРОВНЯ</button>
+      <button class="btn alt" type="button" id="fx-test" style="cursor:pointer">ПОКАЗАТЬ НОВЫЙ РАНГ</button>
       <div class="hint">Настройки эффектов хранятся на этом устройстве.</div>
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
@@ -790,6 +791,9 @@ html,body{overflow-anchor:none}
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.51</b> · 28.10 · Все названия в духе Заклятия: осколки души, ранги, ядра души, Воспоминания, Аспекты, отметины, убежище, оболочка. Монетка стала осколком души</div>
+      <div class="hint"><b>0.50</b> · 28.10 · Испытания Заклятия: случайные физические задания с красным таймером, награда и штраф; пять судьбоносных отметин с титулами, оформлением и предметами; оформление «Заклятие» как награда</div>
+      <div class="hint"><b>0.46</b> · 27.10 · Одна задача гигиены вместо двух; очки за ступени Аспектов убраны</div>
       <div class="hint"><b>0.41</b> · 27.10 · Первого числа Система показывает сводку расходов за прошлый месяц, её можно скопировать и прислать Claude</div>
       <div class="hint"><b>0.40</b> · 27.10 · Выплата долга не считается личной тратой в отчётах</div>
       <div class="hint"><b>0.39</b> · 27.10 · Усиленные нормы английского и еды вынесены вниз, в необязательные: основной квест один, как с приседаниями</div>
@@ -835,16 +839,16 @@ html,body{overflow-anchor:none}
     <div class="hint" id="look-none">Оформление появится, когда что-то откроется.</div>
   </div>
 </div>
-<div class="lvup" id="lvup" hidden role="dialog" aria-modal="true" aria-label="Новый уровень">
+<div class="lvup" id="lvup" hidden role="dialog" aria-modal="true" aria-label="Новый ранг">
   <div class="lbox">
     <div class="lbig" id="lv-big"></div>
     <div id="lv-text"></div>
-    <button class="btn" type="button" id="lv-go">К УЛУЧШЕНИЯМ</button>
+    <button class="btn" type="button" id="lv-go">К ВОСПОМИНАНИЯМ</button>
     <button class="btn alt" type="button" id="lv-ok">ОК</button>
   </div>
 </div>
 
-<div class="lvup" id="achup" hidden role="dialog" aria-modal="true" aria-label="Открыто достижение">
+<div class="lvup" id="achup" hidden role="dialog" aria-modal="true" aria-label="Открыта отметина">
   <div class="lbox">
     <div class="lbig" id="ac-kind"></div>
     <div class="lbig" id="ac-big" style="font-size:14px"></div>
@@ -1117,7 +1121,7 @@ html,body{overflow-anchor:none}
     { t: 'Встал до 10:00', s: 'будильник не нужен, если проснулся сам' },
     { t: 'Обед не меньше 20 минут', s: 'можно с видео, но медленно' },
     { t: 'Еда в пределах 2200 ккал', s: 'любая еда, дома или из магазина' },
-    { t: 'Приготовил еду на завтра', s: 'вечерний квест' },
+    { t: 'Приготовил еду на завтра', s: 'вечерняя задача' },
     { t: 'Уход за лицом', s: 'утром и вечером по твоей схеме, по понедельникам энзимная пудра' },
     { t: 'Уход за зубами', s: 'утром и вечером, отбеливающий гель по схеме' },
     { t: 'Принял душ', s: 'каждый день' },
@@ -1161,10 +1165,10 @@ html,body{overflow-anchor:none}
       return 'Открылись повышенные нормы шагов: ' + a.join('; ') + '. Обычная норма по-прежнему даёт +1.'; } },
     { key: 'n_eng', name: 'Лингвист', desc: function (L) {
       var a = ['занятие вдвое дольше даёт +2']; if (L >= 2) a.push('втрое дольше даёт +3'); if (L >= 3) a.push('вчетверо дольше даёт +4');
-      return 'В квесте «Английский» появились сложные кнопки: ' + a.join(', ') + '. Обычная норма даёт +1.'; } },
+      return 'В задаче «Английский» появились сложные кнопки: ' + a.join(', ') + '. Обычная норма даёт +1.'; } },
     { key: 'n_cook', name: 'Заготовщик', desc: function (L) {
       var a = ['«приготовил на два дня» даёт +2']; if (L >= 2) a.push('«на три дня» даёт +3');
-      return 'В квесте про готовку появились сложные кнопки: ' + a.join(', ') + '. Обычная кнопка даёт +1.'; } },
+      return 'В задаче про готовку появились сложные кнопки: ' + a.join(', ') + '. Обычная кнопка даёт +1.'; } },
     { key: 'n_home', name: 'Хозяин', desc: function (L) {
       return 'В день засчитывается ' + (2 + L) + ' ' + plural(2 + L, 'спонтанное дело', 'спонтанных дела', 'спонтанных дел') + '. Дело можно пометить тяжёлым: оно даёт +' + (L >= 3 ? 3 : 2) + ' вместо +1.'; } }
   ];
@@ -1181,8 +1185,8 @@ html,body{overflow-anchor:none}
   function nlev(key) { return (lastGI && lastGI.nlev && lastGI.nlev[key]) || 0; }
   function spHeavyPts(L) { return L >= 3 ? 3 : 2; }
   var SK_DESC = {
-    squat: 'Растёт от общего числа приседаний за всё время. С новым уровнем открывается подход побольше и даются очки.',
-    pushup: 'Растёт от общего числа отжиманий за всё время. С новым уровнем открывается подход побольше и даются очки.'
+    squat: 'Растёт от общего числа приседаний за всё время. С новой ступенью открывается подход побольше и даются осколки.',
+    pushup: 'Растёт от общего числа отжиманий за всё время. С новой ступенью открывается подход побольше и даются осколки.'
   };
   var SK_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
   var SK_BONUS = [0, 1, 2, 3, 5, 6, 8, 10, 15, 20, 30];
@@ -1220,118 +1224,118 @@ html,body{overflow-anchor:none}
     return out;
   }
   var ACH = [
-    { id: 'x01', t: 'Скрытое достижение', d: 'Пройти суммарно 43 700 шагов', val: 'steps', goal: 43700, pts: 1 },
-    { id: 'x02', t: 'Скрытое достижение', d: 'Пройти суммарно 118 400 шагов', val: 'steps', goal: 118400, pts: 2 },
-    { id: 'x03', t: 'Скрытое достижение', d: 'Пройти суммарно 267 900 шагов', val: 'steps', goal: 267900, pts: 3 },
-    { id: 'x04', t: 'Скрытое достижение', d: 'Пройти суммарно 531 200 шагов', val: 'steps', goal: 531200, pts: 5 },
-    { id: 'x05', t: 'Скрытое достижение', d: 'Пройти суммарно 874 600 шагов', val: 'steps', goal: 874600, pts: 9 },
-    { id: 'x06', t: 'Скрытое достижение', d: 'Пройти суммарно 1 187 300 шагов', val: 'steps', goal: 1187300, pts: 15, title: 'ВЕЧНЫЙ СТРАННИК' },
-    { id: 'x07', t: 'Скрытое достижение', d: '13 400 шагов за один день', val: 'maxDay', goal: 13400, pts: 1 },
-    { id: 'x08', t: 'Скрытое достижение', d: '19 300 шагов за один день', val: 'maxDay', goal: 19300, pts: 2 },
-    { id: 'x09', t: 'Скрытое достижение', d: '27 700 шагов за один день', val: 'maxDay', goal: 27700, pts: 4, title: 'УЛЬТРА' },
-    { id: 'x10', t: 'Скрытое достижение', d: '1 370 повторов приседаний и отжиманий вместе', val: 'reps', goal: 1370, pts: 3 },
-    { id: 'x11', t: 'Скрытое достижение', d: '5 280 повторов приседаний и отжиманий вместе', val: 'reps', goal: 5280, pts: 5 },
-    { id: 'x12', t: 'Скрытое достижение', d: '23 500 повторов приседаний и отжиманий вместе', val: 'reps', goal: 23500, pts: 10 },
-    { id: 'x13', t: 'Скрытое достижение', d: '97 300 повторов приседаний и отжиманий вместе', val: 'reps', goal: 97300, pts: 20, title: 'КОВАНЫЙ' },
-    { id: 'x14', t: 'Скрытое достижение', d: '8 650 приседаний всего', val: 'sq', goal: 8650, pts: 5 },
-    { id: 'x15', t: 'Скрытое достижение', d: '93 200 приседаний всего', val: 'sq', goal: 93200, pts: 25, title: 'КОЛОСС' },
-    { id: 'x16', t: 'Скрытое достижение', d: '7 900 отжиманий на коленях всего', val: 'pu', goal: 7900, pts: 5 },
-    { id: 'x17', t: 'Скрытое достижение', d: '88 700 отжиманий на коленях всего', val: 'pu', goal: 88700, pts: 25, title: 'ТИТАН' },
-    { id: 'x18', t: 'Скрытое достижение', d: '29 подходов приседаний и отжиманий', val: 'sets', goal: 29, pts: 1 },
-    { id: 'x19', t: 'Скрытое достижение', d: '117 подходов приседаний и отжиманий', val: 'sets', goal: 117, pts: 3 },
-    { id: 'x20', t: 'Скрытое достижение', d: '463 подходов приседаний и отжиманий', val: 'sets', goal: 463, pts: 8 },
-    { id: 'x21', t: 'Скрытое достижение', d: '7 тренировок по приложению', val: 'wk', goal: 7, pts: 1 },
-    { id: 'x22', t: 'Скрытое достижение', d: '23 тренировок по приложению', val: 'wk', goal: 23, pts: 3 },
-    { id: 'x23', t: 'Скрытое достижение', d: '58 тренировок по приложению', val: 'wk', goal: 58, pts: 5 },
-    { id: 'x24', t: 'Скрытое достижение', d: '112 тренировок по приложению', val: 'wk', goal: 112, pts: 10, title: 'ЛЕГЕНДА ЗАЛА' },
-    { id: 'x25', t: 'Скрытое достижение', d: '241 тренировок по приложению', val: 'wk', goal: 241, pts: 20, title: 'НЕУДЕРЖИМЫЙ' },
-    { id: 'x26', t: 'Скрытое достижение', d: '4 идеальных дней подряд', val: 'perfBest', goal: 4, pts: 2 },
-    { id: 'x27', t: 'Скрытое достижение', d: '9 идеальных дней подряд', val: 'perfBest', goal: 9, pts: 4 },
-    { id: 'x28', t: 'Скрытое достижение', d: '16 идеальных дней подряд', val: 'perfBest', goal: 16, pts: 7 },
-    { id: 'x29', t: 'Скрытое достижение', d: '33 идеальных дней подряд', val: 'perfBest', goal: 33, pts: 15, title: 'ГЕРОЙ' },
-    { id: 'x30', t: 'Скрытое достижение', d: '13 идеальных дней', val: 'perf', goal: 13, pts: 3 },
-    { id: 'x31', t: 'Скрытое достижение', d: '47 идеальных дней', val: 'perf', goal: 47, pts: 8 },
-    { id: 'x32', t: 'Скрытое достижение', d: '119 идеальных дней', val: 'perf', goal: 119, pts: 15, title: 'МАСТЕР РЕЖИМА' },
-    { id: 'x33', t: 'Скрытое достижение', d: '8 дней подряд вставать до 10:00', val: 'earlyBest', goal: 8, pts: 2 },
-    { id: 'x34', t: 'Скрытое достижение', d: '31 дней подряд вставать до 10:00', val: 'earlyBest', goal: 31, pts: 6, title: 'ЖАВОРОНОК' },
-    { id: 'x35', t: 'Скрытое достижение', d: '104 дней подряд вставать до 10:00', val: 'earlyBest', goal: 104, pts: 15, title: 'ХОЗЯИН УТРА' },
-    { id: 'x36', t: 'Скрытое достижение', d: '17 раз встать до 10:00', val: 'early', goal: 17, pts: 2 },
-    { id: 'x37', t: 'Скрытое достижение', d: '63 раз встать до 10:00', val: 'early', goal: 63, pts: 5 },
-    { id: 'x38', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 11 раз', val: 'cook', goal: 11, pts: 1 },
-    { id: 'x39', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 37 раз', val: 'cook', goal: 37, pts: 3 },
-    { id: 'x40', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 91 раз', val: 'cook', goal: 91, pts: 6 },
-    { id: 'x41', t: 'Скрытое достижение', d: 'Приготовить еду на завтра 203 раз', val: 'cook', goal: 203, pts: 12, title: 'ШЕФ' },
-    { id: 'x42', t: 'Скрытое достижение', d: 'Принять душ 19 раз', val: 'shower', goal: 19, pts: 2 },
-    { id: 'x43', t: 'Скрытое достижение', d: 'Позаниматься английским 66 раз', val: 'eng', goal: 66, pts: 5 },
-    { id: 'x44', t: 'Скрытое достижение', d: '14 дней в пределах 2200 ккал', val: 'kcalOk', goal: 14, pts: 2 },
-    { id: 'x45', t: 'Скрытое достижение', d: '59 дней в пределах 2200 ккал', val: 'kcalOk', goal: 59, pts: 5 },
-    { id: 'x46', t: 'Скрытое достижение', d: '148 дней в пределах 2200 ккал', val: 'kcalOk', goal: 148, pts: 10 },
-    { id: 'x47', t: 'Скрытое достижение', d: 'Записать калории 10 дней', val: 'kcalLog', goal: 10, pts: 1 },
-    { id: 'x48', t: 'Скрытое достижение', d: 'Записать калории 44 дней', val: 'kcalLog', goal: 44, pts: 4 },
-    { id: 'x49', t: 'Скрытое достижение', d: 'Уход за лицом 21 дней', val: 'face', goal: 21, pts: 2 },
-    { id: 'x50', t: 'Скрытое достижение', d: 'Уход за лицом 73 дней', val: 'face', goal: 73, pts: 5 },
-    { id: 'x51', t: 'Скрытое достижение', d: 'Уход за лицом 160 дней', val: 'face', goal: 160, pts: 10 },
-    { id: 'x52', t: 'Скрытое достижение', d: 'Уход за зубами 16 дней', val: 'teeth', goal: 16, pts: 2 },
-    { id: 'x53', t: 'Скрытое достижение', d: 'Уход за зубами 54 дней', val: 'teeth', goal: 54, pts: 5 },
-    { id: 'x54', t: 'Скрытое достижение', d: 'Уход за зубами 142 дней', val: 'teeth', goal: 142, pts: 10 },
-    { id: 'x55', t: 'Скрытое достижение', d: '4 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 4, pts: 3 },
-    { id: 'x56', t: 'Скрытое достижение', d: '9 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 9, pts: 6 },
-    { id: 'x57', t: 'Скрытое достижение', d: '22 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 22, pts: 15, title: 'РОВНЫЙ' },
-    { id: 'x58', t: 'Скрытое достижение', d: '3 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 3, pts: 2 },
-    { id: 'x59', t: 'Скрытое достижение', d: '7 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 7, pts: 6 },
-    { id: 'x60', t: 'Скрытое достижение', d: '19 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 19, pts: 15, title: 'НЕУТОМИМЫЙ' },
-    { id: 'x61', t: 'Скрытое достижение', d: '5 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 5, pts: 1 },
-    { id: 'x62', t: 'Скрытое достижение', d: '12 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 12, pts: 3 },
-    { id: 'x63', t: 'Скрытое достижение', d: '27 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 27, pts: 8 },
-    { id: 'x64', t: 'Скрытое достижение', d: 'Записать калории 17 дней', val: 'kcalLog', goal: 17, pts: 3 },
-    { id: 'x65', t: 'Скрытое достижение', d: '40 дней в пределах 2200 ккал', val: 'kcalOk', goal: 40, pts: 5, title: 'ЖЕЛЕЗНАЯ ВОЛЯ' },
-    { id: 'x66', t: 'Скрытое достижение', d: '200 идеальных дней', val: 'perf', goal: 200, pts: 15, title: 'ЛИДЕР' },
-    { id: 'x67', t: 'Скрытое достижение', d: 'Взвешиваться 5 недель', val: 'weigh', goal: 5, pts: 1 },
-    { id: 'x68', t: 'Скрытое достижение', d: 'Взвешиваться 14 недель', val: 'weigh', goal: 14, pts: 3 },
-    { id: 'x69', t: 'Скрытое достижение', d: 'Взвешиваться 31 недель', val: 'weigh', goal: 31, pts: 6 },
-    { id: 'x70', t: 'Скрытое достижение', d: '2 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 2, pts: 2 },
-    { id: 'x71', t: 'Скрытое достижение', d: '9 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 9, pts: 6 },
-    { id: 'x72', t: 'Скрытое достижение', d: '37 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 37, pts: 15, title: 'МАШИНА' },
-    { id: 'x73', t: 'Скрытое достижение', d: '12 дней, когда сделаны и подъём до 10:00, и уход за лицом, и уход за зубами', val: 'careDay', goal: 12, pts: 2 },
-    { id: 'x74', t: 'Скрытое достижение', d: '45 дней, когда сделаны и подъём до 10:00, и уход за лицом, и уход за зубами', val: 'careDay', goal: 45, pts: 6 },
-    { id: 'x75', t: 'Скрытое достижение', d: '6 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 6, pts: 2 },
-    { id: 'x76', t: 'Скрытое достижение', d: '28 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 28, pts: 5 },
-    { id: 'x77', t: 'Скрытое достижение', d: '89 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 89, pts: 12 },
-    { id: 'x78', t: 'Скрытое достижение', d: '2 воскресений с идеальным днём', val: 'sunPerfect', goal: 2, pts: 2 },
-    { id: 'x79', t: 'Скрытое достижение', d: '7 воскресений с идеальным днём', val: 'sunPerfect', goal: 7, pts: 6 },
-    { id: 'x80', t: 'Скрытое достижение', d: '3 дней по 10 000 шагов и больше', val: 'days10k', goal: 3, pts: 1 },
-    { id: 'x81', t: 'Скрытое достижение', d: '17 дней по 10 000 шагов и больше', val: 'days10k', goal: 17, pts: 4 },
-    { id: 'x82', t: 'Скрытое достижение', d: '61 дней по 10 000 шагов и больше', val: 'days10k', goal: 61, pts: 10 },
-    { id: 'x83', t: 'Скрытое достижение', d: 'Кинуть в копилку 3 раз', val: 'jar', goal: 3, pts: 1 },
-    { id: 'x84', t: 'Скрытое достижение', d: 'Кинуть в копилку 8 раз', val: 'jar', goal: 8, pts: 3 },
-    { id: 'x85', t: 'Скрытое достижение', d: 'Сделать подход приседаний или отжиманий глубокой ночью', val: 'night', goal: 1, pts: 2 },
-    { id: 'x86', t: 'Скрытое достижение', d: 'Пять подходов приседаний или отжиманий глубокой ночью', val: 'night', goal: 5, pts: 4, title: 'СОВА' },
-    { id: 'x87', t: 'Скрытое достижение', d: 'Сделать подход приседаний или отжиманий рано утром', val: 'dawn', goal: 1, pts: 2 },
-    { id: 'x88', t: 'Скрытое достижение', d: 'Семь подходов приседаний или отжиманий рано утром', val: 'dawn', goal: 7, pts: 4, title: 'РАННЯЯ ПТАХА' },
-    { id: 'x89', t: 'Скрытое достижение', d: 'Записать шаги, где есть три семёрки подряд', val: 'lucky', goal: 1, pts: 3 },
-    { id: 'x90', t: 'Скрытое достижение', d: 'За один день пройти вдвое больше цели по шагам', val: 'doubleSteps', goal: 1, pts: 2 },
-    { id: 'x91', t: 'Скрытое достижение', d: '101 дней по 10 000 шагов и больше', val: 'days10k', goal: 101, pts: 12 },
-    { id: 'x92', t: 'Скрытое достижение', d: 'Записать калории 121 день', val: 'kcalLog', goal: 121, pts: 8 },
-    { id: 'x93', t: 'Скрытое достижение', d: '1 337 подходов приседаний и отжиманий', val: 'sets', goal: 1337, pts: 15 },
-    { id: 'x94', t: 'Скрытое достижение', d: '140 раз встать до 10:00', val: 'early', goal: 140, pts: 10 },
-    { id: 'x95', t: 'Скрытое достижение', d: 'Кинуть в копилку 19 раз', val: 'jar', goal: 19, pts: 5 },
-    { id: 'x96', t: 'Скрытое достижение', d: '5 идеальных дней всего', val: 'perf', goal: 5, pts: 3, title: 'ПЯТЁРКА' },
-    { id: 'x97', t: 'Скрытое достижение', d: '69 подходов приседаний и отжиманий', val: 'sets', goal: 69, pts: 4, title: 'BIG DICK ENERGY' },
-    { id: 'x98', t: 'Скрытое достижение', d: '7 дней с тройным ударом', val: 'combo', goal: 7, pts: 6, title: 'SLAY KING' },
-    { id: 'x99', t: 'Скрытое достижение', d: '77 идеальных дней всего', val: 'perf', goal: 77, pts: 12, title: 'BIG BOSS' },
-    { id: 'x100', t: 'Скрытое достижение', d: '14 дней подряд вставать до 10:00', val: 'earlyBest', goal: 14, pts: 6, title: 'СИГМА' },
-    { id: 'x101', t: 'Скрытое достижение', d: '4 200 отжиманий всего', val: 'pu', goal: 4200, pts: 9, title: 'ГИГАЧАД' },
-    { id: 'x102', t: 'Скрытое достижение', d: 'Кинуть в копилку 42 раза', val: 'jar', goal: 42, pts: 8, title: 'СКРУДЖ' },
-    { id: 'x104', t: 'Скрытое достижение', d: '14 дней подряд в пределах 2200 ккал', val: 'kcalOkBest', goal: 14, pts: 8, title: 'СЧЁТОВОД' },
-    { id: 'x103', t: 'Скрытое достижение', d: '33 тренировки', val: 'wk', goal: 33, pts: 10, title: 'ТРИДЦАТЬ ТРИ БОГАТЫРЯ' },
-    { id: 'x105', t: 'Скрытое достижение', d: '9 дней английского подряд', val: 'engBest', goal: 9, pts: 3 },
-    { id: 'x106', t: 'Скрытое достижение', d: 'Английский 31 раз', val: 'eng', goal: 31, pts: 6 },
-    { id: 'x107', t: 'Скрытое достижение', d: '27 дней английского подряд', val: 'engBest', goal: 27, pts: 10 },
-    { id: 'x109', t: 'Скрытое достижение', d: 'Сверка трат 7 раз', val: 'recon', goal: 7, pts: 2 },
-    { id: 'x110', t: 'Скрытое достижение', d: 'Сверка трат 31 раз', val: 'recon', goal: 31, pts: 5 },
-    { id: 'x111', t: 'Скрытое достижение', d: '12 дней подряд со сверкой трат', val: 'reconBest', goal: 12, pts: 8 },
-    { id: 'x112', t: 'Скрытое достижение', d: 'Сверка трат 101 раз', val: 'recon', goal: 101, pts: 14, title: 'СВЕРЩИК' },
-    { id: 'x108', t: 'Скрытое достижение', d: 'Английский 101 раз', val: 'eng', goal: 101, pts: 15, title: 'ПОЛИГЛОТ' }
+    { id: 'x01', t: 'Скрытая отметина', d: 'Пройти суммарно 43 700 шагов', val: 'steps', goal: 43700, pts: 1 },
+    { id: 'x02', t: 'Скрытая отметина', d: 'Пройти суммарно 118 400 шагов', val: 'steps', goal: 118400, pts: 2 },
+    { id: 'x03', t: 'Скрытая отметина', d: 'Пройти суммарно 267 900 шагов', val: 'steps', goal: 267900, pts: 3 },
+    { id: 'x04', t: 'Скрытая отметина', d: 'Пройти суммарно 531 200 шагов', val: 'steps', goal: 531200, pts: 5 },
+    { id: 'x05', t: 'Скрытая отметина', d: 'Пройти суммарно 874 600 шагов', val: 'steps', goal: 874600, pts: 9 },
+    { id: 'x06', t: 'Скрытая отметина', d: 'Пройти суммарно 1 187 300 шагов', val: 'steps', goal: 1187300, pts: 15, title: 'ВЕЧНЫЙ СТРАННИК' },
+    { id: 'x07', t: 'Скрытая отметина', d: '13 400 шагов за один день', val: 'maxDay', goal: 13400, pts: 1 },
+    { id: 'x08', t: 'Скрытая отметина', d: '19 300 шагов за один день', val: 'maxDay', goal: 19300, pts: 2 },
+    { id: 'x09', t: 'Скрытая отметина', d: '27 700 шагов за один день', val: 'maxDay', goal: 27700, pts: 4, title: 'УЛЬТРА' },
+    { id: 'x10', t: 'Скрытая отметина', d: '1 370 повторов приседаний и отжиманий вместе', val: 'reps', goal: 1370, pts: 3 },
+    { id: 'x11', t: 'Скрытая отметина', d: '5 280 повторов приседаний и отжиманий вместе', val: 'reps', goal: 5280, pts: 5 },
+    { id: 'x12', t: 'Скрытая отметина', d: '23 500 повторов приседаний и отжиманий вместе', val: 'reps', goal: 23500, pts: 10 },
+    { id: 'x13', t: 'Скрытая отметина', d: '97 300 повторов приседаний и отжиманий вместе', val: 'reps', goal: 97300, pts: 20, title: 'КОВАНЫЙ' },
+    { id: 'x14', t: 'Скрытая отметина', d: '8 650 приседаний всего', val: 'sq', goal: 8650, pts: 5 },
+    { id: 'x15', t: 'Скрытая отметина', d: '93 200 приседаний всего', val: 'sq', goal: 93200, pts: 25, title: 'КОЛОСС' },
+    { id: 'x16', t: 'Скрытая отметина', d: '7 900 отжиманий на коленях всего', val: 'pu', goal: 7900, pts: 5 },
+    { id: 'x17', t: 'Скрытая отметина', d: '88 700 отжиманий на коленях всего', val: 'pu', goal: 88700, pts: 25, title: 'ТИТАН' },
+    { id: 'x18', t: 'Скрытая отметина', d: '29 подходов приседаний и отжиманий', val: 'sets', goal: 29, pts: 1 },
+    { id: 'x19', t: 'Скрытая отметина', d: '117 подходов приседаний и отжиманий', val: 'sets', goal: 117, pts: 3 },
+    { id: 'x20', t: 'Скрытая отметина', d: '463 подходов приседаний и отжиманий', val: 'sets', goal: 463, pts: 8 },
+    { id: 'x21', t: 'Скрытая отметина', d: '7 тренировок по приложению', val: 'wk', goal: 7, pts: 1 },
+    { id: 'x22', t: 'Скрытая отметина', d: '23 тренировок по приложению', val: 'wk', goal: 23, pts: 3 },
+    { id: 'x23', t: 'Скрытая отметина', d: '58 тренировок по приложению', val: 'wk', goal: 58, pts: 5 },
+    { id: 'x24', t: 'Скрытая отметина', d: '112 тренировок по приложению', val: 'wk', goal: 112, pts: 10, title: 'ЛЕГЕНДА ЗАЛА' },
+    { id: 'x25', t: 'Скрытая отметина', d: '241 тренировок по приложению', val: 'wk', goal: 241, pts: 20, title: 'НЕУДЕРЖИМЫЙ' },
+    { id: 'x26', t: 'Скрытая отметина', d: '4 идеальных дней подряд', val: 'perfBest', goal: 4, pts: 2 },
+    { id: 'x27', t: 'Скрытая отметина', d: '9 идеальных дней подряд', val: 'perfBest', goal: 9, pts: 4 },
+    { id: 'x28', t: 'Скрытая отметина', d: '16 идеальных дней подряд', val: 'perfBest', goal: 16, pts: 7 },
+    { id: 'x29', t: 'Скрытая отметина', d: '33 идеальных дней подряд', val: 'perfBest', goal: 33, pts: 15, title: 'ГЕРОЙ' },
+    { id: 'x30', t: 'Скрытая отметина', d: '13 идеальных дней', val: 'perf', goal: 13, pts: 3 },
+    { id: 'x31', t: 'Скрытая отметина', d: '47 идеальных дней', val: 'perf', goal: 47, pts: 8 },
+    { id: 'x32', t: 'Скрытая отметина', d: '119 идеальных дней', val: 'perf', goal: 119, pts: 15, title: 'МАСТЕР РЕЖИМА' },
+    { id: 'x33', t: 'Скрытая отметина', d: '8 дней подряд вставать до 10:00', val: 'earlyBest', goal: 8, pts: 2 },
+    { id: 'x34', t: 'Скрытая отметина', d: '31 дней подряд вставать до 10:00', val: 'earlyBest', goal: 31, pts: 6, title: 'ЖАВОРОНОК' },
+    { id: 'x35', t: 'Скрытая отметина', d: '104 дней подряд вставать до 10:00', val: 'earlyBest', goal: 104, pts: 15, title: 'ХОЗЯИН УТРА' },
+    { id: 'x36', t: 'Скрытая отметина', d: '17 раз встать до 10:00', val: 'early', goal: 17, pts: 2 },
+    { id: 'x37', t: 'Скрытая отметина', d: '63 раз встать до 10:00', val: 'early', goal: 63, pts: 5 },
+    { id: 'x38', t: 'Скрытая отметина', d: 'Приготовить еду на завтра 11 раз', val: 'cook', goal: 11, pts: 1 },
+    { id: 'x39', t: 'Скрытая отметина', d: 'Приготовить еду на завтра 37 раз', val: 'cook', goal: 37, pts: 3 },
+    { id: 'x40', t: 'Скрытая отметина', d: 'Приготовить еду на завтра 91 раз', val: 'cook', goal: 91, pts: 6 },
+    { id: 'x41', t: 'Скрытая отметина', d: 'Приготовить еду на завтра 203 раз', val: 'cook', goal: 203, pts: 12, title: 'ШЕФ' },
+    { id: 'x42', t: 'Скрытая отметина', d: 'Принять душ 19 раз', val: 'shower', goal: 19, pts: 2 },
+    { id: 'x43', t: 'Скрытая отметина', d: 'Позаниматься английским 66 раз', val: 'eng', goal: 66, pts: 5 },
+    { id: 'x44', t: 'Скрытая отметина', d: '14 дней в пределах 2200 ккал', val: 'kcalOk', goal: 14, pts: 2 },
+    { id: 'x45', t: 'Скрытая отметина', d: '59 дней в пределах 2200 ккал', val: 'kcalOk', goal: 59, pts: 5 },
+    { id: 'x46', t: 'Скрытая отметина', d: '148 дней в пределах 2200 ккал', val: 'kcalOk', goal: 148, pts: 10 },
+    { id: 'x47', t: 'Скрытая отметина', d: 'Записать калории 10 дней', val: 'kcalLog', goal: 10, pts: 1 },
+    { id: 'x48', t: 'Скрытая отметина', d: 'Записать калории 44 дней', val: 'kcalLog', goal: 44, pts: 4 },
+    { id: 'x49', t: 'Скрытая отметина', d: 'Уход за лицом 21 дней', val: 'face', goal: 21, pts: 2 },
+    { id: 'x50', t: 'Скрытая отметина', d: 'Уход за лицом 73 дней', val: 'face', goal: 73, pts: 5 },
+    { id: 'x51', t: 'Скрытая отметина', d: 'Уход за лицом 160 дней', val: 'face', goal: 160, pts: 10 },
+    { id: 'x52', t: 'Скрытая отметина', d: 'Уход за зубами 16 дней', val: 'teeth', goal: 16, pts: 2 },
+    { id: 'x53', t: 'Скрытая отметина', d: 'Уход за зубами 54 дней', val: 'teeth', goal: 54, pts: 5 },
+    { id: 'x54', t: 'Скрытая отметина', d: 'Уход за зубами 142 дней', val: 'teeth', goal: 142, pts: 10 },
+    { id: 'x55', t: 'Скрытая отметина', d: '4 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 4, pts: 3 },
+    { id: 'x56', t: 'Скрытая отметина', d: '9 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 9, pts: 6 },
+    { id: 'x57', t: 'Скрытая отметина', d: '22 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 22, pts: 15, title: 'РОВНЫЙ' },
+    { id: 'x58', t: 'Скрытая отметина', d: '3 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 3, pts: 2 },
+    { id: 'x59', t: 'Скрытая отметина', d: '7 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 7, pts: 6 },
+    { id: 'x60', t: 'Скрытая отметина', d: '19 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 19, pts: 15, title: 'НЕУТОМИМЫЙ' },
+    { id: 'x61', t: 'Скрытая отметина', d: '5 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 5, pts: 1 },
+    { id: 'x62', t: 'Скрытая отметина', d: '12 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 12, pts: 3 },
+    { id: 'x63', t: 'Скрытая отметина', d: '27 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 27, pts: 8 },
+    { id: 'x64', t: 'Скрытая отметина', d: 'Записать калории 17 дней', val: 'kcalLog', goal: 17, pts: 3 },
+    { id: 'x65', t: 'Скрытая отметина', d: '40 дней в пределах 2200 ккал', val: 'kcalOk', goal: 40, pts: 5, title: 'ЖЕЛЕЗНАЯ ВОЛЯ' },
+    { id: 'x66', t: 'Скрытая отметина', d: '200 идеальных дней', val: 'perf', goal: 200, pts: 15, title: 'ЛИДЕР' },
+    { id: 'x67', t: 'Скрытая отметина', d: 'Взвешиваться 5 недель', val: 'weigh', goal: 5, pts: 1 },
+    { id: 'x68', t: 'Скрытая отметина', d: 'Взвешиваться 14 недель', val: 'weigh', goal: 14, pts: 3 },
+    { id: 'x69', t: 'Скрытая отметина', d: 'Взвешиваться 31 недель', val: 'weigh', goal: 31, pts: 6 },
+    { id: 'x70', t: 'Скрытая отметина', d: '2 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 2, pts: 2 },
+    { id: 'x71', t: 'Скрытая отметина', d: '9 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 9, pts: 6 },
+    { id: 'x72', t: 'Скрытая отметина', d: '37 дней с тремя подходами приседаний, тремя подходами отжиманий и тренировкой', val: 'combo', goal: 37, pts: 15, title: 'МАШИНА' },
+    { id: 'x73', t: 'Скрытая отметина', d: '12 дней, когда сделаны и подъём до 10:00, и уход за лицом, и уход за зубами', val: 'careDay', goal: 12, pts: 2 },
+    { id: 'x74', t: 'Скрытая отметина', d: '45 дней, когда сделаны и подъём до 10:00, и уход за лицом, и уход за зубами', val: 'careDay', goal: 45, pts: 6 },
+    { id: 'x75', t: 'Скрытая отметина', d: '6 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 6, pts: 2 },
+    { id: 'x76', t: 'Скрытая отметина', d: '28 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 28, pts: 5 },
+    { id: 'x77', t: 'Скрытая отметина', d: '89 дней, когда сделаны готовка и еда в пределах нормы', val: 'foodDay', goal: 89, pts: 12 },
+    { id: 'x78', t: 'Скрытая отметина', d: '2 воскресений с идеальным днём', val: 'sunPerfect', goal: 2, pts: 2 },
+    { id: 'x79', t: 'Скрытая отметина', d: '7 воскресений с идеальным днём', val: 'sunPerfect', goal: 7, pts: 6 },
+    { id: 'x80', t: 'Скрытая отметина', d: '3 дней по 10 000 шагов и больше', val: 'days10k', goal: 3, pts: 1 },
+    { id: 'x81', t: 'Скрытая отметина', d: '17 дней по 10 000 шагов и больше', val: 'days10k', goal: 17, pts: 4 },
+    { id: 'x82', t: 'Скрытая отметина', d: '61 дней по 10 000 шагов и больше', val: 'days10k', goal: 61, pts: 10 },
+    { id: 'x83', t: 'Скрытая отметина', d: 'Кинуть в копилку 3 раз', val: 'jar', goal: 3, pts: 1 },
+    { id: 'x84', t: 'Скрытая отметина', d: 'Кинуть в копилку 8 раз', val: 'jar', goal: 8, pts: 3 },
+    { id: 'x85', t: 'Скрытая отметина', d: 'Сделать подход приседаний или отжиманий глубокой ночью', val: 'night', goal: 1, pts: 2 },
+    { id: 'x86', t: 'Скрытая отметина', d: 'Пять подходов приседаний или отжиманий глубокой ночью', val: 'night', goal: 5, pts: 4, title: 'СОВА' },
+    { id: 'x87', t: 'Скрытая отметина', d: 'Сделать подход приседаний или отжиманий рано утром', val: 'dawn', goal: 1, pts: 2 },
+    { id: 'x88', t: 'Скрытая отметина', d: 'Семь подходов приседаний или отжиманий рано утром', val: 'dawn', goal: 7, pts: 4, title: 'РАННЯЯ ПТАХА' },
+    { id: 'x89', t: 'Скрытая отметина', d: 'Записать шаги, где есть три семёрки подряд', val: 'lucky', goal: 1, pts: 3 },
+    { id: 'x90', t: 'Скрытая отметина', d: 'За один день пройти вдвое больше цели по шагам', val: 'doubleSteps', goal: 1, pts: 2 },
+    { id: 'x91', t: 'Скрытая отметина', d: '101 дней по 10 000 шагов и больше', val: 'days10k', goal: 101, pts: 12 },
+    { id: 'x92', t: 'Скрытая отметина', d: 'Записать калории 121 день', val: 'kcalLog', goal: 121, pts: 8 },
+    { id: 'x93', t: 'Скрытая отметина', d: '1 337 подходов приседаний и отжиманий', val: 'sets', goal: 1337, pts: 15 },
+    { id: 'x94', t: 'Скрытая отметина', d: '140 раз встать до 10:00', val: 'early', goal: 140, pts: 10 },
+    { id: 'x95', t: 'Скрытая отметина', d: 'Кинуть в копилку 19 раз', val: 'jar', goal: 19, pts: 5 },
+    { id: 'x96', t: 'Скрытая отметина', d: '5 идеальных дней всего', val: 'perf', goal: 5, pts: 3, title: 'ПЯТЁРКА' },
+    { id: 'x97', t: 'Скрытая отметина', d: '69 подходов приседаний и отжиманий', val: 'sets', goal: 69, pts: 4, title: 'BIG DICK ENERGY' },
+    { id: 'x98', t: 'Скрытая отметина', d: '7 дней с тройным ударом', val: 'combo', goal: 7, pts: 6, title: 'SLAY KING' },
+    { id: 'x99', t: 'Скрытая отметина', d: '77 идеальных дней всего', val: 'perf', goal: 77, pts: 12, title: 'BIG BOSS' },
+    { id: 'x100', t: 'Скрытая отметина', d: '14 дней подряд вставать до 10:00', val: 'earlyBest', goal: 14, pts: 6, title: 'СИГМА' },
+    { id: 'x101', t: 'Скрытая отметина', d: '4 200 отжиманий всего', val: 'pu', goal: 4200, pts: 9, title: 'ГИГАЧАД' },
+    { id: 'x102', t: 'Скрытая отметина', d: 'Кинуть в копилку 42 раза', val: 'jar', goal: 42, pts: 8, title: 'СКРУДЖ' },
+    { id: 'x104', t: 'Скрытая отметина', d: '14 дней подряд в пределах 2200 ккал', val: 'kcalOkBest', goal: 14, pts: 8, title: 'СЧЁТОВОД' },
+    { id: 'x103', t: 'Скрытая отметина', d: '33 тренировки', val: 'wk', goal: 33, pts: 10, title: 'ТРИДЦАТЬ ТРИ БОГАТЫРЯ' },
+    { id: 'x105', t: 'Скрытая отметина', d: '9 дней английского подряд', val: 'engBest', goal: 9, pts: 3 },
+    { id: 'x106', t: 'Скрытая отметина', d: 'Английский 31 раз', val: 'eng', goal: 31, pts: 6 },
+    { id: 'x107', t: 'Скрытая отметина', d: '27 дней английского подряд', val: 'engBest', goal: 27, pts: 10 },
+    { id: 'x109', t: 'Скрытая отметина', d: 'Сверка трат 7 раз', val: 'recon', goal: 7, pts: 2 },
+    { id: 'x110', t: 'Скрытая отметина', d: 'Сверка трат 31 раз', val: 'recon', goal: 31, pts: 5 },
+    { id: 'x111', t: 'Скрытая отметина', d: '12 дней подряд со сверкой трат', val: 'reconBest', goal: 12, pts: 8 },
+    { id: 'x112', t: 'Скрытая отметина', d: 'Сверка трат 101 раз', val: 'recon', goal: 101, pts: 14, title: 'СВЕРЩИК' },
+    { id: 'x108', t: 'Скрытая отметина', d: 'Английский 101 раз', val: 'eng', goal: 101, pts: 15, title: 'ПОЛИГЛОТ' }
   ];
 
   // ---- оформление и суперредкие достижения ----
@@ -1411,7 +1415,7 @@ html,body{overflow-anchor:none}
   COS.r_neon = { cat: 'bar', n: 'Неон', key: 'neon' };
   COS.r_stripes = { cat: 'bar', n: 'Полосы', key: 'stripes' };
   COS.r_dots = { cat: 'bar', n: 'Точки', key: 'dots' };
-  var COS_CATS = [{ k: 'theme', n: 'ЦВЕТ' }, { k: 'bg', n: 'ФОН КОМНАТЫ' }, { k: 'coin', n: 'МОНЕТКА' }, { k: 'bar', n: 'ПОЛОСА ОПЫТА' }];
+  var COS_CATS = [{ k: 'theme', n: 'ЦВЕТ' }, { k: 'bg', n: 'ФОН УБЕЖИЩА' }, { k: 'coin', n: 'ОСКОЛОК ДУШИ' }, { k: 'bar', n: 'ШКАЛА ДУШИ' }];
   var THEME_KEYS = ['--fg', '--bg', '--panel', '--panel-2', '--line', '--muted', '--gold', '--gold-dark', '--wall', '--floor'];
   var RAIN_L = 69;
   // суперредкие: ev = по событию в приложении (журнал cfg/rare), slot = открывается после N обычных достижений
@@ -1640,7 +1644,7 @@ html,body{overflow-anchor:none}
 
   var COS2 = [
     ['fx_spark', 'fx', 'Искры', '#ffe36a'], ['fx_petal', 'fx', 'Лепестки', '#f2a1c2'], ['fx_star', 'fx', 'Звёзды', '#fff0a0'],
-    ['fx_conf', 'fx', 'Конфетти', '#6ad0e8'], ['fx_bubble', 'fx', 'Пузыри', '#a8e0ff'], ['fx_coin', 'fx', 'Монеты', '#e8b13c'],
+    ['fx_conf', 'fx', 'Конфетти', '#6ad0e8'], ['fx_bubble', 'fx', 'Пузыри', '#a8e0ff'], ['fx_coin', 'fx', 'Осколки', '#a9bbea'],
     ['lv_firework', 'lv', 'Салют', '#ff7a5a'], ['lv_rain', 'lv', 'Дождь конфетти', '#8be37a'], ['lv_bolt', 'lv', 'Молния', '#fff27a'], ['lv_ripple', 'lv', 'Волны', '#7ad0ff'],
     ['fr_gold', 'frame', 'Золото', '#e8b13c', 'gold'], ['fr_double', 'frame', 'Двойная', '#d8c070', 'double'], ['fr_dash', 'frame', 'Пунктир', '#c8a050', 'dash'],
     ['fr_neon', 'frame', 'Неон', '#ff5acd', 'neon'], ['fr_wood', 'frame', 'Дерево', '#8a5a2b', 'wood'], ['fr_ice', 'frame', 'Лёд', '#bfe6ff', 'ice'],
@@ -1680,9 +1684,9 @@ html,body{overflow-anchor:none}
   COS2.forEach(function (c) { COS[c[0]] = { cat: c[1], n: c[2], sw: c[3], key: c[4], pv: c[5] }; });
   COS.p_gold = { cat: 'theme', n: 'Казна', prem: 'gold', sw: '#f2c14e' };
   COS.p_mirror = { cat: 'theme', n: 'Зеркало', prem: 'mirror', sw: '#4ac7e8' };
-  COS_CATS = [{ k: 'theme', n: 'ЦВЕТ' }, { k: 'bg', n: 'ФОН КОМНАТЫ' }, { k: 'frame', n: 'РАМКА КОМНАТЫ' }, { k: 'aura', n: 'АУРА ПЕРСОНАЖА' },
-    { k: 'coin', n: 'МОНЕТКА' }, { k: 'bar', n: 'ПОЛОСА ОПЫТА' }, { k: 'pat', n: 'УЗОР ФОНА' }, { k: 'font', n: 'СТИЛЬ ТЕКСТА' },
-    { k: 'chk', n: 'ГАЛОЧКА' }, { k: 'tab', n: 'ВКЛАДКИ' }, { k: 'fx', n: 'ЭФФЕКТ НАЖАТИЯ' }, { k: 'lv', n: 'ЭФФЕКТ НОВОГО УРОВНЯ' }, { k: 'snd', n: 'ЗВУКИ' }];
+  COS_CATS = [{ k: 'theme', n: 'ЦВЕТ' }, { k: 'bg', n: 'ФОН УБЕЖИЩА' }, { k: 'frame', n: 'РАМКА УБЕЖИЩА' }, { k: 'aura', n: 'АУРА ПЕРСОНАЖА' },
+    { k: 'coin', n: 'ОСКОЛОК ДУШИ' }, { k: 'bar', n: 'ШКАЛА ДУШИ' }, { k: 'pat', n: 'УЗОР ФОНА' }, { k: 'font', n: 'СТИЛЬ ТЕКСТА' },
+    { k: 'chk', n: 'ГАЛОЧКА' }, { k: 'tab', n: 'ВКЛАДКИ' }, { k: 'fx', n: 'ЭФФЕКТ НАЖАТИЯ' }, { k: 'lv', n: 'ЭФФЕКТ НОВОГО РАНГА' }, { k: 'snd', n: 'ЗВУКИ' }];
   function lookId(cat) {
     var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
     var un = unlockedCos(), id = look[cat];
@@ -1803,7 +1807,7 @@ html,body{overflow-anchor:none}
     if (!nt) return;
     for (i = 0; i < list.length; i++) if (list[i].id === look.title) t = list[i].title;
     if (!t && list.length) t = list[list.length - 1].title;
-    nt.textContent = t || 'ИГРОК';
+    nt.textContent = t || 'СПЯЩИЙ';
   }
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
@@ -2152,14 +2156,14 @@ html,body{overflow-anchor:none}
     var p = pointsInfo(); lastPI = p;
     $('pts').textContent = fmtP(p.P);
     $('goal').textContent = '/ ' + p.need;
-    $('lvl').textContent = 'УР. ' + p.L;
-    $('left').textContent = 'До уровня ' + (p.L + 1) + ': ' + fmtP(p.need - p.P);
+    $('lvl').textContent = 'РАНГ ' + p.L;
+    $('left').textContent = 'До ранга ' + (p.L + 1) + ': ' + fmtP(p.need - p.P);
     $('upg').textContent = String(Math.max(0, p.avail));
     $('upg2').textContent = String(Math.max(0, p.avail));
     var loss = $('loss');
     var parts = [];
-    if (p.lossY > 0) parts.push('Система списала вчера −' + p.lossY + ': ' + p.missY.join(', ') + '.');
-    if (p.missToday > 0) parts.push('Сегодня не закрыто заданий: ' + p.missToday + '. Если не успеешь, завтра Система спишет −' + p.missToday + '.');
+    if (p.lossY > 0) parts.push('Заклятие списало вчера −' + p.lossY + ': ' + p.missY.join(', ') + '.');
+    if (p.missToday > 0) parts.push('Сегодня не закрыто заданий: ' + p.missToday + '. Если не успеешь, завтра Заклятие спишет −' + p.missToday + '.');
     if (p.shieldUsedY) parts.push('Щит поглотил штраф за калории.');
     if (p.kRun > 0 || p.shields > 0) parts.push('Калории: серия ' + p.kRun + ' ' + plural(p.kRun, 'день', 'дня', 'дней') + (p.shields > 0 ? ', щитов: ' + p.shields : '') + '.');
     loss.hidden = !parts.length;
@@ -2191,8 +2195,8 @@ html,body{overflow-anchor:none}
   }
   function showLevelUp(L, avail) {
     avail = Math.max(0, avail);
-    $('lv-big').textContent = '[СИСТЕМА] УРОВЕНЬ ' + L;
-    $('lv-text').textContent = 'Игрок, твой уровень повышен до ' + L + '. Тебе доступно ' + avail + ' ' + plural(avail, 'улучшение', 'улучшения', 'улучшений') + ' в магазине.';
+    $('lv-big').textContent = '[ЗАКЛЯТИЕ] РАНГ ' + L;
+    $('lv-text').textContent = 'Спящий, твой ранг повышен до ' + L + '. Тебе доступно ' + avail + ' ' + plural(avail, 'ядро', 'ядра', 'ядер') + ' души в Воспоминаниях.';
     $('lvup').hidden = false;
     $('lv-ok').focus();
     burst();
@@ -2310,7 +2314,7 @@ html,body{overflow-anchor:none}
     var k = curKey();
     $('d-today').setAttribute('aria-pressed', viewBack === 0 ? 'true' : 'false');
     $('d-yest').setAttribute('aria-pressed', viewBack === 1 ? 'true' : 'false');
-    $('qh').textContent = viewBack === 0 ? 'КВЕСТЫ ДНЯ' : 'КВЕСТЫ ВЧЕРА, ' + dshort(k);
+    $('qh').textContent = viewBack === 0 ? 'ЗАДАЧИ ЗАКЛЯТИЯ' : 'ЗАДАЧИ ВЧЕРА, ' + dshort(k);
     $('psec').hidden = viewBack !== 0;
     $('ssec').hidden = viewBack !== 0;
     renderSpont();
@@ -2384,7 +2388,7 @@ html,body{overflow-anchor:none}
       if (x.heavy && L >= 1) val = spHeavyPts(L);
       if (counted) got += val;
       var row = el('div');
-      var sub = x.done ? (counted ? 'сделано' : 'сделано, но очки за сегодня закончились') : 'отметь, когда сделаешь';
+      var sub = x.done ? (counted ? 'сделано' : 'сделано, но осколки за сегодня закончились') : 'отметь, когда сделаешь';
       if (x.heavy && L >= 1) sub += ', тяжёлое';
       row.appendChild(questButton(x.name, sub, x.done && !counted ? '0' : '+' + val, !!x.done, function () {
         if (!db) return;
@@ -2407,7 +2411,7 @@ html,body{overflow-anchor:none}
       box.appendChild(row);
     });
     if (!mine.length) box.appendChild(el('div', 'hint', 'На сегодня спонтанных дел пока нет.'));
-    $('sp-hint').textContent = 'Каждое сделанное дело даёт +1, штрафа нет. Очки считаются за ' + cap + ' ' + plural(cap, 'дело', 'дела', 'дел') + ' в день. Сегодня засчитано ' + Math.min(doneN, cap) + ' из ' + cap + '.';
+    $('sp-hint').textContent = 'Каждое сделанное дело даёт +1, штрафа нет. Осколки считаются за ' + cap + ' ' + plural(cap, 'дело', 'дела', 'дел') + ' в день. Сегодня засчитано ' + Math.min(doneN, cap) + ' из ' + cap + '.';
     var pr = $('spresets');
     clear(pr);
     var names = SP_DEF.slice();
@@ -2475,7 +2479,7 @@ html,body{overflow-anchor:none}
       var lv = nlev(T[2]);
       if (!lv || (T[0] === 7 && k < NEW_Q)) return;
       var mn = engMin(k);
-      box.appendChild(el('div', 'hint', 'Усилить квест «' + (T[0] === 7 ? 'Английский' : 'Еда на завтра') + '», по желанию: Система выдаст больше очков.'));
+      box.appendChild(el('div', 'hint', 'Усилить задачу «' + (T[0] === 7 ? 'Английский' : 'Еда на завтра') + '», по желанию: Заклятие выдаст больше осколков.'));
       for (var m = 2; m <= lv + 1; m++) {
         (function (m) {
           var onT = !!(td.q && td.q[T[0]]) && (tex[T[1]] || 1) === m;
@@ -2492,7 +2496,7 @@ html,body{overflow-anchor:none}
     var weighed = S.weights.some(function (w) { return mondayKey(w.date) === mk; });
     var list = $('wlist');
     clear(list);
-    list.appendChild(questButton('Взвешивание раз в неделю', weighed ? 'вес записан на этой неделе' : 'запиши вес во вкладке «Похудение»', '+2', weighed, null, true));
+    list.appendChild(questButton('Взвешивание раз в неделю', weighed ? 'вес записан на этой неделе' : 'запиши вес во вкладке «Тело»', '+2', weighed, null, true));
     var SI = stepInfo();
     var sg = SI.goals[mk] || 5000;
     var cnt = 0, dd = parseKey(mk);
@@ -2504,8 +2508,8 @@ html,body{overflow-anchor:none}
     list.appendChild(questButton('Каждый день по ' + fmt(sg) + ' шагов', cnt + ' из 7 дней. Если выполнишь все семь, цель вырастет на 1 000', '+2', !!SI.done[mk], null, true));
     var kc = kcalWeek(mk);
     var ec = engWeek(mk);
-    list.appendChild(questButton('Английский каждый день', ec + ' из 7 дней. Отмечай квест «Английский» каждый день', '+1', ec === 7, null, true));
-    list.appendChild(questButton('Неделя в пределах 2200 ккал', kc + ' из 7 дней подряд. Отмечай квест «Еда в пределах 2200 ккал» каждый день', '+3', kc === 7, null, true));
+    list.appendChild(questButton('Английский каждый день', ec + ' из 7 дней. Отмечай задачу «Английский» каждый день', '+1', ec === 7, null, true));
+    list.appendChild(questButton('Неделя в пределах 2200 ккал', kc + ' из 7 дней подряд. Отмечай задачу «Еда в пределах 2200 ккал» каждый день', '+3', kc === 7, null, true));
   }
   function remaining(ms) {
     var s = Math.max(0, Math.floor(ms / 1000));
@@ -2527,7 +2531,7 @@ html,body{overflow-anchor:none}
       btn.type = 'button';
       if (inCart) {
         var ccost = S.cart.cost || 1;
-        priceEl.textContent = ccost + ' ' + plural(ccost, 'ОЧКО', 'ОЧКА', 'ОЧКОВ').toUpperCase() + ' УЛУЧШЕНИЯ' + (S.cart.price ? ' · ' + fmt(S.cart.price) + ' ₽' : '');
+        priceEl.textContent = ccost + ' ' + plural(ccost, 'ЯДРО', 'ЯДРА', 'ЯДЕР') + ' ДУШИ' + (S.cart.price ? ' · ' + fmt(S.cart.price) + ' ₽' : '');
         var wait = S.cart.at + 86400000 - Date.now();
         if (wait > 0) {
           btn.textContent = 'МОЖНО КУПИТЬ ЧЕРЕЗ ' + remaining(wait);
@@ -2544,7 +2548,7 @@ html,body{overflow-anchor:none}
         cancel.addEventListener('click', function () { enqueue(function () { return db.doc('cfg/cart').delete(); }); });
         card.appendChild(cancel);
       } else if (S.cart) {
-        priceEl.textContent = 'ОТ 1 ОЧКА УЛУЧШЕНИЯ';
+        priceEl.textContent = 'ОТ 1 ЯДРА ДУШИ';
         btn.textContent = 'В КОРЗИНЕ ДРУГАЯ НАГРАДА';
         btn.disabled = true;
         card.appendChild(btn);
@@ -2563,12 +2567,12 @@ html,body{overflow-anchor:none}
             btn.className = 'btn';
             btn.disabled = true;
           } else if (avail < c) {
-            priceEl.textContent = c + ' ' + plural(c, 'ОЧКО', 'ОЧКА', 'ОЧКОВ').toUpperCase() + ' УЛУЧШЕНИЯ';
+            priceEl.textContent = c + ' ' + plural(c, 'ЯДРО', 'ЯДРА', 'ЯДЕР') + ' ДУШИ';
             btn.textContent = 'НЕ ХВАТАЕТ ОЧКОВ: НУЖНО ' + c + ', ЕСТЬ ' + avail;
             btn.className = 'btn';
             btn.disabled = true;
           } else {
-            priceEl.textContent = c + ' ' + plural(c, 'ОЧКО', 'ОЧКА', 'ОЧКОВ').toUpperCase() + ' УЛУЧШЕНИЯ';
+            priceEl.textContent = c + ' ' + plural(c, 'ЯДРО', 'ЯДРА', 'ЯДЕР') + ' ДУШИ';
             btn.textContent = 'В КОРЗИНУ НА 24 ЧАСА';
             btn.className = 'btn go';
             btn.disabled = false;
@@ -3142,32 +3146,32 @@ html,body{overflow-anchor:none}
     var ev = [];
     if (!lastGI) return ev;
     function rewardText(id, pts, title) {
-      var c = cosOf(id), t = 'Награда: +' + pts + ' ' + plural(pts, 'очко', 'очка', 'очков');
+      var c = cosOf(id), t = 'Награда: +' + pts + ' ' + plural(pts, 'осколок', 'осколка', 'осколков');
       if (title) t += ', титул «' + title + '»';
-      if (c && COS[c]) t += ', новое оформление: ' + ({ theme: 'цвет', bg: 'фон комнаты', coin: 'монетка', bar: 'полоса опыта', fx: 'эффект нажатия', lv: 'эффект нового уровня', frame: 'рамка комнаты', aura: 'аура персонажа', font: 'стиль текста', snd: 'звуки', pat: 'узор фона', chk: 'галочка', tab: 'вкладки' }[COS[c].cat]) + ' «' + COS[c].n + '». Выбрать можно ниже в разделе «Оформление».';
+      if (c && COS[c]) t += ', новое оформление: ' + ({ theme: 'цвет', bg: 'фон убежища', coin: 'форма осколка', bar: 'шкала души', fx: 'эффект нажатия', lv: 'эффект нового ранга', frame: 'рамка убежища', aura: 'аура персонажа', font: 'стиль текста', snd: 'звуки', pat: 'узор фона', chk: 'галочка', tab: 'вкладки' }[COS[c].cat]) + ' «' + COS[c].n + '». Выбрать можно ниже в разделе «Оформление».';
       else t += '.';
-      if (ROOM_OF[id]) t = t.replace(/\.$/, '') + '; в комнате появился предмет «' + ROOM_ITEMS[ROOM_OF[id]].n + '».';
+      if (ROOM_OF[id]) t = t.replace(/\.$/, '') + '; в убежище появился предмет «' + ROOM_ITEMS[ROOM_OF[id]].n + '».';
       return t;
     }
     Object.keys(lastGI.trials || {}).forEach(function (k) {
       var r = lastGI.trials[k], t = r.t;
-      if (r.done) ev.push({ id: 'tw:' + k, date: k, kind: 'ИСПЫТАНИЕ ПРОЙДЕНО', big: 'Заклятие признало тебя', text: 'Испытание ранга «' + t.rname + '» выполнено. Награда: +' + t.reward + ' ' + plural(t.reward, 'очко', 'очка', 'очков') + '.' });
-      else if (r.lost) ev.push({ id: 'tf:' + k, date: addDays(k, 1), kind: 'ИСПЫТАНИЕ ПРОВАЛЕНО', big: 'Заклятие забрало своё', red: 1, text: 'Испытание ранга «' + t.rname + '» не выполнено. Штраф: −' + t.reward + ' ' + plural(t.reward, 'очко', 'очка', 'очков') + '. Очки ниже нуля не уходят, уровень не падает.' });
+      if (r.done) ev.push({ id: 'tw:' + k, date: k, kind: 'ИСПЫТАНИЕ ПРОЙДЕНО', big: 'Заклятие признало тебя', text: 'Испытание ранга «' + t.rname + '» выполнено. Награда: +' + t.reward + ' ' + plural(t.reward, 'осколок', 'осколка', 'осколков') + '.' });
+      else if (r.lost) ev.push({ id: 'tf:' + k, date: addDays(k, 1), kind: 'ИСПЫТАНИЕ ПРОВАЛЕНО', big: 'Заклятие забрало своё', red: 1, text: 'Испытание ранга «' + t.rname + '» не выполнено. Штраф: −' + t.reward + ' ' + plural(t.reward, 'осколок', 'осколка', 'осколков') + '. Осколки ниже нуля не уходят, ранг не падает.' });
     });
-    ACH.forEach(function (A) { if (lastGI.ach[A.id]) ev.push({ id: 'a:' + A.id, date: lastGI.ach[A.id], kind: 'ДОСТИЖЕНИЕ', big: A.t, text: A.d + '. ' + rewardText(A.id, A.pts, A.title) }); });
+    ACH.forEach(function (A) { if (lastGI.ach[A.id]) ev.push({ id: 'a:' + A.id, date: lastGI.ach[A.id], kind: 'ОТМЕТИНА', big: A.t, text: A.d + '. ' + rewardText(A.id, A.pts, A.title) }); });
     LEG.forEach(function (G) {
-      if (lastGI.slots[G.id] && !G.ev) ev.push({ id: 'sl:' + G.id, date: lastGI.slots[G.id], kind: 'ЧТО-ТО РЕДКОЕ', big: 'Система открыла цель', text: G.d + '. Награда секретная.' });
-      if (lastGI.ach[G.id]) ev.push({ id: 'g:' + G.id, date: lastGI.ach[G.id], kind: 'СУПЕРРЕДКОЕ ДОСТИЖЕНИЕ', big: 'Игрок, ты сделал редкую находку', text: G.d + '. ' + rewardText(G.id, G.pts, G.title) });
+      if (lastGI.slots[G.id] && !G.ev) ev.push({ id: 'sl:' + G.id, date: lastGI.slots[G.id], kind: 'ЧТО-ТО РЕДКОЕ', big: 'Заклятие открыло цель', text: G.d + '. Награда секретная.' });
+      if (lastGI.ach[G.id]) ev.push({ id: 'g:' + G.id, date: lastGI.ach[G.id], kind: 'СУДЬБОНОСНАЯ ОТМЕТИНА', big: 'Спящий, ты сделал редкую находку', text: G.d + '. ' + rewardText(G.id, G.pts, G.title) });
     });
     SK_KEYS.forEach(function (key) {
       lastGI.ups[key].forEach(function (u) {
-        ev.push({ id: 's:' + key + ':' + u.lvl, date: u.date, kind: 'СЕКРЕТНЫЙ НАВЫК ОТКРЫТ', big: SK[key].name + ' ' + SK_ROMAN[u.lvl - 1],
-          text: 'Теперь доступен подход по ' + skillCap(u.lvl) * 10 + ' повторов' + (u.lvl > 10 ? ', размер подхода больше не растёт, но навык даёт очки' : ', и за него дают больше очков') + '.' });
+        ev.push({ id: 's:' + key + ':' + u.lvl, date: u.date, kind: 'АСПЕКТ ПРОБУЖДЁН', big: SK[key].name + ' ' + SK_ROMAN[u.lvl - 1],
+          text: 'Теперь доступен подход по ' + skillCap(u.lvl) * 10 + ' повторов' + (u.lvl > 10 ? ', размер подхода больше не растёт, но Аспект даёт осколки' : ', и за него дают больше осколков') + '.' });
       });
     });
     NSK.forEach(function (N) {
       (lastGI.nups[N.key] || []).forEach(function (u) {
-        ev.push({ id: 's:' + N.key + ':' + u.lvl, date: u.date, kind: 'СЕКРЕТНЫЙ НАВЫК ОТКРЫТ', big: N.name + ' ' + SK_ROMAN[u.lvl - 1], text: N.desc(u.lvl) });
+        ev.push({ id: 's:' + N.key + ':' + u.lvl, date: u.date, kind: 'АСПЕКТ ПРОБУЖДЁН', big: N.name + ' ' + SK_ROMAN[u.lvl - 1], text: N.desc(u.lvl) });
       });
     });
     return ev;
@@ -3177,7 +3181,7 @@ html,body{overflow-anchor:none}
     if (achShowing || !achQueue.length) return;
     var e = achQueue.shift();
     achShowing = true;
-    $('ac-kind').textContent = '[СИСТЕМА] ' + e.kind;
+    $('ac-kind').textContent = '[ЗАКЛЯТИЕ] ' + e.kind;
     $('ac-big').textContent = e.big;
     $('ac-text').textContent = e.text;
     acCopyText = e.copy || '';
@@ -3201,14 +3205,14 @@ html,body{overflow-anchor:none}
       // старые открытия при первом запуске на устройстве не показываем всплывающим окном
       if (e.date >= addDays(today, -1)) achQueue.push(e);
     });
-    // если открытие пропало (отметку сняли), Система забывает о нём и покажет плашку снова
+    // если открытие пропало (отметку сняли), Заклятие забывает о нём и покажет плашку снова
     var live = {}; evs.forEach(function (e) { live[e.id] = 1; });
     var kept = seen.filter(function (id) { return live[id] || !/^(a|g|sl|s):/.test(id); });
     if (kept.length !== seen.length) { seen = kept; changed = true; }
     if (changed || !had) writeAchSeen(seen);
     try {
       var bs = bodyStage(), bseen = localStorage.getItem('bodySeen');
-      if (bseen !== null && bs > +bseen) achQueue.push({ id: 'body:' + bs, date: today, kind: 'ФОРМА ИЗМЕНИЛАСЬ', big: 'Игрок стал стройнее', text: 'Система зафиксировала изменения в весе. Модель твоего персонажа обновлена.' });
+      if (bseen !== null && bs > +bseen) achQueue.push({ id: 'body:' + bs, date: today, kind: 'ФОРМА ИЗМЕНИЛАСЬ', big: 'Спящий стал стройнее', text: 'Заклятие зафиксировало изменения в весе. Модель твоего персонажа обновлена.' });
       if (bseen === null || bs !== +bseen) localStorage.setItem('bodySeen', String(bs));
     } catch (e) {}
     showNextAch();
@@ -3230,16 +3234,16 @@ html,body{overflow-anchor:none}
       if (!arr.length) return;
       var u = arr[arr.length - 1];
       any = true;
-      sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], SK_DESC[key] + ' Сейчас доступен подход по ' + skillCap(u.lvl) * 10 + '. Уровень открыт ' + dshort(u.date) + '.', '✓', true, null, true));
+      sk.appendChild(questButton(SK[key].name + ' ' + SK_ROMAN[u.lvl - 1], SK_DESC[key] + ' Сейчас доступен подход по ' + skillCap(u.lvl) * 10 + '. Ступень открыта ' + dshort(u.date) + '.', '✓', true, null, true));
     });
     NSK.forEach(function (N) {
       var arr = lastGI.nups[N.key] || [];
       if (!arr.length) return;
       var u = arr[arr.length - 1];
       any = true;
-      sk.appendChild(questButton(N.name + ' ' + SK_ROMAN[u.lvl - 1], N.desc(u.lvl) + ' Открыт ' + dshort(u.date) + '. Следующие уровни скрыты.', '✓', true, null, true));
+      sk.appendChild(questButton(N.name + ' ' + SK_ROMAN[u.lvl - 1], N.desc(u.lvl) + ' Открыт ' + dshort(u.date) + '. Следующие ступени скрыты.', '✓', true, null, true));
     });
-    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые навыки открываются сами, когда накопится достаточно или ты сделаешь рекорд.'));
+    if (!any) sk.appendChild(el('div', 'hint', 'Скрытые Аспекты открываются сами, когда накопится достаточно или ты сделаешь рекорд.'));
     var open = 0;
     LEG.forEach(function (G) {
       var d = lastGI.ach[G.id], cc = G.cos;
@@ -3268,7 +3272,7 @@ html,body{overflow-anchor:none}
     $('d-run').textContent = p.kRun + ' ' + plural(p.kRun, 'день', 'дня', 'дней');
     $('d-line1').textContent = 'Щитов от штрафа: ' + p.shields + ' из ' + SHIELD_MAX + '. На этой неделе закрыто ' + kcalWeek(mondayKey(today)) + ' из 7.';
     var nx = p.kRun < 3 ? [3, '+1'] : p.kRun < 7 ? [7, '+2'] : null;
-    $('d-line2').textContent = nx ? 'До бонуса ' + nx[1] + ' к квесту осталось ' + (nx[0] - p.kRun) + ' ' + plural(nx[0] - p.kRun, 'день', 'дня', 'дней') + '. ' : 'Максимальный бонус +2 к квесту каждый день серии.';
+    $('d-line2').textContent = nx ? 'До бонуса ' + nx[1] + ' к задаче осталось ' + (nx[0] - p.kRun) + ' ' + plural(nx[0] - p.kRun, 'день', 'дня', 'дней') + '. ' : 'Максимальный бонус +2 к задаче каждый день серии.';
     var toS = 5 - (p.kRun % 5);
     $('d-line3').textContent = (p.shields < SHIELD_MAX ? 'До нового щита ' + toS + ' ' + plural(toS, 'день', 'дня', 'дней') + '. ' : 'Щиты заполнены. ') + (st.kcalOkBest ? 'Лучшая серия за всё время: ' + st.kcalOkBest + '.' : '');
     var strip = $('d-strip'); clear(strip);
@@ -3313,13 +3317,13 @@ html,body{overflow-anchor:none}
     if (t.sq) trialRow(c, 'Приседания', pr.sq, t.sq, k, lost || pr.done ? null : 'sq');
     if (t.pu) trialRow(c, 'Отжимания', pr.pu, t.pu, k, lost || pr.done ? null : 'pu');
     if (t.st) { trialRow(c, 'Шаги', pr.st, t.st, k, null); if (!pr.done && !lost) c.appendChild(el('div', 'tr', 'Шаги вносятся в поле «Шаги за день» ниже.')); }
-    c.appendChild(el('div', 'tr', 'Награда: +' + t.reward + ' ' + plural(t.reward, 'очко', 'очка', 'очков') + ' и шанс на редкую находку. Провал: −' + t.reward + '.'));
+    c.appendChild(el('div', 'tr', 'Награда: +' + t.reward + ' ' + plural(t.reward, 'осколок', 'осколка', 'осколков') + ' и шанс на редкую находку. Провал: −' + t.reward + '.'));
     box.appendChild(c);
     if (!pr.done && !lost && loaded && viewBack === 0) {
       try {
         if (localStorage.getItem('trialSeen') !== k) {
           localStorage.setItem('trialSeen', k);
-          achQueue.push({ id: 'tn:' + k, date: k, kind: 'ИСПЫТАНИЕ', big: 'Заклятие выбрало тебя', red: 1, text: 'Игрок, Заклятие Кошмара выдало Испытание ранга «' + t.rname + '»: ' + trialText(t) + '. Награда: +' + t.reward + ' и шанс на редкую находку. Провал: −' + t.reward + '. Отказаться нельзя.' });
+          achQueue.push({ id: 'tn:' + k, date: k, kind: 'ИСПЫТАНИЕ', big: 'Заклятие выбрало тебя', red: 1, text: 'Спящий, Заклятие Кошмара выдало Испытание ранга «' + t.rname + '»: ' + trialText(t) + '. Награда: +' + t.reward + ' и шанс на редкую находку. Провал: −' + t.reward + '. Отказаться нельзя.' });
           showNextAch();
         }
       } catch (e) {}
@@ -3390,7 +3394,7 @@ html,body{overflow-anchor:none}
     if (!force) { try { localStorage.setItem('msum', cm); } catch (e) {} }
     var label = MONTHS_NOM[+pk.slice(5, 7) - 1] + ' ' + pk.slice(0, 4);
     if (!outs.length && !ins.length) {
-      if (force) { achQueue.push({ id: 'ms:' + pk + ':' + Date.now(), date: today, kind: 'ОТЧЁТ ЗА МЕСЯЦ', big: label, text: 'Игрок, за этот месяц нет записанных операций.' }); showNextAch(); }
+      if (force) { achQueue.push({ id: 'ms:' + pk + ':' + Date.now(), date: today, kind: 'ОТЧЁТ ЗА МЕСЯЦ', big: label, text: 'Спящий, за этот месяц нет записанных операций.' }); showNextAch(); }
       return;
     }
     var first = all.reduce(function (m, t) { return t.date < m ? t.date : m; }, '9999');
@@ -3428,7 +3432,7 @@ html,body{overflow-anchor:none}
     lines.push('Возвращено долгов: ' + fmt(back) + ' ₽');
     var text = lines.join('\n');
     var copy = 'Сводка расходов за ' + label + ' из приложения. Давай подумаем, что можно уменьшить, а что увеличить.\n\n' + text;
-    achQueue.push({ id: 'ms:' + pk + ':' + Date.now(), date: today, kind: 'ОТЧЁТ ЗА МЕСЯЦ', big: 'Игрок, подведены итоги: ' + label, text: text, copy: copy });
+    achQueue.push({ id: 'ms:' + pk + ':' + Date.now(), date: today, kind: 'ОТЧЁТ ЗА МЕСЯЦ', big: 'Спящий, подведены итоги: ' + label, text: text, copy: copy });
     showNextAch();
   }
   function weeklySummary() {
@@ -3473,7 +3477,7 @@ html,body{overflow-anchor:none}
     lines.push('Идеальных дней: ' + pf + ' из 7.');
     try { localStorage.setItem('wsum', wk); } catch (e) {}
     var wn = Math.floor(gone / 7);
-    achQueue.push({ id: 'ws:' + wk, date: today, kind: 'ОТЧЁТ ЗА НЕДЕЛЮ', big: 'Игрок, прошла неделя ' + wn + ' из ' + Math.round(TOTAL_DAYS / 7), text: lines.join('\n') });
+    achQueue.push({ id: 'ws:' + wk, date: today, kind: 'ОТЧЁТ ЗА НЕДЕЛЮ', big: 'Спящий, прошла неделя ' + wn + ' из ' + Math.round(TOTAL_DAYS / 7), text: lines.join('\n') });
     showNextAch();
   }
   function renderGlobal() {
@@ -3529,7 +3533,7 @@ html,body{overflow-anchor:none}
     else { q[i] = true; if (m > 1) ex[key] = m; else delete ex[key]; fx = { q: i, k: k, t: Date.now() }; }
     dayWrite(k, cur, { q: q, ex: ex });
     if (key === 'cook') {
-      // еда на несколько дней закрывает квест следующих дней: Система отмечает их сама
+      // еда на несколько дней закрывает задачу следующих дней: Заклятие отмечает их само
       var span = Math.max(curM, m) - 1;
       for (var n = 1; n <= span; n++) {
         var k2 = addDays(k, n), c2 = S.days[k2] || { q: [false, false, false, false], kcal: null };
