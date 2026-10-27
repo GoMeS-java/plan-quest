@@ -724,9 +724,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.38</h2>
-    <div class="hint">Сборка c6a190</div>
+    <h2>ВЕРСИЯ 0.39</h2>
+    <div class="hint">Сборка 46ea03</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.39</b> · 27.10 · Усиленные нормы английского и еды вынесены вниз, в необязательные: основной квест один, как с приседаниями</div>
       <div class="hint"><b>0.38</b> · 27.10 · Еда на два или три дня сама закрывает квест еды на следующие дни</div>
       <div class="hint"><b>0.37</b> · 27.10 · Интерфейс заговорил голосом Системы: обращения к игроку, сообщения и подсказки</div>
       <div class="hint"><b>0.36</b> · 26.10 · Убран квест «Тренировка»: остаются приседания и отжимания</div>
@@ -787,7 +788,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.38";
+<script>window.APP_VERSION = "0.39";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -2088,6 +2089,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     return b;
   }
   var viewBack = 0;
+  var TIERW = ['', '', 'вдвое', 'втрое', 'вчетверо'], TIERC = ['', '', 'на два дня', 'на три дня'];
   function curKey() { var d = new Date(); d.setDate(d.getDate() - viewBack); return dkey(d); }
   function renderToday() {
     var k = curKey();
@@ -2102,7 +2104,6 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     clear(list);
     var justBtn = null;
     var exv = day.ex || {};
-    var TIERW = ['', '', 'вдвое', 'втрое', 'вчетверо'], TIERC = ['', '', 'на два дня', 'на три дня'];
     function tierBtn(i, key, m, title, sub) {
       var onT = !!(day.q && day.q[i]) && (exv[key] || 1) === m;
       var b = questButton(title, sub, '+' + m, onT, function () { setTier(i, key, m); });
@@ -2112,16 +2113,12 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     function qBtn(i) {
       var q = QDEF[i];
       var on = !!(day.q && day.q[i]);
-      if (i === 7 && nlev('n_eng') >= 1) {
-        var ln = nlev('n_eng'), mn = engMin(k);
-        list.appendChild(tierBtn(7, 'eng', 1, 'Английский, ' + mn + ' минут', q.s));
-        for (var m1 = 2; m1 <= ln + 1; m1++) list.appendChild(tierBtn(7, 'eng', m1, 'Английский ' + TIERW[m1] + ' дольше, ' + (mn * m1) + ' минут', 'сложная норма'));
-        return;
-      }
-      if (i === 3 && nlev('n_cook') >= 1) {
-        var lc = nlev('n_cook');
-        list.appendChild(tierBtn(3, 'cook', 1, q.t, q.s));
-        for (var m2 = 2; m2 <= lc + 1; m2++) list.appendChild(tierBtn(3, 'cook', m2, 'Приготовил еду ' + TIERC[m2], 'сложная норма'));
+      if ((i === 7 && nlev('n_eng') >= 1) || (i === 3 && nlev('n_cook') >= 1)) {
+        var tkey = i === 7 ? 'eng' : 'cook', tm = exv[tkey] || 1, mn = engMin(k);
+        var ttl = i === 7 ? 'Английский, ' + mn * tm + ' минут' : (tm > 1 ? 'Приготовил еду ' + TIERC[tm] : q.t);
+        var tb = questButton(ttl, tm > 1 ? 'выбрана усиленная норма' : q.s, '+' + tm, on, function () { setTier(i, tkey, on ? tm : 1); });
+        if (on && fresh(fx) && fx.q === i && fx.k === k) { tb.classList.add('just'); justBtn = tb; fx = null; }
+        list.appendChild(tb);
         return;
       }
       var btn = questButton(qTitle(i, k), q.s, '+1', on, function () { toggleQ(i); });
@@ -2256,6 +2253,20 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
         u.type = 'button';
         u.addEventListener('click', ex.undo);
         box.appendChild(u);
+      }
+    });
+    var td = S.days[k] || { q: [false, false, false, false], kcal: null }, tex = td.ex || {};
+    [[7, 'eng', 'n_eng'], [3, 'cook', 'n_cook']].forEach(function (T) {
+      var lv = nlev(T[2]);
+      if (!lv || (T[0] === 7 && k < NEW_Q)) return;
+      var mn = engMin(k);
+      box.appendChild(el('div', 'hint', 'Усилить квест «' + (T[0] === 7 ? 'Английский' : 'Еда на завтра') + '», по желанию: Система выдаст больше очков.'));
+      for (var m = 2; m <= lv + 1; m++) {
+        (function (m) {
+          var onT = !!(td.q && td.q[T[0]]) && (tex[T[1]] || 1) === m;
+          var ttl = T[0] === 7 ? 'Английский ' + TIERW[m] + ' дольше, ' + (mn * m) + ' минут' : 'Приготовить еду ' + TIERC[m];
+          box.appendChild(questButton(ttl, onT ? 'выбрано' : 'усиленная норма', '+' + m, onT, function () { setTier(T[0], T[1], m); }));
+        })(m);
       }
     });
   }
