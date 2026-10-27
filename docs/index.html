@@ -296,9 +296,19 @@ html[data-pat="diag"], html[data-pat="diag"] body { background-image: repeating-
 .q .t span { color: var(--muted); font-size: 19px; display: block; }
 .q .pts { font-family: var(--font-display); font-size: 10px; color: var(--gold); flex: none; }
 .q.auto { cursor: default; }
-.q[aria-pressed="true"] .t b { color: var(--muted); background: linear-gradient(currentColor, currentColor) no-repeat 0 58% / 100% 2px; }
-.q.just .t b { animation: stk .45s steps(9) backwards; }
-.q.just .box { animation: pop .35s steps(5); }
+.q .t b .w { font-style: normal; background: linear-gradient(currentColor, currentColor) no-repeat 0 58% / 0 2px; }
+.q[aria-pressed="true"] .t b { color: var(--muted); }
+.q[aria-pressed="true"] .t b .w { background-size: 100% 2px; }
+.q[aria-pressed="true"] .t span { opacity: .75; }
+.q.just .t b .w { animation: stkw .2s ease-out backwards; animation-delay: calc(var(--i) * var(--d, 60ms)); }
+.q.just .t b { animation: dimt .6s ease-out; }
+.q.just .t span { animation: dims .6s ease-out; }
+.q.just { animation: qok .7s ease-out; }
+.q.just .box { animation: pop .4s cubic-bezier(.3,1.6,.5,1); }
+@keyframes stkw { from { background-size: 0 2px; } }
+@keyframes dimt { from { color: var(--fg); } }
+@keyframes dims { from { opacity: 1; } }
+@keyframes qok { 0% { box-shadow: 0 0 0 0 rgba(134,192,94,.7); } 100% { box-shadow: 0 0 0 10px rgba(134,192,94,0); } }
 @keyframes stk { from { background-size: 0 2px; } }
 @keyframes pop { 50% { transform: scale(1.35); } }
 .stash { position: fixed; top: 14px; right: 12px; z-index: 19; display: flex; align-items: center; gap: 6px; padding: 5px 9px; background: rgba(20,16,30,.85); border: 2px solid var(--gold); font: 700 13px/1 inherit; color: var(--gold); pointer-events: none; }
@@ -397,7 +407,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 .wbig { font-family: var(--font-display); font-size: 22px; }
 .wbig small { font-size: 11px; color: var(--muted); }
 .wchart { width: 100%; height: auto; display: block; }
-@media (prefers-reduced-motion: reduce) { .stage, .stage::before, .bar i.on, .hero canvas, .hero canvas, .q.just .t b, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .stage, .stage::before, .bar i.on, .hero canvas, .hero canvas, .q.just .t b, .q.just .t b .w, .q.just .t span, .q.just, .q.just .box, .points.bump, .bar i.glow, .app.shake, .lvup .lbox { animation: none; } }
 
 /* ---- расширенная комната: всё внутри уменьшено, комната шире и выше ---- */
 .rm { position: absolute; left: 0; top: 0; width: 172.4%; height: 172.4%; transform: scale(.58); transform-origin: 0 0; }
@@ -728,8 +738,8 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.43</h2>
-    <div class="hint">Сборка 2a96fe</div>
+    <h2>ВЕРСИЯ 0.44</h2>
+    <div class="hint">Сборка 98c48f</div>
     <div class="goal vhist">
       <div class="hint"><b>0.41</b> · 27.10 · Первого числа Система показывает сводку расходов за прошлый месяц, её можно скопировать и прислать Claude</div>
       <div class="hint"><b>0.40</b> · 27.10 · Выплата долга не считается личной тратой в отчётах</div>
@@ -795,7 +805,7 @@ html,body{overflow-anchor:none}
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.43";
+<script>window.APP_VERSION = "0.44";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -2142,7 +2152,11 @@ html,body{overflow-anchor:none}
     b.setAttribute('aria-pressed', pressed ? 'true' : 'false');
     var box = el('span', 'box');
     var t = el('span', 't');
-    t.appendChild(el('b', null, title));
+    var tb = el('b', null);
+    var ws = String(title).split(/(?<=\s)/);
+    var dl = Math.max(20, Math.min(70, Math.round(550 / Math.max(1, ws.length))));
+    ws.forEach(function (w, wi) { var wi2 = el('i', 'w', w); wi2.style.setProperty('--i', wi); if (wi === 0) tb.style.setProperty('--d', dl + 'ms'); tb.appendChild(wi2); });
+    t.appendChild(tb);
     t.appendChild(el('span', null, sub));
     b.appendChild(box); b.appendChild(t); b.appendChild(el('span', 'pts', pts));
     if (onClick) b.addEventListener('click', onClick);
