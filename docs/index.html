@@ -448,7 +448,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 
 <div class="app">
   <div class="top">
-    <div class="topl"><h1>ПЛАН</h1><span id="plslot"></span></div>
+    <div class="topl"><h1>СИСТЕМА</h1><span id="plslot"></span></div>
     <span class="lvl" id="lvl">УР. 1</span>
     <button class="gear" id="trophy-btn" type="button" aria-label="Навыки и достижения">&#127942;</button>
     <button class="gear" id="gear" type="button" aria-label="Настройки">&#9881;</button>
@@ -457,7 +457,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <button type="button" id="pg-btn-a" role="tab" aria-selected="true" aria-pressed="true">ИГРА</button>
     <button type="button" id="pg-btn-b" role="tab" aria-selected="false" aria-pressed="false">ФИНАНСЫ</button>
   </div>
-  <div class="offline" id="offline" hidden>Сохранение недоступно. Открой страницу из своего аккаунта Claude, и данные появятся.</div>
+  <div class="offline" id="offline" hidden>[СИСТЕМА] Сохранение недоступно. Игрок, открой страницу из своего аккаунта Claude, и данные появятся.</div>
 
   <div class="page" id="pg-a">
   <div class="stage" aria-label="Твой пиксельный персонаж в комнате">
@@ -472,7 +472,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div class="hero"><canvas id="hero" width="32" height="52"></canvas></div>
     </div>
     <button class="wopen" id="wopen" type="button" aria-label="Открыть гардероб">&#128084; ГАРДЕРОБ</button>
-    <div class="nametag">ТЫ</div>
+    <div class="nametag">ИГРОК</div>
   </div>
 
   <div class="points">
@@ -483,7 +483,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div class="bar" id="bar" aria-hidden="true"></div>
     <div class="upg"><span class="hint">Очки улучшения:</span><b id="upg">0</b></div>
     <div class="hint" id="loss" hidden></div>
-    <div class="hint">Каждый невыполненный ежедневный квест забирает 1 очко, но ниже нуля не уходит и уровень не падает. Вернулся после пропущенного дня: +3.</div>
+    <div class="hint">Правила Системы: каждый невыполненный ежедневный квест забирает 1 очко. Ниже нуля очки не уходят, уровень не падает. Если вернёшься после пропущенного дня, Система начислит +3.</div>
   </div>
 
   <div class="tabs" role="tablist" data-g="a">
@@ -504,17 +504,17 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div class="goal">
       <div class="goal-head"><b>Шаги за день</b><span class="pct" id="steps-show"></span></div>
       <input id="steps" type="number" inputmode="numeric" placeholder="Сколько шагов прошёл сегодня">
-      <div class="hint">Больше цели тоже можно записывать. Сохраняется, когда выходишь из поля.</div>
+      <div class="hint">Игрок, можно записывать и больше цели. Система сохранит значение, когда ты выйдешь из поля.</div>
     </div>
     <div class="goal">
       <div class="goal-head"><b>Калории за день</b><span class="pct" id="kcal-show"></span></div>
       <input id="kcal" type="number" inputmode="numeric" placeholder="Сколько ккал съел сегодня">
-      <div class="hint">Сохраняется, когда выходишь из поля.</div>
+      <div class="hint">Система сохранит значение, когда ты выйдешь из поля.</div>
     </div>
     <div id="psec">
       <h2>ПЕРИОДИЧЕСКИЕ, НЕОБЯЗАТЕЛЬНЫЕ</h2>
       <div id="plist" style="display:flex;flex-direction:column;gap:10px"></div>
-      <div class="hint">Штрафа за них нет. Приседания и отжимания: 3 подхода в день с паузой 2 часа, награда растёт с каждым подходом.</div>
+      <div class="hint">Штрафа за эти задания нет. Приседания и отжимания: 3 подхода в день, пауза между подходами 2 часа. Награда растёт с каждым подходом.</div>
     </div>
     <div id="ssec">
       <h2>СПОНТАННЫЕ</h2>
@@ -526,13 +526,13 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2>ПОСЛЕДНИЕ 14 ДНЕЙ</h2>
     <div class="strip" id="strip" aria-hidden="true"></div>
-    <div class="hint">Чем зеленее клетка, тем больше квестов закрыто в тот день.</div>
+    <div class="hint">Система отмечает дни: чем зеленее клетка, тем больше квестов ты закрыл.</div>
   </section>
 
   <section class="panel" id="week" data-g="a">
     <h2>КВЕСТЫ НЕДЕЛИ</h2>
     <div id="wlist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <div class="note">Взвешивание засчитывается само, когда ты записываешь вес во вкладке «Похудение». Неделя идёт с понедельника.</div>
+    <div class="note">Система засчитает взвешивание сама, когда ты запишешь вес во вкладке «Похудение». Неделя идёт с понедельника.</div>
   </section>
 
   <section class="panel" id="shop" data-g="a">
@@ -599,7 +599,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 
   <section class="panel" id="wardrobe" data-g="a">
     <h2>ГАРДЕРОБ</h2>
-    <div class="hint">Выбери вещь, и персонаж наверху сразу переоденется.</div>
+    <div class="hint">Игрок, выбери экипировку, и твой персонаж наверху сразу изменится.</div>
     <h2>ВЕРХНЯЯ ОДЕЖДА</h2>
     <div class="wgrid" id="wd-outer"></div>
     <h2>ВЕРХ</h2>
@@ -607,9 +607,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <h2>НИЗ</h2>
     <div class="wgrid" id="wd-bottom"></div>
     <h2>ИНТЕРЬЕР</h2>
-    <div class="hint">Предметы, которые появляются в комнате за редкие находки. Нажми, чтобы убрать или вернуть.</div>
+    <div class="hint">Предметы, которые Система выдаёт за редкие находки. Нажми на предмет, чтобы убрать его из комнаты или вернуть.</div>
     <div class="rmw" id="wd-room"></div>
-    <div class="note">Купил новую вещь? Скинь мне фото, я нарисую её и добавлю сюда.</div>
+    <div class="note">Купил новую вещь? Пришли фото, и Система добавит её в твою экипировку.</div>
   </section>
 
   </div>
@@ -695,7 +695,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </section>
   </div>
 
-  <div class="foot">Данные сохраняются автоматически и видны на всех твоих устройствах.</div>
+  <div class="foot">Система сохраняет данные автоматически. Они доступны на всех твоих устройствах.</div>
 </div>
 <div class="toast" id="toast" hidden></div>
 <div class="flash" id="flash"></div>
@@ -706,7 +706,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
     <h2 id="ach-h">ДОСТИЖЕНИЯ</h2>
     <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
-    <div class="note">Все достижения скрыты, условия неизвестны и перемешаны по всему приложению. Они откроются сами, когда условие выполнится, считать ничего не нужно. Скрытых больше, чем строк со знаками вопроса. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
+    <div class="note">Система скрывает условия достижений. Они откроются сами, когда ты их выполнишь, считать ничего не нужно. Каждое даёт очки к уровню один раз, некоторые ещё и титул под персонажем.</div>
   </div>
 </div>
 <div class="setup" id="setup" hidden role="dialog" aria-modal="true" aria-label="Настройки">
@@ -724,9 +724,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.36</h2>
-    <div class="hint">Сборка f40de6</div>
+    <h2>ВЕРСИЯ 0.37</h2>
+    <div class="hint">Сборка 0dbcb9</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.37</b> · 27.10 · Интерфейс заговорил голосом Системы: обращения к игроку, сообщения и подсказки</div>
       <div class="hint"><b>0.36</b> · 26.10 · Убран квест «Тренировка»: остаются приседания и отжимания</div>
       <div class="hint"><b>0.35</b> · 26.10 · Недельные награды: калории +3, английский +1, взвешивание как раньше +2</div>
       <div class="hint"><b>0.34</b> · 26.10 · Стеллаж, стол, мониторы, компьютер и постеры теперь тоже открываются редкими достижениями, у каждого свой титул и оформление</div>
@@ -785,7 +786,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.36";
+<script>window.APP_VERSION = "0.37";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -1652,7 +1653,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (!nt) return;
     for (i = 0; i < list.length; i++) if (list[i].id === look.title) t = list[i].title;
     if (!t && list.length) t = list[list.length - 1].title;
-    nt.textContent = t || 'ТЫ';
+    nt.textContent = t || 'ИГРОК';
   }
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
@@ -1997,9 +1998,9 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     $('upg2').textContent = String(Math.max(0, p.avail));
     var loss = $('loss');
     var parts = [];
-    if (p.lossY > 0) parts.push('Вчера −' + p.lossY + ': ' + p.missY.join(', ') + '.');
-    if (p.missToday > 0) parts.push('Сегодня пока не закрыто: ' + p.missToday + '. Если не успеешь, завтра будет −' + p.missToday + '.');
-    if (p.shieldUsedY) parts.push('Щит спас от штрафа за калории.');
+    if (p.lossY > 0) parts.push('Система списала вчера −' + p.lossY + ': ' + p.missY.join(', ') + '.');
+    if (p.missToday > 0) parts.push('Сегодня не закрыто заданий: ' + p.missToday + '. Если не успеешь, завтра Система спишет −' + p.missToday + '.');
+    if (p.shieldUsedY) parts.push('Щит поглотил штраф за калории.');
     if (p.kRun > 0 || p.shields > 0) parts.push('Калории: серия ' + p.kRun + ' ' + plural(p.kRun, 'день', 'дня', 'дней') + (p.shields > 0 ? ', щитов: ' + p.shields : '') + '.');
     loss.hidden = !parts.length;
     loss.textContent = parts.join(' ');
@@ -2030,8 +2031,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   }
   function showLevelUp(L, avail) {
     avail = Math.max(0, avail);
-    $('lv-big').textContent = 'УРОВЕНЬ ' + L;
-    $('lv-text').textContent = 'Вы повысили уровень до ' + L + '. Вам доступно ' + avail + ' ' + plural(avail, 'улучшение', 'улучшения', 'улучшений') + ' в магазине.';
+    $('lv-big').textContent = '[СИСТЕМА] УРОВЕНЬ ' + L;
+    $('lv-text').textContent = 'Игрок, твой уровень повышен до ' + L + '. Тебе доступно ' + avail + ' ' + plural(avail, 'улучшение', 'улучшения', 'улучшений') + ' в магазине.';
     $('lvup').hidden = false;
     $('lv-ok').focus();
     burst();
@@ -2923,8 +2924,8 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     }
     ACH.forEach(function (A) { if (lastGI.ach[A.id]) ev.push({ id: 'a:' + A.id, date: lastGI.ach[A.id], kind: 'ДОСТИЖЕНИЕ', big: A.t, text: A.d + '. ' + rewardText(A.id, A.pts, A.title) }); });
     LEG.forEach(function (G) {
-      if (lastGI.slots[G.id] && !G.ev) ev.push({ id: 'sl:' + G.id, date: lastGI.slots[G.id], kind: 'ЧТО-ТО РЕДКОЕ', big: 'Появилась цель', text: G.d + '. Награда секретная.' });
-      if (lastGI.ach[G.id]) ev.push({ id: 'g:' + G.id, date: lastGI.ach[G.id], kind: 'СУПЕРРЕДКОЕ ДОСТИЖЕНИЕ', big: 'Редкая находка', text: G.d + '. ' + rewardText(G.id, G.pts, G.title) });
+      if (lastGI.slots[G.id] && !G.ev) ev.push({ id: 'sl:' + G.id, date: lastGI.slots[G.id], kind: 'ЧТО-ТО РЕДКОЕ', big: 'Система открыла цель', text: G.d + '. Награда секретная.' });
+      if (lastGI.ach[G.id]) ev.push({ id: 'g:' + G.id, date: lastGI.ach[G.id], kind: 'СУПЕРРЕДКОЕ ДОСТИЖЕНИЕ', big: 'Игрок, ты сделал редкую находку', text: G.d + '. ' + rewardText(G.id, G.pts, G.title) });
     });
     SK_KEYS.forEach(function (key) {
       lastGI.ups[key].forEach(function (u) {
@@ -2944,7 +2945,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (achShowing || !achQueue.length) return;
     var e = achQueue.shift();
     achShowing = true;
-    $('ac-kind').textContent = e.kind;
+    $('ac-kind').textContent = '[СИСТЕМА] ' + e.kind;
     $('ac-big').textContent = e.big;
     $('ac-text').textContent = e.text;
     $('achup').hidden = false;
@@ -2967,7 +2968,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (changed || !had) writeAchSeen(seen);
     try {
       var bs = bodyStage(), bseen = localStorage.getItem('bodySeen');
-      if (bseen !== null && bs > +bseen) achQueue.push({ id: 'body:' + bs, date: today, kind: 'ФОРМА ИЗМЕНИЛАСЬ', big: 'Персонаж стал стройнее', text: 'Изменения в весе заметны: модель персонажа обновилась.' });
+      if (bseen !== null && bs > +bseen) achQueue.push({ id: 'body:' + bs, date: today, kind: 'ФОРМА ИЗМЕНИЛАСЬ', big: 'Игрок стал стройнее', text: 'Система зафиксировала изменения в весе. Модель твоего персонажа обновлена.' });
       if (bseen === null || bs !== +bseen) localStorage.setItem('bodySeen', String(bs));
     } catch (e) {}
     showNextAch();
@@ -3096,7 +3097,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     lines.push('Идеальных дней: ' + pf + ' из 7.');
     try { localStorage.setItem('wsum', wk); } catch (e) {}
     var wn = Math.floor(gone / 7);
-    achQueue.push({ id: 'ws:' + wk, date: today, kind: 'СВОДКА НЕДЕЛИ', big: 'Прошла неделя ' + wn + ' из ' + Math.round(TOTAL_DAYS / 7), text: lines.join('\n') });
+    achQueue.push({ id: 'ws:' + wk, date: today, kind: 'ОТЧЁТ ЗА НЕДЕЛЮ', big: 'Игрок, прошла неделя ' + wn + ' из ' + Math.round(TOTAL_DAYS / 7), text: lines.join('\n') });
     showNextAch();
   }
   function renderGlobal() {
