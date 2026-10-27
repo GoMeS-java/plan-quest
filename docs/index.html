@@ -738,8 +738,8 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.44</h2>
-    <div class="hint">Сборка 98c48f</div>
+    <h2>ВЕРСИЯ 0.45</h2>
+    <div class="hint">Сборка 1e0f5e</div>
     <div class="goal vhist">
       <div class="hint"><b>0.41</b> · 27.10 · Первого числа Система показывает сводку расходов за прошлый месяц, её можно скопировать и прислать Claude</div>
       <div class="hint"><b>0.40</b> · 27.10 · Выплата долга не считается личной тратой в отчётах</div>
@@ -805,7 +805,7 @@ html,body{overflow-anchor:none}
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.44";
+<script>window.APP_VERSION = "0.45";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -3055,6 +3055,10 @@ html,body{overflow-anchor:none}
       // старые открытия при первом запуске на устройстве не показываем всплывающим окном
       if (e.date >= addDays(today, -1)) achQueue.push(e);
     });
+    // если открытие пропало (отметку сняли), Система забывает о нём и покажет плашку снова
+    var live = {}; evs.forEach(function (e) { live[e.id] = 1; });
+    var kept = seen.filter(function (id) { return live[id] || !/^(a|g|sl|s):/.test(id); });
+    if (kept.length !== seen.length) { seen = kept; changed = true; }
     if (changed || !had) writeAchSeen(seen);
     try {
       var bs = bodyStage(), bseen = localStorage.getItem('bodySeen');

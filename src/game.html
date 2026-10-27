@@ -3054,6 +3054,10 @@ html,body{overflow-anchor:none}
       // старые открытия при первом запуске на устройстве не показываем всплывающим окном
       if (e.date >= addDays(today, -1)) achQueue.push(e);
     });
+    // если открытие пропало (отметку сняли), Система забывает о нём и покажет плашку снова
+    var live = {}; evs.forEach(function (e) { live[e.id] = 1; });
+    var kept = seen.filter(function (id) { return live[id] || !/^(a|g|sl|s):/.test(id); });
+    if (kept.length !== seen.length) { seen = kept; changed = true; }
     if (changed || !had) writeAchSeen(seen);
     try {
       var bs = bodyStage(), bseen = localStorage.getItem('bodySeen');
