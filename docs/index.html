@@ -724,9 +724,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.37</h2>
-    <div class="hint">Сборка 0dbcb9</div>
+    <h2>ВЕРСИЯ 0.38</h2>
+    <div class="hint">Сборка c6a190</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.38</b> · 27.10 · Еда на два или три дня сама закрывает квест еды на следующие дни</div>
       <div class="hint"><b>0.37</b> · 27.10 · Интерфейс заговорил голосом Системы: обращения к игроку, сообщения и подсказки</div>
       <div class="hint"><b>0.36</b> · 26.10 · Убран квест «Тренировка»: остаются приседания и отжимания</div>
       <div class="hint"><b>0.35</b> · 26.10 · Недельные награды: калории +3, английский +1, взвешивание как раньше +2</div>
@@ -786,7 +787,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.37";
+<script>window.APP_VERSION = "0.38";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -3147,9 +3148,23 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     for (var z = 0; z < QDEF.length; z++) q[z] = !!q[z];
     var ex = Object.assign({}, cur.ex || {});
     var curM = ex[key] || 1;
-    if (q[i] && curM === m) { q[i] = false; delete ex[key]; }
+    var wasOff = q[i] && curM === m;
+    if (key === 'cook') delete ex.cov;
+    if (wasOff) { q[i] = false; delete ex[key]; }
     else { q[i] = true; if (m > 1) ex[key] = m; else delete ex[key]; fx = { q: i, k: k, t: Date.now() }; }
     dayWrite(k, cur, { q: q, ex: ex });
+    if (key === 'cook') {
+      // еда на несколько дней закрывает квест следующих дней: Система отмечает их сама
+      var span = Math.max(curM, m) - 1;
+      for (var n = 1; n <= span; n++) {
+        var k2 = addDays(k, n), c2 = S.days[k2] || { q: [false, false, false, false], kcal: null };
+        var q2 = (c2.q || []).slice();
+        for (var z2 = 0; z2 < QDEF.length; z2++) q2[z2] = !!q2[z2];
+        var ex2 = Object.assign({}, c2.ex || {});
+        if (!wasOff && n < m) { if (!q2[3]) { q2[3] = true; ex2.cov = 1; dayWrite(k2, c2, { q: q2, ex: ex2 }); } }
+        else if (ex2.cov) { q2[3] = false; delete ex2.cov; dayWrite(k2, c2, { q: q2, ex: ex2 }); }
+      }
+    }
   }
   function doExercise(key, reps) {
     if (!db) return;
