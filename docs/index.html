@@ -724,9 +724,10 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.39</h2>
-    <div class="hint">Сборка 46ea03</div>
+    <h2>ВЕРСИЯ 0.40</h2>
+    <div class="hint">Сборка 7986b9</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.40</b> · 27.10 · Выплата долга не считается личной тратой в отчётах</div>
       <div class="hint"><b>0.39</b> · 27.10 · Усиленные нормы английского и еды вынесены вниз, в необязательные: основной квест один, как с приседаниями</div>
       <div class="hint"><b>0.38</b> · 27.10 · Еда на два или три дня сама закрывает квест еды на следующие дни</div>
       <div class="hint"><b>0.37</b> · 27.10 · Интерфейс заговорил голосом Системы: обращения к игроку, сообщения и подсказки</div>
@@ -788,7 +789,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.39";
+<script>window.APP_VERSION = "0.40";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -2436,7 +2437,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     S.tx.forEach(function (t) {
       if (t.date.slice(0, 7) !== mk || t.kind === 'xfer') return;
       if (t.kind === 'in') { if (t.cat !== 'Долг') inc += t.amt; }
-      else {
+      else if (t.cat !== 'Долг') {
         exp += t.amt;
         if (t.work) work += t.amt;
         var c = t.cat || 'Без категории';
@@ -2822,7 +2823,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     if (spPeriod === 'month') return { a: today.slice(0, 8) + '01', b: today, label: MONTHS_NOM[+today.slice(5, 7) - 1] };
     var last = null;
     S.tx.forEach(function (t) {
-      if (t.kind !== 'out' || t.date > today) return;
+      if (t.kind !== 'out' || t.cat === 'Долг' || t.date > today) return;
       if (last === null || t.date > last) last = t.date;
     });
     if (last === null) return { a: today, b: today, label: 'Сегодня' };
@@ -2836,7 +2837,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     var r = spRange();
     var bk = {}, work = 0, big = [], total = 0;
     S.tx.forEach(function (t) {
-      if (t.kind !== 'out' || t.date < r.a || t.date > r.b) return;
+      if (t.kind !== 'out' || t.cat === 'Долг' || t.date < r.a || t.date > r.b) return;
       var b = bucketOf(t);
       if (b === 'Работа') { work += t.amt; return; }
       if (t.amt >= BIG) { big.push(t); return; }
@@ -3081,7 +3082,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     S.tx.forEach(function (t) {
       if (!t.counted || !t.date || t.date < from || t.date > to) return;
       if (t.kind === 'in' && t.cat !== 'Долг') inc += t.amt;
-      else if (t.kind === 'out') out += t.amt;
+      else if (t.kind === 'out' && t.cat !== 'Долг') out += t.amt;
     });
     var kc = 0, st = 0, en = 0, pf = 0, d = from;
     for (var i = 0; i < 7; i++, d = addDays(d, 1)) {
