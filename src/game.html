@@ -300,6 +300,8 @@ html[data-pat="diag"], html[data-pat="diag"] body { background-image: repeating-
 .q.just .box { animation: pop .35s steps(5); }
 @keyframes stk { from { background-size: 0 2px; } }
 @keyframes pop { 50% { transform: scale(1.35); } }
+.stash { position: fixed; top: 14px; right: 12px; z-index: 19; display: flex; align-items: center; gap: 6px; padding: 5px 9px; background: rgba(20,16,30,.85); border: 2px solid var(--gold); font: 700 13px/1 inherit; color: var(--gold); pointer-events: none; }
+.stash[hidden] { display: none; }
 .fly { position: fixed; z-index: 20; width: 14px; height: 14px; background: var(--gold); box-shadow: inset -3px -3px 0 var(--gold-dark); pointer-events: none; }
 .points.bump { animation: bump .4s steps(8); }
 @keyframes bump { 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
@@ -2060,25 +2062,78 @@ html,body{overflow-anchor:none}
       f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
     }
   }
+  var stashN = 0, stashEl = null, releasing = false;
+  function barTarget(back) {
+    var bar = $('bar');
+    var on = bar.querySelectorAll('i.on').length;
+    return bar.children[Math.max(0, Math.min(19, on - 1 - back))] || bar;
+  }
+  function barVisible() {
+    var r = $('bar').getBoundingClientRect();
+    return r.top >= 50 && r.bottom <= (window.innerHeight || 700) - 20;
+  }
+  function coinFly(from, to, dur, arc, done) {
+    var c = document.createElement('div');
+    c.className = 'fly';
+    c.style.left = (from.x - 7) + 'px';
+    c.style.top = (from.y - 7) + 'px';
+    document.body.appendChild(c);
+    var dx = to.x - from.x, dy = to.y - from.y;
+    var an = c.animate([
+      { transform: 'translate(0,0) scale(1)' },
+      { transform: 'translate(' + (dx * 0.4) + 'px,' + (dy * 0.4 - arc) + 'px) scale(1.5)', offset: 0.45 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.8)' }
+    ], { duration: dur, easing: 'ease-in', fill: 'forwards' });
+    an.onfinish = function () { if (c.parentNode) c.parentNode.removeChild(c); if (done) done(); };
+  }
+  function ctr(r) { return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+  function stashShow() {
+    if (!stashEl) {
+      stashEl = el('div', 'stash');
+      stashEl.appendChild(el('i', 'fly'));
+      stashEl.lastChild.style.position = 'static';
+      stashEl.appendChild(el('b', null, ''));
+      document.body.appendChild(stashEl);
+    }
+    stashEl.lastChild.textContent = '×' + stashN;
+    stashEl.hidden = stashN === 0;
+  }
+  function releaseStash() {
+    if (releasing || !stashN || !barVisible()) return;
+    releasing = true;
+    var n = stashN, st = stashEl.getBoundingClientRect(), from = ctr(st);
+    stashN = 0; stashShow();
+    var k = 0;
+    (function next() {
+      if (k >= n) { releasing = false; return; }
+      var tg = barTarget(n - 1 - k);
+      var j = k; k++;
+      coinFly(from, ctr(tg.getBoundingClientRect()), 700, 40);
+      setTimeout(next, 300);
+    })();
+  }
+  var scTick = false;
+  window.addEventListener('scroll', function () {
+    if (scTick || !stashN) return;
+    scTick = true;
+    requestAnimationFrame(function () { scTick = false; releaseStash(); });
+  }, { passive: true });
   function flyCoin(src) {
     if (!src || !src.animate) return;
     if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var bar = $('bar');
-    var on = bar.querySelectorAll('i.on').length;
-    var tgt = bar.children[Math.max(0, Math.min(19, on - 1))] || bar;
-    var a = src.getBoundingClientRect(), t = tgt.getBoundingClientRect();
-    var c = document.createElement('div');
-    c.className = 'fly';
-    c.style.left = (a.left + a.width / 2 - 7) + 'px';
-    c.style.top = (a.top + a.height / 2 - 7) + 'px';
-    document.body.appendChild(c);
-    var dx = t.left + t.width / 2 - (a.left + a.width / 2), dy = t.top + t.height / 2 - (a.top + a.height / 2);
-    var an = c.animate([
-      { transform: 'translate(0,0) scale(1)' },
-      { transform: 'translate(' + (dx * 0.4) + 'px,' + (dy * 0.4 - 50) + 'px) scale(1.5)', offset: 0.45 },
-      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.6)' }
-    ], { duration: 700, easing: 'ease-in' });
-    an.onfinish = function () { if (c.parentNode) c.parentNode.removeChild(c); };
+    var a = ctr(src.getBoundingClientRect());
+    if (barVisible() && !stashN) {
+      coinFly(a, ctr(barTarget(0).getBoundingClientRect()), 700, 50);
+      return;
+    }
+    // полоска очков не на экране: монетка прилипает к краю и ждёт, пока ты прокрутишь вверх
+    stashShow();
+    var sr = stashEl.getBoundingClientRect();
+    stashN++;
+    stashEl.hidden = false;
+    var to = { x: (window.innerWidth || 360) - 30, y: 34 };
+    coinFly(a, to, 450, 40, function () { stashShow(); });
+    stashEl.lastChild.textContent = '×' + stashN;
   }
   function questButton(title, sub, pts, pressed, onClick, auto) {
     var b = el('button', 'q' + (auto ? ' auto' : ''));
