@@ -443,6 +443,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 .stage[data-frame="sunset"] { border-style: solid; border-width: 6px; animation: sunsetb 5s ease-in-out infinite alternate; }
 @keyframes sunsetb { 0% { border-color: #ffb454; box-shadow: 0 0 12px #ff8a4a; } 50% { border-color: #ff6a8a; box-shadow: 0 0 14px #ff5a7a; } 100% { border-color: #a46aff; box-shadow: 0 0 12px #8a5aff; } }
 .rmw { display: flex; flex-wrap: wrap; gap: 8px; }
+html,body{overflow-anchor:none}
 </style>
 
 <div class="app">
@@ -3059,6 +3060,15 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
     }
   }
   function renderAll() {
+    var sy = window.pageYOffset || 0;
+    renderAllInner();
+    // перерисовка не должна сбрасывать прокрутку (на телефоне страница прыгала вверх)
+    if (sy > 0 && Math.abs((window.pageYOffset || 0) - sy) > 2) {
+      window.scrollTo(0, sy);
+      requestAnimationFrame(function () { if (Math.abs((window.pageYOffset || 0) - sy) > 2) window.scrollTo(0, sy); });
+    }
+  }
+  function renderAllInner() {
     renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass();
   }
 
