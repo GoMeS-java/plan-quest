@@ -3663,28 +3663,69 @@ var citadelNpcSelected=null,citadelResidentSignature='',citadelResidentRank=1;
 function citadelNpcState(person) {
  return CitadelWorld.resident(person,Date.now(),citadelResidentRank,citadelPeople.indexOf(person));
 }
-function citadelNpcSpeak(key) {
+// Only public game state is observed. No rewards, timers or save writes here.
+var citadelNpcPrevious=null,citadelNpcEvents={},citadelNpcVisits={},citadelNpcOrigin=null;
+function citadelNpcProgress(){
+ var day=dkey(new Date()),record=S.days[day]||{},idx=activeIdx(day),mk=mondayKey(day),p=pointsInfo(),t=trialOf(day),levels={};
+ citadelRooms.forEach(function(room){levels[room]=citadelRoomLevel(room);});
+ return {day:day,rank:p.L,cores:p.avail,done:idx.filter(function(i){return !!(record.q||[])[i];}).length,total:idx.length,
+  weekly:engWeek(mk)+kcalWeek(mk)+(S.weights.some(function(w){return mondayKey(w.date)===mk;})?1:0),
+  trial:t?(trialProg(day,t).done?'done':'active'):'none',levels:levels,gear:JSON.stringify(outfitIds()),
+  body:JSON.stringify((S.weights||[]).map(function(w){return [w.date,w.kg];}).sort())};
+}
+function citadelNpcObserve(){
+ var next=citadelNpcProgress(),old=citadelNpcPrevious;citadelNpcPrevious=next;
+ if(!old||old.day!==next.day){citadelNpcEvents={};return;}
+ function remember(key,line){citadelNpcEvents[key]={line:line,until:Date.now()+1800000};}
+ if(next.done>old.done)remember('archivist','Новую запись вижу: ещё одно дело завершено. Летопись складывается из таких строк.');
+ if(next.weekly>old.weekly)remember('archivist','Недельные записи продвинулись. Я сверила их с книгой дня.');
+ if(next.trial==='done'&&old.trial!=='done')remember('guardian','Испытание выдержано. Сегодня твоя стойкость доказана делом.');
+ if(next.gear!==old.gear||next.body!==old.body)remember('smith','Вижу перемены в твоей подготовке. Подгоню снаряжение под нынешний путь.');
+ var changed=citadelRooms.filter(function(room){return next.levels[room]>old.levels[room];});
+ if(changed.length)remember('smith',changed.indexOf('forge')>=0?'Мастерская улучшена. У горна теперь всё под рукой — хорошая работа.':'Обновление в комнате «'+CitadelWorld.names[changed[0]]+'» вижу. Обстановка стала крепче.');
+ if(next.cores!==old.cores)remember('treasurer',next.cores<0?'Расходы разных устройств не сошлись. Покупки остановлены; сохрани копии и сверь историю.':next.cores<old.cores?'Расход занесён в книгу. Теперь свободно ядер души: '+next.cores+'.':'Запас пополнился. Теперь свободно ядер души: '+next.cores+'.');
+ if(next.rank>old.rank){
+  remember('guardian','Новый ранг '+next.rank+'. Дозор приветствует твоё продвижение.');
+  remember('archivist','Ранг '+next.rank+' внесён в летопись. Путь продолжается.');
+ }
+}
+function citadelNpcClose(){
+ citadelNpcSelected=null;citadelNpcOrigin=null;$('citadel-room-conversation').hidden=true;$('citadel-npc-dialogue').textContent='';$('citadel-npc-actions').textContent='';$('citadel-npc-actions').dataset.person='';
+ document.querySelectorAll('.citadel-interior-stage .citadel-person').forEach(function(n){n.dataset.mode=citadelNpcState(citadelPeople.find(function(p){return p.key===n.dataset.person;})).mode;});
+}
+function citadelNpcSpeak(key,refresh) {
  if(!loaded)return;
  var person=citadelPeople.find(function(n){return n.key===key;}),p=pointsInfo();
- if(!person||p.L<person.rank)return;
+ if(!person||p.L<person.rank){citadelNpcClose();return;}
+ var state=citadelNpcState(person);
+ if(refresh&&citadelNpcOrigin&&(state.moving||state.room!==citadelNpcOrigin||citadelSelected!==citadelNpcOrigin)) {citadelNpcClose();return;}
+ if(!refresh){citadelNpcVisits[key]=(citadelNpcVisits[key]||0)+1;citadelNpcOrigin=!state.moving&&state.room===citadelSelected&&!$('citadel-interior').hidden?state.room:null;}
  citadelNpcSelected=key;
- var state=citadelNpcState(person),day=dkey(new Date()),record=S.days[day]||{},idx=activeIdx(day),done=idx.filter(function(i){return !!(record.q||[])[i];}).length;
- var line=state.line;
- if(person.key==='guardian') {
-  var t=trialOf(day);
-  line+=' '+(t?(trialProg(day,t).done?'Сегодняшнее испытание пройдено. Стража видит твою стойкость.':'В Зале Испытаний ещё есть работа. Проверим твой настоящий прогресс?'):'Сегодня без испытания. У ворот спокойно.');
- } else if(person.key==='archivist') {
-  line+=' '+(done===idx.length?'Все основные записи сегодняшнего дня завершены.': 'В сегодняшних записях выполнено '+done+' из '+idx.length+' дел.');
-  line+=' На неделе: английский '+engWeek(mondayKey(day))+' / 7.';
- } else if(person.key==='smith') {
-  line+=' '+(citadelRoomLevel('forge')>1?'Горн обустроен — работать стало уютнее.':'Каменный горн ждёт обустройства.');
-  line+=' Твой облик в мастерской тот же, что в «Оболочке».';
- } else line+=' Свободно ядер души: '+Math.max(0,p.avail)+'. Строительство и «Воспоминания» используют одну казну.';
+ var current=citadelNpcPrevious||citadelNpcProgress(),day=current.day,line;
+ var greetings={
+  guardian:['Дозор на месте. Говори.','Приветствую. Что у тебя на пути?','У ворот спокойно. Я слушаю.'],
+  archivist:['Оставлю перо на минуту. Рассказывай.','Для твоих дел найдётся чистая страница.','Книга открыта. Сверим записи?'],
+  smith:['Отложу молот. Подходи ближе.','Угли ещё жаркие. Слушаю тебя.','Руки в саже, зато дело движется.'],
+  treasurer:['Книга казны передо мной. Сверимся.','Каждому расходу — своя строка.','Счёт любит точность. Я слушаю.']
+ };
+ var phase=state.mode==='rest'?{guardian:'Ночной дозор тих. Береги силы.',archivist:'Чернила сохнут до утра.',smith:'Горн погашен. Утром продолжим.',treasurer:'Казна закрыта до утра.'}[key]:state.mode==='social'?{guardian:'За столом можно снять караул с плеч.',archivist:'У очага истории звучат теплее.',smith:'После горна приятно посидеть у огня.',treasurer:'На ужине книги пока отложены.'}[key]:state.moving?state.line:new Date().getHours()<10?{guardian:'Проверяю утренний план обхода.',archivist:'Готовлю страницы нового дня.',smith:'Планирую работу перед растопкой.',treasurer:'Сверяю утренний остаток.'}[key]:state.activity+'.';
+ line=greetings[key][((citadelNpcVisits[key]||1)-1)%3]+' '+phase;
+ var event=citadelNpcEvents[key];if(event&&event.until>Date.now())line+=' '+event.line;
+ if(key==='guardian') {
+  var t=trialOf(day),y=new Date();y.setDate(y.getDate()-1);var yesterday=dkey(y),past=trialOf(yesterday);
+  line+=' '+(t?(trialProg(day,t).done?'Сегодняшнее испытание пройдено.':'Сегодняшнее испытание ещё активно. Сверь силы и требования.'):'Сегодня без испытания.');
+  if(past)line+=' '+(trialProg(yesterday,past).done?'Вчерашний рубеж ты удержал.':'Вчерашнее испытание осталось незавершённым. Штраф учтён в основном пути; сегодня начни посильно.');
+  line+=' Твой ранг: '+p.L+'.';
+ }else if(key==='archivist') {
+  line+=' '+(current.done===current.total?'Все основные записи сегодняшнего дня завершены.':'В сегодняшних записях выполнено '+current.done+' из '+current.total+' дел.');
+  line+=' На неделе: английский '+engWeek(mondayKey(day))+' / 7, питание '+kcalWeek(mondayKey(day))+' / 7.';
+ }else if(key==='smith')line+=' '+(citadelRoomLevel('forge')>1?'Горн обустроен — работать стало уютнее.':'Каменный горн ждёт обустройства.')+' Снаряжение сверяю с твоей «Оболочкой».';
+ else line+=' '+(p.avail<0?'Обнаружены несогласованные расходы между устройствами.':'Свободно ядер души: '+p.avail+'.')+' Строительство и «Воспоминания» используют одну казну.';
  document.querySelectorAll('.citadel-interior-stage .citadel-person').forEach(function(n){n.dataset.mode=n.dataset.person===key?'interaction':citadelNpcState(citadelPeople.find(function(p){return p.key===n.dataset.person;})).mode;});
  $('citadel-npc-dialogue').textContent=person.name+' · '+state.activity+': «'+line+'»';
  citadelRoomConversation();
  var host=$('citadel-npc-actions');if(host.dataset.person===key)return;host.dataset.person=key;host.textContent='';
- [[citadelNpcTask(person).label,function(){var task=citadelNpcTask(person);citadelNavigate(task.tab,task.focus);}],['Где ты?',function(){citadelFindResident(person);}],['Дела на сегодня',function(){citadelNavigate('today');}],['Хроника недели',function(){citadelNavigate('week');}]].forEach(function(row){var b=document.createElement('button');b.type='button';b.textContent=row[0];b.addEventListener('click',row[1]);host.appendChild(b);});
+ [[citadelNpcTask(person).label,function(){var task=citadelNpcTask(person);citadelNavigate(task.tab,task.focus);}],['Где ты?',function(){citadelFindResident(person);}],['Дела на сегодня',function(){citadelNavigate('today');}],['Хроника недели',function(){citadelNavigate('week');}],['Завершить разговор',citadelNpcClose]].forEach(function(row){var b=document.createElement('button');b.type='button';b.textContent=row[0];b.addEventListener('click',row[1]);host.appendChild(b);});
 }
 function citadelNpcTask(person){
  if(person.key==='guardian')return {label:'ПРОВЕРИТЬ ИСПЫТАНИЕ',tab:'today',focus:'trialbox'};
@@ -3700,7 +3741,8 @@ function citadelRoomConversation(){
  $('citadel-room-speech').textContent=$('citadel-npc-dialogue').textContent;
  var task=citadelNpcTask(person),button=$('citadel-room-npc-action');button.textContent=task.label;button.onclick=function(){citadelNavigate(task.tab,task.focus);};
 }
-$('citadel-room-npc-close').addEventListener('click',function(){citadelNpcSelected=null;$('citadel-room-conversation').hidden=true;$('citadel-npc-dialogue').textContent='';$('citadel-npc-actions').textContent='';$('citadel-npc-actions').dataset.person='';document.querySelectorAll('.citadel-interior-stage .citadel-person').forEach(function(n){n.dataset.mode=citadelNpcState(citadelPeople.find(function(p){return p.key===n.dataset.person;})).mode;});});
+$('citadel-room-npc-close').addEventListener('click',citadelNpcClose);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&citadelNpcSelected){citadelNpcClose();}});
 function syncCitadelResidents(level) {
  var host=$('citadel-residents');if(!host)return;citadelResidentRank=level;
  var states=citadelPeople.map(citadelNpcState);
@@ -3724,7 +3766,7 @@ function syncCitadelResidents(level) {
   $('citadel-population').textContent='ЖИТЕЛИ: '+arrived;
  }
  citadelPositionResidents(states);
- if(citadelNpcSelected)citadelNpcSpeak(citadelNpcSelected);else citadelRoomConversation();
+ if(citadelNpcSelected)citadelNpcSpeak(citadelNpcSelected,true);else citadelRoomConversation();
 }
 function citadelFindResident(person){
  var state=citadelNpcState(person);
@@ -3797,7 +3839,7 @@ function citadelSyncTrial(){var panel=$('citadel-trial');if(!panel||!loaded)retu
 $('citadel-trial-open').addEventListener('click',function(){citadelNavigate('today','trialbox');});
 function citadelSyncDaily(){if(!loaded)return;var k=dkey(new Date()),day=S.days[k]||{},idx=activeIdx(k),q=day.q||[],done=idx.filter(function(i){return !!q[i];}).length,host=$('citadel-daily-list');if(!host)return;host.textContent='';var count=document.createElement('div');count.className='citadel-weekly-row';count.textContent='Основные задания: '+done+' / '+idx.length;host.appendChild(count);var steps=document.createElement('div');steps.className='citadel-weekly-row';var target=stepInfo().goals[mondayKey(k)]||5000;steps.textContent='Шаги: '+fmt(+day.steps||0)+' / '+fmt(target);host.appendChild(steps);var details=$('citadel-daily-details');if(details){details.textContent='';idx.forEach(function(i){var item=document.createElement('div'),name=document.createElement('span'),state=document.createElement('span');item.className='citadel-daily-quest'+(q[i]?' is-done':'');name.textContent=qTitle(i,k);state.textContent=q[i]?'✓':'○';state.setAttribute('aria-label',q[i]?'Выполнено':'Не выполнено');item.appendChild(name);item.appendChild(state);details.appendChild(item);});}$('citadel-daily-count').textContent=done+' / '+idx.length;}
 function citadelSyncWeekly(){if(!loaded)return;var mk=mondayKey(dkey(new Date())),si=stepInfo(),goal=si.goals[mk]||5000,days=0,day=parseKey(mk);for(var i=0;i<7;i++){var record=S.days[dkey(day)];if(record&&record.steps>=goal)days++;day.setDate(day.getDate()+1);}var weighed=S.weights.some(function(w){return mondayKey(w.date)===mk;}),eng=engWeek(mk),kcal=kcalWeek(mk),rows=[['Взвешивание',weighed?'Выполнено':'Не записано',weighed],['Шаги каждый день',days+' / 7 · цель '+fmt(goal),!!si.done[mk]],['Английский',eng+' / 7',eng===7],['Питание',kcal+' / 7',kcal===7]],host=$('citadel-weekly-list');if(!host)return;host.textContent='';rows.forEach(function(r){var line=document.createElement('div'),label=document.createElement('span'),state=document.createElement('span');line.className='citadel-weekly-row'+(r[2]?' is-done':'');label.textContent=r[0];state.textContent=r[1];line.appendChild(label);line.appendChild(state);host.appendChild(line);});$('citadel-weekly-count').textContent=rows.filter(function(r){return r[2];}).length+' / '+rows.length;}
-function syncCitadel(){if(!loaded)return;var p=pointsInfo();var weights=(S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&w.date<=dkey(new Date());}).sort(function(a,b){return a.date.localeCompare(b.date);});var last=weights.length?Number(weights[weights.length-1].kg):null;$('citadel-live-rank').textContent='РАНГ '+p.L;$('citadel-live-body').textContent=last===null?'ТЕЛО: НЕТ ЗАПИСЕЙ':'ВЕС '+last+' КГ';$('citadel-live-points').textContent='ОСКОЛКИ '+p.P;var b=S.opening?balances():null;$('citadel-live-cash').textContent=b?'БАЛАНС '+fmtM(b.cash+b.card)+' ₽':'ФИНАНСЫ: НЕТ ДАННЫХ';var equipped=outfitIds();$('citadel-live-gear').textContent='ОБОЛОЧКА: '+(equipped.outer==='none'?'БЕЗ ПЛАЩА':'ЭКИПИРОВАНА');syncCitadelAvatar();syncCitadelResidents(p.L);citadelRenderActivities();citadelRenderBuilding();citadelRoomJournal();if(!$('citadel-interior').hidden){citadelRenderDecor();citadelRenderExits();}syncCitadelTime();citadelSyncTrial();citadelSyncWeekly();citadelSyncDaily();if($('citadel-home').open){var current=document.querySelector('[data-croom="'+citadelSelected+'"]');if(current&&p.L<Number(current.getAttribute('data-min-rank')||1))citadelMove('rest');else if(current&&current.getAttribute('aria-pressed')!=='true')citadelMove(citadelSelected);}document.querySelectorAll('[data-min-rank]').forEach(function(btn){var locked=p.L<Number(btn.getAttribute('data-min-rank'));btn.classList.toggle('is-locked',locked);btn.setAttribute('aria-disabled',locked?'true':'false');var badge=btn.querySelector('.citadel-lock');if(badge)badge.textContent=locked?'ЗАКРЫТО':'ДОСТУПНО';});}
+function syncCitadel(){if(!loaded)return;citadelNpcObserve();var p=pointsInfo();var weights=(S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&w.date<=dkey(new Date());}).sort(function(a,b){return a.date.localeCompare(b.date);});var last=weights.length?Number(weights[weights.length-1].kg):null;$('citadel-live-rank').textContent='РАНГ '+p.L;$('citadel-live-body').textContent=last===null?'ТЕЛО: НЕТ ЗАПИСЕЙ':'ВЕС '+last+' КГ';$('citadel-live-points').textContent='ОСКОЛКИ '+p.P;var b=S.opening?balances():null;$('citadel-live-cash').textContent=b?'БАЛАНС '+fmtM(b.cash+b.card)+' ₽':'ФИНАНСЫ: НЕТ ДАННЫХ';var equipped=outfitIds();$('citadel-live-gear').textContent='ОБОЛОЧКА: '+(equipped.outer==='none'?'БЕЗ ПЛАЩА':'ЭКИПИРОВАНА');syncCitadelAvatar();syncCitadelResidents(p.L);citadelRenderActivities();citadelRenderBuilding();citadelRoomJournal();if(!$('citadel-interior').hidden){citadelRenderDecor();citadelRenderExits();}syncCitadelTime();citadelSyncTrial();citadelSyncWeekly();citadelSyncDaily();if($('citadel-home').open){var current=document.querySelector('[data-croom="'+citadelSelected+'"]');if(current&&p.L<Number(current.getAttribute('data-min-rank')||1))citadelMove('rest');else if(current&&current.getAttribute('aria-pressed')!=='true')citadelMove(citadelSelected);}document.querySelectorAll('[data-min-rank]').forEach(function(btn){var locked=p.L<Number(btn.getAttribute('data-min-rank'));btn.classList.toggle('is-locked',locked);btn.setAttribute('aria-disabled',locked?'true':'false');var badge=btn.querySelector('.citadel-lock');if(badge)badge.textContent=locked?'ЗАКРЫТО':'ДОСТУПНО';});}
 function renderAllInner() {
     renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel();
   }
@@ -4350,5 +4392,6 @@ function renderAllInner() {
   });
   applyLook();
   document.addEventListener('visibilitychange', function () { if (!document.hidden) { renderAll(); timeCheck(); } });
+if(window.PlanSync)window.PlanSync.beforeUpdate=function(){return chain;};
 })();
 </script>
