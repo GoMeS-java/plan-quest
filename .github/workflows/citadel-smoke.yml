@@ -38,6 +38,31 @@ jobs:
           assert 'data-t="citadel"' not in game
           print('Integrated Citadel and prototype verified')
           PY
+      - name: Citadel integration contract checks
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          game = Path('docs/index.html').read_text(encoding='utf-8')
+          required = (
+              "function citadelTrialClock()",
+              "function citadelSyncTrial()",
+              "function citadelSyncWeekly()",
+              "function citadelSyncDaily()",
+              "function citadelNavigate(",
+              "trialOf(today)",
+              "trialProg(today,t)",
+              "citadelNavigate('today','trialbox')",
+              "citadelNavigate(btn.dataset.citadelTab)",
+              'id="citadel-trial-clock"',
+              'data-citadel-tab="week"',
+              'data-citadel-tab="today"',
+          )
+          for token in required:
+              assert token in game, "Missing integration: " + token
+          assert "data-t=\"citadel\"" not in game
+          assert "id=\"citadel-frame\"" not in game
+          print("Read-only quest mirrors and navigation contracts verified")
+          PY
       - name: JavaScript syntax checks
         run: |
           node --check docs/citadel.js
