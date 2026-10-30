@@ -105,6 +105,16 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .stage[data-bg="chamber"] .window { background: linear-gradient(#02030a, #1a0a14); }
 .stage[data-bg="chamber"] .moon { background: #d4243e; box-shadow: 0 0 14px 6px rgba(212,36,62,.5), inset -5px -3px 0 #8a1226; }
 .stage[data-bg="chamber"] .star { display: none; }
+.stage[data-bg="abyss"] { --wall: #100d1c; --floor: #090712; }
+.stage[data-bg="abyss"] .window { background: linear-gradient(145deg, #080718, #30204c 60%, #6d4ca1); box-shadow: 0 0 18px rgba(133,88,207,.25); }
+.stage[data-bg="abyss"] .moon { background: #cbb6ff; box-shadow: 0 0 14px 4px rgba(167,123,255,.55); }
+.stage[data-bg="abyss"]::before { content: ""; position: absolute; inset: 0 0 26% 0; pointer-events: none; background: radial-gradient(ellipse at 50% 92%, rgba(101,56,155,.35), transparent 58%), repeating-linear-gradient(110deg, transparent 0 32px, rgba(156,105,224,.045) 33px 35px); animation: abyssBreathe 7s ease-in-out infinite alternate; }
+@keyframes abyssBreathe { from { opacity: .45; } to { opacity: 1; } }
+.stage[data-frame="abyss"] { border: 5px solid #5d477e; box-shadow: inset 0 0 0 2px #171020, 0 0 17px rgba(128,83,184,.35); animation: abyssBorder 4s ease-in-out infinite alternate; }
+@keyframes abyssBorder { to { border-color: #b69ae8; box-shadow: inset 0 0 0 2px #171020, 0 0 27px rgba(155,107,223,.6); } }
+:root[data-aura="abyss"] .hero canvas { filter: drop-shadow(0 0 7px #7e51c4) drop-shadow(0 0 18px rgba(77,36,129,.8)); }
+:root[data-aura="abyss"] .hero::after { content: ""; position: absolute; inset: 15px 25% 12px; pointer-events: none; background: radial-gradient(ellipse at bottom, rgba(75,34,125,.6), transparent 70%); animation: abyssBreathe 3s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .stage[data-bg="abyss"]::before, .stage[data-frame="abyss"], :root[data-aura="abyss"] .hero::after { animation: none; } }
 .stage[data-bg="chamber"]::before { content: ""; position: absolute; inset: 0 0 26% 0; pointer-events: none; background: radial-gradient(circle at 20% 70%, rgba(212,36,62,.2), transparent 40%), radial-gradient(circle at 80% 40%, rgba(90,110,200,.18), transparent 40%); animation: twinkle 4s steps(2) infinite; }
 :root[data-font="curse"] :is(h1, h2, .px, .big, .lbig, .dcenter b) { letter-spacing: 1px; text-shadow: 0 0 6px rgba(212,36,62,.9), 0 0 14px rgba(212,36,62,.5); }
 .rmi.glw { filter: drop-shadow(0 0 4px rgba(212,36,62,.8)); }
@@ -510,7 +520,7 @@ html,body{overflow-anchor:none}
 
 <div class="app">
   <div class="top">
-    <div class="topl"><h1>ЗАКЛЯТИЕ</h1><span id="plslot"></span></div>
+    <div class="topl"><h1 id="summon-name" role="button" tabindex="0" title="Позови Заклятие" style="cursor:pointer">ЗАКЛЯТИЕ</h1><span id="plslot"></span></div>
     <span class="lvl" id="lvl">РАНГ 1</span>
     <button class="gear" id="trophy-btn" type="button" aria-label="Аспекты и отметины">&#127942;</button>
     <button class="gear" id="gear" type="button" aria-label="Настройки">&#9881;</button>
@@ -789,9 +799,10 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.51</h2>
-    <div class="hint">Сборка 142dbb</div>
+    <h2>ВЕРСИЯ 0.52</h2>
+    <div class="hint">Сборка 0891e8</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.52</b> · 30.10 · Судьбоносная отметина «Услышанный Бездной»: титул, 17 осколков и комплект тёмного оформления «Голос из Бездны»</div>
       <div class="hint"><b>0.51</b> · 28.10 · Все названия в духе Заклятия: осколки души, ранги, ядра души, Воспоминания, Аспекты, отметины, убежище, оболочка. Монетка стала осколком души</div>
       <div class="hint"><b>0.50</b> · 28.10 · Испытания Заклятия: случайные физические задания с красным таймером, награда и штраф; пять судьбоносных отметин с титулами, оформлением и предметами; оформление «Заклятие» как награда</div>
       <div class="hint"><b>0.46</b> · 27.10 · Одна задача гигиены вместо двух; очки за ступени Аспектов убраны</div>
@@ -859,7 +870,7 @@ html,body{overflow-anchor:none}
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.51";
+<script>window.APP_VERSION = "0.52";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -1451,6 +1462,7 @@ html,body{overflow-anchor:none}
     { id: 'z30', title: 'ПЕРЕПИСАВШИЙ СУДЬБУ', val: 'trialTop', goal: 1, d: 'Пройти Испытание высшего ранга', pts: 45, cos: 'fr_shard' },
     { id: 'z31', title: 'ПРОКЛЯТЫЙ', val: 'trialFailHigh', goal: 1, d: 'Провалить тяжёлое Испытание', pts: 6, cos: 'b_chamber' },
     { id: 'z32', title: 'ДИТЯ ТЕНЕЙ', val: 'trialWin', goal: 3, d: 'Пройти несколько Испытаний Заклятия', pts: 35, cos: 'fo_curse' },
+    { id: 'z33', title: 'УСЛЫШАННЫЙ БЕЗДНОЙ', ev: 1, d: 'Призвать Заклятие семь раз, коснувшись его имени за восемь секунд', pts: 17, cos: 'th_abyss' },
     { id: 'z18', title: 'ПАЛИНДРОМ', ev: 1, d: 'Открыть приложение ровно в 10:01, 15:51, 20:02 или 21:12', pts: 12, cos: 'p_mirror' }
   ];
 
@@ -1592,6 +1604,7 @@ html,body{overflow-anchor:none}
     if (!loaded || !lastGI || window.__COS_ALL) return null;
     var u = {};
     Object.keys(lastGI.ach).forEach(function (id) { var c = cosOf(id); if (c) u[c] = true; });
+    if (lastGI.ach.z33) ['th_abyss', 'b_abyss', 'fr_abyss', 'au_abyss'].forEach(function (id) { u[id] = true; });
     return u;
   }
   var premTimer = null;
@@ -1677,6 +1690,11 @@ html,body{overflow-anchor:none}
     ['au_focus', 'aura', 'Фокус', '#4ac7ff', 'focus'], ['au_orbit', 'aura', 'Орбита', '#b48cff', 'orbit'],
     ['fr_scan', 'frame', 'Сканер', '#39ff9a', 'scan'], ['fr_sunset', 'frame', 'Закатная рамка', '#ff8a5a', 'sunset']);
   COS.th_zakl = { cat: 'theme', n: 'Заклятие', sw: '#a9bbea', tx: 'shadow', v: { '--bg': '#05060a', '--panel': '#0b0d14', '--panel-2': '#12151f', '--line': '#222839', '--fg': '#d6dbea', '--muted': '#7a8298', '--gold': '#a9bbea', '--gold-dark': '#3c4a78', '--wall': '#0d1018', '--floor': '#080a10' } };
+  // Оригинальный комплект «Голос из Бездны»: четыре варианта оформления за одну отметину.
+  COS.th_abyss = { cat: 'theme', n: 'Голос из Бездны', sw: '#a477e0', v: { '--bg': '#080611', '--panel': '#151020', '--panel-2': '#20172d', '--line': '#57416e', '--fg': '#e5dcf3', '--muted': '#a698bc', '--gold': '#b993f3', '--gold-dark': '#684291', '--wall': '#100d1c', '--floor': '#090712' } };
+  COS.b_abyss = { cat: 'bg', n: 'Предел Бездны', sw: '#8a60c5', key: 'abyss', pv: 'linear-gradient(#080718, #30204c, #6d4ca1)' };
+  COS.fr_abyss = { cat: 'frame', n: 'Печать Тени', sw: '#a78ad8', key: 'abyss' };
+  COS.au_abyss = { cat: 'aura', n: 'Шёпот Бездны', sw: '#8956cc', key: 'abyss' };
   COS.au_smoke = { cat: 'aura', n: 'Чёрный дым', sw: '#d4243e', key: 'smoke' };
   COS.fr_shard = { cat: 'frame', n: 'Осколок души', sw: '#a9bbea', key: 'shard' };
   COS.b_chamber = { cat: 'bg', n: 'Чёрный чертог', sw: '#d4243e', key: 'chamber', pv: 'linear-gradient(#02030a, #1a0a14 60%, #d4243e)' };
@@ -3149,6 +3167,7 @@ html,body{overflow-anchor:none}
     function rewardText(id, pts, title) {
       var c = cosOf(id), t = 'Награда: +' + pts + ' ' + plural(pts, 'осколок', 'осколка', 'осколков');
       if (title) t += ', титул «' + title + '»';
+      if (id === 'z33') return t + ', комплект «Голос из Бездны»: цвет, фон убежища, рамка и аура. Всё можно выбрать в «Настройки → Оформление».';
       if (c && COS[c]) t += ', новое оформление: ' + ({ theme: 'цвет', bg: 'фон убежища', coin: 'форма осколка', bar: 'шкала души', fx: 'эффект нажатия', lv: 'эффект нового ранга', frame: 'рамка убежища', aura: 'аура персонажа', font: 'стиль текста', snd: 'звуки', pat: 'узор фона', chk: 'галочка', tab: 'вкладки' }[COS[c].cat]) + ' «' + COS[c].n + '». Выбрать можно ниже в разделе «Оформление».';
       else t += '.';
       if (ROOM_OF[id]) t = t.replace(/\.$/, '') + '; в убежище появился предмет «' + ROOM_ITEMS[ROOM_OF[id]].n + '».';
@@ -3248,7 +3267,7 @@ html,body{overflow-anchor:none}
     var open = 0;
     LEG.forEach(function (G) {
       var d = lastGI.ach[G.id], cc = G.cos;
-      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : '') + (ROOM_OF[G.id] ? ' · предмет «' + ROOM_ITEMS[ROOM_OF[G.id]].n + '»' : ''), '+' + G.pts, true, null, true)); }
+      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (G.id === 'z33' ? ' · полный комплект «Голос из Бездны»' : cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : '') + (ROOM_OF[G.id] ? ' · предмет «' + ROOM_ITEMS[ROOM_OF[G.id]].n + '»' : ''), '+' + G.pts, true, null, true)); }
       else if (lastGI.slots[G.id] && !G.ev) {
         var v = Math.min(lastGI.st[G.val] || 0, G.goal);
         box.appendChild(questButton('Суперредкая цель: ' + G.d, (G.goal > 1 ? fmt(v) + ' из ' + fmt(G.goal) : 'ещё не выполнено') + ' · награда секретная', '+?', false, null, true));
@@ -3863,6 +3882,17 @@ html,body{overflow-anchor:none}
     heroTaps.push(n);
     heroTaps = heroTaps.filter(function (t) { return n - t < 8000; });
     if (heroTaps.length >= 15) { heroTaps = []; recordRare('z02'); }
+  });
+  var summonTaps = [];
+  function summonAbyss() {
+    var now = Date.now();
+    summonTaps.push(now);
+    summonTaps = summonTaps.filter(function (t) { return now - t < 8000; });
+    if (summonTaps.length >= 7) { summonTaps = []; recordRare('z33'); }
+  }
+  $('summon-name').addEventListener('click', summonAbyss);
+  $('summon-name').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); summonAbyss(); }
   });
   applyLook();
   document.addEventListener('visibilitychange', function () { if (!document.hidden) { renderAll(); timeCheck(); } });
