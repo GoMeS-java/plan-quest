@@ -1,8 +1,10 @@
-name: Citadel prototype smoke test
+name: Integrated Citadel smoke test
 on:
   pull_request:
     paths:
       - 'src/citadel*.js'
+      - 'src/game.html'
+      - 'src/localdb.js'
       - 'prototype/citadel.html'
       - 'build.py'
       - '.github/workflows/citadel-smoke.yml'
@@ -29,13 +31,29 @@ jobs:
           assert '../src/' not in page
           for name in ('citadel.js', 'citadel-life.js', 'citadel-weather.js', 'sw.js'):
               assert Path('docs', name).is_file(), name
-          print('Citadel assets and relative paths verified')
+          game = Path('docs/index.html').read_text(encoding='utf-8')
+          for marker in ('id="citadel-castle"', 'id="citadel-avatar-canvas"', 'id="citadel-interior-hero"', 'function citadelMove(', 'function syncCitadelAvatar(', 'id="citadel-live-cash"'):
+              assert marker in game, marker
+          assert 'id="citadel-frame"' not in game
+          assert 'data-t="citadel"' not in game
+          print('Integrated Citadel and prototype verified')
           PY
       - name: JavaScript syntax checks
         run: |
           node --check docs/citadel.js
           node --check docs/citadel-life.js
           node --check docs/citadel-weather.js
+          node --check docs/localdb.js
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path('docs/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>', html, re.I)
+          assert scripts
+          for i, source in enumerate(scripts):
+              Path('/tmp/citadel-inline-%d.js' % i).write_text(source, encoding='utf-8')
+          PY
+          for f in /tmp/citadel-inline-*.js; do node --check "$f"; done
       - uses: actions/upload-artifact@v4
         with:
           name: citadel-test-build
