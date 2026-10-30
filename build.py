@@ -69,7 +69,7 @@ for name in ['citadel.js', 'citadel-life.js', 'citadel-weather.js']:
     shutil.copy(f'{SRC}/{name}', f'{DIST}/{name}')
     # Встраиваем код в HTML: тестовая страница работает даже из локального ZIP/файла.
     source = open(f'{SRC}/{name}', encoding='utf-8').read()
-    citadel = citadel.replace(f'<script src="../src/{name}"></script>', '<script>\\n' + source + '\\n</script>')
+    citadel = citadel.replace(f'<script src="../src/{name}"></script>', '<script>\n' + source + '\n</script>')
 citadel = citadel.replace('</head>', '<meta name="theme-color" content="#100c18"></head>')
 open(f'{DIST}/citadel.html', 'w', encoding='utf-8').write(citadel)
 
