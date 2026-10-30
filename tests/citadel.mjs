@@ -55,6 +55,7 @@ try {
    await p.waitForFunction(()=>!!window.__citadelShell);
    assert(await p.locator('#citadel-castle').isVisible());assert(!(await p.locator('.stage').isVisible()));
    assert.equal(await p.locator('[data-croom]').count(),10);
+   assert.match(await p.locator('.citadel-shell-drawer.left').innerText(),/Ранг 24/);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    if(width<1050){await p.locator('.citadel-shell-tail.left').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');
    if(width===390)await p.screenshot({path:resolve(out,'shell-left-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:width-5,y:100}});assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
