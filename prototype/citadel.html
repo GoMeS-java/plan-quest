@@ -58,10 +58,34 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 #scene-hero:before{content:'';position:absolute;top:5px;left:6px;width:14px;height:12px;background:#bfa0d8;box-shadow:0 0 0 2px #1c1428}
 #scene-hero:after{content:'';position:absolute;bottom:4px;left:4px;width:7px;height:10px;background:#160f20;box-shadow:12px 0 #160f20}
 #room-scene.reduce-motion #scene-hero{animation:none;transition:none}
+
+.castle-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 6px}.castle-tools button{padding:7px 10px}.castle-tools small{margin-left:auto}
+#castle{scrollbar-width:thin;scrollbar-color:#8163a0 #241a30}
+@media(max-width:650px){
+ body{padding:8px}.wrap{max-width:100%}h1{font-size:22px;margin:6px 0}h1+p{font-size:13px;line-height:1.4;margin:5px 0 10px}
+ .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.toolbar button{padding:9px 5px;font-size:13px}
+ #atmosphere{padding:10px;gap:7px;margin-top:8px;font-size:13px}
+ #atmosphere label{font-size:13px}#atmosphere select,#atmosphere button,#weather-city{font-size:13px!important;padding:6px!important}
+ #atmosphere #weather-city{max-width:120px!important}#atmosphere small{font-size:11px}
+ #castle{padding:5px;border-width:2px;min-height:150px}
+ #castle .floor{grid-template-columns:repeat(6,minmax(0,1fr));min-width:0;gap:2px;padding:3px;margin:5px 0;border-bottom-width:5px}
+ #castle .room,#castle .empty{min-width:0;min-height:85px;padding:12px 2px 4px;border-width:1px}
+ #castle .room .symbol{font-size:19px}#castle .room .name{font-size:10px;overflow-wrap:anywhere;line-height:1.15}
+ #castle .room:after{width:14px;height:19px;border-width:2px;left:6%;top:7px}
+ #castle .room:before{right:3px;font-size:9px}#castle .hero{transform:scale(.7);transform-origin:bottom left;left:2px}
+ #castle .floor-title{font-size:11px}#castle .stairs{font-size:10px}
+ #castle.zoomed .floor{grid-template-columns:repeat(6,minmax(90px,1fr));min-width:580px}
+ #castle.zoomed .room,#castle.zoomed .empty{min-height:120px}
+ #castle.zoomed .room .name{font-size:13px}
+ .panel{padding:10px;margin-top:10px}.panel h2{font-size:17px}.panel p{font-size:13px}
+ .controls{gap:6px;margin:8px 0}.controls button,.controls select{font-size:13px;padding:8px}
+ .castle-tools{font-size:13px}.castle-tools small{flex-basis:100%;margin-left:0}
+ #room-dialog{padding:9px}#room-scene{height:220px}
+}
 </style></head><body><main class="wrap">
 <h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
 <div class="toolbar"><button id="overview" class="active">Обзор</button><button id="walk">Прогулка</button><button id="add-floor">Открыть этаж (демо)</button><button id="reset">Сбросить прототип</button></div>
-<div id="atmosphere" class="panel"><strong id="phase-label">Атмосфера</strong><label>Режим <select id="weather-mode"><option value="fantasy">Магический</option><option value="hybrid">Гибрид</option></select></label><label>Город <input id="weather-city" placeholder="Например, Москва" maxlength="100" style="max-width:150px;background:#2c203c;color:#eee0ff;padding:8px;border:1px solid #8064a5"></label><button id="refresh-weather">Обновить</button><small id="weather-info" role="status"></small><label>Погода <select id="weather"><option value="rain">Дождь</option><option value="clear">Ясно</option><option value="snow">Снег</option><option value="fog">Туман</option></select></label><label><input type="checkbox" id="day-night" checked> Смена времени суток</label><label><input type="checkbox" id="reduce-motion"> Без анимации</label></div><div id="castle" aria-label="План Цитадели"></div>
+<div id="atmosphere" class="panel"><strong id="phase-label">Атмосфера</strong><label>Режим <select id="weather-mode"><option value="fantasy">Магический</option><option value="hybrid">Гибрид</option></select></label><label>Город <input id="weather-city" placeholder="Например, Москва" maxlength="100" style="max-width:150px;background:#2c203c;color:#eee0ff;padding:8px;border:1px solid #8064a5"></label><button id="refresh-weather">Обновить</button><small id="weather-info" role="status"></small><label>Погода <select id="weather"><option value="rain">Дождь</option><option value="clear">Ясно</option><option value="snow">Снег</option><option value="fog">Туман</option></select></label><label><input type="checkbox" id="day-night" checked> Смена времени суток</label><label><input type="checkbox" id="reduce-motion"> Без анимации</label></div><div class="castle-tools"><strong>План замка</strong><button id="castle-zoom" type="button" aria-pressed="false">Увеличить план</button><small id="castle-hint">Нажми на комнату для выбора</small></div><div id="castle" aria-label="План Цитадели"></div>
 <div class="panel"><h2 id="selection-title">Редактор комнат</h2><p id="selection-description">Выбери свободную ячейку для строительства или существующую комнату.</p>
 <div class="controls"><label>Комната <select id="kind"></select></label><button id="build">Построить</button><button id="expand">Расширить на 1</button><button id="go">Направить героя</button></div><div class="controls"><label>Мебель <select id="furniture"></select></label><label>Место <select id="slot"></select></label><button id="place">Разместить</button><button id="remove">Убрать последнюю</button></div><div class="controls"><button id="prev">← Назад</button><button id="next">Вперёд →</button></div><div class="panel"><h2>Обитатели Цитадели</h2><p id="rank-info">Ранг Цитадели: 1</p><label><input id="demo-toggle" type="checkbox"> Режим проверки</label> <label>Ранг <input id="demo-level" type="number" min="1" max="100" value="1" disabled style="width:72px;background:#2c203c;color:#eee0ff;border:1px solid #8064a5;padding:7px"></label><p><small>В обычном режиме используется максимальный ранг из «Заклятия», если игра запускалась на этом же сайте и устройстве.</small></p><div id="npcs" class="npcbar"></div><p id="dialogue">Выбери жителя, чтобы поговорить.</p></div><div id="status" role="status"></div>
 <small>Размеры помещений различаются. Занятые ячейки и закрытые этажи недоступны. Состояние сохраняется только в браузере прототипа.</small></div>
@@ -159,6 +183,7 @@ document.getElementById('refresh-weather').onclick=async function(){var city=doc
 document.getElementById('weather').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.weather.selected=this.value;commit(next);};
 document.getElementById('day-night').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.settings.dayNight=this.checked;commit(next);};
 document.getElementById('reduce-motion').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.settings.reducedMotion=this.checked;commit(next);};
+document.getElementById('castle-zoom').onclick=function(){var zoomed=castle.classList.toggle('zoomed');this.textContent=zoomed?'Уместить весь план':'Увеличить план';this.setAttribute('aria-pressed',String(zoomed));document.getElementById('castle-hint').textContent=zoomed?'Проведи пальцем влево или вправо':'Нажми на комнату для выбора';};
 document.getElementById('overview').onclick=function(){mode='overview';render();};
 document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Нажми на комнату, чтобы войти внутрь и перемещаться по интерьеру.');render();};
 document.getElementById('add-floor').onclick=function(){var next=JSON.parse(JSON.stringify(state));var f=next.floors.find(function(x){return !x.unlocked;});if(f)f.unlocked=true;else next.floors.push({id:'f'+next.floors.length,capacity:6,unlocked:true});commit(next);announce('Этаж открыт в демонстрационном режиме.');};
