@@ -799,10 +799,11 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <h2>ВЕРСИЯ 0.52</h2>
-    <div class="hint">Сборка 0891e8</div>
+    <h2>ВЕРСИЯ 0.53</h2>
+    <div class="hint">Сборка 163276</div>
     <div class="goal vhist">
-      <div class="hint"><b>0.52</b> · 30.10 · Судьбоносная отметина «Услышанный Бездной»: титул, 17 осколков и комплект тёмного оформления «Голос из Бездны»</div>
+      <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
+      <div class="hint"><b>0.52</b> · 30.10 · Новая тайна Заклятия и оформление в духе тёмного фэнтези</div>
       <div class="hint"><b>0.51</b> · 28.10 · Все названия в духе Заклятия: осколки души, ранги, ядра души, Воспоминания, Аспекты, отметины, убежище, оболочка. Монетка стала осколком души</div>
       <div class="hint"><b>0.50</b> · 28.10 · Испытания Заклятия: случайные физические задания с красным таймером, награда и штраф; пять судьбоносных отметин с титулами, оформлением и предметами; оформление «Заклятие» как награда</div>
       <div class="hint"><b>0.46</b> · 27.10 · Одна задача гигиены вместо двух; очки за ступени Аспектов убраны</div>
@@ -870,7 +871,7 @@ html,body{overflow-anchor:none}
   </div>
 </div>
 
-<script>window.APP_VERSION = "0.52";
+<script>window.APP_VERSION = "0.53";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -1462,7 +1463,7 @@ html,body{overflow-anchor:none}
     { id: 'z30', title: 'ПЕРЕПИСАВШИЙ СУДЬБУ', val: 'trialTop', goal: 1, d: 'Пройти Испытание высшего ранга', pts: 45, cos: 'fr_shard' },
     { id: 'z31', title: 'ПРОКЛЯТЫЙ', val: 'trialFailHigh', goal: 1, d: 'Провалить тяжёлое Испытание', pts: 6, cos: 'b_chamber' },
     { id: 'z32', title: 'ДИТЯ ТЕНЕЙ', val: 'trialWin', goal: 3, d: 'Пройти несколько Испытаний Заклятия', pts: 35, cos: 'fo_curse' },
-    { id: 'z33', title: 'УСЛЫШАННЫЙ БЕЗДНОЙ', ev: 1, d: 'Призвать Заклятие семь раз, коснувшись его имени за восемь секунд', pts: 17, cos: 'th_abyss' },
+    { id: 'z33', title: 'УСЛЫШАННЫЙ БЕЗДНОЙ', ev: 1, d: 'Заклятие ответило на зов', pts: 0, cos: 'th_abyss' },
     { id: 'z18', title: 'ПАЛИНДРОМ', ev: 1, d: 'Открыть приложение ровно в 10:01, 15:51, 20:02 или 21:12', pts: 12, cos: 'p_mirror' }
   ];
 
@@ -3167,7 +3168,7 @@ html,body{overflow-anchor:none}
     function rewardText(id, pts, title) {
       var c = cosOf(id), t = 'Награда: +' + pts + ' ' + plural(pts, 'осколок', 'осколка', 'осколков');
       if (title) t += ', титул «' + title + '»';
-      if (id === 'z33') return t + ', комплект «Голос из Бездны»: цвет, фон убежища, рамка и аура. Всё можно выбрать в «Настройки → Оформление».';
+      if (id === 'z33') return 'Заклятие признало твой зов. Остальное ты узнаешь сам.';
       if (c && COS[c]) t += ', новое оформление: ' + ({ theme: 'цвет', bg: 'фон убежища', coin: 'форма осколка', bar: 'шкала души', fx: 'эффект нажатия', lv: 'эффект нового ранга', frame: 'рамка убежища', aura: 'аура персонажа', font: 'стиль текста', snd: 'звуки', pat: 'узор фона', chk: 'галочка', tab: 'вкладки' }[COS[c].cat]) + ' «' + COS[c].n + '». Выбрать можно ниже в разделе «Оформление».';
       else t += '.';
       if (ROOM_OF[id]) t = t.replace(/\.$/, '') + '; в убежище появился предмет «' + ROOM_ITEMS[ROOM_OF[id]].n + '».';
@@ -3267,7 +3268,7 @@ html,body{overflow-anchor:none}
     var open = 0;
     LEG.forEach(function (G) {
       var d = lastGI.ach[G.id], cc = G.cos;
-      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (G.id === 'z33' ? ' · полный комплект «Голос из Бездны»' : cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : '') + (ROOM_OF[G.id] ? ' · предмет «' + ROOM_ITEMS[ROOM_OF[G.id]].n + '»' : ''), '+' + G.pts, true, null, true)); }
+      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (G.id === 'z33' ? '' : cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : '') + (ROOM_OF[G.id] ? ' · предмет «' + ROOM_ITEMS[ROOM_OF[G.id]].n + '»' : ''), G.pts ? '+' + G.pts : '✓', true, null, true)); }
       else if (lastGI.slots[G.id] && !G.ev) {
         var v = Math.min(lastGI.st[G.val] || 0, G.goal);
         box.appendChild(questButton('Суперредкая цель: ' + G.d, (G.goal > 1 ? fmt(v) + ' из ' + fmt(G.goal) : 'ещё не выполнено') + ' · награда секретная', '+?', false, null, true));
@@ -3282,7 +3283,7 @@ html,body{overflow-anchor:none}
       }
     });
     for (var qi = 0; qi < 11; qi++) box.appendChild(questButton('???', '', '+?', false, null, true));
-    $('ach-h').textContent = open ? 'ДОСТИЖЕНИЯ: ОТКРЫТО ' + open : 'ДОСТИЖЕНИЯ';
+    $('ach-h').textContent = 'ОТМЕТИНЫ';
     updateNameTag();
     renderLook();
   }
