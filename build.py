@@ -67,7 +67,9 @@ for f in ['manifest.json', 'config.js', 'localdb.js', 'privacy.html']:
 citadel = open('prototype/citadel.html', encoding='utf-8').read()
 for name in ['citadel.js', 'citadel-life.js', 'citadel-weather.js']:
     shutil.copy(f'{SRC}/{name}', f'{DIST}/{name}')
-    citadel = citadel.replace(f'../src/{name}', name)
+    # Встраиваем код в HTML: тестовая страница работает даже из локального ZIP/файла.
+    source = open(f'{SRC}/{name}', encoding='utf-8').read()
+    citadel = citadel.replace(f'<script src="../src/{name}"></script>', '<script>\\n' + source + '\\n</script>')
 citadel = citadel.replace('</head>', '<meta name="theme-color" content="#100c18"></head>')
 open(f'{DIST}/citadel.html', 'w', encoding='utf-8').write(citadel)
 
