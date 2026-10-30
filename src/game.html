@@ -2180,6 +2180,12 @@ html,body{overflow-anchor:none}
     $('pts').textContent = fmtP(p.P);
     $('goal').textContent = '/ ' + p.need;
     $('lvl').textContent = 'РАНГ ' + p.L;
+    // Независимый мост прогресса Цитадели. Не изменяет игровые данные.
+    try {
+      var citadelRank = Number(localStorage.getItem('plan.citadel.maxRank.v1')) || 1;
+      if (p.L > citadelRank) localStorage.setItem('plan.citadel.maxRank.v1', String(p.L));
+    } catch (citadelError) {}
+
     $('left').textContent = 'До ранга ' + (p.L + 1) + ': ' + fmtP(p.need - p.P);
     $('upg').textContent = String(Math.max(0, p.avail));
     $('upg2').textContent = String(Math.max(0, p.avail));
