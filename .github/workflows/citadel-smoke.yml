@@ -32,7 +32,7 @@ jobs:
           for name in ('citadel.js', 'citadel-life.js', 'citadel-weather.js', 'sw.js'):
               assert Path('docs', name).is_file(), name
           game = Path('docs/index.html').read_text(encoding='utf-8')
-          for marker in ('id="citadel-castle"', 'id="citadel-avatar-canvas"', 'id="citadel-interior-hero"', 'function citadelMove(', 'function syncCitadelAvatar(', 'id="citadel-live-cash"', 'function citadelRenderDecor(', 'function citadelInspectObject(', 'id="citadel-decor-options"', 'function citadelRenderActivities(', 'function citadelNpcSpeak(', 'id="citadel-activity-actions"'):
+          for marker in ('id="citadel-castle"', 'id="citadel-avatar-canvas"', 'id="citadel-interior-hero"', 'function citadelMove(', 'function syncCitadelAvatar(', 'id="citadel-live-cash"', 'function citadelRenderDecor(', 'function citadelInspectObject(', 'id="citadel-decor-options"', 'function citadelRenderActivities(', 'function citadelNpcSpeak(', 'id="citadel-activity-actions"', 'function citadelSyncWeekly(', 'function citadelSyncDaily(', 'function citadelNavigate(', 'function citadelSyncTrial('):
               assert marker in game, marker
           assert 'id="citadel-frame"' not in game
           assert 'data-t="citadel"' not in game
@@ -48,7 +48,7 @@ jobs:
           import re
           from pathlib import Path
           html = Path('docs/index.html').read_text(encoding='utf-8')
-          scripts = re.findall(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>', html, re.I)
+          scripts = re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', html, re.I)
           assert scripts
           for i, source in enumerate(scripts):
               Path('/tmp/citadel-inline-%d.js' % i).write_text(source, encoding='utf-8')
