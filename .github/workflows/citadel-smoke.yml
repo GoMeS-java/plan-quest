@@ -1,0 +1,41 @@
+name: Citadel prototype smoke test
+on:
+  pull_request:
+    paths:
+      - 'src/citadel*.js'
+      - 'prototype/citadel.html'
+      - 'build.py'
+      - '.github/workflows/citadel-smoke.yml'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - name: Build and verify Citadel assets
+        run: |
+          python build.py
+          python - <<'PY'
+          from pathlib import Path
+          page = Path('docs/citadel.html').read_text(encoding='utf-8')
+          assert '<script src="citadel.js"></script>' in page
+          assert '<script src="citadel-life.js"></script>' in page
+          assert '<script src="citadel-weather.js"></script>' in page
+          assert '../src/' not in page
+          for name in ('citadel.js', 'citadel-life.js', 'citadel-weather.js', 'sw.js'):
+              assert Path('docs', name).is_file(), name
+          print('Citadel assets and relative paths verified')
+          PY
+      - name: JavaScript syntax checks
+        run: |
+          node --check docs/citadel.js
+          node --check docs/citadel-life.js
+          node --check docs/citadel-weather.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: citadel-test-build
+          path: docs/
