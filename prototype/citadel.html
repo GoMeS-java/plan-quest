@@ -13,21 +13,21 @@ button:focus-visible{outline:2px solid #dfbaff}button.active{background:#694b91}
 .room:before{content:'✦';position:absolute;top:4px;right:8px;color:#bd95ed}.room.selected{outline:3px solid #edc57e}.room .symbol{font-size:28px}.room .name{font-size:13px}.empty{border:1px dashed #766483;min-height:118px;background:#22192c;color:#9d8bae}
 .panel{border:1px solid #59436d;background:#1c1428;border-radius:12px;padding:16px;margin-top:16px}.panel h2{margin-top:0;font-size:18px}
 small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opacity:.6}.mode-walk .room.hero-room{opacity:1;outline:3px solid #8cc8e8}
-.hero{position:absolute;bottom:6px;left:12px;font-size:21px;filter:drop-shadow(0 0 5px #b17bff)}
+.furn{display:flex;flex-wrap:wrap;gap:3px}.furn span{border:1px solid #a286b8;padding:2px;font-size:14px}.hero{position:absolute;bottom:6px;left:12px;font-size:21px;filter:drop-shadow(0 0 5px #b17bff)}
 @media(max-width:550px){body{padding:10px}h1{font-size:20px}.panel{padding:12px}}
 </style></head><body><main class="wrap">
 <h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
 <div class="toolbar"><button id="overview" class="active">Обзор</button><button id="walk">Прогулка</button><button id="add-floor">Открыть этаж (демо)</button><button id="reset">Сбросить прототип</button></div>
 <div id="castle" aria-label="План Цитадели"></div>
 <div class="panel"><h2 id="selection-title">Редактор комнат</h2><p id="selection-description">Выбери свободную ячейку для строительства или существующую комнату.</p>
-<div class="controls"><label>Комната <select id="kind"></select></label><button id="build">Построить</button><button id="expand">Расширить на 1</button><button id="go">Направить героя</button></div><div id="status" role="status"></div>
+<div class="controls"><label>Комната <select id="kind"></select></label><button id="build">Построить</button><button id="expand">Расширить на 1</button><button id="go">Направить героя</button></div><div class="controls"><label>Мебель <select id="furniture"></select></label><label>Место <select id="slot"></select></label><button id="place">Разместить</button><button id="remove">Убрать последнюю</button></div><div class="controls"><button id="prev">← Назад</button><button id="next">Вперёд →</button></div><div id="status" role="status"></div>
 <small>Размеры помещений различаются. Занятые ячейки и закрытые этажи недоступны. Состояние сохраняется только в браузере прототипа.</small></div>
 </main><script src="../src/citadel.js"></script><script>
 (function(){
 'use strict';
 var model=window.Citadel, state=model.load(), selected=null, mode='overview';
 var symbols={throne:'♛',quarters:'☾',study:'✒',wardrobe:'♧',gallery:'✧',lounge:'♨',training:'⚔',archive:'▤',treasury:'◆',workshop:'⚒'};
-var castle=document.getElementById('castle'),status=document.getElementById('status'),kind=document.getElementById('kind');
+var castle=document.getElementById('castle'),status=document.getElementById('status'),kind=document.getElementById('kind'),furniture=document.getElementById('furniture'),slot=document.getElementById('slot');Object.keys(model.furniture).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=model.furniture[k].name;furniture.appendChild(o);});
 Object.keys(model.rooms).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=model.rooms[k].name+' ('+model.rooms[k].size+')';kind.appendChild(o);});
 function announce(t){status.textContent=t;}
 function commit(next){state=next;model.save(state);render();}
@@ -42,7 +42,7 @@ if(room){var tile=document.createElement('button');tile.className='room';tile.st
 if(selected&&selected.id===room.id)tile.classList.add('selected');
 if(state.hero.roomId===room.id)tile.classList.add('hero-room');
 var s=document.createElement('span');s.className='symbol';s.textContent=symbols[room.kind]||'✦';tile.appendChild(s);
-var n=document.createElement('span');n.className='name';n.textContent=model.rooms[room.kind].name;tile.appendChild(n);
+var n=document.createElement('span');n.className='name';n.textContent=model.rooms[room.kind].name;tile.appendChild(n);var items=document.createElement('span');items.className='furn';(room.items||[]).forEach(function(item){var marker=document.createElement('span');marker.title=model.furniture[item.kind]?model.furniture[item.kind].name:item.kind;marker.textContent=model.furniture[item.kind]?model.furniture[item.kind].symbol:'?';items.appendChild(marker);});tile.appendChild(items);
 if(state.hero.roomId===room.id){var h=document.createElement('span');h.className='hero';h.textContent='♟';tile.appendChild(h);}
 tile.onclick=function(){selected={id:room.id};render();};floor.appendChild(tile);i+=room.size-1;
 }else if(!state.rooms.some(function(r){return r.floor===f.id&&i>=r.start&&i<r.start+r.size;})){
@@ -57,15 +57,20 @@ document.getElementById('selection-title').textContent=room?model.rooms[room.kin
 document.getElementById('selection-description').textContent=room?'Этаж '+room.floor+', размер '+room.size+', уровень '+room.level:selected&&selected.floor?'Этаж '+selected.floor+', позиция '+(selected.start+1):'Выбери комнату или свободное место.';
 document.getElementById('build').disabled=!selected||!selected.floor||mode==='walk';
 document.getElementById('expand').disabled=!room||mode==='walk';
-document.getElementById('go').disabled=!room;
+document.getElementById('go').disabled=!room;document.getElementById('place').disabled=!room||mode==='walk';document.getElementById('remove').disabled=!room||!(room.items||[]).length||mode==='walk';slot.textContent='';if(room)for(var z=0;z<room.size*2;z++){var opt=document.createElement('option');opt.value=String(z);opt.textContent='Место '+(z+1);opt.disabled=(room.items||[]).some(function(item){return item.slot===z;});slot.appendChild(opt);}document.getElementById('prev').disabled=mode!=='walk';document.getElementById('next').disabled=mode!=='walk';
 document.getElementById('overview').classList.toggle('active',mode==='overview');
 document.getElementById('walk').classList.toggle('active',mode==='walk');
 }
 document.getElementById('build').onclick=function(){try{commit(model.addRoom(state,kind.value,selected.floor,selected.start));selected=null;announce('Комната построена.');render();}catch(e){announce(e.message);}};
 document.getElementById('expand').onclick=function(){try{var r=state.rooms.find(function(x){return x.id===selected.id;});commit(model.expandRoom(state,r.id,r.size+1));announce('Комната расширена.');}catch(e){announce(e.message);}};
+document.getElementById('place').onclick=function(){try{commit(model.placeFurniture(state,selected.id,furniture.value,Number(slot.value)));announce('Мебель размещена.');}catch(e){announce(e.message);}};
+document.getElementById('remove').onclick=function(){try{var room=state.rooms.find(function(r){return r.id===selected.id;});commit(model.removeFurniture(state,room.id,room.items[room.items.length-1].id));announce('Предмет убран.');}catch(e){announce(e.message);}};
+function walkStep(direction){var rooms=state.rooms.slice().sort(function(a,b){return a.floor.localeCompare(b.floor)||a.start-b.start;});var index=rooms.findIndex(function(r){return r.id===state.hero.roomId;});var target=rooms[index+direction];if(!target){announce('Дальше прохода нет.');return;}var next=JSON.parse(JSON.stringify(state));next.hero.roomId=target.id;selected={id:target.id};commit(next);announce('Герой вошёл: '+model.rooms[target.kind].name);}
+document.getElementById('prev').onclick=function(){walkStep(-1);};
+document.getElementById('next').onclick=function(){walkStep(1);};
 document.getElementById('go').onclick=function(){if(!selected||!selected.id)return;var next=JSON.parse(JSON.stringify(state));next.hero.roomId=selected.id;commit(next);announce('Герой перешёл в выбранную комнату.');};
 document.getElementById('overview').onclick=function(){mode='overview';render();};
-document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Свободное движение появится на следующем этапе.');render();};
+document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Используй стрелки для перехода между построенными комнатами.');render();};
 document.getElementById('add-floor').onclick=function(){var next=JSON.parse(JSON.stringify(state));var f=next.floors.find(function(x){return !x.unlocked;});if(f)f.unlocked=true;else next.floors.push({id:'f'+next.floors.length,capacity:6,unlocked:true});commit(next);announce('Этаж открыт в демонстрационном режиме.');};
 document.getElementById('reset').onclick=function(){if(!confirm('Сбросить только прототип Цитадели?'))return;selected=null;commit(model.initial());announce('Прототип сброшен.');};
 render();
