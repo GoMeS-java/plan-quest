@@ -1,7 +1,7 @@
 /* Опциональная реальная погода: без геолокации, с офлайн-резервом. */
 (function(root){
 'use strict';
-var CACHE_KEY='plan.citadel.weather.v1';
+var CACHE_KEY='plan.citadel.weather.v1';var CITY_KEY='plan.citadel.weather.city.v1';
 function mapCode(code){
  if(code===0||code===1)return 'clear';
  if(code===2||code===3||code===45||code===48)return 'fog';
@@ -26,7 +26,8 @@ async function lookup(city){
  var data=await forecast.json();
  if(!data.current||!Number.isFinite(Number(data.current.weather_code)))throw Error('Нет данных о погоде.');
  var result={city:place.name,country:place.country||'',weather:mapCode(Number(data.current.weather_code)),code:Number(data.current.weather_code),fetchedAt:Date.now()};
- save(result);return result;
+ save(result);try{root.localStorage.setItem(CITY_KEY,city);}catch(_){}return result;
 }
-root.CitadelWeather=Object.freeze({lookup:lookup,cached:cached,mapCode:mapCode});
+function savedCity(){try{return root.localStorage.getItem(CITY_KEY)||'';}catch(_){return '';}}
+root.CitadelWeather=Object.freeze({lookup:lookup,cached:cached,mapCode:mapCode,savedCity:savedCity});
 })(window);
