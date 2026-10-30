@@ -63,8 +63,16 @@ icon(512, .62).save(f'{DIST}/icon-512-maskable.png')
 for f in ['manifest.json', 'config.js', 'localdb.js', 'privacy.html']:
     shutil.copy(f'{SRC}/{f}', f'{DIST}/{f}')
 
+# --- Отдельная тестовая Цитадель (не заменяет основную игру)
+citadel = open('prototype/citadel.html', encoding='utf-8').read()
+for name in ['citadel.js', 'citadel-life.js', 'citadel-weather.js']:
+    shutil.copy(f'{SRC}/{name}', f'{DIST}/{name}')
+    citadel = citadel.replace(f'../src/{name}', name)
+citadel = citadel.replace('</head>', '<meta name="theme-color" content="#100c18"></head>')
+open(f'{DIST}/citadel.html', 'w', encoding='utf-8').write(citadel)
+
 # --- sw.js с версией = хэш содержимого
-shell = ['./', 'index.html', 'manifest.json', 'config.js', 'localdb.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png']
+shell = ['./', 'index.html', 'manifest.json', 'config.js', 'localdb.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
 h = hashlib.sha256()
 for f in sorted(set(shell) - {'./'}):
     h.update(open(f'{DIST}/{f}', 'rb').read())
