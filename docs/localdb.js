@@ -16,7 +16,7 @@
   var docs = {};      // path -> {d, u}
   var meta = {};      // fileId, lastSync, user
   var subs = [];      // {path|col, kind, cb}
-  var dirty = false;
+  var dirty = false, revision = 0;
 
   function jget(k, def) { try { var s = localStorage.getItem(k); return s ? JSON.parse(s) : def; } catch (e) { return def; } }
   function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
@@ -73,7 +73,7 @@
       if (result && typeof result.then === 'function') throw new Error('Transaction callback must be synchronous');
       if (changed) {
         if (!jset(KEY, { v: 1, docs: next })) { var error = new Error('Storage unavailable'); error.code = 'quota_exceeded'; throw error; }
-        docs = next; dirty = true; notify(); scheduleSync();
+        docs = next; dirty = true; revision++; notify(); scheduleSync();
       }
       return result;
     }
@@ -82,7 +82,7 @@
   }
   function write(p, d) { return mutate(function (tx) { tx.set(p, d); }); }
   window.addEventListener('storage', function (e) {
-    if (e.key === KEY) { docs = (jget(KEY, { docs: {} }) || {}).docs || {}; notify(); }
+    if (e.key === KEY) { docs = (jget(KEY, { docs: {} }) || {}).docs || {}; dirty = true; revision++; notify(); scheduleSync(); }
   });
 
   var db = {
@@ -135,7 +135,7 @@
     } else if (o && o.docs) {
       var m = merge(o); n = Object.keys(o.docs).length; void m;
     } else throw new Error('bad format');
-    save(); dirty = true; notify(); scheduleSync();
+    save(); dirty = true; revision++; notify(); scheduleSync();
     return n;
   }
 
@@ -232,10 +232,14 @@
     return rows;
   }
   function writeAll(id) {
-    var rows = rowsOut();
+    var rows = rowsOut(), sentRevision = revision;
     return api('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + TAB + '!A1:C' + rows.length + '?valueInputOption=RAW', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ range: TAB + '!A1:C' + rows.length, majorDimension: 'ROWS', values: rows })
+    }).then(function (response) {
+      // Запись, сделанная во время HTTP-запроса, ещё не попала в отправленные строки.
+      dirty = revision !== sentRevision;
+      return response;
     });
   }
   function createFile() {
@@ -250,6 +254,7 @@
 
   function sync(interactive) {
     if (busy) return waiting || Promise.resolve();
+    var succeeded = false;
     busy = true; setStatus('Синхронизация…', 'work');
     waiting = getToken(!!interactive).then(function () { return findFile(); }).then(function (id) {
       if (!id) return createFile().then(function () { return { created: true }; });
@@ -259,7 +264,7 @@
         return m;
       });
     }).then(function () {
-      dirty = false; meta.lastSync = Date.now(); saveMeta();
+      succeeded = true; meta.lastSync = Date.now(); saveMeta();
       setStatus('', 'ok');
     }).catch(function (e) {
       var m = e && e.message;
@@ -267,7 +272,7 @@
       else if (m === 'offline' || m === 'Failed to fetch') setStatus('Нет сети: всё сохранено на телефоне', 'off');
       else if (m === 'auth' || m === 'popup_closed' || m === 'popup_failed_to_open' || m === 'access_denied' || m === 'interaction_required') setStatus('Нужно войти в Google', 'warn');
       else setStatus('Не удалось синхронизировать', 'warn');
-    }).then(function () { busy = false; waiting = null; });
+    }).then(function () { busy = false; waiting = null; renderChip(); if (succeeded && dirty && haveToken() && navigator.onLine) scheduleSync(); });
     return waiting;
   }
   function scheduleSync() {
