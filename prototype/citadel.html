@@ -10,10 +10,10 @@ button:focus-visible{outline:2px solid #dfbaff}button.active{background:#694b91}
 #castle{overflow-x:auto;border:3px solid #604579;background:linear-gradient(#241a39,#151020);border-radius:12px;padding:20px;min-height:290px}
 .floor{display:grid;grid-template-columns:repeat(6,minmax(94px,1fr));gap:4px;min-width:610px;margin:8px 0;padding:7px;background:#33263e;border-bottom:8px solid #746078}
 .floor-title{grid-column:1/-1;color:#ccb5e5;font-size:12px}.room{border:2px solid #7c5d9e;border-radius:4px;min-height:118px;background:linear-gradient(#3a2a4d,#21182c);position:relative;text-align:center;padding:18px 5px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
-.room:before{content:'✦';position:absolute;top:4px;right:8px;color:#bd95ed}.room.selected{outline:3px solid #edc57e}.room .symbol{font-size:28px}.room .name{font-size:13px}.empty{border:1px dashed #766483;min-height:118px;background:#22192c;color:#9d8bae}
+.room{overflow:hidden;background:repeating-linear-gradient(0deg,transparent 0 23px,#372842 24px 25px),repeating-linear-gradient(90deg,#35273f 0 46px,#493450 47px 49px);box-shadow:inset 0 -12px #241829,inset 0 8px #5d4767}.room:after{content:' ';position:absolute;left:14%;top:12px;width:26px;height:34px;border:4px solid #705681;border-radius:14px 14px 0 0;background:linear-gradient(#54416e,#252139);box-shadow:inset 0 0 10px #9472b8;pointer-events:none}.room:before{content:'✦';position:absolute;top:4px;right:8px;color:#bd95ed}.room.selected{outline:3px solid #edc57e}.room .symbol{font-size:28px}.room .name{font-size:13px}.empty{border:1px dashed #766483;min-height:118px;background:#22192c;color:#9d8bae}
 .panel{border:1px solid #59436d;background:#1c1428;border-radius:12px;padding:16px;margin-top:16px}.panel h2{margin-top:0;font-size:18px}
 small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opacity:.6}.mode-walk .room.hero-room{opacity:1;outline:3px solid #8cc8e8}
-.furn{display:flex;flex-wrap:wrap;gap:3px}.furn span{border:1px solid #a286b8;padding:2px;font-size:14px}.hero{position:absolute;bottom:6px;left:12px;font-size:21px;filter:drop-shadow(0 0 5px #b17bff)}
+.furn{display:flex;flex-wrap:wrap;gap:3px}.furn span{border:1px solid #a286b8;padding:2px;font-size:14px}.hero{position:absolute;bottom:8px;left:12px;width:16px;height:28px;font-size:0;background:linear-gradient(#2c2039 0 30%,#9571ba 30% 39%,#24152e 39%);border:2px solid #b08ace;clip-path:polygon(25% 0,75% 0,100% 45%,85% 100%,15% 100%,0 45%);filter:drop-shadow(0 0 5px #b17bff);animation:hero-idle 1.4s steps(2) infinite;transition:left .28s linear}.hero.walking{animation:hero-walk .25s steps(2) infinite}@keyframes hero-idle{50%{transform:translateY(-2px)}}@keyframes hero-walk{50%{transform:translateY(-4px) rotate(3deg)}}.floor{position:relative}.floor:after{content:' ';position:absolute;bottom:0;left:0;right:0;height:5px;background:repeating-linear-gradient(90deg,#b08b63 0 30px,#6b4b56 31px 34px)}.stairs{position:absolute;right:8px;bottom:5px;color:#c8a6ed;pointer-events:none;font-size:16px}@media(prefers-reduced-motion:reduce){.hero{animation:none!important;transition:none!important}}
 @media(max-width:550px){body{padding:10px}h1{font-size:20px}.panel{padding:12px}}
 </style></head><body><main class="wrap">
 <h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
@@ -35,7 +35,7 @@ function render(){
 castle.textContent='';castle.classList.toggle('mode-walk',mode==='walk');
 state.floors.slice().reverse().forEach(function(f){
 var floor=document.createElement('div');floor.className='floor';
-var label=document.createElement('div');label.className='floor-title';label.textContent=f.id+' · '+(f.unlocked?'Открыт':'Закрыт');floor.appendChild(label);
+var label=document.createElement('div');label.className='floor-title';label.textContent=f.id+' · '+(f.unlocked?'Открыт':'Закрыт');floor.appendChild(label);if(f.unlocked){var stair=document.createElement('span');stair.className='stairs';stair.textContent='▤';stair.title='Лестничный переход (декорация прототипа)';floor.appendChild(stair);}
 for(var i=0;i<f.capacity;i++){
 var start=i,room=state.rooms.find(function(r){return r.floor===f.id&&r.start===start;});
 if(room){var tile=document.createElement('button');tile.className='room';tile.style.gridColumn='span '+room.size;
@@ -70,7 +70,7 @@ document.getElementById('prev').onclick=function(){walkStep(-1);};
 document.getElementById('next').onclick=function(){walkStep(1);};
 document.getElementById('go').onclick=function(){if(!selected||!selected.id)return;var next=JSON.parse(JSON.stringify(state));next.hero.roomId=selected.id;commit(next);announce('Герой перешёл в выбранную комнату.');};
 document.getElementById('overview').onclick=function(){mode='overview';render();};
-document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Используй стрелки для перехода между построенными комнатами.');render();};
+document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Используй стрелки для перехода между комнатами. Переходы пока мгновенные.');render();};
 document.getElementById('add-floor').onclick=function(){var next=JSON.parse(JSON.stringify(state));var f=next.floors.find(function(x){return !x.unlocked;});if(f)f.unlocked=true;else next.floors.push({id:'f'+next.floors.length,capacity:6,unlocked:true});commit(next);announce('Этаж открыт в демонстрационном режиме.');};
 document.getElementById('reset').onclick=function(){if(!confirm('Сбросить только прототип Цитадели?'))return;selected=null;commit(model.initial());announce('Прототип сброшен.');};
 render();
