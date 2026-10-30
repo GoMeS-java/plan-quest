@@ -7,6 +7,9 @@ on:
       - 'src/citadel*.js'
       - 'src/game.html'
       - 'src/localdb.js'
+      - 'src/config*.js'
+      - 'src/sw.template.js'
+      - 'src/manifest.json'
       - 'prototype/citadel.html'
       - 'build.py'
       - 'tests/**'
@@ -99,6 +102,11 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
           npm test
+      - name: Isolated Android PWA safety tests
+        run: |
+          python build.py --test
+          npm run test:isolation
+          git diff --exit-code -- docs/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -108,3 +116,7 @@ jobs:
         with:
           name: citadel-test-build
           path: docs/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-isolated-test-build
+          path: android-test/

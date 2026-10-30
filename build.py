@@ -3,14 +3,18 @@
 import hashlib, json, os, re, shutil, sys
 from PIL import Image, ImageDraw
 
-SRC = 'src'; DIST = 'docs'
+if any(arg != '--test' for arg in sys.argv[1:]):
+    raise SystemExit('Usage: python build.py [--test]')
+TEST = '--test' in sys.argv
+SRC = 'src'; DIST = 'android-test' if TEST else 'docs'
+config_source = 'config.test.js' if TEST else 'config.js'
 if os.path.exists(DIST): shutil.rmtree(DIST)
 os.makedirs(DIST)
 
 # --- index.html
 g = open(f'{SRC}/game.html', encoding='utf-8').read()
 g = g.replace('__VER__', open(f'{SRC}/version.txt', encoding='utf-8').read().strip())
-build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'citadel-world.js', 'sw.template.js', 'config.js'])).encode()).hexdigest()[:12]
+build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'citadel-world.js', 'sw.template.js', 'manifest.json', config_source]) + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
 g = g.replace('__BUILD__', build_id)
 i = g.index('</style>') + len('</style>')
 head_part, body_part = g[:i], g[i:]
@@ -25,6 +29,13 @@ html = ('<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
         '<script src="config.js"></script><script src="localdb.js"></script>\n'
         + head_part + '</head><body>' + body_part + '\n</body></html>\n')
 open(f'{DIST}/index.html', 'w', encoding='utf-8').write(html)
+
+if TEST:
+    page = open(f'{DIST}/index.html', encoding='utf-8').read()
+    page = re.sub(r'<title>.*?</title>', '<title>Заклятие Кошмара · ТЕСТ</title>', page, count=1)
+    page = page.replace('Они доступны на всех твоих устройствах.', 'В тестовой версии они хранятся отдельно на этом устройстве; сохраняйте резервные копии.')
+    page = page.replace('<body>', '<body><div role="status" style="padding:10px;background:#422d0a;color:#fff;text-align:center;font:16px sans-serif">ТЕСТОВАЯ ВЕРСИЯ · Отдельные сохранения</div>', 1)
+    open(f'{DIST}/index.html', 'w', encoding='utf-8').write(page)
 
 # --- pixel-иконка
 def icon(size, safe):
@@ -63,7 +74,13 @@ icon(512, .82).save(f'{DIST}/icon-512.png')
 icon(512, .62).save(f'{DIST}/icon-512-maskable.png')
 
 for f in ['manifest.json', 'config.js', 'localdb.js', 'privacy.html', 'citadel-world.js']:
-    shutil.copy(f'{SRC}/{f}', f'{DIST}/{f}')
+    source_name = config_source if f == 'config.js' else f
+    shutil.copy(f'{SRC}/{source_name}', f'{DIST}/{f}')
+
+if TEST:
+    manifest = json.load(open(f'{DIST}/manifest.json', encoding='utf-8'))
+    manifest.update(name='Заклятие Кошмара · ТЕСТ', short_name='Кошмар ТЕСТ', id='./android-test')
+    open(f'{DIST}/manifest.json', 'w', encoding='utf-8').write(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
 
 # --- Отдельная тестовая Цитадель (не заменяет основную игру)
 citadel = open('prototype/citadel.html', encoding='utf-8').read()

@@ -8,10 +8,18 @@
 (function () {
   'use strict';
   var CFG = window.PLAN_CONFIG || {};
-  var KEY = 'plan.store.v1';
-  var META = 'plan.meta.v1';
-  var UPGRADE = 'plan.pre-update.v1';
-  var RECOVERY = 'plan.recovery.v1', CONFLICT = 'plan.conflict.v1';
+  var PREFIX = CFG.testMode ? 'plan.android-test.' : 'plan.';
+  var KEY = PREFIX + 'store.v1';
+  var META = PREFIX + 'meta.v1';
+  var UPGRADE = PREFIX + 'pre-update.v1';
+  var RECOVERY = PREFIX + 'recovery.v1', CONFLICT = PREFIX + 'conflict.v1';
+  var TOKEN_KEY = PREFIX + 'tok';
+  // The isolated Android build has no cloud access until a separate OAuth
+  // client and its exact HTTPS origin have been explicitly configured.
+  var cloudAllowed = !CFG.testMode || (CFG.cloudEnabled === true &&
+    CFG.clientId && CFG.clientId !== CFG.productionClientId &&
+    /^https:\/\//.test(CFG.allowedOrigin || '') && CFG.allowedOrigin === location.origin &&
+    CFG.fileName === 'plan-data-android-test');
   var FILE_NAME = CFG.fileName || 'plan-data';
   var SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
@@ -189,7 +197,8 @@
     } else if (o && o.docs) incoming = o.docs;
     else return Promise.reject(new Error('bad format'));
     try { incoming = clone(validDocs(incoming)); } catch (e) { return Promise.reject(e); }
-    if (restore) return exclusive(function () {
+    if (restore) return syncExclusive(function () { return exclusive(function () {
+      meta = jget(META, {}) || {};
       var local = persistedDocs(), next = {}, now = Date.now();
       recovery(local, incoming);
       Object.keys(Object.assign({}, local, incoming)).forEach(function (p) {
@@ -202,12 +211,14 @@
       docs = next; dirty = true; revision++; notify();
       localStorage.removeItem(CONFLICT); pendingConflict = null; renderChip();
       return Object.keys(incoming).length;
-    });
+    }); });
     return merge({ docs: incoming }).then(function () { dirty = true; revision++; notify(); scheduleSync(); return Object.keys(incoming).length; });
   }
   function resolveConflict(choice) {
     if (!pendingConflict || ['local', 'remote'].indexOf(choice) < 0) return Promise.reject(new Error('conflict'));
-    return exclusive(function () {
+    return syncExclusive(function () { return exclusive(function () {
+      pendingConflict = jget(CONFLICT, null);
+      if (!pendingConflict) throw new Error('conflict');
       var local = persistedDocs(), remote = validDocs(pendingConflict.docs), next = clone(local), accepted = Object.assign({}, meta.accepted || {});
       recovery(local, remote);
       Object.keys(remote).forEach(function (p) {
@@ -221,18 +232,22 @@
       docs = next; dirty = true; revision++; notify();
       localStorage.removeItem(CONFLICT); pendingConflict = null; clearTimeout(syncTimer);
       setStatus('Выбор сохранён на телефоне. Сверьте копии и запустите синхронизацию вручную.', 'warn');
-    });
+    }); });
   }
   function downloadSnapshot(value, name) {
     var blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }), url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = name + '-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
-  function exportBackup() { downloadSnapshot({ v: 1, docs: persistedDocs() }, 'plan-backup'); }
+  function exportBackup() {
+    return Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () {
+      return exclusive(function () { downloadSnapshot({ v: 1, docs: persistedDocs() }, CFG.testMode ? 'plan-test-backup' : 'plan-backup'); });
+    });
+  }
 
   // ---- Google Диск -----------------------------------------------------
   var token = null, tokenExp = 0, tokClient = null, gsiLoading = null;
-  (function () { var t = jget('plan.tok', null); if (t && t.t && t.exp > Date.now() + 60000) { token = t.t; tokenExp = t.exp; } })();
+  (function () { var t = jget(TOKEN_KEY, null); if (t && t.t && t.exp > Date.now() + 60000) { token = t.t; tokenExp = t.exp; } })();
   var status = { text: '', cls: '' };
   var busy = false, syncTimer = null, waiting = null;
 
@@ -253,6 +268,7 @@
   }
 
   function getToken(interactive) {
+    if (!cloudAllowed) return Promise.reject(new Error('testcloud'));
     if (haveToken()) return Promise.resolve(token);
     if (!CFG.clientId) return Promise.reject(new Error('noclient'));
     if (!navigator.onLine) return Promise.reject(new Error('offline'));
@@ -263,7 +279,7 @@
           callback: function (r) {
             if (r && r.access_token) {
               token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
-              jset('plan.tok', { t: token, exp: tokenExp });
+              jset(TOKEN_KEY, { t: token, exp: tokenExp });
               meta.signed = true; saveMeta();
               if (!meta.hint) {
                 fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)', { headers: { Authorization: 'Bearer ' + token } })
@@ -282,9 +298,10 @@
   }
 
   function api(url, opt) {
+    if (!cloudAllowed) return Promise.reject(new Error('testcloud'));
     opt = opt || {}; opt.headers = Object.assign({ Authorization: 'Bearer ' + token }, opt.headers || {});
     return fetch(url, opt).then(function (r) {
-      if (r.status === 401) { token = null; tokenExp = 0; jset('plan.tok', null); throw new Error('auth'); }
+      if (r.status === 401) { token = null; tokenExp = 0; jset(TOKEN_KEY, null); throw new Error('auth'); }
       if (!r.ok) throw new Error('http' + r.status);
       return r;
     });
@@ -343,10 +360,19 @@
     });
   }
 
-  function sync(interactive) {
-    return navigator.locks ? navigator.locks.request(KEY + '.sync', function () { return doSync(interactive); }) : doSync(interactive);
+  // Recovery and sync take locks in the same order: sync lock, then data
+  // lock. A delayed network response must finish before recovery is committed.
+  // The promise queue provides the same ordering in a single tab without Locks.
+  var syncQueue = Promise.resolve();
+  function syncExclusive(fn) {
+    if (navigator.locks) return navigator.locks.request(KEY + '.sync', fn);
+    var next = syncQueue.then(fn, fn);
+    syncQueue = next.catch(function () {});
+    return next;
   }
+  function sync(interactive) { return syncExclusive(function () { return doSync(interactive); }); }
   function doSync(interactive) {
+    if (!cloudAllowed) { setStatus('ТЕСТОВАЯ ВЕРСИЯ: Google отключён. Данные остаются только на этом устройстве.', 'warn'); return Promise.resolve(); }
     meta = jget(META, meta) || {}; pendingConflict = jget(CONFLICT, null);
     if (meta.syncPaused && !interactive) { setStatus('Автосинхронизация приостановлена. Проверьте копию и синхронизируйте вручную.', 'warn'); return Promise.resolve(); }
     if (upgradeBlocked) { setStatus('Прогресс открыт только для чтения: не удалось создать копию перед обновлением. Скачайте данные, освободите место и перезагрузите приложение.', 'warn'); return Promise.resolve(); }
@@ -397,7 +423,9 @@
   function renderChip() {
     if (!chip) return;
     var txt, cls;
-    if (updateReady) { txt = 'ОБНОВИТЬ'; cls = 'upd'; }
+    if (upgradeBlocked || pendingConflict) { txt = '!'; cls = 'warn'; }
+    else if (updateReady) { txt = 'ОБНОВИТЬ'; cls = 'upd'; }
+    else if (CFG.testMode && !cloudAllowed) { txt = 'ТЕСТ'; cls = 'warn'; }
     else if (!navigator.onLine) { txt = 'ОФЛАЙН'; cls = 'off'; }
     else if (busy) { txt = '…'; cls = 'work'; }
     else if (!meta.signed || !haveToken()) { txt = meta.signed ? 'ВХОД ↻' : 'ВОЙТИ'; cls = 'warn'; }
@@ -412,10 +440,11 @@
     menu.textContent = '';
     menu.appendChild(el('div', 'pl-t', 'СИНХРОНИЗАЦИЯ'));
     if (window.APP_VERSION) menu.appendChild(el('div', 'pl-s', 'Версия ' + window.APP_VERSION));
+    if (CFG.testMode) menu.appendChild(el('div', 'pl-s', 'ТЕСТОВАЯ ВЕРСИЯ · отдельные сохранения. ' + (cloudAllowed ? 'Тестовая таблица Google.' : 'Google отключён. Основная таблица не используется.')));
     var line = (upgradeBlocked ? 'Прогресс только для чтения. Скачайте копию, освободите место и перезагрузите приложение.' : pendingConflict ? 'Конфликт устройств. Синхронизация приостановлена. Сохраните обе копии перед выбором.' : status.text) || (!navigator.onLine ? 'Нет сети: всё сохранено на телефоне' : (meta.signed ? fmtAgo(meta.lastSync) : 'Данные только на этом телефоне'));
     menu.appendChild(el('div', 'pl-s', line));
     var b;
-    b = el('button', 'pl-b', 'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ'); b.onclick = function () { try { exportBackup(); } catch (e) { setStatus('Не удалось создать копию', 'warn'); } }; menu.appendChild(b);
+    b = el('button', 'pl-b', 'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ'); b.onclick = function () { exportBackup().catch(function () { setStatus('Не удалось создать копию', 'warn'); }); }; menu.appendChild(b);
     if (pendingConflict) {
       b = el('button', 'pl-b', 'СОХРАНИТЬ ОБЛАЧНУЮ КОПИЮ'); b.onclick = function () { downloadSnapshot({ v: 1, docs: pendingConflict.docs }, 'plan-cloud'); }; menu.appendChild(b);
       ['local', 'remote'].forEach(function (choice) {
@@ -428,11 +457,11 @@
       b = el('button', 'pl-b go', 'ОБНОВИТЬ ПРИЛОЖЕНИЕ'); b.onclick = function () { Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () { return exclusive(function () { if (!jset(UPGRADE, { v: 1, docs: persistedDocs() })) throw storageError(); if (swReg && swReg.waiting) swReg.waiting.postMessage('SKIP_WAITING'); }); }).catch(function () { setStatus('Обновление отложено: не удалось сохранить резервную копию. Скачайте копию и освободите место.', 'warn'); }); }; menu.appendChild(b);
     }
     b = el('button', 'pl-b go', meta.signed ? 'СИНХРОНИЗИРОВАТЬ' : 'ВОЙТИ ЧЕРЕЗ GOOGLE');
-    b.onclick = function () { sync(true); }; menu.appendChild(b);
+    b.onclick = function () { sync(true); }; b.disabled = !cloudAllowed; menu.appendChild(b);
     if (meta.signed) {
       b = el('button', 'pl-b', 'ВЫЙТИ'); b.onclick = function () {
         try { if (window.google && token) google.accounts.oauth2.revoke(token, function () {}); } catch (e) {}
-        token = null; tokenExp = 0; jset('plan.tok', null); meta.signed = false; delete meta.sheetId; delete meta.hint; saveMeta(); setStatus('', ''); renderChip();
+        token = null; tokenExp = 0; jset(TOKEN_KEY, null); meta.signed = false; delete meta.sheetId; delete meta.hint; saveMeta(); setStatus('', ''); renderChip();
       }; menu.appendChild(b);
     }
     b = el('button', 'pl-b', 'ИМПОРТ ИЗ ФАЙЛА');
@@ -462,20 +491,20 @@
     menu = el('div', 'pl-menu'); menu.hidden = true;
     fileIn = document.createElement('input'); fileIn.type = 'file'; fileIn.accept = '.json,application/json'; fileIn.hidden = true;
     fileIn.onchange = function () {
-      var f = fileIn.files && fileIn.files[0]; if (!f) return;
+      var f = fileIn.files && fileIn.files[0], restoring = restoreFile; if (!f) return;
       var rd = new FileReader();
       rd.onload = function () {
         var value;
         try { value = JSON.parse(rd.result); } catch (e) { setStatus('Не удалось прочитать файл', 'warn'); fileIn.value = ''; return; }
-        if (restoreFile && !window.confirm('Восстановить весь прогресс из копии? Текущий прогресс будет сохранён отдельно; автосинхронизация отключится.')) { fileIn.value = ''; return; }
-        importObj(value, restoreFile).then(function (n) { setStatus('Сохранено записей: ' + n + (restoreFile ? '. Для облака войдите заново после проверки.' : ''), 'ok'); })
+        if (restoring && !window.confirm('Восстановить весь прогресс из копии? Текущий прогресс будет сохранён отдельно; автосинхронизация отключится.')) { fileIn.value = ''; return; }
+        if (restoring) setStatus('Восстановление: ожидаем завершения текущей синхронизации. Не закрывайте приложение.', 'work');
+        importObj(value, restoring).then(function (n) { setStatus('Сохранено записей: ' + n + (restoring ? '. Для облака войдите заново после проверки.' : ''), 'ok'); })
           .catch(function () { setStatus('Импорт не сохранён. Проверьте файл и свободное место.', 'warn'); });
         fileIn.value = '';
       };
       rd.readAsText(f);
     };
     chip.onclick = function () {
-      if (!updateReady && meta.signed && !haveToken() && navigator.onLine && !busy) { sync(false); return; }
       menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu();
     };
     var bar = el('div', 'pl-bar'); bar.appendChild(chip);

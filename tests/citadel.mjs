@@ -406,6 +406,35 @@ try {
    await context.close();
   }
  });
+ await check('backup includes the gameplay action queued immediately before download',async()=>{
+  const {page:p,context}=await open();const event=p.waitForEvent('download');
+  await p.evaluate(()=>{document.querySelector('#qlist button').click();return PlanSync.exportBackup();});
+  const download=await event,copy=JSON.parse(await readFile(await download.path(),'utf8'));
+  assert.equal(copy.docs['days/'+date].d.q[0],true,'download must include preceding queued quest');await context.close();
+ });
+ await check('expired Google session still opens backup and conflict controls without authorization',async()=>{
+  const {page:p,context}=await open();
+  await p.evaluate(()=>{const m=JSON.parse(localStorage.getItem('plan.meta.v1'));m.signed=true;localStorage.setItem('plan.meta.v1',JSON.stringify(m));localStorage.setItem('plan.conflict.v1',JSON.stringify({docs:{'cfg/conflict':{d:{value:true},u:1}},paths:['cfg/conflict']}));});
+  await p.reload();await castle(p);await p.locator('.pl-chip').click();assert(await p.locator('.pl-menu').isVisible(),'backup menu must open even when token expired');
+  assert(await p.locator('.pl-menu').getByRole('button',{name:'СОХРАНИТЬ ОБЛАЧНУЮ КОПИЮ',exact:true}).isVisible());await context.close();
+ });
+ await check('restore waits for in-flight Sheets synchronization in the same and another tab',async()=>{
+  for(const otherTab of [false,true]){
+   const {page:p,context}=await open();let rows=[['path','json','u']],puts=0,hold=false,release,onRead;
+   const started=new Promise(r=>onRead=r),blocked=new Promise(r=>release=r);
+   await context.route('**/*googleapis.com/**',async route=>{const req=route.request(),u=req.url();let data={};if(u.includes('fonts.googleapis.com'))return route.fulfill({body:'',contentType:'text/css'});if(u.includes('drive/v3/files?'))data={files:[{id:'QA_SHEET'}]};else if(u.includes('/about?'))data={user:{emailAddress:'qa@example.invalid'}};else if(u.includes('values/data!A:C')){if(hold){hold=false;onRead();await blocked;}data={values:rows};}else if(req.method()==='PUT'){puts++;rows=JSON.parse(req.postData()).values;}else throw Error('Unexpected synthetic request');await route.fulfill({contentType:'application/json',body:JSON.stringify(data)});});
+   let target=p;if(otherTab){target=await context.newPage();await target.clock.install({time:new Date(date+'T14:00:00+03:00')});await target.goto(url);await castle(target);}
+   await p.evaluate(()=>{window.google={accounts:{oauth2:{initTokenClient:o=>({requestAccessToken:()=>o.callback({access_token:'synthetic-token',expires_in:3600})})}}};});
+   await p.evaluate(()=>PlanSync.sync(true));const copy=await docs(p);await write(p,'cfg/after-copy',{value:true});
+   hold=true;await p.evaluate(()=>{window.__sync=PlanSync.sync(false);});await started;
+   await target.evaluate(copy=>{window.__restoreDone=false;window.__restore=PlanSync.importObj({v:1,docs:copy},true).then(()=>{window.__restoreDone=true;});},copy);
+   await target.waitForTimeout(80);assert.equal(await target.evaluate(()=>__restoreDone),false,'restore must wait rather than be overwritten by a delayed cloud response');
+   release();await p.evaluate(()=>__sync);await target.evaluate(()=>__restore);const after=await docs(target),uploaded=puts;
+   for(const [path,record]of Object.entries(copy))assert.deepEqual(after[path].d,record.d);assert.equal(after['cfg/after-copy'].d,null);
+   await p.evaluate(()=>PlanSync.sync(false));await target.evaluate(()=>PlanSync.sync(false));assert.equal(puts,uploaded,'no automatic writes after completed restore');
+   assert.equal(await target.evaluate(()=>JSON.parse(localStorage.getItem('plan.meta.v1')).syncPaused),true);await context.close();
+  }
+ });
  await check('failed pre-update copy keeps old save read-only until storage recovers',async()=>{
   const {page:p,context}=await open({failUpgrade:true});const before=await docs(p);
   const rejected=await p.evaluate(async()=>{try{const db=await claude.use('db');await db.doc('cfg/blocked').set({value:true});return false;}catch{return true;}});assert(rejected);assert.deepEqual(await docs(p),before);

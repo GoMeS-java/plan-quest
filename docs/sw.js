@@ -1,6 +1,8 @@
 /* Service worker: версия кэша = хэш файлов (подставляет build.py). */
-var VERSION = '8023abfad2';
-var CACHE = 'plan-' + VERSION;
+var VERSION = '1dc3997c18';
+var CACHE_PREFIX = 'plan-shell-' + encodeURIComponent(self.registration.scope) + '-';
+var CACHE = CACHE_PREFIX + VERSION;
+var FONT_CACHE = CACHE_PREFIX + 'fonts';
 var SHELL = ["./", "index.html", "manifest.json", "config.js", "localdb.js", "citadel-world.js", "icon-192.png", "icon-512.png", "icon-512-maskable.png", "citadel.html", "citadel.js", "citadel-life.js", "citadel-weather.js"];
 
 self.addEventListener('install', function (e) {
@@ -8,13 +10,13 @@ self.addEventListener('install', function (e) {
 });
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.filter(function (k) { return k.indexOf('plan-') === 0 && k !== CACHE && k !== 'plan-fonts'; })
+    return Promise.all(keys.filter(function (k) { return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE && k !== FONT_CACHE; })
       .map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
 self.addEventListener('message', function (e) {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
-  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('e1b24bac2ff2');
+  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('41777bad3d55');
 });
 
 self.addEventListener('fetch', function (e) {
@@ -23,7 +25,7 @@ self.addEventListener('fetch', function (e) {
   var url = new URL(req.url);
   // Шрифты Google: кладём в кэш при первом онлайн-открытии
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    e.respondWith(caches.open('plan-fonts').then(function (c) {
+    e.respondWith(caches.open(FONT_CACHE).then(function (c) {
       return c.match(req).then(function (hit) {
         var net = fetch(req).then(function (r) { if (r && (r.ok || r.type === 'opaque')) c.put(req, r.clone()); return r; }).catch(function () { return hit; });
         return hit || net;
@@ -31,7 +33,7 @@ self.addEventListener('fetch', function (e) {
     }));
     return;
   }
-  if (url.origin !== location.origin) return;      // Google API и вход не трогаем
+  if (url.origin !== location.origin || !url.href.startsWith(self.registration.scope)) return;      // Google API и вход не трогаем
   e.respondWith(caches.open(CACHE).then(function (c) {
     return c.match(req, { ignoreSearch: true }).then(function (hit) {
       if (hit) return hit;

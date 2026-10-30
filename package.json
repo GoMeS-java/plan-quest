@@ -1,6 +1,12 @@
 {
   "name": "plan-quest-checks",
   "private": true,
-  "scripts": {"test": "node tests/citadel.mjs"},
-  "devDependencies": {"playwright": "1.62.1"}
+  "scripts": {
+    "test": "node tests/citadel.mjs",
+    "test:isolation": "node tests/android-isolation.mjs",
+    "test:all": "npm test && npm run test:isolation"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
 }
