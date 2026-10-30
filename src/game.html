@@ -515,6 +515,7 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 @keyframes sunsetb { 0% { border-color: #ffb454; box-shadow: 0 0 12px #ff8a4a; } 50% { border-color: #ff6a8a; box-shadow: 0 0 14px #ff5a7a; } 100% { border-color: #a46aff; box-shadow: 0 0 12px #8a5aff; } }
 .rmw { display: flex; flex-wrap: wrap; gap: 8px; }
 html,body{overflow-anchor:none}
+.citadel-integrated{border:1px solid var(--line);background:var(--panel);border-radius:9px;overflow:hidden;margin-top:-5px}.citadel-integrated summary{cursor:pointer;list-style:none;padding:12px;font-family:var(--font-display);font-size:9px;color:var(--gold);display:flex;justify-content:space-between;gap:6px}.citadel-integrated summary::-webkit-details-marker{display:none}.citadel-integrated summary span{font-family:var(--font-body,inherit);font-size:11px;color:var(--muted)}.citadel-inside{padding:0 10px 12px}.citadel-vitals{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}.citadel-vitals span{font-size:10px;border:1px solid var(--line);padding:5px;color:var(--fg)}.citadel-rooms{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px}.citadel-room{min-height:88px;border:2px solid #6b5845;background:repeating-linear-gradient(90deg,#302a29 0 20px,#3a3030 21px 23px);display:flex;align-items:center;justify-content:space-around;flex-direction:column;box-shadow:inset 0 -9px #191519}.citadel-room b{font-size:25px;color:#b49b79}.citadel-room span{font-size:8px;text-align:center;color:#dfd1b9}.citadel-rest{border-color:#5c586d}.citadel-archive{border-color:#4f625c}.citadel-inside .hint{font-size:10px;line-height:1.5;margin:10px 0 0}
 </style>
 
 <div class="app">
@@ -547,6 +548,7 @@ html,body{overflow-anchor:none}
     <div id="ttimer" hidden></div>
   </div>
 
+  <details class="citadel-integrated" id="citadel-home"><summary>♜ ЦИТАДЕЛЬ <span id="citadel-summary">ТВОЁ УБЕЖИЩЕ</span></summary><div class="citadel-inside"><div class="citadel-vitals"><span id="citadel-live-rank">РАНГ …</span><span id="citadel-live-body">ТЕЛО …</span><span id="citadel-live-points">ОСКОЛКИ …</span></div><div class="citadel-rooms" aria-label="Помещения Цитадели"><div class="citadel-room citadel-throne"><b>♜</b><span>ЗАЛ СПЯЩЕГО</span></div><div class="citadel-room citadel-rest"><b>☾</b><span>ПОКОИ</span></div><div class="citadel-room citadel-archive"><b>▤</b><span>АРХИВ</span></div></div><p class="hint">Это часть твоего убежища. Персонаж, его экипировка и характеристики остаются из основной игры. Строительство пока не подключено к общей экономике.</p></div></details>
   <div class="points">
     <div class="points-row">
       <div class="big"><span class="coin"></span><span id="pts">…</span> <small id="goal">/ 40</small></div>
@@ -563,10 +565,10 @@ html,body{overflow-anchor:none}
     <button class="tab" role="tab" aria-selected="false" data-t="week">ХРОНИКА</button>
     <button class="tab" role="tab" aria-selected="false" data-t="shop" style="font-size:6px">ВОСПОМИНАНИЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="diet" style="font-size:7px">ТЕЛО</button>
-    <button class="tab" role="tab" aria-selected="false" data-t="goals">ПУТЬ</button><button class="tab" role="tab" aria-selected="false" data-t="citadel" style="font-size:7px">ЦИТАДЕЛЬ</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="goals">ПУТЬ</button>
   </div>
 
-  <section class="panel" id="citadel" data-g="a"><h2>ЦИТАДЕЛЬ СПЯЩЕГО</h2><p class="note">Часть Заклятия. Ранг и изменения тела берутся из текущего прогресса.</p><iframe id="citadel-frame" title="Цитадель" src="citadel.html" loading="lazy" style="width:100%;height:680px;border:1px solid var(--line);border-radius:8px;background:#100c18" sandbox="allow-scripts allow-same-origin"></iframe></section><section class="panel active" id="today" data-g="a">
+  <section class="panel active" id="today" data-g="a">
     <div class="daysw" id="daysw">
       <button type="button" id="d-today" aria-pressed="true">СЕГОДНЯ</button>
       <button type="button" id="d-yest" aria-pressed="false">ВЧЕРА</button>
@@ -3385,8 +3387,7 @@ html,body{overflow-anchor:none}
       requestAnimationFrame(function () { if (Math.abs((window.pageYOffset || 0) - sy) > 2) window.scrollTo(0, sy); });
     }
   }
-  function syncCitadel(){var frame=$('citadel-frame');if(!frame||!loaded||!frame.contentWindow)return;var p=pointsInfo(),weights=(S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&w.date<=dkey(new Date());}).sort(function(a,b){return a.date.localeCompare(b.date);});var first=weights.length?Number(weights[0].kg):null,last=weights.length?Number(weights[weights.length-1].kg):null;frame.contentWindow.postMessage({type:'plan.citadel.live.v1',rank:p.L,bodyStage:bodyStage(),baseline:first,current:last},'*');}
-window.addEventListener('message',function(e){var f=$('citadel-frame');if(f&&e.source===f.contentWindow&&e.data&&e.data.type==='plan.citadel.ready.v1')syncCitadel();});
+  function syncCitadel(){if(!loaded)return;var p=pointsInfo();var weights=(S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&w.date<=dkey(new Date());}).sort(function(a,b){return a.date.localeCompare(b.date);});var last=weights.length?Number(weights[weights.length-1].kg):null;$('citadel-live-rank').textContent='РАНГ '+p.L;$('citadel-live-body').textContent=last===null?'ТЕЛО: НЕТ ЗАПИСЕЙ':'ВЕС '+last+' КГ';$('citadel-live-points').textContent='ОСКОЛКИ '+p.P;}
 function renderAllInner() {
     renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel();
   }
