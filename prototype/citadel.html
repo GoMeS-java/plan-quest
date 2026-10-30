@@ -42,6 +42,22 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 #room-scene[data-weather="clear"]:before{box-shadow:0 0 22px #e4b477,inset 0 0 18px #d4a668}
 #room-scene[data-weather="fog"]:before{box-shadow:0 0 24px #a29cac,inset 0 0 18px #9c91ac}
 #atmosphere select,#atmosphere button{padding:7px}
+
+#room-scene{isolation:isolate}
+#scene-weather{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+#scene-weather i{position:absolute;top:-20%;left:var(--x);width:2px;height:24px;background:#a6c5f7a8;transform:rotate(16deg);animation:rainfall var(--dur) linear infinite;animation-delay:var(--delay)}
+#scene-weather.snow i{width:5px;height:5px;border-radius:50%;background:#e2efff;transform:none;animation-name:snowfall}
+#scene-weather.fog{background:linear-gradient(90deg,#b6aec021,transparent,#b6aec025);animation:fogmove 9s ease-in-out infinite alternate}
+#scene-weather.clear{background:radial-gradient(ellipse at 50% 20%,#e7b87d2e,transparent 60%)}
+#room-scene.reduce-motion #scene-weather i,#room-scene.reduce-motion #scene-weather{animation:none!important}
+#room-scene.reduce-motion #scene-weather i{top:var(--y)}
+@keyframes rainfall{to{top:120%;transform:translateX(-30px) rotate(16deg)}}
+@keyframes snowfall{to{top:120%;transform:translateX(20px)}}
+@keyframes fogmove{to{opacity:.3;transform:translateX(12px)}}
+#scene-hero{z-index:3;box-shadow:inset 0 -9px #100c19}
+#scene-hero:before{content:'';position:absolute;top:5px;left:6px;width:14px;height:12px;background:#bfa0d8;box-shadow:0 0 0 2px #1c1428}
+#scene-hero:after{content:'';position:absolute;bottom:4px;left:4px;width:7px;height:10px;background:#160f20;box-shadow:12px 0 #160f20}
+#room-scene.reduce-motion #scene-hero{animation:none;transition:none}
 </style></head><body><main class="wrap">
 <h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
 <div class="toolbar"><button id="overview" class="active">Обзор</button><button id="walk">Прогулка</button><button id="add-floor">Открыть этаж (демо)</button><button id="reset">Сбросить прототип</button></div>
@@ -49,7 +65,7 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 <div class="panel"><h2 id="selection-title">Редактор комнат</h2><p id="selection-description">Выбери свободную ячейку для строительства или существующую комнату.</p>
 <div class="controls"><label>Комната <select id="kind"></select></label><button id="build">Построить</button><button id="expand">Расширить на 1</button><button id="go">Направить героя</button></div><div class="controls"><label>Мебель <select id="furniture"></select></label><label>Место <select id="slot"></select></label><button id="place">Разместить</button><button id="remove">Убрать последнюю</button></div><div class="controls"><button id="prev">← Назад</button><button id="next">Вперёд →</button></div><div class="panel"><h2>Обитатели Цитадели</h2><p id="rank-info">Ранг Цитадели: 1</p><label><input id="demo-toggle" type="checkbox"> Режим проверки</label> <label>Ранг <input id="demo-level" type="number" min="1" max="100" value="1" disabled style="width:72px;background:#2c203c;color:#eee0ff;border:1px solid #8064a5;padding:7px"></label><p><small>В обычном режиме используется максимальный ранг из «Заклятия», если игра запускалась на этом же сайте и устройстве.</small></p><div id="npcs" class="npcbar"></div><p id="dialogue">Выбери жителя, чтобы поговорить.</p></div><div id="status" role="status"></div>
 <small>Размеры помещений различаются. Занятые ячейки и закрытые этажи недоступны. Состояние сохраняется только в браузере прототипа.</small></div>
-</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script src="../src/citadel.js"></script><script src="../src/citadel-life.js"></script><script>
+</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-weather" aria-hidden="true"></div><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script src="../src/citadel.js"></script><script src="../src/citadel-life.js"></script><script>
 (function(){
 'use strict';
 var model=window.Citadel, state=model.load(), selected=null, mode='overview';
@@ -58,6 +74,14 @@ var life=window.CitadelLife;var sceneRoomId=null,heroX=45;var demoLevel=1;var de
 Object.keys(model.rooms).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=model.rooms[k].name+' ('+model.rooms[k].size+')';kind.appendChild(o);});
 function announce(t){status.textContent=t;}
 function commit(next){state=next;model.save(state);render();}
+function drawWeather(){
+ var layer=document.getElementById('scene-weather'),scene=document.getElementById('room-scene'),weather=state.weather.selected;
+ layer.className=weather;layer.textContent='';
+ scene.classList.toggle('reduce-motion',!!state.settings.reducedMotion);
+ if(weather!=='rain'&&weather!=='snow')return;
+ var count=state.settings.reducedMotion?10:weather==='rain'?28:16;
+ for(var i=0;i<count;i++){var drop=document.createElement('i');drop.style.setProperty('--x',((i*37+11)%97)+'%');drop.style.setProperty('--y',((i*29+13)%88)+'%');drop.style.setProperty('--dur',(weather==='rain'?1.3+(i%6)*.16:4+(i%7)*.6)+'s');drop.style.setProperty('--delay',(-i*.27)+'s');layer.appendChild(drop);}
+}
 function applyAtmosphere(){
  var env=model.environment(Date.now(),state),phase=state.settings.dayNight?env.phase:'day';
  castle.dataset.phase=phase;document.getElementById('room-scene').dataset.phase=phase;
@@ -66,7 +90,7 @@ function applyAtmosphere(){
  document.getElementById('weather').value=state.weather.selected;
  document.getElementById('day-night').checked=state.settings.dayNight;
  document.getElementById('reduce-motion').checked=state.settings.reducedMotion;
- document.getElementById('scene-hero').style.animation=state.settings.reducedMotion?'none':'';
+ document.getElementById('scene-hero').style.animation=state.settings.reducedMotion?'none':'';drawWeather();
 }
 function render(){
 applyAtmosphere();castle.textContent='';castle.classList.toggle('mode-walk',mode==='walk');
