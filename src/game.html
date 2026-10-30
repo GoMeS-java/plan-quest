@@ -801,6 +801,7 @@ html,body{overflow-anchor:none}
     <h2>ВЕРСИЯ __VER__</h2>
     <div class="hint">Сборка __BUILD__</div>
     <div class="goal vhist">
+      <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
       <div class="hint"><b>0.52</b> · 30.10 · Новая тайна Заклятия и оформление в духе тёмного фэнтези</div>
       <div class="hint"><b>0.51</b> · 28.10 · Все названия в духе Заклятия: осколки души, ранги, ядра души, Воспоминания, Аспекты, отметины, убежище, оболочка. Монетка стала осколком души</div>
@@ -1541,9 +1542,12 @@ html,body{overflow-anchor:none}
       CC(RR('#3a3d4e', '3 0 2 1;2 1 1 1;5 1 1 1;1 10 6 2'), RR('#1a1c28', '1 2 6 8'), RR('#7a1a28', '2 3 4 6'), RR('#ff5468', '3 5 2 3')),
       CC(RR('#3a3d4e', '3 0 2 1;2 1 1 1;5 1 1 1;1 10 6 2'), RR('#1a1c28', '1 2 6 8'), RR('#7a1a28', '2 3 4 6'), RR('#ff8a98', '3 4 2 4'))] },
     tapestry: { n: 'Гобелен', w: 10, h: 14, k: 4, slot: 'right:20px;top:6px', f: [
-      CC(RR('#c9a04a', '0 0 10 1'), RR('#2f5d7a', '1 1 8 11'), RR('#e8b13c', '4 3 2 1;3 4 4 1;2 5 6 1;3 6 4 1;4 7 2 1'), RR('#2f5d7a', '4 5 2 1'), RR('#e8b13c', '1 12 8 1;1 13 1 1;4 13 1 1;8 13 1 1'))] }
+      CC(RR('#c9a04a', '0 0 10 1'), RR('#2f5d7a', '1 1 8 11'), RR('#e8b13c', '4 3 2 1;3 4 4 1;2 5 6 1;3 6 4 1;4 7 2 1'), RR('#2f5d7a', '4 5 2 1'), RR('#e8b13c', '1 12 8 1;1 13 1 1;4 13 1 1;8 13 1 1'))] },
+    abyssobelisk: { n: 'Обелиск Бездны', w: 10, h: 16, k: 4, slot: 'right:20px;top:123px', f: [
+      CC(RR('#130d20', '3 0 4 2;2 2 6 3;1 5 8 8;0 13 10 3'), RR('#42275f', '3 1 4 2;2 4 6 8;1 13 8 1'), RR('#9b6bdb', '4 2 2 5;3 7 1 3;5 8 1 3'), RR('#d8b9ff', '4 3 1 3;6 9 1 1'), RR('#28163d', '2 14 6 2')),
+      CC(RR('#130d20', '3 0 4 2;2 2 6 3;1 5 8 8;0 13 10 3'), RR('#42275f', '3 1 4 2;2 4 6 8;1 13 8 1'), RR('#b993f3', '4 2 2 5;3 7 1 3;5 8 1 3'), RR('#f0e2ff', '5 3 1 3;3 8 1 1;6 10 1 1'), RR('#28163d', '2 14 6 2'))] }
   };
-  var ROOM_OF = { z01: 'clock', z02: 'cat', z03: 'dart', z04: 'mirror', z05: 'bag', z06: 'garland', z07: 'trophy', z08: 'pennant', z09: 'kettle', z10: 'medal', z11: 'scale', z12: 'lamp', z13: 'safe', z14: 'globe', z15: 'rug', z17: 'owl', z19: 'banner', z20: 'bolt', z18: 'tapestry', z21: 'shelf', z22: 'desk', z23: 'monitors', z24: 'pc', z25: 'poster1', z26: 'poster2', z27: 'poster3', z28: 'gate', z29: 'shard', z30: 'darkmirror', z31: 'chains', z32: 'lantern' };
+  var ROOM_OF = { z01: 'clock', z02: 'cat', z03: 'dart', z04: 'mirror', z05: 'bag', z06: 'garland', z07: 'trophy', z08: 'pennant', z09: 'kettle', z10: 'medal', z11: 'scale', z12: 'lamp', z13: 'safe', z14: 'globe', z15: 'rug', z17: 'owl', z19: 'banner', z20: 'bolt', z18: 'tapestry', z21: 'shelf', z22: 'desk', z23: 'monitors', z24: 'pc', z25: 'poster1', z26: 'poster2', z27: 'poster3', z28: 'gate', z29: 'shard', z30: 'darkmirror', z31: 'chains', z32: 'lantern', z33: 'abyssobelisk' };
   function roomEl(it) {
     var d = document.createElement('div');
     d.className = 'rmi' + (it.rep ? ' rep' : '') + (it.sw ? ' sw' : '');
@@ -3267,7 +3271,7 @@ html,body{overflow-anchor:none}
     var open = 0;
     LEG.forEach(function (G) {
       var d = lastGI.ach[G.id], cc = G.cos;
-      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (G.id === 'z33' ? '' : cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : '') + (ROOM_OF[G.id] ? ' · предмет «' + ROOM_ITEMS[ROOM_OF[G.id]].n + '»' : ''), G.pts ? '+' + G.pts : '✓', true, null, true)); }
+      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (G.id === 'z33' ? '' : cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : '') + (ROOM_OF[G.id] && G.id !== 'z33' ? ' · предмет «' + ROOM_ITEMS[ROOM_OF[G.id]].n + '»' : ''), G.pts ? '+' + G.pts : '✓', true, null, true)); }
       else if (lastGI.slots[G.id] && !G.ev) {
         var v = Math.min(lastGI.st[G.val] || 0, G.goal);
         box.appendChild(questButton('Суперредкая цель: ' + G.d, (G.goal > 1 ? fmt(v) + ' из ' + fmt(G.goal) : 'ещё не выполнено') + ' · награда секретная', '+?', false, null, true));
