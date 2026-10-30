@@ -19,4 +19,20 @@ assert.equal(context.abyssBalance({version:1,earned:17},context.S.buys),5);
 assert.equal(context.citadelRoomLevel('rest'),3);
 assert.equal(context.spent(),2);
 assert.equal(context.abyssBalance(null),0,'unmigrated save cannot spend essence');
-console.log('Abyss economy: legacy migration, costs and independent balances pass');
+// Execute the actual migration twice against a transactional in-memory copy.
+const docs=new Map();
+const tx={get:key=>docs.get(key),set:(key,value)=>docs.set(key,structuredClone(value)),list:kind=>kind==='buys'?context.S.buys:[]};
+let rank=7,events={'daily-2026-10-31':1};
+Object.assign(context,{loaded:true,db:{runTransaction:async fn=>fn(tx)},abyssReconciling:false,
+  enqueue:fn=>fn(),purchasePoints:()=>({L:rank}),abyssEvents:()=>events,Date});
+vm.runInContext(functionText('function abyssReconcile(){','// Существующий расчёт читает актуальный снимок'),context);
+await context.abyssReconcile();
+assert.equal(docs.get('cfg/abyss-economy').earned,0,'completed events are baselined');
+assert.equal(docs.get('cfg/abyss-economy-backup').legacyCitadelBuys.length,2);
+rank=8;events={...events,'weekly-2026-11-02':2};
+await context.abyssReconcile();
+assert.equal(docs.get('cfg/abyss-economy').earned,7);
+await context.abyssReconcile();
+assert.equal(docs.get('cfg/abyss-economy').earned,7,'reload is idempotent');
+assert.equal(docs.get('cfg/abyss-economy-backup').rank,7,'original recovery snapshot is preserved');
+console.log('Abyss economy: legacy migration, costs, independent balances and idempotent grants pass');
