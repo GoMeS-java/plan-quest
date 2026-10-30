@@ -22,9 +22,10 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           page = Path('docs/citadel.html').read_text(encoding='utf-8')
-          assert '<script src="citadel.js"></script>' in page
-          assert '<script src="citadel-life.js"></script>' in page
-          assert '<script src="citadel-weather.js"></script>' in page
+          assert 'root.Citadel = Object.freeze' in page
+          assert 'root.CitadelLife' in page
+          assert 'root.CitadelWeather' in page
+          assert '<script src="../src/' not in page
           assert '../src/' not in page
           for name in ('citadel.js', 'citadel-life.js', 'citadel-weather.js', 'sw.js'):
               assert Path('docs', name).is_file(), name
