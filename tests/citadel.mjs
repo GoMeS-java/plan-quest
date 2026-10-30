@@ -65,7 +65,7 @@ try {
   const before=await docs(p);
   await p.locator('.citadel-daily-journal summary').click();
   const rows=p.locator('#citadel-daily-details .citadel-daily-quest');
-  assert.equal(await rows.count(),await p.evaluate(()=>__qa.S.days['2026-10-30']?document.querySelectorAll('#qlist button.q').length:0));
+  assert.equal(await rows.count(),7);
   assert.deepEqual(await docs(p),before,'opening journal must not write to storage');
   await p.locator('#qlist button.q').first().click();await p.waitForTimeout(60);await dismiss(p);
   assert.equal(await p.locator('#citadel-daily-details .citadel-daily-quest.is-done').count(),1);
