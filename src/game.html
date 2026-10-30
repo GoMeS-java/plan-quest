@@ -3799,7 +3799,7 @@ function citadelPositionResidents(states){
  });
 }
 function citadelAnimateHero(from,to){
- var path=CitadelWorld.route(from,to,pointsInfo().L);var hero=$('citadel-avatar');hero.dataset.route=path.join(' ');hero.dataset.facing=citadelNodePoint(to).x<citadelNodePoint(from).x?'left':'right';hero.dataset.moving='false';
+ var path=CitadelWorld.route(from,to,pointsInfo().L);var hero=$('citadel-avatar');hero.dataset.route=path.join(' ');var origin=citadelNodePoint(from),destination=citadelNodePoint(to);if(origin&&destination)hero.dataset.facing=destination.x<origin.x?'left':'right';hero.dataset.moving='false';if(!origin||!destination)return;
  if(path.length<2||window.matchMedia('(prefers-reduced-motion:reduce)').matches||!$('citadel-avatar').animate)return;
  var frames=path.map(function(id){var p=citadelNodePoint(id);return p?{left:(p.x-22)+'px',top:(p.y-54)+'px'}:null;}).filter(Boolean);
  if(frames.length>1){hero.dataset.moving='true';citadelHeroAnimation=hero.animate(frames,{duration:(frames.length-1)*350,easing:'linear'});citadelHeroAnimation.onfinish=function(){hero.dataset.moving='false';};}

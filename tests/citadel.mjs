@@ -73,6 +73,11 @@ try {
    await p.setViewportSize({width,height:1300});
    await p.locator('#citadel-castle').screenshot({path:resolve(out,'graphics-full-castle-'+width+'.png')});
    await p.locator('[data-art-view="room"]').click();assert(await p.locator('#citadel-interior').isVisible());
+   const door=p.locator('#citadel-interior-stage [data-stage-door]').first(),destination=await door.getAttribute('data-stage-door');
+   await door.click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),destination);
+   const roomName=(await p.locator('[data-croom="'+destination+'"] .citadel-room-name').textContent()).replace(/ · \d+$/,'');
+   assert.equal(await p.locator('#citadel-interior-title').innerText(),roomName,'immersive door must update the title without reading hidden castle coordinates');
+   await p.locator('[data-art-view="people"]').click();assert(await p.locator('#citadel-residents').isVisible());
    await p.goBack();assert(!(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-expanded'))));
    await context.close();
   }
@@ -233,7 +238,8 @@ try {
   const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16'});await castle(p);const before=await p.evaluate(()=>__qa.points().avail);
   for(const room of ['throne','observatory','rest','study','archive','forge']){
    await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-enter').click();
-   for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});}
+   await p.setViewportSize({width:390,height:900});await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-1.png')});
+   for(const level of [2,3]){const beforePixels=await p.locator('#citadel-interior-stage').screenshot();await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});const afterPixels=await p.locator('#citadel-interior-stage').screenshot();assert(!beforePixels.equals(afterPixels),'renovation must change visible pixels: '+room+' '+level);await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-'+level+'.png')});}
    for(const width of [320,360,390,430,768,1280]){
     await p.setViewportSize({width,height:900});
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
@@ -297,7 +303,8 @@ try {
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);const before=await p.evaluate(()=>__qa.points());
   for(const room of ['gatehouse','refectory','cloister','vault']){
    await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-enter').click();
-   for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});}
+   await p.setViewportSize({width:390,height:900});await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-1.png')});
+   for(const level of [2,3]){const beforePixels=await p.locator('#citadel-interior-stage').screenshot();await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});const afterPixels=await p.locator('#citadel-interior-stage').screenshot();assert(!beforePixels.equals(afterPixels),'renovation must change visible pixels: '+room+' '+level);await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-'+level+'.png')});}
    for(const width of [320,360,390,430,768,1280]){
     await p.setViewportSize({width,height:900});
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);

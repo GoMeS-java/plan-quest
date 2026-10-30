@@ -123,3 +123,4 @@ body.citadel-modal-open{overflow:hidden}.citadel-art-nav{scroll-margin-top:100px
 @keyframes citadelCloud{to{translate:12px 0;opacity:.4}}
 .citadel-castle[data-phase="ДЕНЬ"] .citadel-sky{filter:brightness(1.2) saturate(.7)}.citadel-castle[data-phase="УТРО"] .citadel-sky{filter:sepia(.2) brightness(1.1)}.citadel-castle[data-phase="НОЧЬ"] .citadel-sky{filter:brightness(.77)}
 .citadel-expanded[data-ui-view="overview"] .citadel-room-info{display:none!important}
+.citadel-interior-object:after{display:none}
