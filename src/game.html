@@ -4469,7 +4469,7 @@ function renderAllInner() {
     var title=document.createElement('strong');title.className='citadel-shell-title';title.textContent='⚜ ЗАКЛЯТИЕ КОШМАРА';header.appendChild(title);
     var nav=document.createElement('nav');nav.className='citadel-shell-nav';nav.setAttribute('aria-label','Разделы игры');header.appendChild(nav);home.insertBefore(header,inside);
     var dialog=document.createElement('dialog');dialog.className='citadel-system-dialog';dialog.innerHTML='<header><strong id="citadel-system-title"></strong><button type="button" aria-label="Вернуться в Цитадель">✕</button></header><div class="citadel-system-content"></div>';document.body.appendChild(dialog);
-    var moved=null,anchor=null,origin=null,drawer='',zoom=1,baseWidth=760;
+    var moved=null,anchor=null,origin=null,drawer='',zoom=window.innerWidth<650?.85:1,baseWidth=760;
     function restore(){if(moved&&origin){origin.insertBefore(moved,anchor);moved=null;origin=null;anchor=null;}}
     function closeSystem(silent){if(dialog.open)dialog.close();restore();if(!silent&&history.state?.citadelOverlay==='system')history.back();}
     dialog.addEventListener('close',restore);dialog.querySelector('header button').onclick=closeSystem;
@@ -4512,7 +4512,7 @@ function renderAllInner() {
     [['−',function(){zoom=Math.max(.55,zoom-.2);cameraSize();}],['Общий вид',function(){zoom=Math.max(.5,viewport.clientWidth/baseWidth);cameraSize();viewport.scrollTo({left:0,top:0});}],['+',function(){zoom=Math.min(2,zoom+.2);cameraSize();}],['К комнате',function(){var room=document.querySelector('[data-croom="'+citadelSelected+'"]');if(room)room.scrollIntoView({block:'center',inline:'center'});}]].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[0];b.onclick=item[1];camera.appendChild(b);});
     var savedCamera=null;try{savedCamera=JSON.parse(localStorage.getItem('plan.citadel.camera.v1')||'null');}catch(e){}
     if(savedCamera&&Number.isFinite(savedCamera.zoom))zoom=Math.max(.55,Math.min(2,savedCamera.zoom));
-    cameraSize();requestAnimationFrame(function(){if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);citadelPosition();});
+    cameraSize();function restoreCamera(){requestAnimationFrame(function(){cameraSize();if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);else viewport.scrollTo(Math.max(0,(castle.scrollWidth-viewport.clientWidth)/2),0);citadelPosition();});}restoreCamera();window.addEventListener('load',restoreCamera,{once:true});
     var saveCamera=0;viewport.addEventListener('scroll',function(){clearTimeout(saveCamera);saveCamera=setTimeout(function(){try{localStorage.setItem('plan.citadel.camera.v1',JSON.stringify({left:viewport.scrollLeft,top:viewport.scrollTop,zoom:zoom}));}catch(e){}},300);},{passive:true});
     window.addEventListener('resize',cameraSize);
     window.addEventListener('popstate',function(){if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});

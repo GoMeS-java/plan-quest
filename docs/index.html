@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1a1511"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.60";window.APP_BUILD="261fab175a0e";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1a1511"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.60";window.APP_BUILD="5836fe8f2881";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Заклятие</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -955,7 +955,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <h2>ВЕРСИЯ 0.60</h2>
-    <div class="hint">Сборка 261fab175a0e</div>
+    <div class="hint">Сборка 5836fe8f2881</div>
     <div class="goal vhist">
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -4470,7 +4470,7 @@ function renderAllInner() {
     var title=document.createElement('strong');title.className='citadel-shell-title';title.textContent='⚜ ЗАКЛЯТИЕ КОШМАРА';header.appendChild(title);
     var nav=document.createElement('nav');nav.className='citadel-shell-nav';nav.setAttribute('aria-label','Разделы игры');header.appendChild(nav);home.insertBefore(header,inside);
     var dialog=document.createElement('dialog');dialog.className='citadel-system-dialog';dialog.innerHTML='<header><strong id="citadel-system-title"></strong><button type="button" aria-label="Вернуться в Цитадель">✕</button></header><div class="citadel-system-content"></div>';document.body.appendChild(dialog);
-    var moved=null,anchor=null,origin=null,drawer='',zoom=1,baseWidth=760;
+    var moved=null,anchor=null,origin=null,drawer='',zoom=window.innerWidth<650?.85:1,baseWidth=760;
     function restore(){if(moved&&origin){origin.insertBefore(moved,anchor);moved=null;origin=null;anchor=null;}}
     function closeSystem(silent){if(dialog.open)dialog.close();restore();if(!silent&&history.state?.citadelOverlay==='system')history.back();}
     dialog.addEventListener('close',restore);dialog.querySelector('header button').onclick=closeSystem;
@@ -4513,7 +4513,7 @@ function renderAllInner() {
     [['−',function(){zoom=Math.max(.55,zoom-.2);cameraSize();}],['Общий вид',function(){zoom=Math.max(.5,viewport.clientWidth/baseWidth);cameraSize();viewport.scrollTo({left:0,top:0});}],['+',function(){zoom=Math.min(2,zoom+.2);cameraSize();}],['К комнате',function(){var room=document.querySelector('[data-croom="'+citadelSelected+'"]');if(room)room.scrollIntoView({block:'center',inline:'center'});}]].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[0];b.onclick=item[1];camera.appendChild(b);});
     var savedCamera=null;try{savedCamera=JSON.parse(localStorage.getItem('plan.citadel.camera.v1')||'null');}catch(e){}
     if(savedCamera&&Number.isFinite(savedCamera.zoom))zoom=Math.max(.55,Math.min(2,savedCamera.zoom));
-    cameraSize();requestAnimationFrame(function(){if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);citadelPosition();});
+    cameraSize();function restoreCamera(){requestAnimationFrame(function(){cameraSize();if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);else viewport.scrollTo(Math.max(0,(castle.scrollWidth-viewport.clientWidth)/2),0);citadelPosition();});}restoreCamera();window.addEventListener('load',restoreCamera,{once:true});
     var saveCamera=0;viewport.addEventListener('scroll',function(){clearTimeout(saveCamera);saveCamera=setTimeout(function(){try{localStorage.setItem('plan.citadel.camera.v1',JSON.stringify({left:viewport.scrollLeft,top:viewport.scrollTop,zoom:zoom}));}catch(e){}},300);},{passive:true});
     window.addEventListener('resize',cameraSize);
     window.addEventListener('popstate',function(){if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
