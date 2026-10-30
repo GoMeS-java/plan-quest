@@ -14,7 +14,8 @@ function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); retu
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
 const baseline = '<!doctype html><html><head><meta charset="utf-8"><script src="/config.js"></script><script src="/localdb.js"></script></head><body>'+baselineSrc+'</body></html>';
-const server=createServer(async(req,res)=>{try { const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname); const file=resolve(root,'.'+(path==='/'?'/index.html':path)); if(!file.startsWith(root+'/'))throw Error(); const body=await readFile(file); res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(file)]||'text/plain');res.end(body); }catch{res.writeHead(404);res.end();}});
+const servedOverrides=new Map();
+const server=createServer(async(req,res)=>{try { const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname); const file=resolve(root,'.'+(path==='/'?'/index.html':path)); if(!file.startsWith(root+'/'))throw Error(); const body=servedOverrides.has(file)?servedOverrides.get(file):await readFile(file); if(file.endsWith('/sw.js'))res.setHeader('Cache-Control','no-cache'); res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(file)]||'text/plain');res.end(body); }catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}:{} )});
@@ -24,13 +25,13 @@ async function check(name,fn){if(process.env.TEST_FILTER&&!new RegExp(process.en
 const date='2026-10-30';
 const initial={'cfg/opening':{cash:1200.5,card:3400},'weights/test':{kg:143.7,date,ts:1},['days/'+date]:{q:[false,false,false,false,false,false,false,false,false,false],steps:1200,kcal:2100},'spont/old':{name:'Synthetic task',date,done:false,heavy:true,ts:1},'cfg/outfit':{outer:'none'}};
 // Computed keys are assigned separately to remain compatible with plain JavaScript.
-async function open({width=390,height=844,seed=initial,legacy={},base=false,day=date,sw=false}={}){
+async function open({width=390,height=844,seed=initial,legacy={},base=false,day=date,sw=false,failUpgrade=false}={}){
  const context=await browser.newContext({viewport:{width,height},isMobile:width<600,hasTouch:width<600,timezoneId:'Europe/Moscow',reducedMotion:'reduce',serviceWorkers:sw?'allow':'block'});
  context.setDefaultTimeout(15000);
  const page=await context.newPage();page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('Failed to load resource'))errors.push(m.text());});
  await page.clock.install({time:new Date(day+'T14:00:00+03:00')});
- await context.addInitScript(({seed,legacy,day})=>{if(!localStorage.getItem('qa-init')){const docs=Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]));localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs}));for(const [k,v]of Object.entries(legacy))localStorage.setItem(k,v);localStorage.setItem('qa-init','1');}localStorage.setItem('wsum',day.slice(0,7)+'-26');localStorage.setItem('msum',day.slice(0,7));localStorage.setItem('trialSeen',day);},{seed,legacy,day});
+ await context.addInitScript(({seed,legacy,day,failUpgrade})=>{if(!localStorage.getItem('qa-init')){const docs=Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]));localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs}));for(const [k,v]of Object.entries(legacy))localStorage.setItem(k,v);localStorage.setItem('qa-init','1');}localStorage.setItem('wsum',day.slice(0,7)+'-26');localStorage.setItem('msum',day.slice(0,7));localStorage.setItem('trialSeen',day);if(failUpgrade&&!localStorage.getItem('qa-upgrade-failed')){localStorage.setItem('qa-upgrade-failed','1');window.__originalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.pre-update.v1')throw new DOMException('Synthetic full','QuotaExceededError');return window.__originalSetItem.call(this,k,v);};}},{seed,legacy,day,failUpgrade});
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
  await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(page));
@@ -196,7 +197,7 @@ try {
   for(const room of ['throne','observatory','rest','study','archive','forge']){
    await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-enter').click();
    for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});}
-   for(const width of [320,1280]){
+   for(const width of [320,360,390,430,768,1280]){
     await p.setViewportSize({width,height:900});
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
     assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth),'interior overflow '+room+' at '+width);
@@ -331,6 +332,108 @@ try {
   const remote=await docs(b.page);await a.page.evaluate(remote=>PlanSync.importObj({v:1,docs:remote}),remote);await a.page.waitForFunction(()=>__qa.points().avail===-1);
   await castle(a.page);await a.page.locator('[data-croom="rest"]').click();await a.page.locator('#citadel-enter').click();assert(await a.page.locator('#citadel-upgrade').isDisabled());assert.match(await a.page.locator('#citadel-building-balance').innerText(),/несогласованные расходы/);
   const before=await docs(a.page);await a.page.evaluate(()=>{__qa.upgrade('rest',1);return __qa.idle();});assert.deepEqual(await docs(a.page),before);await a.context.close();await b.context.close();
+ });
+ await check('NPC event reactions follow durable quests, weekly progress, renovations, resources and development',async()=>{
+  const day='2027-04-16',seed=advancedSeed();seed['days/'+day]={q:Array(10).fill(false),steps:0,kcal:2500};
+  const {page:p,context}=await open({seed,day});await castle(p);
+  const speak=async name=>{await p.locator('#citadel-residents button').filter({hasText:name}).click();return p.locator('#citadel-npc-dialogue').innerText();};
+  const first=await speak('Хранительница');const second=await speak('Хранительница');assert.notEqual(first,second,'explicit conversations should vary');
+  await p.evaluate(()=>__qa.render());assert.equal(await p.locator('#citadel-npc-dialogue').innerText(),second,'idle renders must not rotate speech');
+  await p.locator('#qlist button.q').first().click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(70);await dismiss(p);
+  assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/ещё одно дело завершено/);
+  const changed=structuredClone((await docs(p))['days/'+day].d);changed.q[7]=true;await write(p,'days/'+day,changed);
+  assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Недельные записи продвинулись/);
+  await p.evaluate(()=>{__qa.upgrade('forge',1);return __qa.idle();});await p.waitForFunction(()=>__qa.roomLevel('forge')===2);
+  assert.match(await speak('Кузнец'),/Мастерская улучшена/);assert.match(await speak('Казначей'),/Расход занесён/);
+  await p.clock.fastForward(31*60000);await p.evaluate(()=>__qa.render());
+  await write(p,'weights/development',{date:day,kg:140,ts:2});assert.match(await speak('Кузнец'),/перемены в твоей подготовке/);
+  const before=await docs(p);await p.locator('#citadel-npc-actions button').filter({hasText:'Завершить разговор'}).click();assert.equal(await p.locator('#citadel-npc-dialogue').innerText(),'');
+  await speak('Страж');await p.keyboard.press('Escape');assert.equal(await p.locator('#citadel-npc-actions button').count(),0);assert.deepEqual(await docs(p),before);
+  await p.reload();await castle(p);assert.match(await speak('Кузнец'),/Горн обустроен/);await context.close();
+ });
+ await check('guardian reacts to real trial completion and yesterday failure without applying extra rewards',async()=>{
+  const probe=await open({seed:advancedSeed(),day:'2027-04-16'});
+  const trial=await probe.page.evaluate(()=>{for(let n=1;n<10;n++){const d=new Date(2027,3,n),k=d.getFullYear()+'-04-'+String(n).padStart(2,'0'),t=__qa.trial(k);if(t)return {k,t};}});await probe.context.close();assert(trial);
+  const seed=advancedSeed();seed['days/'+trial.k]={q:Array(10).fill(true),steps:0,kcal:2100};seed['trial/'+trial.k]={sq:0,pu:0};
+  const {page:p,context}=await open({seed,day:trial.k});await castle(p);await p.locator('#citadel-residents button').filter({hasText:'Страж'}).click();assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/ещё активно/);
+  await write(p,'trial/'+trial.k,{sq:trial.t.sq,pu:trial.t.pu});await write(p,'days/'+trial.k,{q:Array(10).fill(true),steps:Math.max(50000,trial.t.st),kcal:2100});assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Испытание выдержано/);
+  const points=await p.evaluate(()=>__qa.points());for(let i=0;i<3;i++)await p.locator('#citadel-residents button').filter({hasText:'Страж'}).click();assert.deepEqual(await p.evaluate(()=>__qa.points()),points);
+  await write(p,'trial/'+trial.k,{sq:0,pu:0});await write(p,'days/'+trial.k,{q:Array(10).fill(true),steps:0,kcal:2100});
+  await p.clock.setSystemTime(new Date(trial.k+'T14:00:00+03:00').getTime()+86400000);await p.evaluate(()=>__qa.render());await dismiss(p);await p.locator('#citadel-residents button').filter({hasText:'Страж'}).click();assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Вчерашнее испытание осталось незавершённым/);await context.close();
+ });
+ await check('atomic merge and import reject storage failure and malformed records without changing progress',async()=>{
+  const {page:p,context}=await open();const before=await docs(p);
+  const remote={'cfg/citadel':{d:{selectedRoom:'study',decor:{}},u:Date.now()}};
+  const fail=await p.evaluate(async remote=>{
+   const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};
+   try{await PlanSync.importObj({v:1,docs:remote});return false;}catch{return true;}finally{Storage.prototype.setItem=original;}
+  },remote);assert(fail);assert.deepEqual(await docs(p),before);
+  await p.reload();await castle(p);assert.deepEqual(await docs(p),before,'reload must retain original durable snapshot');
+  for(const bad of [{docs:{'days/bad':{d:{q:[]},u:'invalid'}}},{docs:{'bad':{d:{},u:1}}},{docs:{'cfg/invalid':{d:[],u:1}}}]){
+   assert(await p.evaluate(async bad=>{try{await PlanSync.importObj(bad);return false;}catch{return true;}},bad));assert.deepEqual(await docs(p),before);
+  }
+  await p.evaluate(remote=>PlanSync.importObj({v:1,docs:remote}),remote);await p.waitForTimeout(60);assert((await docs(p))['cfg/citadel']);
+  assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.recovery.v1')).docs),before);await context.close();
+ });
+ await check('backup download and explicit restore round trip preserve progress and disable automatic cloud writes',async()=>{
+  const {page:p,context}=await open();const before=await docs(p);
+  const downloadEvent=p.waitForEvent('download');await p.evaluate(()=>PlanSync.exportBackup());const download=await downloadEvent;
+  const copy=JSON.parse(await readFile(await download.path(),'utf8'));assert.deepEqual(copy.docs,before);assert.equal(Object.keys(copy).includes('token'),false);
+  await write(p,'days/'+date,{q:Array(10).fill(true),steps:8000});await write(p,'spont/after-backup',{name:'Synthetic later entry',done:true,date});
+  await p.locator('.pl-chip').click();const menu=p.locator('.pl-menu');assert(await menu.isVisible());
+  p.once('dialog',d=>d.accept());const chooserEvent=p.waitForEvent('filechooser');await menu.getByRole('button',{name:'ВОССТАНОВИТЬ КОПИЮ ИЗ ФАЙЛА',exact:true}).click();const chooser=await chooserEvent;
+  await chooser.setFiles({name:'synthetic-backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(copy))});
+  await p.waitForFunction(()=>JSON.parse(localStorage.getItem('plan.meta.v1'))?.syncPaused===true);await p.waitForTimeout(70);const after=await docs(p);
+  for(const [path,record]of Object.entries(before))assert.deepEqual(after[path].d,record.d);assert.equal(after['spont/after-backup'].d,null);
+  assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.meta.v1')).signed),false);
+  await p.reload();await castle(p);assert.deepEqual((await docs(p))['days/'+date].d,before['days/'+date].d);await context.close();
+ });
+ await check('Sheets conflicts survive reload, pause uploads, export both copies and resolve by explicit choice',async()=>{
+  for(const choice of ['local','remote']){
+   const {page:p,context}=await open();let puts=0,rows=[['path','json','u']];
+   await context.route('**/*googleapis.com/**',async route=>{const req=route.request(),u=req.url();if(u.includes('fonts.googleapis.com'))return route.fulfill({contentType:'text/css',body:''});let data={};if(u.includes('drive/v3/files?'))data={files:[{id:'QA_SHEET'}]};else if(u.includes('/about?'))data={user:{emailAddress:'qa@example.invalid'}};else if(u.includes('values/data!A:C'))data={values:rows};else if(req.method()==='PUT'){puts++;rows=JSON.parse(req.postData()).values;}else throw Error('Unexpected synthetic request');await route.fulfill({contentType:'application/json',body:JSON.stringify(data)});});
+   await p.evaluate(()=>{window.google={accounts:{oauth2:{initTokenClient:o=>({requestAccessToken:()=>o.callback({access_token:'synthetic-token',expires_in:3600})})}}};});
+   await p.evaluate(()=>PlanSync.sync(true));const uploaded=puts;
+   await p.clock.fastForward(1000);await write(p,'days/'+date,{q:Array(10).fill(true),steps:8000});const local=await docs(p);
+   const remote={q:Array(10).fill(false),steps:9000};rows=rows.map(r=>r[0]==='days/'+date?[r[0],JSON.stringify(remote),local['days/'+date].u+5]:r);
+   await p.evaluate(()=>PlanSync.sync(false));assert.equal(puts,uploaded);assert.deepEqual(await docs(p),local);assert(await p.evaluate(()=>!!localStorage.getItem('plan.conflict.v1')));
+   await p.reload();await castle(p);await p.evaluate(()=>PlanSync.sync(false));assert.equal(puts,uploaded,'reload must not silently upload conflict');
+   await p.locator('.pl-chip').click();const menu=p.locator('.pl-menu');assert.match(await menu.innerText(),/Конфликт устройств/);
+   const downloadEvent=p.waitForEvent('download');await menu.getByRole('button',{name:'СОХРАНИТЬ ОБЛАЧНУЮ КОПИЮ',exact:true}).click();const download=await downloadEvent;assert.deepEqual(JSON.parse(await readFile(await download.path(),'utf8')).docs['days/'+date].d,remote);
+   p.once('dialog',d=>d.accept());await menu.getByRole('button',{name:choice==='local'?'ОСТАВИТЬ ДАННЫЕ ТЕЛЕФОНА':'ПРИНЯТЬ КОНФЛИКТУЮЩИЕ ДАННЫЕ ОБЛАКА',exact:true}).click();await p.waitForFunction(()=>!localStorage.getItem('plan.conflict.v1'));
+   await p.clock.runFor(65000);assert.equal(puts,uploaded,'resolution waits for manual synchronization');
+   await p.evaluate(()=>PlanSync.sync(true));assert.equal(puts,uploaded+1,'approved resolution must not conflict forever');assert.deepEqual(JSON.parse(rows.find(r=>r[0]==='days/'+date)[1]),choice==='local'?local['days/'+date].d:remote);
+   await context.close();
+  }
+ });
+ await check('failed pre-update copy keeps old save read-only until storage recovers',async()=>{
+  const {page:p,context}=await open({failUpgrade:true});const before=await docs(p);
+  const rejected=await p.evaluate(async()=>{try{const db=await claude.use('db');await db.doc('cfg/blocked').set({value:true});return false;}catch{return true;}});assert(rejected);assert.deepEqual(await docs(p),before);
+  await p.locator('.pl-chip').click();assert.match(await p.locator('.pl-menu').innerText(),/только для чтения/);
+  const downloaded=p.waitForEvent('download');await p.locator('.pl-menu').getByRole('button',{name:'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ',exact:true}).click();const file=await downloaded;assert.deepEqual(JSON.parse(await readFile(await file.path(),'utf8')).docs,before);
+  await p.reload();await castle(p);await write(p,'cfg/recovered',{value:true});assert((await docs(p))['cfg/recovered']);assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);await context.close();
+ });
+ await check('rank advancement is observed from actual shared progress without NPC save writes',async()=>{
+  const complete=advancedSeed(),seed=structuredClone(complete),restore={};
+  for(let d=1;d<=30;d++){const k='2027-03-'+String(d).padStart(2,'0');for(const col of ['days','per']){restore[col+'/'+k]=seed[col+'/'+k];delete seed[col+'/'+k];}}
+  const {page:p,context}=await open({seed,day:'2027-04-16'});await castle(p);const before=await p.evaluate(()=>__qa.points().L);assert(before>=5);
+  await p.locator('#citadel-residents button').filter({hasText:'Страж'}).click();
+  await p.evaluate(async restore=>{const db=await claude.use('db');await db.runTransaction(tx=>{for(const [path,value]of Object.entries(restore))tx.set(path,value);});},restore);
+  await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
+  assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
+ });
+ await check('production PWA upgrades previous release and keeps a pre-update recovery copy',async()=>{
+  for(const name of ['index.html','localdb.js','sw.js'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','fdd756a:docs/'+name]));
+  const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(20000);
+  await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2027-04-12');localStorage.setItem('msum','2027-04');localStorage.setItem('trialSeen','2027-04-16');},advancedSeed());
+  await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
+  await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(p));
+  await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.56');
+  await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);
+  const before=await docs(p);servedOverrides.clear();await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
+  await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();await p.waitForFunction(()=>window.APP_VERSION==='0.57');await p.waitForLoadState('load');await p.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated');await castle(p);
+  assert.deepEqual(await docs(p),before,'update must preserve every original record and timestamp');assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
+  await p.clock.runFor(1000);await context.setOffline(true);await p.reload();await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.57');assert.deepEqual(await docs(p),before);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
  });
  await check('production PWA construction offline survives reload with one durable payment',async()=>{
   const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(15000);
