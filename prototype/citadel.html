@@ -106,7 +106,7 @@ function applyAtmosphere(){
  document.getElementById('scene-hero').style.animation=state.settings.reducedMotion?'none':'';drawWeather();
 }
 function render(){
-applyAtmosphere();castle.textContent='';castle.classList.toggle('mode-walk',mode==='walk');
+castle.textContent='';applyAtmosphere();castle.classList.toggle('mode-walk',mode==='walk');
 state.floors.slice().reverse().forEach(function(f){
 var floor=document.createElement('div');floor.className='floor';
 var label=document.createElement('div');label.className='floor-title';label.textContent=f.id+' · '+(f.unlocked?'Открыт':'Закрыт');floor.appendChild(label);if(f.unlocked){var stair=document.createElement('span');stair.className='stairs';stair.textContent='▤';stair.title='Лестничный переход (декорация прототипа)';floor.appendChild(stair);}
@@ -163,6 +163,8 @@ document.getElementById('overview').onclick=function(){mode='overview';render();
 document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Нажми на комнату, чтобы войти внутрь и перемещаться по интерьеру.');render();};
 document.getElementById('add-floor').onclick=function(){var next=JSON.parse(JSON.stringify(state));var f=next.floors.find(function(x){return !x.unlocked;});if(f)f.unlocked=true;else next.floors.push({id:'f'+next.floors.length,capacity:6,unlocked:true});commit(next);announce('Этаж открыт в демонстрационном режиме.');};
 document.getElementById('reset').onclick=function(){if(!confirm('Сбросить только прототип Цитадели?'))return;selected=null;commit(model.initial());announce('Прототип сброшен.');};
-document.getElementById('weather-city').value=weatherApi.savedCity();render();autoRefreshWeather();document.addEventListener('visibilitychange',function(){if(!document.hidden)autoRefreshWeather();});
+document.getElementById('weather-city').value=weatherApi.savedCity();
+try{render();}catch(error){castle.textContent='Ошибка отрисовки Цитадели: '+(error&&error.message||String(error));castle.style.color='#ffb5b5';console.error('Citadel render failed',error);}
+autoRefreshWeather();document.addEventListener('visibilitychange',function(){if(!document.hidden)autoRefreshWeather();});
 })();
 </script></body></html>
