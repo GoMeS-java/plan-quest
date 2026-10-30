@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={S:S,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,buy:buy};`;
+const expose = `window.__qa={S:S,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
@@ -181,7 +181,7 @@ try {
  await check('resident schedules, progress-aware dialogue and room journals read original state',async()=>{
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
   const clock=async hour=>{await p.clock.setSystemTime(new Date('2027-04-16T'+String(hour).padStart(2,'0')+':00:00+03:00'));await p.evaluate(()=>__qa.render());await dismiss(p);};
-  for(const [hour,room,count]of [[2,'rest',4],[8,'study',4],[14,'forge',1],[19,'throne',4],[22,'forge',1]]){
+  for(const [hour,room,count]of [[2,'rest',4],[8,'study',4],[14,'forge',1],[19,'refectory',4],[22,'forge',1]]){
    await clock(hour);assert.equal(await p.locator('[data-croom="'+room+'"] .citadel-person').count(),count);assert(await p.locator('[data-croom="'+room+'"] .citadel-person').evaluateAll(nodes=>nodes.every(n=>{const a=n.getBoundingClientRect(),b=n.parentElement.getBoundingClientRect();return getComputedStyle(n).position==='absolute'&&a.left>=b.left&&a.right<=b.right&&a.top>=b.top&&a.bottom<=b.bottom;})), 'resident sprites must be visible inside rooms');
   }
   await clock(14);const before=await docs(p);await p.locator('#citadel-residents button').filter({hasText:'Хранительница'}).click();assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/завершены/);assert.deepEqual(await docs(p),before);
@@ -233,13 +233,96 @@ try {
   assert(rows.some(r=>r[0]==='buys/citadel-study-2'),'the new payment must be sent without a manual sync');
   await context.close();
  });
+ await check('connected castle graph excludes locked rooms and every tier has real exits',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
+  const graph=await p.evaluate(()=>{
+   const w=CitadelWorld,rooms=Object.keys(w.ranks),paths=[];
+   for(const from of rooms)for(const to of rooms)paths.push({from,to,path:w.route(from,to,99)});
+   return {rooms,paths,graph:w.graph,locked:w.route('rest','vault',1),unknown:w.route('missing','rest',99),short:w.route('rest','study',1)};
+  });
+  assert.equal(graph.rooms.length,10);assert.deepEqual(graph.locked,[]);assert.deepEqual(graph.unknown,[]);assert.deepEqual(graph.short,['rest','hall-1','study']);
+  for(const {from,to,path}of graph.paths){assert.equal(path[0],from);assert.equal(path.at(-1),to);for(let i=1;i<path.length;i++)assert(graph.graph[path[i-1]].includes(path[i]),'nonadjacent route edge');}
+  await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();
+  assert((await p.locator('#citadel-exits [data-travel]').count())>=3);
+  await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');
+  assert.equal(await p.locator('#citadel-avatar').getAttribute('data-route'),'gatehouse hall-3 hall-2 archive');
+  await p.evaluate(()=>__qa.idle());await p.reload();await castle(p);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('aria-pressed'),'true');
+  await context.close();
+ });
+ await check('all new rooms, paid renovations, doors and objects work at six viewport widths',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);const before=await p.evaluate(()=>__qa.points());
+  for(const room of ['gatehouse','refectory','cloister','vault']){
+   await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-enter').click();
+   for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});}
+   for(const width of [320,360,390,430,768,1280]){
+    await p.setViewportSize({width,height:900});
+    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
+    assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth),'interior overflow '+room+' at '+width);
+    await p.locator('#citadel-interior-object').focus();await p.keyboard.press('Enter');assert.match(await p.locator('#citadel-object-status').innerText(),/:/);
+    assert(await p.locator('#citadel-exits button:enabled').count());
+    if(width===320||width===1280)await p.locator('#citadel-interior').screenshot({path:resolve(out,'cycle2-'+room+'-'+width+'.png')});
+   }
+  }
+  const after=await p.evaluate(()=>__qa.points());assert.deepEqual({...after,avail:before.avail},before);assert.equal(after.avail,before.avail-12);
+  await p.setViewportSize({width:390,height:844});await p.locator('#citadel-castle').screenshot({path:resolve(out,'cycle2-five-tiers.png')});
+  await p.reload();await castle(p);assert(await p.evaluate(()=>['gatehouse','refectory','cloister','vault'].every(r=>__qa.roomLevel(r)===3)));await context.close();
+ });
+ await check('NPCs visibly traverse stairs, recover the same route after reload and complete errands',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
+  const time=async text=>{await p.clock.setFixedTime(new Date('2027-04-16T'+text+'+03:00'));await p.evaluate(()=>__qa.render());await dismiss(p);};
+  await time('10:00:07');let st=await p.evaluate(()=>__qa.npcState('smith'));assert(st.moving);assert(st.path.includes('hall-2'));assert.equal(st.destination,'forge');
+  const sprite=p.locator('#citadel-castle > .citadel-person[data-person="smith"]');assert.equal(await sprite.count(),1);
+  const a=await sprite.boundingBox();await time('10:00:09');const b=await sprite.boundingBox();assert(a.x!==b.x||a.y!==b.y,'resident must physically move');
+  st=await p.evaluate(()=>__qa.npcState('smith'));await p.reload();await castle(p);const restored=await p.evaluate(()=>__qa.npcState('smith'));assert.equal(restored.node,st.node);assert.equal(restored.next,st.next);assert(Math.abs(restored.fraction-st.fraction)<.1);
+  await p.setViewportSize({width:320,height:700});await p.evaluate(()=>window.dispatchEvent(new Event('resize')));await p.waitForTimeout(40);
+  assert(await sprite.evaluate(n=>{const a=n.getBoundingClientRect(),b=document.querySelector('#citadel-castle').getBoundingClientRect();return a.left>=b.left&&a.right<=b.right;}));
+  await time('10:02:00');assert.equal(await p.locator('[data-croom="forge"] .citadel-person[data-person="smith"]').count(),1);assert.equal(await p.locator('#citadel-castle > .is-travelling').count(),0);
+  await time('14:15:05');assert((await p.evaluate(()=>__qa.npcState('guardian'))).moving);
+  await time('14:15:40');assert.equal((await p.evaluate(()=>__qa.npcState('guardian'))).room,'gatehouse');
+  await time('14:17:00');assert.equal((await p.evaluate(()=>__qa.npcState('guardian'))).room,'observatory');
+  await time('18:00:09');assert((await p.evaluate(()=>__qa.npcState('archivist'))).moving);
+  await time('18:02:00');assert.equal(await p.locator('[data-croom="refectory"] .citadel-person').count(),4);
+  await p.locator('[data-croom="refectory"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-interior-stage [data-person="smith"]').focus();await p.keyboard.press('Enter');assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Кузнец/);assert.equal(await p.locator('#citadel-interior-stage [data-person="smith"]').getAttribute('data-mode'),'interaction');
+  await time('23:00:10');assert((await p.evaluate(()=>__qa.npcState('smith'))).moving);await time('23:02:00');assert.equal(await p.locator('[data-croom="rest"] .citadel-person').count(),4);
+  const before=await p.evaluate(()=>__qa.npcState('smith'));await p.clock.setSystemTime(new Date('2027-04-17T00:01:00+03:00'));await p.evaluate(()=>__qa.render());assert.equal((await p.evaluate(()=>__qa.npcState('smith'))).room,before.room);
+  await context.close();
+ });
+ await check('resident timer moves through a departure without manual renders or save writes',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
+  await p.locator('#citadel-home').evaluate(n=>n.open=false);await p.clock.setSystemTime(new Date('2027-04-16T18:00:00+03:00'));await castle(p);
+  const before=await docs(p);const a=await p.locator('#citadel-castle > [data-person="guardian"]').boundingBox();await p.clock.runFor(7000);
+  const b=await p.locator('#citadel-castle > [data-person="guardian"]').boundingBox();assert(a.x!==b.x||a.y!==b.y);
+  await p.clock.runFor(65000);assert.equal(await p.locator('[data-croom="refectory"] .citadel-person').count(),4);assert.deepEqual(await docs(p),before,'NPC simulation must not write progress');await context.close();
+ });
+ await check('animation follows connected hero path and reduced motion disables animation',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
+  await p.emulateMedia({reducedMotion:'no-preference'});await p.evaluate(()=>__qa.move('vault'));
+  const info=await p.locator('#citadel-avatar').evaluate(n=>({route:n.dataset.route,frames:n.getAnimations().flatMap(a=>a.effect.getKeyframes()).filter(k=>k.left)}));
+  assert.equal(info.route,'rest hall-1 hall-2 hall-3 hall-4 vault');assert.equal(info.frames.length,6);
+  await p.emulateMedia({reducedMotion:'reduce'});await p.evaluate(()=>__qa.move('study'));assert.equal(await p.locator('#citadel-avatar').evaluate(n=>n.getAnimations().length),0);
+  await p.locator('#citadel-home').evaluate(n=>n.open=false);await p.clock.setSystemTime(new Date('2027-04-16T18:02:00+03:00'));await castle(p);await p.waitForFunction(()=>document.querySelectorAll('[data-croom="refectory"] .citadel-person').length===4);await context.close();
+ });
+ await check('two tab cosmetic patches retain other rooms and current selected destination',async()=>{
+  const seed=structuredClone(initial);seed['cfg/citadel']={selectedRoom:'study',decor:{}};const {page:p,context}=await open({seed});await castle(p);const other=await context.newPage();await other.clock.install({time:new Date(date+'T14:00:00+03:00')});await other.goto(url);await castle(other);await dismiss(other);
+  await Promise.all([p.evaluate(()=>__qa.decor('rest','banner')),other.evaluate(()=>__qa.decor('study','banner'))]);
+  await p.evaluate(()=>__qa.idle());await other.evaluate(()=>__qa.idle());await p.waitForFunction(()=>PlanSync._docs()['cfg/citadel']?.d.decor?.study==='banner'&&PlanSync._docs()['cfg/citadel']?.d.decor?.rest==='banner');
+  assert.equal((await docs(p))['cfg/citadel'].d.decor.rest,'banner');assert.equal((await docs(p))['cfg/citadel'].d.selectedRoom,'study');await context.close();
+ });
+ await check('independent offline device spends expose conflict after merge and block further construction',async()=>{
+  const seed=advancedSeed(),probe=await open({seed,day:'2027-04-16'}),points=await probe.page.evaluate(()=>__qa.points());await probe.context.close();seed['buys/previous']={name:'Synthetic prior purchase',cost:points.upgrades-1};
+  const a=await open({seed,day:'2027-04-16'}),b=await open({seed,day:'2027-04-16'});
+  await Promise.all([a.page.evaluate(()=>{__qa.upgrade('gatehouse',1);return __qa.idle();}),b.page.evaluate(()=>{__qa.upgrade('study',1);return __qa.idle();})]);
+  const remote=await docs(b.page);await a.page.evaluate(remote=>PlanSync.importObj({v:1,docs:remote}),remote);await a.page.waitForFunction(()=>__qa.points().avail===-1);
+  await castle(a.page);await a.page.locator('[data-croom="rest"]').click();await a.page.locator('#citadel-enter').click();assert(await a.page.locator('#citadel-upgrade').isDisabled());assert.match(await a.page.locator('#citadel-building-balance').innerText(),/несогласованные расходы/);
+  const before=await docs(a.page);await a.page.evaluate(()=>{__qa.upgrade('rest',1);return __qa.idle();});assert.deepEqual(await docs(a.page),before);await a.context.close();await b.context.close();
+ });
  await check('production PWA construction offline survives reload with one durable payment',async()=>{
   const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(15000);
   await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2027-04-12');localStorage.setItem('msum','2027-04');localStorage.setItem('trialSeen','2027-04-16');},advancedSeed());
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
   await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(p));
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);
-  await context.setOffline(true);await p.reload();await castle(p);await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
+  await context.setOffline(true);await p.reload();await castle(p);assert(await p.evaluate(()=>!!window.CitadelWorld));await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
   assert.equal(Number(await p.locator('#upg').innerText()),Number(before)-1);await p.reload();await castle(p);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');
   assert.equal(Object.keys(await docs(p)).filter(k=>k==='buys/citadel-study-2').length,1);assert.equal(Number(await p.locator('#upg').innerText()),Number(before)-1);await context.close();
@@ -248,4 +331,4 @@ try {
   const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'allow'});await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.goto(url);await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await context.setOffline(true);await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('cfg/citadel').set({selectedRoom:'study',decor:{study:'banner'}});});await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom="study"][aria-pressed="true"]'));await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-decoration').getAttribute('data-decor'),'banner');await context.close();
  });
  assert.deepEqual(errors,[],'browser runtime errors');console.log(`PASS ${passed} scenario groups; no runtime errors`);
-} catch(error) {console.error('FAIL',currentCheck,error.name,String(error.message).split('Call log:')[0].split('\n')[0]);process.exitCode=1;} finally {await browser.close();await new Promise(r=>server.close(r));}
+} catch(error) {console.error('FAIL',currentCheck,error.name,String(error.message).split('Call log:')[0].split('\n')[0],String(error.stack).split('\n').find(line=>/citadel\.mjs:\d/.test(line))||'');process.exitCode=1;} finally {await browser.close();await new Promise(r=>server.close(r));}
