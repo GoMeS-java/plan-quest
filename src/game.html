@@ -4498,6 +4498,7 @@ function renderAllInner() {
     function refreshDrawer(){
       left.textContent='';right.textContent='';var h=document.createElement('h2');h.textContent='Путь Спящего';left.appendChild(h);
       var status=document.createElement('p');var p=loaded?pointsInfo():null;status.textContent=p?'Ранг '+p.L+' · '+p.P+' / '+p.need+' осколков · Ядра души '+p.avail+' · Эссенция '+abyssBalance(S.abyss):'Загрузка пути…';left.appendChild(status);
+      if(p){var meter=document.createElement('div'),fill=document.createElement('i');meter.className='citadel-shell-meter';fill.style.width=Math.max(0,Math.min(100,100*p.P/p.need))+'%';meter.appendChild(fill);left.appendChild(meter);}
       [['Обзор',function(){citadelSetArtView('overview');}],['Прогулка',function(){citadelSetArtView('overview');}],['Строительство',function(){citadelSetArtView('upgrades');citadelEnter();}],['Интерьер',function(){citadelEnter();}],['Жители',function(){citadelSetArtView('people');}],['Атмосфера',function(){showSystem('goals','Путь');}],['Задания',function(){showSystem('today','Задания');}],['Настройки',function(){showSystem('settings','Настройки');}]].forEach(function(item){drawerButton(left,item[0],function(){closeDrawer();item[1]();});});
       var time=document.createElement('p');time.textContent=$('citadel-time').textContent;left.appendChild(time);
       var rh=document.createElement('h2');rh.textContent='Выбранная комната';right.appendChild(rh);

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1a1511"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.60";window.APP_BUILD="de7103c0d90c";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1a1511"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.60";window.APP_BUILD="a810f85df4ac";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Заклятие</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -955,7 +955,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <h2>ВЕРСИЯ 0.60</h2>
-    <div class="hint">Сборка de7103c0d90c</div>
+    <div class="hint">Сборка a810f85df4ac</div>
     <div class="goal vhist">
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -4499,6 +4499,7 @@ function renderAllInner() {
     function refreshDrawer(){
       left.textContent='';right.textContent='';var h=document.createElement('h2');h.textContent='Путь Спящего';left.appendChild(h);
       var status=document.createElement('p');var p=loaded?pointsInfo():null;status.textContent=p?'Ранг '+p.L+' · '+p.P+' / '+p.need+' осколков · Ядра души '+p.avail+' · Эссенция '+abyssBalance(S.abyss):'Загрузка пути…';left.appendChild(status);
+      if(p){var meter=document.createElement('div'),fill=document.createElement('i');meter.className='citadel-shell-meter';fill.style.width=Math.max(0,Math.min(100,100*p.P/p.need))+'%';meter.appendChild(fill);left.appendChild(meter);}
       [['Обзор',function(){citadelSetArtView('overview');}],['Прогулка',function(){citadelSetArtView('overview');}],['Строительство',function(){citadelSetArtView('upgrades');citadelEnter();}],['Интерьер',function(){citadelEnter();}],['Жители',function(){citadelSetArtView('people');}],['Атмосфера',function(){showSystem('goals','Путь');}],['Задания',function(){showSystem('today','Задания');}],['Настройки',function(){showSystem('settings','Настройки');}]].forEach(function(item){drawerButton(left,item[0],function(){closeDrawer();item[1]();});});
       var time=document.createElement('p');time.textContent=$('citadel-time').textContent;left.appendChild(time);
       var rh=document.createElement('h2');rh.textContent='Выбранная комната';right.appendChild(rh);
