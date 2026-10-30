@@ -18,10 +18,11 @@ const server=createServer(async(req,res)=>{try { const path=decodeURIComponent(n
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}:{} )});
+console.log('Browser',browser.version());
 const errors=[];let passed=0,currentCheck='setup';
 async function check(name,fn){if(process.env.TEST_FILTER&&!new RegExp(process.env.TEST_FILTER).test(name))return;currentCheck=name;await fn();passed++;console.log('PASS',name);}
 const date='2026-10-30';
-const initial={'cfg/opening':{cash:1200.5,card:3400},'weights/test':{kg:152,date,ts:1},['days/'+date]:{q:[false,false,false,false,false,false,false,false,false,false],steps:1200,kcal:2100},'spont/old':{name:'Synthetic task',date,done:false,heavy:true,ts:1},'cfg/outfit':{outer:'none'}};
+const initial={'cfg/opening':{cash:1200.5,card:3400},'weights/test':{kg:143.7,date,ts:1},['days/'+date]:{q:[false,false,false,false,false,false,false,false,false,false],steps:1200,kcal:2100},'spont/old':{name:'Synthetic task',date,done:false,heavy:true,ts:1},'cfg/outfit':{outer:'none'}};
 // Computed keys are assigned separately to remain compatible with plain JavaScript.
 async function open({width=390,height=844,seed=initial,legacy={},base=false,day=date,sw=false}={}){
  const context=await browser.newContext({viewport:{width,height},isMobile:width<600,hasTouch:width<600,timezoneId:'Europe/Moscow',reducedMotion:'reduce',serviceWorkers:sw?'allow':'block'});
@@ -249,6 +250,11 @@ try {
   await p.evaluate(()=>__qa.idle());await p.reload();await castle(p);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('aria-pressed'),'true');
   await context.close();
  });
+ await check('a new player can return from the gatehouse through stairs past locked rooms',async()=>{
+  const {page:p,context}=await open({width:320});await castle(p);assert.equal(await p.evaluate(()=>__qa.points().L),1);
+  await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();assert(await p.locator('#citadel-exits [data-travel="archive"]').isDisabled());
+  await p.locator('#citadel-exits [data-travel="rest"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'rest');assert.equal(await p.locator('#citadel-avatar').getAttribute('data-route'),'gatehouse hall-3 hall-2 hall-1 rest');await context.close();
+ });
  await check('all new rooms, paid renovations, doors and objects work at six viewport widths',async()=>{
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);const before=await p.evaluate(()=>__qa.points());
   for(const room of ['gatehouse','refectory','cloister','vault']){
@@ -301,6 +307,16 @@ try {
   assert.equal(info.route,'rest hall-1 hall-2 hall-3 hall-4 vault');assert.equal(info.frames.length,6);
   await p.emulateMedia({reducedMotion:'reduce'});await p.evaluate(()=>__qa.move('study'));assert.equal(await p.locator('#citadel-avatar').evaluate(n=>n.getAnimations().length),0);
   await p.locator('#citadel-home').evaluate(n=>n.open=false);await p.clock.setSystemTime(new Date('2027-04-16T18:02:00+03:00'));await castle(p);await p.waitForFunction(()=>document.querySelectorAll('[data-croom="refectory"] .citadel-person').length===4);await context.close();
+ });
+ await check('room conversations stay near the resident, navigate to their task and close on departure',async()=>{
+  const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16'});await castle(p);
+  await p.locator('[data-croom="forge"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-interior-stage [data-person="smith"]').dispatchEvent('click');
+  assert(await p.locator('#citadel-room-conversation').isVisible());assert.match(await p.locator('#citadel-room-speech').innerText(),/Кузнец/);assert(await p.locator('#citadel-room-conversation').evaluate(n=>n.scrollWidth<=n.clientWidth));
+  const before=await docs(p);await p.locator('#citadel-room-npc-action').click();assert(await p.locator('#wardrobe').isVisible());
+  // Return through the existing task tab, then finish the conversation.
+  await p.locator('.tab[data-t="today"]').click();await p.locator('#citadel-room-npc-close').click();assert(await p.locator('#citadel-room-conversation').isHidden());assert.deepEqual(await docs(p),before);
+  await p.locator('#citadel-interior-stage [data-person="smith"]').dispatchEvent('click');await p.clock.setFixedTime(new Date('2027-04-16T18:00:09+03:00'));await p.evaluate(()=>__qa.render());assert(await p.locator('#citadel-room-conversation').isHidden());
+  const dest=await p.locator('.citadel-scene-door').first().getAttribute('data-stage-door');assert(await p.locator('.citadel-scene-door').first().evaluate(n=>n.getBoundingClientRect().width>=44));await p.locator('.citadel-scene-door').first().click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),dest);await context.close();
  });
  await check('two tab cosmetic patches retain other rooms and current selected destination',async()=>{
   const seed=structuredClone(initial);seed['cfg/citadel']={selectedRoom:'study',decor:{}};const {page:p,context}=await open({seed});await castle(p);const other=await context.newPage();await other.clock.install({time:new Date(date+'T14:00:00+03:00')});await other.goto(url);await castle(other);await dismiss(other);
