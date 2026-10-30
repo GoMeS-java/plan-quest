@@ -406,6 +406,17 @@ try {
    await context.close();
   }
  });
+ await check('reload during a queued purchase leaves no partial charge and a committed purchase survives immediate reload',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);const before=await p.evaluate(()=>__qa.points().avail);
+  const other=await context.newPage();await other.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});await other.goto(url);await castle(other);
+  await other.evaluate(()=>{window.__held=false;window.__block=navigator.locks.request('plan.store.v1',()=>{window.__held=true;return new Promise(r=>{window.__release=r;});});});await other.waitForFunction(()=>__held);
+  await p.evaluate(()=>{__qa.upgrade('rest',1);});await p.waitForFunction(async()=>{const state=await navigator.locks.query();return state.pending.some(l=>l.name==='plan.store.v1');});
+  await p.reload();await other.evaluate(()=>__release());await other.evaluate(()=>__block);await castle(p);
+  assert.equal((await docs(p))['buys/citadel-rest-2'],undefined);assert.equal(await p.evaluate(()=>__qa.points().avail),before);
+  await p.evaluate(()=>{__qa.upgrade('rest',1);});await p.waitForFunction(()=>!!JSON.parse(localStorage.getItem('plan.store.v1')).docs['buys/citadel-rest-2']);
+  await p.reload();await castle(p);assert.equal(await p.evaluate(()=>__qa.points().avail),before-1);assert.equal(await p.evaluate(()=>__qa.roomLevel('rest')),2);
+  assert.equal(Object.keys(await docs(p)).filter(k=>k==='buys/citadel-rest-2').length,1);await context.close();
+ });
  await check('backup includes the gameplay action queued immediately before download',async()=>{
   const {page:p,context}=await open();const event=p.waitForEvent('download');
   await p.evaluate(()=>{document.querySelector('#qlist button').click();return PlanSync.exportBackup();});
