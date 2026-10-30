@@ -10,7 +10,7 @@ os.makedirs(DIST)
 # --- index.html
 g = open(f'{SRC}/game.html', encoding='utf-8').read()
 g = g.replace('__VER__', open(f'{SRC}/version.txt', encoding='utf-8').read().strip())
-g = g.replace('__BUILD__', hashlib.sha256((g + open(f'{SRC}/localdb.js', encoding='utf-8').read()).encode()).hexdigest()[:6])
+g = g.replace('__BUILD__', hashlib.sha256((g + open(f'{SRC}/localdb.js', encoding='utf-8').read() + open(f'{SRC}/citadel-world.js', encoding='utf-8').read()).encode()).hexdigest()[:6])
 i = g.index('</style>') + len('</style>')
 head_part, body_part = g[:i], g[i:]
 head_part = head_part.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '')
@@ -60,7 +60,7 @@ icon(192, .82).save(f'{DIST}/icon-192.png')
 icon(512, .82).save(f'{DIST}/icon-512.png')
 icon(512, .62).save(f'{DIST}/icon-512-maskable.png')
 
-for f in ['manifest.json', 'config.js', 'localdb.js', 'privacy.html']:
+for f in ['manifest.json', 'config.js', 'localdb.js', 'privacy.html', 'citadel-world.js']:
     shutil.copy(f'{SRC}/{f}', f'{DIST}/{f}')
 
 # --- Отдельная тестовая Цитадель (не заменяет основную игру)
@@ -74,7 +74,7 @@ citadel = citadel.replace('</head>', '<meta name="theme-color" content="#100c18"
 open(f'{DIST}/citadel.html', 'w', encoding='utf-8').write(citadel)
 
 # --- sw.js с версией = хэш содержимого
-shell = ['./', 'index.html', 'manifest.json', 'config.js', 'localdb.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
+shell = ['./', 'index.html', 'manifest.json', 'config.js', 'localdb.js', 'citadel-world.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
 h = hashlib.sha256()
 for f in sorted(set(shell) - {'./'}):
     h.update(open(f'{DIST}/{f}', 'rb').read())
