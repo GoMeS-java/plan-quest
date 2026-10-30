@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Цитадель · Прототип</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#100c18;color:#e7dcf6}
+*{box-sizing:border-box}body{margin:0;padding:16px}.wrap{max-width:900px;margin:auto}
+h1{font-size:24px;margin:8px 0}p{color:#b9a9cf}.toolbar,.controls{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+button,select{background:#2c203c;color:#eee0ff;border:1px solid #8064a5;border-radius:8px;padding:10px;cursor:pointer;font:inherit}
+button:focus-visible{outline:2px solid #dfbaff}button.active{background:#694b91}
+#castle{overflow-x:auto;border:3px solid #604579;background:linear-gradient(#241a39,#151020);border-radius:12px;padding:20px;min-height:290px}
+.floor{display:grid;grid-template-columns:repeat(6,minmax(94px,1fr));gap:4px;min-width:610px;margin:8px 0;padding:7px;background:#33263e;border-bottom:8px solid #746078}
+.floor-title{grid-column:1/-1;color:#ccb5e5;font-size:12px}.room{border:2px solid #7c5d9e;border-radius:4px;min-height:118px;background:linear-gradient(#3a2a4d,#21182c);position:relative;text-align:center;padding:18px 5px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
+.room{overflow:hidden;background:repeating-linear-gradient(0deg,transparent 0 23px,#372842 24px 25px),repeating-linear-gradient(90deg,#35273f 0 46px,#493450 47px 49px);box-shadow:inset 0 -12px #241829,inset 0 8px #5d4767}.room:after{content:' ';position:absolute;left:14%;top:12px;width:26px;height:34px;border:4px solid #705681;border-radius:14px 14px 0 0;background:linear-gradient(#54416e,#252139);box-shadow:inset 0 0 10px #9472b8;pointer-events:none}.room:before{content:'✦';position:absolute;top:4px;right:8px;color:#bd95ed}.room.selected{outline:3px solid #edc57e}.room .symbol{font-size:28px}.room .name{font-size:13px}.empty{border:1px dashed #766483;min-height:118px;background:#22192c;color:#9d8bae}
+.panel{border:1px solid #59436d;background:#1c1428;border-radius:12px;padding:16px;margin-top:16px}.panel h2{margin-top:0;font-size:18px}
+small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opacity:.6}.mode-walk .room.hero-room{opacity:1;outline:3px solid #8cc8e8}
+.furn{display:flex;flex-wrap:wrap;gap:3px}.furn span{border:1px solid #a286b8;padding:2px;font-size:14px}.hero{position:absolute;bottom:8px;left:12px;width:16px;height:28px;font-size:0;background:linear-gradient(#2c2039 0 30%,#9571ba 30% 39%,#24152e 39%);border:2px solid #b08ace;clip-path:polygon(25% 0,75% 0,100% 45%,85% 100%,15% 100%,0 45%);filter:drop-shadow(0 0 5px #b17bff);animation:hero-idle 1.4s steps(2) infinite;transition:left .28s linear}.hero.walking{animation:hero-walk .25s steps(2) infinite}@keyframes hero-idle{50%{transform:translateY(-2px)}}@keyframes hero-walk{50%{transform:translateY(-4px) rotate(3deg)}}.floor{position:relative}.floor:after{content:' ';position:absolute;bottom:0;left:0;right:0;height:5px;background:repeating-linear-gradient(90deg,#b08b63 0 30px,#6b4b56 31px 34px)}.stairs{position:absolute;right:8px;bottom:5px;color:#c8a6ed;pointer-events:none;font-size:16px}@media(prefers-reduced-motion:reduce){.hero{animation:none!important;transition:none!important}}
+@media(max-width:550px){body{padding:10px}h1{font-size:20px}.panel{padding:12px}}
+ .npc{font-size:13px;color:#efcda6;background:#24172d;border:1px solid #896e94;padding:3px;border-radius:5px;position:relative;z-index:1}.npcbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.npcbar button{font-size:13px;padding:8px}.room .name{position:relative;z-index:1}
+#room-view[hidden]{display:none!important}#room-view{position:fixed;inset:0;z-index:30;background:#0d0916ed;display:flex;align-items:center;justify-content:center;padding:12px}
+#room-dialog{width:min(740px,100%);background:#1d142a;border:2px solid #9b74bc;border-radius:12px;padding:14px;box-shadow:0 0 60px #000}
+#room-scene{height:280px;position:relative;overflow:hidden;touch-action:manipulation;border:4px solid #705481;background:repeating-linear-gradient(90deg,#382841 0 50px,#49344d 51px 54px);box-shadow:inset 0 -28px #2a1c2c}
+#room-scene:before{content:'';position:absolute;top:30px;left:45%;width:70px;height:105px;border:9px solid #80619a;border-radius:35px 35px 0 0;background:linear-gradient(#483a70,#1b1633)}
+#room-scene:after{content:'';position:absolute;bottom:24px;left:0;right:0;height:8px;background:repeating-linear-gradient(90deg,#8d6d62 0 45px,#4c3547 46px 50px)}
+#scene-hero{position:absolute;bottom:33px;left:45%;height:60px;width:34px;background:linear-gradient(#30233e 0 30%,#a27cc6 30% 40%,#291b3a 40%);border:4px solid #c09fe0;clip-path:polygon(25% 0,75% 0,100% 40%,85% 100%,15% 100%,0 40%);transition:left .35s linear;z-index:2;animation:hero-idle 1.4s steps(2) infinite}
+#scene-items{position:absolute;bottom:32px;left:0;right:0;display:flex;justify-content:space-around;align-items:end;font-size:32px;pointer-events:none}
+#scene-items span{padding:5px 10px;background:#261b32aa;border:2px solid #8d6c98}
+#scene-npcs{position:absolute;bottom:100px;left:12px;display:flex;flex-wrap:wrap;gap:5px;z-index:2}
+#scene-npcs button{font-size:12px;background:#372448}
+.scene-controls{display:flex;gap:8px;justify-content:center;margin-top:12px}.scene-controls button{min-width:70px}
+@media(prefers-reduced-motion:reduce){#scene-hero{animation:none;transition:none}}
+
+#atmosphere{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#castle[data-phase="night"],#castle[data-phase="deep-night"]{background:linear-gradient(#110e27,#0b0a16)}
+#castle[data-phase="morning"]{background:linear-gradient(#51405b,#241c35)}
+#castle[data-phase="day"]{background:linear-gradient(#473c60,#221a38)}
+#castle[data-phase="evening"]{background:linear-gradient(#513052,#211528)}
+#room-scene[data-phase="night"],#room-scene[data-phase="deep-night"]{filter:brightness(.7)}
+#room-scene[data-phase="morning"]{filter:sepia(.12) brightness(1.12)}
+#room-scene[data-phase="evening"]{filter:sepia(.22) brightness(.9)}
+#room-scene[data-weather="rain"]:before{box-shadow:0 0 22px #5675a6,inset 0 0 18px #6682b5}
+#room-scene[data-weather="snow"]:before{box-shadow:0 0 22px #b5d6ff,inset 0 0 18px #a5c8ee}
+#room-scene[data-weather="clear"]:before{box-shadow:0 0 22px #e4b477,inset 0 0 18px #d4a668}
+#room-scene[data-weather="fog"]:before{box-shadow:0 0 24px #a29cac,inset 0 0 18px #9c91ac}
+#atmosphere select,#atmosphere button{padding:7px}
+
+#room-scene{isolation:isolate}
+#scene-weather{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+#scene-weather i{position:absolute;top:-20%;left:var(--x);width:2px;height:24px;background:#a6c5f7a8;transform:rotate(16deg);animation:rainfall var(--dur) linear infinite;animation-delay:var(--delay)}
+#scene-weather.snow i{width:5px;height:5px;border-radius:50%;background:#e2efff;transform:none;animation-name:snowfall}
+#scene-weather.fog{background:linear-gradient(90deg,#b6aec021,transparent,#b6aec025);animation:fogmove 9s ease-in-out infinite alternate}
+#scene-weather.clear{background:radial-gradient(ellipse at 50% 20%,#e7b87d2e,transparent 60%)}
+#room-scene.reduce-motion #scene-weather i,#room-scene.reduce-motion #scene-weather{animation:none!important}
+#room-scene.reduce-motion #scene-weather i{top:var(--y)}
+@keyframes rainfall{to{top:120%;transform:translateX(-30px) rotate(16deg)}}
+@keyframes snowfall{to{top:120%;transform:translateX(20px)}}
+@keyframes fogmove{to{opacity:.3;transform:translateX(12px)}}
+#scene-hero{z-index:3;box-shadow:inset 0 -9px #100c19}
+#scene-hero:before{content:'';position:absolute;top:5px;left:6px;width:14px;height:12px;background:#bfa0d8;box-shadow:0 0 0 2px #1c1428}
+#scene-hero:after{content:'';position:absolute;bottom:4px;left:4px;width:7px;height:10px;background:#160f20;box-shadow:12px 0 #160f20}
+#room-scene.reduce-motion #scene-hero{animation:none;transition:none}
+
+.castle-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 6px}.castle-tools button{padding:7px 10px}.castle-tools small{margin-left:auto}
+#castle{scrollbar-width:thin;scrollbar-color:#8163a0 #241a30}
+@media(max-width:650px){
+ body{padding:8px}.wrap{max-width:100%}h1{font-size:22px;margin:6px 0}h1+p{font-size:13px;line-height:1.4;margin:5px 0 10px}
+ .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.toolbar button{padding:9px 5px;font-size:13px}
+ #atmosphere{padding:10px;gap:7px;margin-top:8px;font-size:13px}
+ #atmosphere label{font-size:13px}#atmosphere select,#atmosphere button,#weather-city{font-size:13px!important;padding:6px!important}
+ #atmosphere #weather-city{max-width:120px!important}#atmosphere small{font-size:11px}
+ #castle{padding:5px;border-width:2px;min-height:150px}
+ #castle .floor{grid-template-columns:repeat(6,minmax(0,1fr));min-width:0;gap:2px;padding:3px;margin:5px 0;border-bottom-width:5px}
+ #castle .room,#castle .empty{min-width:0;min-height:85px;padding:12px 2px 4px;border-width:1px}
+ #castle .room .symbol{font-size:19px}#castle .room .name{font-size:10px;overflow-wrap:anywhere;line-height:1.15}
+ #castle .room:after{width:14px;height:19px;border-width:2px;left:6%;top:7px}
+ #castle .room:before{right:3px;font-size:9px}#castle .hero{transform:scale(.7);transform-origin:bottom left;left:2px}
+ #castle .floor-title{font-size:11px}#castle .stairs{font-size:10px}
+ #castle.zoomed .floor{grid-template-columns:repeat(6,minmax(90px,1fr));min-width:580px}
+ #castle.zoomed .room,#castle.zoomed .empty{min-height:120px}
+ #castle.zoomed .room .name{font-size:13px}
+ .panel{padding:10px;margin-top:10px}.panel h2{font-size:17px}.panel p{font-size:13px}
+ .controls{gap:6px;margin:8px 0}.controls button,.controls select{font-size:13px;padding:8px}
+ .castle-tools{font-size:13px}.castle-tools small{flex-basis:100%;margin-left:0}
+ #room-dialog{padding:9px}#room-scene{height:220px}
+}
+
+/* Визуальные мотивы по типам помещений: без внешних картинок и сети */
+.room-throne,#room-scene[data-room="throne"]{--accent:#e8bb74;--glow:#a36a37;--stone:#403047}
+.room-quarters,#room-scene[data-room="quarters"]{--accent:#bca5e5;--glow:#7765a8;--stone:#302a49}
+.room-study,#room-scene[data-room="study"]{--accent:#80b8c7;--glow:#3b8b9e;--stone:#263e4d}
+.room-workshop,#room-scene[data-room="workshop"]{--accent:#f1a16a;--glow:#a75b36;--stone:#49302d}
+.room-training,#room-scene[data-room="training"]{--accent:#d49b9b;--glow:#8d4a58;--stone:#43313c}
+.room-archive,#room-scene[data-room="archive"]{--accent:#9fcbad;--glow:#56836b;--stone:#293e39}
+.room-treasury,#room-scene[data-room="treasury"]{--accent:#f1d084;--glow:#9b803b;--stone:#3b3442}
+.room-wardrobe,#room-scene[data-room="wardrobe"]{--accent:#e5afd4;--glow:#936a9c;--stone:#443149}
+.room-gallery,#room-scene[data-room="gallery"]{--accent:#a3a9eb;--glow:#686db3;--stone:#303251}
+.room-lounge,#room-scene[data-room="lounge"]{--accent:#d8bfa2;--glow:#987657;--stone:#41343c}
+.room[class*="room-"]{border-color:var(--accent,#7c5d9e);background:repeating-linear-gradient(90deg,var(--stone,#35273f) 0 43px,#55445b 44px 46px);box-shadow:inset 0 -13px #1b1324,inset 0 7px var(--glow,#5d4767)}
+.room[class*="room-"] .symbol{color:var(--accent,#e7dcf6);text-shadow:0 0 12px var(--glow,#9875bd);z-index:1}
+.room[class*="room-"]:after{border-color:var(--accent,#705681);box-shadow:inset 0 0 14px var(--glow,#9472b8)}
+#room-scene[data-room]{border-color:var(--accent,#705481);background:repeating-linear-gradient(90deg,var(--stone,#382841) 0 49px,#55415c 50px 52px);box-shadow:inset 0 -30px #211726,inset 0 15px var(--glow,#48314f)}
+#room-scene[data-room]:before{border-color:var(--accent,#80619a);box-shadow:inset 0 0 18px var(--glow,#54416e),0 0 20px var(--glow,#54416e)}
+#room-scene[data-room]:after{background:repeating-linear-gradient(90deg,var(--accent,#8d6d62) 0 45px,#4c3547 46px 50px)}
+#scene-decoration{position:absolute;inset:0;pointer-events:none;z-index:0}
+#scene-decoration .decor{position:absolute;display:grid;place-items:center;color:var(--accent,#dec3fa);text-shadow:0 0 12px var(--glow,#7760a0);font-size:38px}
+#scene-decoration .decor.left{left:8%;bottom:70px}#scene-decoration .decor.right{right:8%;bottom:70px}
+#scene-decoration .decor.center{left:45%;top:15px;font-size:24px}
+#scene-hero{border-color:var(--accent,#c09fe0);filter:drop-shadow(0 0 5px var(--glow,#9b75c7))}
+@media(max-width:650px){#scene-decoration .decor{font-size:27px}#scene-decoration .decor.center{font-size:20px}}
+
+/* Оригинальные CSS-пиксельные силуэты: без эмодзи, изображений и сторонних ассетов */
+#scene-decoration .pixel-prop{position:absolute;display:block;width:62px;height:72px;bottom:35px;image-rendering:pixelated;filter:drop-shadow(0 5px 1px #08070a);background:transparent}
+#scene-decoration .pixel-prop.left{left:7%}#scene-decoration .pixel-prop.right{right:7%}
+#scene-decoration .pixel-prop.center{left:calc(50% - 20px);top:13px;bottom:auto;width:40px;height:40px}
+.pixel-prop:before,.pixel-prop:after{content:'';position:absolute;display:block}
+.prop-throne:before{inset:7px 10px 5px;background:linear-gradient(90deg,#18151b 0 17%,#a17e53 17% 27%,#302736 27% 73%,#a17e53 73% 83%,#18151b 83%);border:4px solid #7e6a55;clip-path:polygon(0 20%,22% 20%,22% 0,78% 0,78% 20%,100% 20%,100% 100%,0 100%)}
+.prop-throne:after{left:7px;right:7px;bottom:0;height:13px;background:#5c4750;border-top:5px solid #b08a58}
+.prop-bed:before{left:0;right:0;bottom:10px;height:24px;background:linear-gradient(#6b5a81 0 38%,#31283d 38%);border:5px solid #8b728c}
+.prop-bed:after{left:0;bottom:0;width:8px;height:43px;background:#76617c;box-shadow:54px 0 #76617c}
+.prop-books:before{inset:5px 7px;background:repeating-linear-gradient(90deg,#292c34 0 9px,#8d7664 9px 13px,#30343e 13px 20px);border:5px solid #786452}
+.prop-books:after{left:7px;right:7px;top:33px;height:5px;background:#b08c6d}
+.prop-anvil:before{left:4px;right:4px;bottom:28px;height:17px;background:#89909c;clip-path:polygon(0 0,100% 0,75% 100%,25% 100%)}
+.prop-anvil:after{left:25px;bottom:5px;width:12px;height:24px;background:#555663;box-shadow:-10px 22px 0 5px #2a2933}
+.prop-forge:before{left:8px;right:8px;bottom:3px;height:57px;background:#39323a;border:6px solid #7a665d;clip-path:polygon(0 28%,25% 0,75% 0,100% 28%,100% 100%,0 100%)}
+.prop-forge:after{left:19px;bottom:10px;width:25px;height:31px;background:linear-gradient(#f5ad55,#aa4930,#341d20);box-shadow:0 0 20px #d66839}
+.prop-chest:before{left:5px;right:5px;bottom:8px;height:35px;background:#47323b;border:5px solid #9b8052;border-radius:7px 7px 2px 2px}
+.prop-chest:after{left:28px;bottom:13px;width:8px;height:24px;background:#c8a466}
+.prop-desk:before{left:3px;right:3px;bottom:33px;height:10px;background:#947b65;box-shadow:0 5px #3b2b36}
+.prop-desk:after{left:9px;bottom:0;width:8px;height:33px;background:#55414c;box-shadow:35px 0 #55414c}
+.prop-pillar:before{left:20px;bottom:0;width:22px;height:70px;background:repeating-linear-gradient(90deg,#4e4754 0 6px,#777080 6px 10px)}
+.prop-pillar:after{left:9px;top:0;width:44px;height:11px;background:#817789;box-shadow:0 60px #817789}
+.prop-candle:before{left:26px;bottom:10px;width:12px;height:37px;background:#b3a5a0}
+.prop-candle:after{left:28px;bottom:49px;width:8px;height:13px;background:#e6b872;box-shadow:0 0 14px #e5a552}
+.prop-blade:before{left:28px;top:0;width:9px;height:53px;background:linear-gradient(90deg,#687886,#d0c5bd,#687886);clip-path:polygon(50% 0,100% 20%,100% 100%,0 100%,0 20%)}
+.prop-blade:after{left:15px;top:50px;width:35px;height:6px;background:#9c785b;box-shadow:0 8px #44303b}
+.prop-shield:before{left:11px;top:4px;width:42px;height:60px;background:#55475a;border:6px solid #a18a79;clip-path:polygon(0 0,100% 0,100% 60%,50% 100%,0 60%)}
+.prop-shield:after{left:28px;top:16px;width:9px;height:34px;background:#9b7e6d}
+.prop-mirror:before{inset:3px 12px 9px;background:linear-gradient(130deg,#85919f,#343447);border:6px solid #a18a91;border-radius:18px 18px 4px 4px}
+.prop-wardrobe:before{inset:3px 7px;background:linear-gradient(90deg,#493340 0 49%,#302634 49% 52%,#493340 52%);border:5px solid #947681}
+.prop-wardrobe:after{left:26px;top:30px;width:5px;height:6px;background:#c4a075;box-shadow:9px 0 #c4a075}
+.prop-fireplace:before{inset:5px;background:#2c252e;border:7px solid #7e6971}
+.prop-fireplace:after{left:19px;bottom:10px;width:25px;height:32px;background:linear-gradient(#e2b46e,#a95132,#2e1c25);box-shadow:0 0 17px #b5683e}
+.prop-banner:before{left:16px;top:2px;width:32px;height:60px;background:#55435c;border:4px solid #9d7c7b;clip-path:polygon(0 0,100% 0,100% 100%,50% 77%,0 100%)}
+.prop-moon:before{left:8px;top:5px;width:24px;height:24px;border-radius:50%;background:#a7b3c5;box-shadow:0 0 12px #7d91b3}
+.prop-moon:after{left:16px;top:1px;width:24px;height:24px;border-radius:50%;background:#29253d}
+.prop-crown:before{left:5px;top:5px;width:30px;height:25px;background:#b39868;clip-path:polygon(0 0,25% 40%,50% 0,75% 40%,100% 0,90% 100%,10% 100%)}
+.prop-sigil:before{left:9px;top:4px;width:23px;height:23px;border:4px solid #91a4b3;transform:rotate(45deg);box-shadow:0 0 13px #6884a0}
+.prop-ember:before{left:16px;top:5px;width:12px;height:24px;background:#e0a05f;clip-path:polygon(50% 0,100% 65%,50% 100%,0 65%);box-shadow:0 0 15px #c56e40}
+@media(max-width:650px){#scene-decoration .pixel-prop{transform:scale(.8);transform-origin:bottom center}}
+#appearance-panel input{width:110px;max-width:100%;padding:8px;background:#2c203c;color:#eee0ff;border:1px solid #8064a5;border-radius:6px}#appearance-panel label{font-size:13px}#appearance-panel p{margin:7px 0}
+.hero{transform:scaleX(var(--body-scale,1));transform-origin:center bottom}
+#scene-hero{transform:scaleX(var(--body-scale,1));transform-origin:center bottom}
+@keyframes hero-idle{50%{transform:scaleX(var(--body-scale,1)) translateY(-2px)}}
+@keyframes hero-walk{50%{transform:scaleX(var(--body-scale,1)) translateY(-4px) rotate(3deg)}}
+@media(max-width:650px){#castle .hero{transform:scaleX(var(--body-scale,1)) scale(.7)}}
+</style><meta name="theme-color" content="#100c18"></head><body><main class="wrap">
+<h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
+<div class="toolbar"><button id="overview" class="active">Обзор</button><button id="walk">Прогулка</button><button id="add-floor">Открыть этаж (демо)</button><button id="reset">Сбросить прототип</button></div>
+<div id="atmosphere" class="panel"><strong id="phase-label">Атмосфера</strong><label>Режим <select id="weather-mode"><option value="fantasy">Магический</option><option value="hybrid">Гибрид</option></select></label><label>Город <input id="weather-city" placeholder="Например, Москва" maxlength="100" style="max-width:150px;background:#2c203c;color:#eee0ff;padding:8px;border:1px solid #8064a5"></label><button id="refresh-weather">Обновить</button><small id="weather-info" role="status"></small><label>Погода <select id="weather"><option value="rain">Дождь</option><option value="clear">Ясно</option><option value="snow">Снег</option><option value="fog">Туман</option></select></label><label><input type="checkbox" id="day-night" checked> Смена времени суток</label><label><input type="checkbox" id="reduce-motion"> Без анимации</label></div><div class="castle-tools"><strong>План замка</strong><button id="castle-zoom" type="button" aria-pressed="false">Увеличить план</button><small id="castle-hint">Нажми на комнату для выбора</small></div><div id="castle" aria-label="План Цитадели"></div>
+<div class="panel" id="appearance-panel"><h2>Мой облик</h2><p id="body-note">Данные о теле поступают из вкладки «Тело» основной игры. Здесь ничего вводить не нужно.</p></div><div class="panel"><h2 id="selection-title">Редактор комнат</h2><p id="selection-description">Выбери свободную ячейку для строительства или существующую комнату.</p>
+<div class="controls"><label>Комната <select id="kind"></select></label><button id="build">Построить</button><button id="expand">Расширить на 1</button><button id="go">Направить героя</button></div><div class="controls"><label>Мебель <select id="furniture"></select></label><label>Место <select id="slot"></select></label><button id="place">Разместить</button><button id="remove">Убрать последнюю</button></div><div class="controls"><button id="prev">← Назад</button><button id="next">Вперёд →</button></div><div class="panel"><h2>Обитатели Цитадели</h2><p id="rank-info">Ранг Цитадели: 1</p><label><input id="demo-toggle" type="checkbox"> Режим проверки</label> <label>Ранг <input id="demo-level" type="number" min="1" max="100" value="1" disabled style="width:72px;background:#2c203c;color:#eee0ff;border:1px solid #8064a5;padding:7px"></label><p><small>В обычном режиме используется максимальный ранг из «Заклятия», если игра запускалась на этом же сайте и устройстве.</small></p><div id="npcs" class="npcbar"></div><p id="dialogue">Выбери жителя, чтобы поговорить.</p></div><div id="status" role="status"></div>
+<small>Размеры помещений различаются. Занятые ячейки и закрытые этажи недоступны. Состояние сохраняется только в браузере прототипа.</small></div>
+</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" data-room="throne" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-weather" aria-hidden="true"></div><div id="scene-decoration" aria-hidden="true"></div><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script>
+/* Цитадель Спящего: независимая модель мира, без изменения текущих сохранений. */
+(function (root) {
+  'use strict';
+  var KEY = 'plan.citadel.v1';
+  var ROOMS = {
+    throne: { name: 'Тронный зал', size: 3, domain: 'rank' },
+    quarters: { name: 'Личные покои', size: 1, domain: 'rest' },
+    study: { name: 'Кабинет', size: 1, domain: 'knowledge' },
+    wardrobe: { name: 'Гардероб', size: 1, domain: 'rank' },
+    gallery: { name: 'Галерея трофеев', size: 2, domain: 'achievements' },
+    lounge: { name: 'Гостиная', size: 2, domain: 'rest' },
+    training: { name: 'Зал Испытаний', size: 2, domain: 'fitness' },
+    archive: { name: 'Архив Разума', size: 2, domain: 'knowledge' },
+    treasury: { name: 'Сокровищница', size: 2, domain: 'finance' },
+    workshop: { name: 'Мастерская', size: 1, domain: 'rank' }
+  };
+  var NPC = {
+    archivist: { name: 'Хранительница Архива', home: 'archive', traits: ['спокойная', 'любознательная'] },
+    guard: { name: 'Страж Цитадели', home: 'training', traits: ['дисциплинированный', 'немногословный'] },
+    treasurer: { name: 'Казначей', home: 'treasury', traits: ['рассудительный', 'ироничный'] },
+    smith: { name: 'Кузнец Бездны', home: 'workshop', traits: ['сосредоточенный', 'упорный'] }
+  };
+  function initial() {
+    return {
+      schema: 1, createdAt: Date.now(), view: 'overview',
+      weather: { mode: 'fantasy', selected: 'rain' },
+      settings: { sound: false, particles: true, dayNight: true, reducedMotion: false },
+      floors: [
+        { id: 'f0', capacity: 6, unlocked: true },
+        { id: 'f1', capacity: 6, unlocked: false }
+      ],
+      rooms: [
+        { id: 'throne-1', kind: 'throne', floor: 'f0', start: 0, size: 3, level: 1, items: [] },
+        { id: 'quarters-1', kind: 'quarters', floor: 'f0', start: 3, size: 1, level: 1, items: [] }
+      ],
+      hero: { roomId: 'throne-1', appearance: 'current', activity: 'idle' },
+      inhabitants: [],
+      inventory: [],
+      lastVisited: Date.now()
+    };
+  }
+  function validPlacement(state, floor, start, size, ignoreId) {
+    var f = state.floors.find(function (x) { return x.id === floor && x.unlocked; });
+    if (!f || !Number.isInteger(start) || start < 0 || start + size > f.capacity) return false;
+    return !state.rooms.some(function (r) {
+      return r.id !== ignoreId && r.floor === floor && start < r.start + r.size && r.start < start + size;
+    });
+  }
+  function addRoom(state, kind, floor, start) {
+    if (!ROOMS[kind]) throw new Error('Неизвестный тип комнаты');
+    var size = ROOMS[kind].size;
+    if (!validPlacement(state, floor, start, size)) throw new Error('Недоступный участок');
+    var next = JSON.parse(JSON.stringify(state));
+    next.rooms.push({ id: kind + '-' + Date.now(), kind: kind, floor: floor, start: start, size: size, level: 1, items: [] });
+    return next;
+  }
+  function expandRoom(state, id, size) {
+    var room = state.rooms.find(function (r) { return r.id === id; });
+    if (!room || !Number.isInteger(size) || size < room.size || size > 6) throw new Error('Неверный размер');
+    if (!validPlacement(state, room.floor, room.start, size, id)) throw new Error('Нет места для расширения');
+    var next = JSON.parse(JSON.stringify(state));
+    next.rooms.find(function (r) { return r.id === id; }).size = size;
+    return next;
+  }
+  var FURNITURE = Object.freeze({
+    bed: { name: 'Кровать', symbol: '▰', rooms: ['quarters'] },
+    desk: { name: 'Письменный стол', symbol: '▤', rooms: ['study', 'quarters'] },
+    wardrobe: { name: 'Шкаф', symbol: '▥', rooms: ['wardrobe', 'quarters'] },
+    chair: { name: 'Кресло', symbol: '♧', rooms: ['lounge', 'study', 'quarters'] },
+    lamp: { name: 'Светильник', symbol: '✧', rooms: ['quarters', 'study', 'wardrobe', 'gallery', 'lounge'] },
+    shelf: { name: 'Стеллаж', symbol: '▦', rooms: ['study', 'gallery', 'lounge'] }
+  });
+  function placeFurniture(state, roomId, kind, slot) {
+    var room = state.rooms.find(function (r) { return r.id === roomId; });
+    var item = FURNITURE[kind];
+    if (!room || !item || item.rooms.indexOf(room.kind) < 0) throw new Error('Предмет не подходит для комнаты');
+    if (!Number.isInteger(slot) || slot < 0 || slot >= room.size * 2) throw new Error('Недоступное место');
+    if ((room.items || []).some(function (x) { return x.slot === slot; })) throw new Error('Место занято');
+    var next = JSON.parse(JSON.stringify(state));
+    next.rooms.find(function (r) { return r.id === roomId; }).items.push({ id: 'f-' + Date.now() + '-' + slot, kind: kind, slot: slot });
+    return next;
+  }
+  function removeFurniture(state, roomId, itemId) {
+    var next = JSON.parse(JSON.stringify(state));
+    var room = next.rooms.find(function (r) { return r.id === roomId; });
+    if (!room || !(room.items || []).some(function (x) { return x.id === itemId; })) throw new Error('Предмет не найден');
+    room.items = room.items.filter(function (x) { return x.id !== itemId; });
+    return next;
+  }
+  function environment(now, state) {
+    var hour = new Date(now).getHours();
+    var phase = hour < 6 ? 'deep-night' : hour < 12 ? 'morning' : hour < 18 ? 'day' : hour < 22 ? 'evening' : 'night';
+    return { phase: phase, weather: state.weather.selected };
+  }
+  function npcActivity(id, now) {
+    if (!NPC[id]) return null;
+    var hour = new Date(now).getHours();
+    if (hour < 7 || hour >= 23) return 'rest';
+    if (hour < 10) return 'morning';
+    if (hour < 18) return 'work';
+    if (hour < 21) return 'social';
+    return 'evening';
+  }
+  function load() {
+    try {
+      var raw = root.localStorage.getItem(KEY);
+      if (!raw) return initial();
+      var data = JSON.parse(raw);
+      return data && data.schema === 1 && Array.isArray(data.rooms) ? data : initial();
+    } catch (_) { return initial(); }
+  }
+  function save(state) {
+    if (!state || state.schema !== 1) throw new Error('Несовместимая версия данных');
+    root.localStorage.setItem(KEY, JSON.stringify(state));
+  }
+  // Награды не создаются этим модулем. Полученные предметы импортируются
+  // только из проверенной системы достижений, без раскрытия закрытого каталога.
+  root.Citadel = Object.freeze({
+    rooms: ROOMS, inhabitants: NPC, furniture: FURNITURE, initial: initial, load: load, save: save, placeFurniture: placeFurniture, removeFurniture: removeFurniture,
+    validPlacement: validPlacement, addRoom: addRoom, expandRoom: expandRoom,
+    environment: environment, npcActivity: npcActivity
+  });
+})(window);
+
+</script><script>
+/* Переходы и жители Цитадели: автономная демонстрационная логика. */
+(function(root){
+'use strict';
+function sortedRooms(state){return state.rooms.slice().sort(function(a,b){return Number(a.floor.slice(1))-Number(b.floor.slice(1))||a.start-b.start;});}
+function route(state,fromId,toId){
+ var rooms=sortedRooms(state),from=rooms.findIndex(function(r){return r.id===fromId;}),to=rooms.findIndex(function(r){return r.id===toId;});
+ if(from<0||to<0)return [];
+ var step=from<=to?1:-1,out=[];
+ for(var i=from;i!==to+step;i+=step)out.push(rooms[i].id);
+ return out;
+}
+var UNLOCK_LEVELS=Object.freeze({guard:5,archivist:10,smith:15,treasurer:20});
+function residents(state,now,level){
+ level=Number.isFinite(Number(level))?Math.max(1,Math.floor(Number(level))):1;
+ var model=root.Citadel;
+ return Object.keys(model.inhabitants).filter(function(id){return level>=UNLOCK_LEVELS[id];}).map(function(id){
+  var npc=model.inhabitants[id],activity=model.npcActivity(id,now);
+  var preferred=state.rooms.find(function(r){return r.kind===npc.home;});
+  var quarters=state.rooms.find(function(r){return r.kind==='quarters';});
+  var throne=state.rooms.find(function(r){return r.kind==='throne';});
+  var location=activity==='work'&&preferred?preferred:activity==='social'&&throne?throne:quarters||throne||preferred;
+  return {id:id,name:npc.name,activity:activity,roomId:location?location.id:null};
+ });
+}
+var lines={
+ archivist:{work:'В Архиве ещё столько непрочитанных страниц.',social:'Порой лучшие мысли рождаются за беседой.',rest:'Книги подождут до утра.'},
+ guard:{work:'Стены крепки. Я проверю ворота ещё раз.',social:'Сегодня в Цитадели спокойно.',rest:'Даже стражам нужен отдых.'},
+ treasurer:{work:'Порядок в сокровищнице начинается с учёта.',social:'Хорошая беседа не требует платы.',rest:'Подсчёты продолжим завтра.'},
+ smith:{work:'Горн горяч. Металл ждёт своей формы.',social:'После работы приятно посидеть у огня.',rest:'Пусть угли остывают.'}
+};
+function dialogue(id,activity){var entry=lines[id];return entry&&(entry[activity]||entry.work)||'Приветствую тебя в Цитадели.';}
+root.CitadelLife=Object.freeze({route:route,residents:residents,dialogue:dialogue,unlockLevels:UNLOCK_LEVELS});
+})(window);
+
+</script><script>
+/* Опциональная реальная погода: без геолокации, с офлайн-резервом. */
+(function(root){
+'use strict';
+var CACHE_KEY='plan.citadel.weather.v1';var CITY_KEY='plan.citadel.weather.city.v1';
+function mapCode(code){
+ if(code===0||code===1)return 'clear';
+ if(code===2||code===3||code===45||code===48)return 'fog';
+ if(code===51||code===53||code===55||code===56||code===57||code===61||code===63||code===65||code===66||code===67||code===80||code===81||code===82||code===95||code===96||code===99)return 'rain';
+ if(code===71||code===73||code===75||code===77||code===85||code===86)return 'snow';
+ return 'fog';
+}
+function cached(){
+ try{var value=JSON.parse(root.localStorage.getItem(CACHE_KEY)||'null');return value&&typeof value.weather==='string'?value:null;}catch(_){return null;}
+}
+function save(data){try{root.localStorage.setItem(CACHE_KEY,JSON.stringify(data));}catch(_){}}
+async function lookup(city){
+ city=String(city||'').trim();
+ if(city.length<2||city.length>100)throw Error('Укажи название города (2–100 символов).');
+ var geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=ru&format=json');
+ if(!geo.ok)throw Error('Не удалось найти город.');
+ var places=await geo.json();
+ if(!places.results||!places.results.length)throw Error('Город не найден.');
+ var place=places.results[0];
+ var forecast=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(place.latitude)+'&longitude='+encodeURIComponent(place.longitude)+'&current=weather_code&timezone=auto');
+ if(!forecast.ok)throw Error('Сервис погоды недоступен.');
+ var data=await forecast.json();
+ if(!data.current||!Number.isFinite(Number(data.current.weather_code)))throw Error('Нет данных о погоде.');
+ var result={city:place.name,country:place.country||'',weather:mapCode(Number(data.current.weather_code)),code:Number(data.current.weather_code),fetchedAt:Date.now()};
+ save(result);try{root.localStorage.setItem(CITY_KEY,city);}catch(_){}return result;
+}
+function savedCity(){try{return root.localStorage.getItem(CITY_KEY)||'';}catch(_){return '';}}
+root.CitadelWeather=Object.freeze({lookup:lookup,cached:cached,mapCode:mapCode,savedCity:savedCity});
+})(window);
+
+</script><script>
+(function(){
+'use strict';
+var model=window.Citadel, state=model.load(), selected=null, mode='overview';
+var symbols={throne:'♛',quarters:'☾',study:'✒',wardrobe:'♧',gallery:'✧',lounge:'♨',training:'⚔',archive:'▤',treasury:'◆',workshop:'⚒'};
+var weatherApi=window.CitadelWeather;var weatherRefreshBusy=false;var life=window.CitadelLife;var sceneRoomId=null,heroX=45;var demoLevel=1;var demoEnabled=false;/* Реальный облик: отдельные добровольные данные, без связи с уровнем. */
+var appearanceKey='plan.citadel.appearance.v1';
+function appearance(){try{var v=JSON.parse(localStorage.getItem(appearanceKey)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return {};}}
+function appearanceScale(){var a=liveCitadel||{},base=Number(a.baseline),current=Number(a.current);if(!base||!current||base<30||current<30||base>500||current>500)return 1;return Math.max(.82,Math.min(1.18,Math.sqrt(current/base)));}
+function applyHeroAppearance(){var scale=appearanceScale();document.querySelectorAll('.hero,#scene-hero').forEach(function(el){el.style.setProperty('--body-scale',String(scale));});}
+var liveCitadel=null;window.addEventListener('message',function(e){if(e.source!==window.parent||!e.data||e.data.type!=='plan.citadel.live.v1')return;liveCitadel=e.data;var note=document.getElementById('body-note');if(note)note.textContent=liveCitadel.current!=null?'Вес из игры: '+liveCitadel.current+' кг. Этап изменения тела: '+liveCitadel.bodyStage+'.':'Пока нет записей веса во вкладке «Тело».';render();applyHeroAppearance();});if(window.parent!==window)window.parent.postMessage({type:'plan.citadel.ready.v1'},'*');function actualRank(){if(liveCitadel&&Number.isFinite(Number(liveCitadel.rank)))return Math.max(1,Math.floor(Number(liveCitadel.rank)));try{return Math.max(1,Math.floor(Number(localStorage.getItem('plan.citadel.maxRank.v1'))||1));}catch(e){return 1;}}function rank(){return demoEnabled?demoLevel:actualRank();}var castle=document.getElementById('castle'),status=document.getElementById('status'),kind=document.getElementById('kind'),furniture=document.getElementById('furniture'),slot=document.getElementById('slot');Object.keys(model.furniture).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=model.furniture[k].name;furniture.appendChild(o);});
+Object.keys(model.rooms).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=model.rooms[k].name+' ('+model.rooms[k].size+')';kind.appendChild(o);});
+function announce(t){status.textContent=t;}
+function commit(next){state=next;model.save(state);render();}
+function drawWeather(){
+ var layer=document.getElementById('scene-weather'),scene=document.getElementById('room-scene'),weather=effectiveWeather();
+ layer.className=weather;layer.textContent='';
+ scene.classList.toggle('reduce-motion',!!state.settings.reducedMotion);
+ if(weather!=='rain'&&weather!=='snow')return;
+ var count=state.settings.reducedMotion?10:weather==='rain'?28:16;
+ for(var i=0;i<count;i++){var drop=document.createElement('i');drop.style.setProperty('--x',((i*37+11)%97)+'%');drop.style.setProperty('--y',((i*29+13)%88)+'%');drop.style.setProperty('--dur',(weather==='rain'?1.3+(i%6)*.16:4+(i%7)*.6)+'s');drop.style.setProperty('--delay',(-i*.27)+'s');layer.appendChild(drop);}
+}
+async function autoRefreshWeather(){
+ if(weatherRefreshBusy||state.weather.mode!=='hybrid')return;
+ var city=weatherApi.savedCity();if(!city)return;
+ var cache=weatherApi.cached();if(cache&&Date.now()-cache.fetchedAt<30*60*1000)return;
+ weatherRefreshBusy=true;
+ try{await weatherApi.lookup(city);render();}
+ catch(e){var info=document.getElementById('weather-info');info.textContent='Нет связи. Используются последние данные или магическая погода.';}
+ finally{weatherRefreshBusy=false;}
+}
+function effectiveWeather(){
+ if(state.weather.mode==='hybrid'){var cache=weatherApi.cached();if(cache)return cache.weather;}
+ return state.weather.selected;
+}
+function applyAtmosphere(){
+ var env=model.environment(Date.now(),state),phase=state.settings.dayNight?env.phase:'day';
+ castle.dataset.phase=phase;document.getElementById('room-scene').dataset.phase=phase;
+ document.getElementById('room-scene').dataset.weather=effectiveWeather();
+ document.getElementById('phase-label').textContent=({morning:'Утро',day:'День',evening:'Вечер',night:'Ночь','deep-night':'Глубокая ночь'})[phase]+' · местное время';
+ document.getElementById('weather').value=state.weather.selected;document.getElementById('weather').disabled=state.weather.mode==='hybrid';document.getElementById('weather-mode').value=state.weather.mode||'fantasy';var cache=weatherApi.cached();document.getElementById('weather-info').textContent=state.weather.mode==='hybrid'?(cache?'Последние данные: '+cache.city+' · '+new Date(cache.fetchedAt).toLocaleString('ru-RU'):'Нет данных. Укажи город и нажми «Обновить».'):'Магическая погода выбирается вручную.';
+ document.getElementById('day-night').checked=state.settings.dayNight;
+ document.getElementById('reduce-motion').checked=state.settings.reducedMotion;
+ document.getElementById('scene-hero').style.animation=state.settings.reducedMotion?'none':'';drawWeather();
+}
+function render(){
+castle.textContent='';applyAtmosphere();castle.classList.toggle('mode-walk',mode==='walk');
+state.floors.slice().reverse().forEach(function(f){
+var floor=document.createElement('div');floor.className='floor';
+var label=document.createElement('div');label.className='floor-title';label.textContent=f.id+' · '+(f.unlocked?'Открыт':'Закрыт');floor.appendChild(label);if(f.unlocked){var stair=document.createElement('span');stair.className='stairs';stair.textContent='▤';stair.title='Лестничный переход (декорация прототипа)';floor.appendChild(stair);}
+for(var i=0;i<f.capacity;i++){
+var start=i,room=state.rooms.find(function(r){return r.floor===f.id&&r.start===start;});
+if(room){var tile=document.createElement('button');tile.className='room room-'+room.kind;tile.style.gridColumn='span '+room.size;
+if(selected&&selected.id===room.id)tile.classList.add('selected');
+if(state.hero.roomId===room.id)tile.classList.add('hero-room');
+var s=document.createElement('span');s.className='symbol';s.textContent=symbols[room.kind]||'✦';tile.appendChild(s);
+var n=document.createElement('span');n.className='name';n.textContent=model.rooms[room.kind].name;tile.appendChild(n);var items=document.createElement('span');items.className='furn';(room.items||[]).forEach(function(item){var marker=document.createElement('span');marker.title=model.furniture[item.kind]?model.furniture[item.kind].name:item.kind;marker.textContent=model.furniture[item.kind]?model.furniture[item.kind].symbol:'?';items.appendChild(marker);});tile.appendChild(items);life.residents(state,Date.now(),rank()).filter(function(npc){return npc.roomId===room.id;}).forEach(function(npc){var n=document.createElement('span');n.className='npc';n.textContent='♙ '+npc.name;tile.appendChild(n);});
+if(state.hero.roomId===room.id){var h=document.createElement('span');h.className='hero';h.textContent='♟';tile.appendChild(h);h.style.setProperty('--body-scale',String(appearanceScale()));}
+tile.onclick=function(){selected={id:room.id};render();if(mode==='walk')openRoom(room.id);};floor.appendChild(tile);i+=room.size-1;
+}else if(!state.rooms.some(function(r){return r.floor===f.id&&i>=r.start&&i<r.start+r.size;})){
+var empty=document.createElement('button');empty.className='empty';empty.textContent=f.unlocked?'+':'×';empty.disabled=!f.unlocked;
+empty.onclick=(function(fid,pos){return function(){selected={floor:fid,start:pos};render();};})(f.id,start);
+floor.appendChild(empty);
+}}
+castle.appendChild(floor);
+});
+var room=selected&&selected.id&&state.rooms.find(function(r){return r.id===selected.id;});
+document.getElementById('selection-title').textContent=room?model.rooms[room.kind].name:selected&&selected.floor?'Свободный участок':'Редактор комнат';
+document.getElementById('selection-description').textContent=room?'Этаж '+room.floor+', размер '+room.size+', уровень '+room.level:selected&&selected.floor?'Этаж '+selected.floor+', позиция '+(selected.start+1):'Выбери комнату или свободное место.';
+document.getElementById('build').disabled=!selected||!selected.floor||mode==='walk';
+document.getElementById('expand').disabled=!room||mode==='walk';
+document.getElementById('go').disabled=!room;document.getElementById('place').disabled=!room||mode==='walk';document.getElementById('remove').disabled=!room||!(room.items||[]).length||mode==='walk';slot.textContent='';if(room)for(var z=0;z<room.size*2;z++){var opt=document.createElement('option');opt.value=String(z);opt.textContent='Место '+(z+1);opt.disabled=(room.items||[]).some(function(item){return item.slot===z;});slot.appendChild(opt);}document.getElementById('prev').disabled=mode!=='walk';document.getElementById('next').disabled=mode!=='walk';
+document.getElementById('rank-info').textContent='Ранг Цитадели: '+rank()+(demoEnabled?' (проверка)':'');var npcBar=document.getElementById('npcs');npcBar.textContent='';life.residents(state,Date.now()).forEach(function(npc){var b=document.createElement('button');b.textContent=npc.name;b.onclick=function(){document.getElementById('dialogue').textContent=npc.name+': «'+life.dialogue(npc.id,npc.activity)+'»';if(npc.roomId){selected={id:npc.roomId};render();}};npcBar.appendChild(b);});if(!npcBar.children.length){var note=document.createElement('small');note.textContent='Пока в Цитадели нет жителей. Первый появится на уровне 5.';npcBar.appendChild(note);}
+document.getElementById('overview').classList.toggle('active',mode==='overview');
+document.getElementById('walk').classList.toggle('active',mode==='walk');
+}
+document.getElementById('build').onclick=function(){try{commit(model.addRoom(state,kind.value,selected.floor,selected.start));selected=null;announce('Комната построена.');render();}catch(e){announce(e.message);}};
+document.getElementById('expand').onclick=function(){try{var r=state.rooms.find(function(x){return x.id===selected.id;});commit(model.expandRoom(state,r.id,r.size+1));announce('Комната расширена.');}catch(e){announce(e.message);}};
+document.getElementById('place').onclick=function(){try{commit(model.placeFurniture(state,selected.id,furniture.value,Number(slot.value)));announce('Мебель размещена.');}catch(e){announce(e.message);}};
+document.getElementById('remove').onclick=function(){try{var room=state.rooms.find(function(r){return r.id===selected.id;});commit(model.removeFurniture(state,room.id,room.items[room.items.length-1].id));announce('Предмет убран.');}catch(e){announce(e.message);}};
+function walkStep(direction){var rooms=state.rooms.slice().sort(function(a,b){return Number(a.floor.slice(1))-Number(b.floor.slice(1))||a.start-b.start;});var index=rooms.findIndex(function(r){return r.id===state.hero.roomId;});var target=rooms[index+direction];if(!target){announce('Дальше прохода нет.');return;}var next=JSON.parse(JSON.stringify(state));var path=life.route(state,state.hero.roomId,target.id);next.hero.roomId=target.id;selected={id:target.id};commit(next);announce('Маршрут: '+path.map(function(id){var r=state.rooms.find(function(x){return x.id===id;});return model.rooms[r.kind].name;}).join(' → '));}
+document.getElementById('prev').onclick=function(){walkStep(-1);};
+document.getElementById('next').onclick=function(){walkStep(1);};
+document.getElementById('go').onclick=function(){if(!selected||!selected.id)return;var next=JSON.parse(JSON.stringify(state));next.hero.roomId=selected.id;commit(next);announce('Герой перешёл в выбранную комнату.');};
+document.getElementById('demo-toggle').onchange=function(){demoEnabled=this.checked;document.getElementById('demo-level').disabled=!demoEnabled;render();};document.getElementById('demo-level').onchange=function(){demoLevel=Math.max(1,Math.min(100,Math.floor(Number(this.value)||1)));this.value=demoLevel;render();};
+
+function sceneMove(x){heroX=Math.max(3,Math.min(90,x));document.getElementById('scene-hero').style.left=heroX+'%';}
+function decorateRoom(kind){
+ var sets={throne:['pillar','crown','throne'],quarters:['candle','moon','bed'],study:['books','sigil','desk'],workshop:['anvil','ember','forge'],training:['blade','sigil','shield'],archive:['books','moon','books'],treasury:['chest','crown','chest'],wardrobe:['mirror','moon','wardrobe'],gallery:['banner','crown','banner'],lounge:['candle','moon','fireplace']};
+ var marks=sets[kind]||['pillar','sigil','pillar'],layer=document.getElementById('scene-decoration');layer.textContent='';
+ ['left','center','right'].forEach(function(position,i){var mark=document.createElement('span');mark.className='pixel-prop '+position+' prop-'+marks[i];mark.setAttribute('aria-hidden','true');layer.appendChild(mark);});
+}
+function openRoom(id){var room=state.rooms.find(function(r){return r.id===id;});if(!room)return;sceneRoomId=id;document.getElementById('room-heading').textContent=model.rooms[room.kind].name;document.getElementById('room-scene').dataset.room=room.kind;decorateRoom(room.kind);var next=JSON.parse(JSON.stringify(state));next.hero.roomId=id;commit(next);var items=document.getElementById('scene-items');items.textContent='';(room.items||[]).forEach(function(item){var span=document.createElement('span');span.title=model.furniture[item.kind]?model.furniture[item.kind].name:item.kind;span.textContent=model.furniture[item.kind]?model.furniture[item.kind].symbol:'✧';items.appendChild(span);});var npcs=document.getElementById('scene-npcs');npcs.textContent='';life.residents(state,Date.now(),rank()).filter(function(n){return n.roomId===id;}).forEach(function(n){var btn=document.createElement('button');btn.textContent='♙ '+n.name;btn.onclick=function(){document.getElementById('scene-status').textContent=n.name+': «'+life.dialogue(n.id,n.activity)+'»';};npcs.appendChild(btn);});document.getElementById('room-view').hidden=false;sceneMove(45);applyHeroAppearance();}
+document.getElementById('close-room').onclick=function(){document.getElementById('room-view').hidden=true;sceneRoomId=null;};
+document.getElementById('move-left').onclick=function(){sceneMove(heroX-12);};
+document.getElementById('move-right').onclick=function(){sceneMove(heroX+12);};
+document.getElementById('room-scene').onclick=function(e){if(e.target.closest('button'))return;var rect=this.getBoundingClientRect();sceneMove((e.clientX-rect.left)/rect.width*100);};
+document.getElementById('scene-talk').onclick=function(){var n=life.residents(state,Date.now(),rank()).find(function(n){return n.roomId===sceneRoomId;});document.getElementById('scene-status').textContent=n?n.name+': «'+life.dialogue(n.id,n.activity)+'»':'Здесь пока не с кем поговорить.';};
+document.addEventListener('keydown',function(e){if(document.getElementById('room-view').hidden)return;if(e.key==='Escape')document.getElementById('close-room').click();if(e.key==='ArrowLeft')sceneMove(heroX-8);if(e.key==='ArrowRight')sceneMove(heroX+8);});
+document.getElementById('weather-mode').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.weather.mode=this.value;commit(next);if(next.weather.mode==='hybrid')autoRefreshWeather();};
+document.getElementById('refresh-weather').onclick=async function(){var city=document.getElementById('weather-city').value.trim();var button=this;button.disabled=true;document.getElementById('weather-info').textContent='Загружаю погоду…';try{var result=await weatherApi.lookup(city);var next=JSON.parse(JSON.stringify(state));next.weather.mode='hybrid';commit(next);document.getElementById('weather-info').textContent='Погода обновлена: '+result.city;}catch(e){document.getElementById('weather-info').textContent=e.message+' Используются сохранённые данные или магическая погода.';}finally{button.disabled=false;}};
+document.getElementById('weather').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.weather.selected=this.value;commit(next);};
+document.getElementById('day-night').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.settings.dayNight=this.checked;commit(next);};
+document.getElementById('reduce-motion').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.settings.reducedMotion=this.checked;commit(next);};
+document.getElementById('castle-zoom').onclick=function(){var zoomed=castle.classList.toggle('zoomed');this.textContent=zoomed?'Уместить весь план':'Увеличить план';this.setAttribute('aria-pressed',String(zoomed));document.getElementById('castle-hint').textContent=zoomed?'Проведи пальцем влево или вправо':'Нажми на комнату для выбора';};
+document.getElementById('overview').onclick=function(){mode='overview';render();};
+document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Нажми на комнату, чтобы войти внутрь и перемещаться по интерьеру.');render();};
+document.getElementById('add-floor').onclick=function(){var next=JSON.parse(JSON.stringify(state));var f=next.floors.find(function(x){return !x.unlocked;});if(f)f.unlocked=true;else next.floors.push({id:'f'+next.floors.length,capacity:6,unlocked:true});commit(next);announce('Этаж открыт в демонстрационном режиме.');};
+document.getElementById('reset').onclick=function(){if(!confirm('Сбросить только прототип Цитадели?'))return;selected=null;commit(model.initial());announce('Прототип сброшен.');};
+document.getElementById('weather-city').value=weatherApi.savedCity();
+try{render();}catch(error){castle.textContent='Ошибка отрисовки Цитадели: '+(error&&error.message||String(error));castle.style.color='#ffb5b5';console.error('Citadel render failed',error);}
+autoRefreshWeather();document.addEventListener('visibilitychange',function(){if(!document.hidden)autoRefreshWeather();});
+})();
+</script></body></html>

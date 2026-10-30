@@ -2,3 +2,6 @@ seed.json
 plan-seed.json
 dump/
 __pycache__/
+
+node_modules/
+test-results/
