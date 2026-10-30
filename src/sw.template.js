@@ -12,7 +12,10 @@ self.addEventListener('activate', function (e) {
       .map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
-self.addEventListener('message', function (e) { if (e.data === 'SKIP_WAITING') self.skipWaiting(); });
+self.addEventListener('message', function (e) {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
+  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('__APP_BUILD__');
+});
 
 self.addEventListener('fetch', function (e) {
   var req = e.request;

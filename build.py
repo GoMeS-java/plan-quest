@@ -10,7 +10,8 @@ os.makedirs(DIST)
 # --- index.html
 g = open(f'{SRC}/game.html', encoding='utf-8').read()
 g = g.replace('__VER__', open(f'{SRC}/version.txt', encoding='utf-8').read().strip())
-g = g.replace('__BUILD__', hashlib.sha256((g + open(f'{SRC}/localdb.js', encoding='utf-8').read() + open(f'{SRC}/citadel-world.js', encoding='utf-8').read()).encode()).hexdigest()[:6])
+build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'citadel-world.js', 'sw.template.js', 'config.js'])).encode()).hexdigest()[:12]
+g = g.replace('__BUILD__', build_id)
 i = g.index('</style>') + len('</style>')
 head_part, body_part = g[:i], g[i:]
 head_part = head_part.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '')
@@ -20,6 +21,7 @@ html = ('<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
         '<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">'
         '<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">'
         '<link rel="apple-touch-icon" href="icon-192.png">'
+        '<script>window.APP_VERSION=' + json.dumps(open(f'{SRC}/version.txt', encoding='utf-8').read().strip()) + ';window.APP_BUILD=' + json.dumps(build_id) + ';</script>'
         '<script src="config.js"></script><script src="localdb.js"></script>\n'
         + head_part + '</head><body>' + body_part + '\n</body></html>\n')
 open(f'{DIST}/index.html', 'w', encoding='utf-8').write(html)
@@ -78,7 +80,9 @@ shell = ['./', 'index.html', 'manifest.json', 'config.js', 'localdb.js', 'citade
 h = hashlib.sha256()
 for f in sorted(set(shell) - {'./'}):
     h.update(open(f'{DIST}/{f}', 'rb').read())
+# Worker logic changes must also receive a fresh cache identity.
+h.update(open(f'{SRC}/sw.template.js', 'rb').read())
 ver = h.hexdigest()[:10]
-sw = open(f'{SRC}/sw.template.js', encoding='utf-8').read().replace('__VERSION__', ver).replace('__SHELL__', json.dumps(shell))
+sw = open(f'{SRC}/sw.template.js', encoding='utf-8').read().replace('__VERSION__', ver).replace('__SHELL__', json.dumps(shell)).replace('__APP_BUILD__', build_id)
 open(f'{DIST}/sw.js', 'w', encoding='utf-8').write(sw)
 print('built', ver, os.listdir(DIST))

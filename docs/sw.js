@@ -1,5 +1,5 @@
 /* Service worker: версия кэша = хэш файлов (подставляет build.py). */
-var VERSION = '3b6484b50e';
+var VERSION = '8023abfad2';
 var CACHE = 'plan-' + VERSION;
 var SHELL = ["./", "index.html", "manifest.json", "config.js", "localdb.js", "citadel-world.js", "icon-192.png", "icon-512.png", "icon-512-maskable.png", "citadel.html", "citadel.js", "citadel-life.js", "citadel-weather.js"];
 
@@ -12,7 +12,10 @@ self.addEventListener('activate', function (e) {
       .map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
-self.addEventListener('message', function (e) { if (e.data === 'SKIP_WAITING') self.skipWaiting(); });
+self.addEventListener('message', function (e) {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
+  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('e1b24bac2ff2');
+});
 
 self.addEventListener('fetch', function (e) {
   var req = e.request;
