@@ -68,9 +68,9 @@ try {
    await p.locator('[data-art-view="people"]').click();assert(await p.locator('#citadel-residents').evaluate(n=>{const r=n.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}));
    await p.locator('#citadel-fullscreen').click();assert(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-expanded')));
    await p.locator('[data-art-view="overview"]').click();assert(await p.locator('#citadel-castle').isVisible());assert(!(await p.locator('#citadel-interior').isVisible()));
-   await p.screenshot({path:resolve(out,'graphics-game-screen-'+width+'.png')});
+   await p.clock.runFor(32);assert(await p.locator('#citadel-avatar').evaluate(n=>{const a=n.getBoundingClientRect(),b=document.querySelector('[data-croom][aria-pressed="true"]').getBoundingClientRect();return a.left>=b.left&&a.right<=b.right&&a.top>=b.top&&a.bottom<=b.bottom;}),'hero must fit its selected room after immersive resize');await p.screenshot({path:resolve(out,'graphics-game-screen-'+width+'.png')});
    // Capture the whole interactive cutaway without viewport clipping on tall mobile scenes.
-   await p.setViewportSize({width,height:1300});
+   await p.setViewportSize({width,height:1300});await p.clock.runFor(32);
    await p.locator('#citadel-castle').screenshot({path:resolve(out,'graphics-full-castle-'+width+'.png')});
    await p.locator('[data-art-view="room"]').click();assert(await p.locator('#citadel-interior').isVisible());
    const door=p.locator('#citadel-interior-stage [data-stage-door]').first(),destination=await door.getAttribute('data-stage-door');
