@@ -9,9 +9,11 @@ function route(state,fromId,toId){
  for(var i=from;i!==to+step;i+=step)out.push(rooms[i].id);
  return out;
 }
-function residents(state,now){
+var UNLOCK_LEVELS=Object.freeze({guard:5,archivist:10,smith:15,treasurer:20});
+function residents(state,now,level){
+ level=Number.isFinite(Number(level))?Math.max(1,Math.floor(Number(level))):1;
  var model=root.Citadel;
- return Object.keys(model.inhabitants).map(function(id){
+ return Object.keys(model.inhabitants).filter(function(id){return level>=UNLOCK_LEVELS[id];}).map(function(id){
   var npc=model.inhabitants[id],activity=model.npcActivity(id,now);
   var preferred=state.rooms.find(function(r){return r.kind===npc.home;});
   var quarters=state.rooms.find(function(r){return r.kind==='quarters';});
@@ -27,5 +29,5 @@ var lines={
  smith:{work:'Горн горяч. Металл ждёт своей формы.',social:'После работы приятно посидеть у огня.',rest:'Пусть угли остывают.'}
 };
 function dialogue(id,activity){var entry=lines[id];return entry&&(entry[activity]||entry.work)||'Приветствую тебя в Цитадели.';}
-root.CitadelLife=Object.freeze({route:route,residents:residents,dialogue:dialogue});
+root.CitadelLife=Object.freeze({route:route,residents:residents,dialogue:dialogue,unlockLevels:UNLOCK_LEVELS});
 })(window);
