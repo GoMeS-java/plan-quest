@@ -3495,11 +3495,11 @@ case 'status':return 'Твой текущий ранг: '+p.L+'. Осколки 
 case 'residents':return 'Цитадель постепенно заселяется. Первые жители появляются с 5-го ранга.';
 case 'appearance':return 'Внешность героя, одежда и изменения тела берутся из существующей игры.'+(last?' Последний записанный вес: '+last.kg+' кг.':' Записей веса пока нет.');
 case 'recovery':return 'Тихий свет в окнах. Здесь можно передохнуть. Игровые показатели не меняются.';
-case 'today':return 'Твои ежедневные задания находятся в разделе «СЕГОДНЯ». Выполняй их там, чтобы сохранить единый прогресс.';
-case 'progress':return 'Ранг '+p.L+', осколки '+p.P+'. Новые помещения открываются на рангах 5, 10 и 15.';
+case 'today':citadelNavigate('today');return 'Открываю твои настоящие ежедневные задания.';
+case 'progress':citadelNavigate('goals');return 'Ранг '+p.L+', осколки '+p.P+'. Открываю твой путь.';
 case 'stars':return 'Над башней мерцают звёзды. Наблюдение не расходует ресурсы.';
-case 'memories':return 'Записи прошлого остаются в основной «ХРОНИКЕ» и «ВОСПОМИНАНИЯХ».';
-case 'gear':return 'Сейчас экипировано: '+(outfitIds().outer==='none'?'без верхнего слоя':'верхний слой одежды')+'. Смена одежды остаётся в гардеробе основной игры.';
+case 'memories':citadelNavigate('week');return 'Открываю хронику. История остаётся в основной игре.';
+case 'gear':citadelNavigate('diet');return 'Открываю раздел тела и экипировки основной игры.';
 }return '';}
 function citadelRenderActivities(){if(!loaded)return;var info=citadelActivityData[citadelSelected],p=pointsInfo(),host=$('citadel-activity-actions');if(!info||!host)return;$('citadel-activity-rank').textContent='РАНГ '+p.L;$('citadel-activity-text').textContent=info.intro;$('citadel-activity-feedback').textContent='';host.textContent='';info.actions.forEach(function(action){var b=document.createElement('button');b.type='button';b.textContent=action[1];b.addEventListener('click',function(){$('citadel-activity-feedback').textContent=citadelActivityMessage(action[0]);});host.appendChild(b);});}
 var citadelNpcLines={guardian:['Страж Цитадели','Башни ещё молоды. Не забывай возвращаться к своим целям.','Видишь свет в окнах? Значит, убежище живёт.'],archivist:['Хранительница Архива','Каждая запись важна, даже самая маленькая.','Прошлое не обязано определять твой следующий шаг.'],smith:['Кузнец','Пока горн тёплый, путь продолжается.','Настоящая экипировка приходит из твоих достижений.'],treasurer:['Казначей','Состояние убежища отражает твою реальную казну.','Я не создаю монеты из воздуха.']};
