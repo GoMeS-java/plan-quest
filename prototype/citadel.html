@@ -82,6 +82,30 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
  .castle-tools{font-size:13px}.castle-tools small{flex-basis:100%;margin-left:0}
  #room-dialog{padding:9px}#room-scene{height:220px}
 }
+
+/* Визуальные мотивы по типам помещений: без внешних картинок и сети */
+.room-throne,#room-scene[data-room="throne"]{--accent:#e8bb74;--glow:#a36a37;--stone:#403047}
+.room-quarters,#room-scene[data-room="quarters"]{--accent:#bca5e5;--glow:#7765a8;--stone:#302a49}
+.room-study,#room-scene[data-room="study"]{--accent:#80b8c7;--glow:#3b8b9e;--stone:#263e4d}
+.room-workshop,#room-scene[data-room="workshop"]{--accent:#f1a16a;--glow:#a75b36;--stone:#49302d}
+.room-training,#room-scene[data-room="training"]{--accent:#d49b9b;--glow:#8d4a58;--stone:#43313c}
+.room-archive,#room-scene[data-room="archive"]{--accent:#9fcbad;--glow:#56836b;--stone:#293e39}
+.room-treasury,#room-scene[data-room="treasury"]{--accent:#f1d084;--glow:#9b803b;--stone:#3b3442}
+.room-wardrobe,#room-scene[data-room="wardrobe"]{--accent:#e5afd4;--glow:#936a9c;--stone:#443149}
+.room-gallery,#room-scene[data-room="gallery"]{--accent:#a3a9eb;--glow:#686db3;--stone:#303251}
+.room-lounge,#room-scene[data-room="lounge"]{--accent:#d8bfa2;--glow:#987657;--stone:#41343c}
+.room[class*="room-"]{border-color:var(--accent,#7c5d9e);background:repeating-linear-gradient(90deg,var(--stone,#35273f) 0 43px,#55445b 44px 46px);box-shadow:inset 0 -13px #1b1324,inset 0 7px var(--glow,#5d4767)}
+.room[class*="room-"] .symbol{color:var(--accent,#e7dcf6);text-shadow:0 0 12px var(--glow,#9875bd);z-index:1}
+.room[class*="room-"]:after{border-color:var(--accent,#705681);box-shadow:inset 0 0 14px var(--glow,#9472b8)}
+#room-scene[data-room]{border-color:var(--accent,#705481);background:repeating-linear-gradient(90deg,var(--stone,#382841) 0 49px,#55415c 50px 52px);box-shadow:inset 0 -30px #211726,inset 0 15px var(--glow,#48314f)}
+#room-scene[data-room]:before{border-color:var(--accent,#80619a);box-shadow:inset 0 0 18px var(--glow,#54416e),0 0 20px var(--glow,#54416e)}
+#room-scene[data-room]:after{background:repeating-linear-gradient(90deg,var(--accent,#8d6d62) 0 45px,#4c3547 46px 50px)}
+#scene-decoration{position:absolute;inset:0;pointer-events:none;z-index:0}
+#scene-decoration .decor{position:absolute;display:grid;place-items:center;color:var(--accent,#dec3fa);text-shadow:0 0 12px var(--glow,#7760a0);font-size:38px}
+#scene-decoration .decor.left{left:8%;bottom:70px}#scene-decoration .decor.right{right:8%;bottom:70px}
+#scene-decoration .decor.center{left:45%;top:15px;font-size:24px}
+#scene-hero{border-color:var(--accent,#c09fe0);filter:drop-shadow(0 0 5px var(--glow,#9b75c7))}
+@media(max-width:650px){#scene-decoration .decor{font-size:27px}#scene-decoration .decor.center{font-size:20px}}
 </style></head><body><main class="wrap">
 <h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
 <div class="toolbar"><button id="overview" class="active">Обзор</button><button id="walk">Прогулка</button><button id="add-floor">Открыть этаж (демо)</button><button id="reset">Сбросить прототип</button></div>
@@ -89,7 +113,7 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 <div class="panel"><h2 id="selection-title">Редактор комнат</h2><p id="selection-description">Выбери свободную ячейку для строительства или существующую комнату.</p>
 <div class="controls"><label>Комната <select id="kind"></select></label><button id="build">Построить</button><button id="expand">Расширить на 1</button><button id="go">Направить героя</button></div><div class="controls"><label>Мебель <select id="furniture"></select></label><label>Место <select id="slot"></select></label><button id="place">Разместить</button><button id="remove">Убрать последнюю</button></div><div class="controls"><button id="prev">← Назад</button><button id="next">Вперёд →</button></div><div class="panel"><h2>Обитатели Цитадели</h2><p id="rank-info">Ранг Цитадели: 1</p><label><input id="demo-toggle" type="checkbox"> Режим проверки</label> <label>Ранг <input id="demo-level" type="number" min="1" max="100" value="1" disabled style="width:72px;background:#2c203c;color:#eee0ff;border:1px solid #8064a5;padding:7px"></label><p><small>В обычном режиме используется максимальный ранг из «Заклятия», если игра запускалась на этом же сайте и устройстве.</small></p><div id="npcs" class="npcbar"></div><p id="dialogue">Выбери жителя, чтобы поговорить.</p></div><div id="status" role="status"></div>
 <small>Размеры помещений различаются. Занятые ячейки и закрытые этажи недоступны. Состояние сохраняется только в браузере прототипа.</small></div>
-</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-weather" aria-hidden="true"></div><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script src="../src/citadel.js"></script><script src="../src/citadel-life.js"></script><script src="../src/citadel-weather.js"></script><script>
+</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" data-room="throne" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-weather" aria-hidden="true"></div><div id="scene-decoration" aria-hidden="true"></div><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script src="../src/citadel.js"></script><script src="../src/citadel-life.js"></script><script src="../src/citadel-weather.js"></script><script>
 (function(){
 'use strict';
 var model=window.Citadel, state=model.load(), selected=null, mode='overview';
@@ -136,7 +160,7 @@ var floor=document.createElement('div');floor.className='floor';
 var label=document.createElement('div');label.className='floor-title';label.textContent=f.id+' · '+(f.unlocked?'Открыт':'Закрыт');floor.appendChild(label);if(f.unlocked){var stair=document.createElement('span');stair.className='stairs';stair.textContent='▤';stair.title='Лестничный переход (декорация прототипа)';floor.appendChild(stair);}
 for(var i=0;i<f.capacity;i++){
 var start=i,room=state.rooms.find(function(r){return r.floor===f.id&&r.start===start;});
-if(room){var tile=document.createElement('button');tile.className='room';tile.style.gridColumn='span '+room.size;
+if(room){var tile=document.createElement('button');tile.className='room room-'+room.kind;tile.style.gridColumn='span '+room.size;
 if(selected&&selected.id===room.id)tile.classList.add('selected');
 if(state.hero.roomId===room.id)tile.classList.add('hero-room');
 var s=document.createElement('span');s.className='symbol';s.textContent=symbols[room.kind]||'✦';tile.appendChild(s);
@@ -171,7 +195,8 @@ document.getElementById('go').onclick=function(){if(!selected||!selected.id)retu
 document.getElementById('demo-toggle').onchange=function(){demoEnabled=this.checked;document.getElementById('demo-level').disabled=!demoEnabled;render();};document.getElementById('demo-level').onchange=function(){demoLevel=Math.max(1,Math.min(100,Math.floor(Number(this.value)||1)));this.value=demoLevel;render();};
 
 function sceneMove(x){heroX=Math.max(3,Math.min(90,x));document.getElementById('scene-hero').style.left=heroX+'%';}
-function openRoom(id){var room=state.rooms.find(function(r){return r.id===id;});if(!room)return;sceneRoomId=id;document.getElementById('room-heading').textContent=model.rooms[room.kind].name;var next=JSON.parse(JSON.stringify(state));next.hero.roomId=id;commit(next);var items=document.getElementById('scene-items');items.textContent='';(room.items||[]).forEach(function(item){var span=document.createElement('span');span.title=model.furniture[item.kind]?model.furniture[item.kind].name:item.kind;span.textContent=model.furniture[item.kind]?model.furniture[item.kind].symbol:'✧';items.appendChild(span);});var npcs=document.getElementById('scene-npcs');npcs.textContent='';life.residents(state,Date.now(),rank()).filter(function(n){return n.roomId===id;}).forEach(function(n){var btn=document.createElement('button');btn.textContent='♙ '+n.name;btn.onclick=function(){document.getElementById('scene-status').textContent=n.name+': «'+life.dialogue(n.id,n.activity)+'»';};npcs.appendChild(btn);});document.getElementById('room-view').hidden=false;sceneMove(45);}
+function decorateRoom(kind){var symbols={throne:['⚜','♛','⚜'],quarters:['☾','✧','🛏'],study:['▤','✒','▤'],workshop:['⚒','✦','⚙'],training:['⚔','✦','⚔'],archive:['▤','✧','▤'],treasury:['◆','♛','◆'],wardrobe:['♧','✧','♧'],gallery:['✧','♛','✧'],lounge:['♨','☾','♨']};var marks=symbols[kind]||['✧','✦','✧'];var layer=document.getElementById('scene-decoration');layer.textContent='';['left','center','right'].forEach(function(position,i){var mark=document.createElement('span');mark.className='decor '+position;mark.textContent=marks[i];layer.appendChild(mark);});}
+function openRoom(id){var room=state.rooms.find(function(r){return r.id===id;});if(!room)return;sceneRoomId=id;document.getElementById('room-heading').textContent=model.rooms[room.kind].name;document.getElementById('room-scene').dataset.room=room.kind;decorateRoom(room.kind);var next=JSON.parse(JSON.stringify(state));next.hero.roomId=id;commit(next);var items=document.getElementById('scene-items');items.textContent='';(room.items||[]).forEach(function(item){var span=document.createElement('span');span.title=model.furniture[item.kind]?model.furniture[item.kind].name:item.kind;span.textContent=model.furniture[item.kind]?model.furniture[item.kind].symbol:'✧';items.appendChild(span);});var npcs=document.getElementById('scene-npcs');npcs.textContent='';life.residents(state,Date.now(),rank()).filter(function(n){return n.roomId===id;}).forEach(function(n){var btn=document.createElement('button');btn.textContent='♙ '+n.name;btn.onclick=function(){document.getElementById('scene-status').textContent=n.name+': «'+life.dialogue(n.id,n.activity)+'»';};npcs.appendChild(btn);});document.getElementById('room-view').hidden=false;sceneMove(45);}
 document.getElementById('close-room').onclick=function(){document.getElementById('room-view').hidden=true;sceneRoomId=null;};
 document.getElementById('move-left').onclick=function(){sceneMove(heroX-12);};
 document.getElementById('move-right').onclick=function(){sceneMove(heroX+12);};
