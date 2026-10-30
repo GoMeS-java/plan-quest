@@ -62,6 +62,31 @@
     next.rooms.find(function (r) { return r.id === id; }).size = size;
     return next;
   }
+  var FURNITURE = Object.freeze({
+    bed: { name: 'Кровать', symbol: '▰', rooms: ['quarters'] },
+    desk: { name: 'Письменный стол', symbol: '▤', rooms: ['study', 'quarters'] },
+    wardrobe: { name: 'Шкаф', symbol: '▥', rooms: ['wardrobe', 'quarters'] },
+    chair: { name: 'Кресло', symbol: '♧', rooms: ['lounge', 'study', 'quarters'] },
+    lamp: { name: 'Светильник', symbol: '✧', rooms: ['quarters', 'study', 'wardrobe', 'gallery', 'lounge'] },
+    shelf: { name: 'Стеллаж', symbol: '▦', rooms: ['study', 'gallery', 'lounge'] }
+  });
+  function placeFurniture(state, roomId, kind, slot) {
+    var room = state.rooms.find(function (r) { return r.id === roomId; });
+    var item = FURNITURE[kind];
+    if (!room || !item || item.rooms.indexOf(room.kind) < 0) throw new Error('Предмет не подходит для комнаты');
+    if (!Number.isInteger(slot) || slot < 0 || slot >= room.size * 2) throw new Error('Недоступное место');
+    if ((room.items || []).some(function (x) { return x.slot === slot; })) throw new Error('Место занято');
+    var next = JSON.parse(JSON.stringify(state));
+    next.rooms.find(function (r) { return r.id === roomId; }).items.push({ id: 'f-' + Date.now() + '-' + slot, kind: kind, slot: slot });
+    return next;
+  }
+  function removeFurniture(state, roomId, itemId) {
+    var next = JSON.parse(JSON.stringify(state));
+    var room = next.rooms.find(function (r) { return r.id === roomId; });
+    if (!room || !(room.items || []).some(function (x) { return x.id === itemId; })) throw new Error('Предмет не найден');
+    room.items = room.items.filter(function (x) { return x.id !== itemId; });
+    return next;
+  }
   function environment(now, state) {
     var hour = new Date(now).getHours();
     var phase = hour < 6 ? 'deep-night' : hour < 12 ? 'morning' : hour < 18 ? 'day' : hour < 22 ? 'evening' : 'night';
@@ -91,7 +116,7 @@
   // Награды не создаются этим модулем. Полученные предметы импортируются
   // только из проверенной системы достижений, без раскрытия закрытого каталога.
   root.Citadel = Object.freeze({
-    rooms: ROOMS, inhabitants: NPC, initial: initial, load: load, save: save,
+    rooms: ROOMS, inhabitants: NPC, furniture: FURNITURE, initial: initial, load: load, save: save, placeFurniture: placeFurniture, removeFurniture: removeFurniture,
     validPlacement: validPlacement, addRoom: addRoom, expandRoom: expandRoom,
     environment: environment, npcActivity: npcActivity
   });
