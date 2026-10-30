@@ -21,7 +21,7 @@ try{
  await ctx.route('https://**/*',route=>{requests.push(route.request().url());return route.fulfill({body:'',contentType:'text/css'});});
  // Simulate unrelated production data, authentication and cache on the same origin.
  const production=JSON.stringify({v:1,docs:{'cfg/production-sentinel':{d:{value:'unchanged'},u:1}}});
- await ctx.addInitScript(production=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',production);localStorage.setItem('plan.meta.v1',JSON.stringify({signed:true,sheetId:'PRODUCTION_DO_NOT_USE'}));localStorage.setItem('plan.tok',JSON.stringify({t:'synthetic-production-token',exp:Date.now()+3600000}));localStorage.setItem('qa-init','1');}},production);
+ await ctx.addInitScript(production=>{localStorage.setItem('plan.shell.classic.v1','1');if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',production);localStorage.setItem('plan.meta.v1',JSON.stringify({signed:true,sheetId:'PRODUCTION_DO_NOT_USE'}));localStorage.setItem('plan.tok',JSON.stringify({t:'synthetic-production-token',exp:Date.now()+3600000}));localStorage.setItem('qa-init','1');}},production);
  const p=await ctx.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.goto(url+'/android-test/');
  await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&!!window.PlanSync);
  await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');

@@ -174,3 +174,6 @@ body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel
  .citadel-shell .citadel-shell-tail,.citadel-shell .citadel-shell-shade{display:none!important}
  .citadel-shell .citadel-shell-camera{right:265px}
 }
+.citadel-shell-header #plslot{flex:none;display:flex;align-items:center;max-width:88px}
+.citadel-shell-header .pl-chip{min-height:40px}
+@media(max-width:600px){.citadel-shell-header #plslot{max-width:54px}.citadel-shell-header .pl-chip{font-size:8px;padding:4px}}
