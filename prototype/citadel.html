@@ -106,6 +106,46 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 #scene-decoration .decor.center{left:45%;top:15px;font-size:24px}
 #scene-hero{border-color:var(--accent,#c09fe0);filter:drop-shadow(0 0 5px var(--glow,#9b75c7))}
 @media(max-width:650px){#scene-decoration .decor{font-size:27px}#scene-decoration .decor.center{font-size:20px}}
+
+/* Оригинальные CSS-пиксельные силуэты: без эмодзи, изображений и сторонних ассетов */
+#scene-decoration .pixel-prop{position:absolute;display:block;width:62px;height:72px;bottom:35px;image-rendering:pixelated;filter:drop-shadow(0 5px 1px #08070a);background:transparent}
+#scene-decoration .pixel-prop.left{left:7%}#scene-decoration .pixel-prop.right{right:7%}
+#scene-decoration .pixel-prop.center{left:calc(50% - 20px);top:13px;bottom:auto;width:40px;height:40px}
+.pixel-prop:before,.pixel-prop:after{content:'';position:absolute;display:block}
+.prop-throne:before{inset:7px 10px 5px;background:linear-gradient(90deg,#18151b 0 17%,#a17e53 17% 27%,#302736 27% 73%,#a17e53 73% 83%,#18151b 83%);border:4px solid #7e6a55;clip-path:polygon(0 20%,22% 20%,22% 0,78% 0,78% 20%,100% 20%,100% 100%,0 100%)}
+.prop-throne:after{left:7px;right:7px;bottom:0;height:13px;background:#5c4750;border-top:5px solid #b08a58}
+.prop-bed:before{left:0;right:0;bottom:10px;height:24px;background:linear-gradient(#6b5a81 0 38%,#31283d 38%);border:5px solid #8b728c}
+.prop-bed:after{left:0;bottom:0;width:8px;height:43px;background:#76617c;box-shadow:54px 0 #76617c}
+.prop-books:before{inset:5px 7px;background:repeating-linear-gradient(90deg,#292c34 0 9px,#8d7664 9px 13px,#30343e 13px 20px);border:5px solid #786452}
+.prop-books:after{left:7px;right:7px;top:33px;height:5px;background:#b08c6d}
+.prop-anvil:before{left:4px;right:4px;bottom:28px;height:17px;background:#89909c;clip-path:polygon(0 0,100% 0,75% 100%,25% 100%)}
+.prop-anvil:after{left:25px;bottom:5px;width:12px;height:24px;background:#555663;box-shadow:-10px 22px 0 5px #2a2933}
+.prop-forge:before{left:8px;right:8px;bottom:3px;height:57px;background:#39323a;border:6px solid #7a665d;clip-path:polygon(0 28%,25% 0,75% 0,100% 28%,100% 100%,0 100%)}
+.prop-forge:after{left:19px;bottom:10px;width:25px;height:31px;background:linear-gradient(#f5ad55,#aa4930,#341d20);box-shadow:0 0 20px #d66839}
+.prop-chest:before{left:5px;right:5px;bottom:8px;height:35px;background:#47323b;border:5px solid #9b8052;border-radius:7px 7px 2px 2px}
+.prop-chest:after{left:28px;bottom:13px;width:8px;height:24px;background:#c8a466}
+.prop-desk:before{left:3px;right:3px;bottom:33px;height:10px;background:#947b65;box-shadow:0 5px #3b2b36}
+.prop-desk:after{left:9px;bottom:0;width:8px;height:33px;background:#55414c;box-shadow:35px 0 #55414c}
+.prop-pillar:before{left:20px;bottom:0;width:22px;height:70px;background:repeating-linear-gradient(90deg,#4e4754 0 6px,#777080 6px 10px)}
+.prop-pillar:after{left:9px;top:0;width:44px;height:11px;background:#817789;box-shadow:0 60px #817789}
+.prop-candle:before{left:26px;bottom:10px;width:12px;height:37px;background:#b3a5a0}
+.prop-candle:after{left:28px;bottom:49px;width:8px;height:13px;background:#e6b872;box-shadow:0 0 14px #e5a552}
+.prop-blade:before{left:28px;top:0;width:9px;height:53px;background:linear-gradient(90deg,#687886,#d0c5bd,#687886);clip-path:polygon(50% 0,100% 20%,100% 100%,0 100%,0 20%)}
+.prop-blade:after{left:15px;top:50px;width:35px;height:6px;background:#9c785b;box-shadow:0 8px #44303b}
+.prop-shield:before{left:11px;top:4px;width:42px;height:60px;background:#55475a;border:6px solid #a18a79;clip-path:polygon(0 0,100% 0,100% 60%,50% 100%,0 60%)}
+.prop-shield:after{left:28px;top:16px;width:9px;height:34px;background:#9b7e6d}
+.prop-mirror:before{inset:3px 12px 9px;background:linear-gradient(130deg,#85919f,#343447);border:6px solid #a18a91;border-radius:18px 18px 4px 4px}
+.prop-wardrobe:before{inset:3px 7px;background:linear-gradient(90deg,#493340 0 49%,#302634 49% 52%,#493340 52%);border:5px solid #947681}
+.prop-wardrobe:after{left:26px;top:30px;width:5px;height:6px;background:#c4a075;box-shadow:9px 0 #c4a075}
+.prop-fireplace:before{inset:5px;background:#2c252e;border:7px solid #7e6971}
+.prop-fireplace:after{left:19px;bottom:10px;width:25px;height:32px;background:linear-gradient(#e2b46e,#a95132,#2e1c25);box-shadow:0 0 17px #b5683e}
+.prop-banner:before{left:16px;top:2px;width:32px;height:60px;background:#55435c;border:4px solid #9d7c7b;clip-path:polygon(0 0,100% 0,100% 100%,50% 77%,0 100%)}
+.prop-moon:before{left:8px;top:5px;width:24px;height:24px;border-radius:50%;background:#a7b3c5;box-shadow:0 0 12px #7d91b3}
+.prop-moon:after{left:16px;top:1px;width:24px;height:24px;border-radius:50%;background:#29253d}
+.prop-crown:before{left:5px;top:5px;width:30px;height:25px;background:#b39868;clip-path:polygon(0 0,25% 40%,50% 0,75% 40%,100% 0,90% 100%,10% 100%)}
+.prop-sigil:before{left:9px;top:4px;width:23px;height:23px;border:4px solid #91a4b3;transform:rotate(45deg);box-shadow:0 0 13px #6884a0}
+.prop-ember:before{left:16px;top:5px;width:12px;height:24px;background:#e0a05f;clip-path:polygon(50% 0,100% 65%,50% 100%,0 65%);box-shadow:0 0 15px #c56e40}
+@media(max-width:650px){#scene-decoration .pixel-prop{transform:scale(.8);transform-origin:bottom center}}
 </style></head><body><main class="wrap">
 <h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
 <div class="toolbar"><button id="overview" class="active">Обзор</button><button id="walk">Прогулка</button><button id="add-floor">Открыть этаж (демо)</button><button id="reset">Сбросить прототип</button></div>
@@ -195,7 +235,11 @@ document.getElementById('go').onclick=function(){if(!selected||!selected.id)retu
 document.getElementById('demo-toggle').onchange=function(){demoEnabled=this.checked;document.getElementById('demo-level').disabled=!demoEnabled;render();};document.getElementById('demo-level').onchange=function(){demoLevel=Math.max(1,Math.min(100,Math.floor(Number(this.value)||1)));this.value=demoLevel;render();};
 
 function sceneMove(x){heroX=Math.max(3,Math.min(90,x));document.getElementById('scene-hero').style.left=heroX+'%';}
-function decorateRoom(kind){var symbols={throne:['⚜','♛','⚜'],quarters:['☾','✧','🛏'],study:['▤','✒','▤'],workshop:['⚒','✦','⚙'],training:['⚔','✦','⚔'],archive:['▤','✧','▤'],treasury:['◆','♛','◆'],wardrobe:['♧','✧','♧'],gallery:['✧','♛','✧'],lounge:['♨','☾','♨']};var marks=symbols[kind]||['✧','✦','✧'];var layer=document.getElementById('scene-decoration');layer.textContent='';['left','center','right'].forEach(function(position,i){var mark=document.createElement('span');mark.className='decor '+position;mark.textContent=marks[i];layer.appendChild(mark);});}
+function decorateRoom(kind){
+ var sets={throne:['pillar','crown','throne'],quarters:['candle','moon','bed'],study:['books','sigil','desk'],workshop:['anvil','ember','forge'],training:['blade','sigil','shield'],archive:['books','moon','books'],treasury:['chest','crown','chest'],wardrobe:['mirror','moon','wardrobe'],gallery:['banner','crown','banner'],lounge:['candle','moon','fireplace']};
+ var marks=sets[kind]||['pillar','sigil','pillar'],layer=document.getElementById('scene-decoration');layer.textContent='';
+ ['left','center','right'].forEach(function(position,i){var mark=document.createElement('span');mark.className='pixel-prop '+position+' prop-'+marks[i];mark.setAttribute('aria-hidden','true');layer.appendChild(mark);});
+}
 function openRoom(id){var room=state.rooms.find(function(r){return r.id===id;});if(!room)return;sceneRoomId=id;document.getElementById('room-heading').textContent=model.rooms[room.kind].name;document.getElementById('room-scene').dataset.room=room.kind;decorateRoom(room.kind);var next=JSON.parse(JSON.stringify(state));next.hero.roomId=id;commit(next);var items=document.getElementById('scene-items');items.textContent='';(room.items||[]).forEach(function(item){var span=document.createElement('span');span.title=model.furniture[item.kind]?model.furniture[item.kind].name:item.kind;span.textContent=model.furniture[item.kind]?model.furniture[item.kind].symbol:'✧';items.appendChild(span);});var npcs=document.getElementById('scene-npcs');npcs.textContent='';life.residents(state,Date.now(),rank()).filter(function(n){return n.roomId===id;}).forEach(function(n){var btn=document.createElement('button');btn.textContent='♙ '+n.name;btn.onclick=function(){document.getElementById('scene-status').textContent=n.name+': «'+life.dialogue(n.id,n.activity)+'»';};npcs.appendChild(btn);});document.getElementById('room-view').hidden=false;sceneMove(45);}
 document.getElementById('close-room').onclick=function(){document.getElementById('room-view').hidden=true;sceneRoomId=null;};
 document.getElementById('move-left').onclick=function(){sceneMove(heroX-12);};
