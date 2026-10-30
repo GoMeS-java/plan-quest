@@ -563,10 +563,10 @@ html,body{overflow-anchor:none}
     <button class="tab" role="tab" aria-selected="false" data-t="week">ХРОНИКА</button>
     <button class="tab" role="tab" aria-selected="false" data-t="shop" style="font-size:6px">ВОСПОМИНАНИЯ</button>
     <button class="tab" role="tab" aria-selected="false" data-t="diet" style="font-size:7px">ТЕЛО</button>
-    <button class="tab" role="tab" aria-selected="false" data-t="goals">ПУТЬ</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="goals">ПУТЬ</button><button class="tab" role="tab" aria-selected="false" data-t="citadel" style="font-size:7px">ЦИТАДЕЛЬ</button>
   </div>
 
-  <section class="panel active" id="today" data-g="a">
+  <section class="panel" id="citadel" data-g="a"><h2>ЦИТАДЕЛЬ СПЯЩЕГО</h2><p class="note">Часть Заклятия. Ранг и изменения тела берутся из текущего прогресса.</p><iframe id="citadel-frame" title="Цитадель" src="citadel.html" loading="lazy" style="width:100%;height:680px;border:1px solid var(--line);border-radius:8px;background:#100c18" sandbox="allow-scripts allow-same-origin"></iframe></section><section class="panel active" id="today" data-g="a">
     <div class="daysw" id="daysw">
       <button type="button" id="d-today" aria-pressed="true">СЕГОДНЯ</button>
       <button type="button" id="d-yest" aria-pressed="false">ВЧЕРА</button>
@@ -3385,8 +3385,10 @@ html,body{overflow-anchor:none}
       requestAnimationFrame(function () { if (Math.abs((window.pageYOffset || 0) - sy) > 2) window.scrollTo(0, sy); });
     }
   }
-  function renderAllInner() {
-    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass();
+  function syncCitadel(){var frame=$('citadel-frame');if(!frame||!loaded||!frame.contentWindow)return;var p=pointsInfo(),weights=(S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&w.date<=dkey(new Date());}).sort(function(a,b){return a.date.localeCompare(b.date);});var first=weights.length?Number(weights[0].kg):null,last=weights.length?Number(weights[weights.length-1].kg):null;frame.contentWindow.postMessage({type:'plan.citadel.live.v1',rank:p.L,bodyStage:bodyStage(),baseline:first,current:last},'*');}
+window.addEventListener('message',function(e){var f=$('citadel-frame');if(f&&e.source===f.contentWindow&&e.data&&e.data.type==='plan.citadel.ready.v1')syncCitadel();});
+function renderAllInner() {
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel();
   }
 
   function renderHourglass() {
