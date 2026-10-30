@@ -56,21 +56,47 @@
     }, 0);
   }
 
-  function write(p, d) {
-    docs[p] = { d: d, u: Date.now() };
-    save(); dirty = true; notify(); scheduleSync();
-    return Promise.resolve();
+  // Один снимок содержит и оплату, и результат покупки. Callback синхронный:
+  // между проверкой остатка и фиксацией никто не может изменить этот снимок.
+  function mutate(fn) {
+    function commit() {
+      var raw = localStorage.getItem(KEY), persisted = raw ? JSON.parse(raw) : { docs: {} };
+      if (!persisted || !persisted.docs || typeof persisted.docs !== 'object' || Array.isArray(persisted.docs)) throw new Error('Invalid saved database');
+      var next = clone(persisted.docs || {}), changed = false;
+      var tx = {
+        get: function (p) { return next[p] && clone(next[p].d); },
+        list: function (c) { return Object.keys(next).filter(function (p) { return colOf(p) === c && next[p].d != null; }).map(function (p) { return Object.assign({}, clone(next[p].d), { id: idOf(p) }); }); },
+        set: function (p, d) { next[p] = { d: clone(d), u: Math.max(Date.now(), (next[p] && next[p].u || 0) + 1) }; changed = true; },
+        delete: function (p) { tx.set(p, null); }
+      };
+      var result = fn(tx);
+      if (result && typeof result.then === 'function') throw new Error('Transaction callback must be synchronous');
+      if (changed) {
+        if (!jset(KEY, { v: 1, docs: next })) { var error = new Error('Storage unavailable'); error.code = 'quota_exceeded'; throw error; }
+        docs = next; dirty = true; notify(); scheduleSync();
+      }
+      return result;
+    }
+    if (navigator.locks) return navigator.locks.request(KEY, commit);
+    return Promise.resolve().then(commit);
   }
+  function write(p, d) { return mutate(function (tx) { tx.set(p, d); }); }
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEY) { docs = (jget(KEY, { docs: {} }) || {}).docs || {}; notify(); }
+  });
 
   var db = {
+    runTransaction: mutate,
     doc: function (p) {
       return {
         onSnapshot: function (cb) { subs.push({ kind: 'doc', path: p, cb: cb }); setTimeout(function () { cb(snapDoc(p)); }, 0); },
         set: function (d) { return write(p, clone(d)); },
         update: function (d) {
-          var cur = docs[p] && docs[p].d != null ? clone(docs[p].d) : {};
-          Object.keys(d).forEach(function (k) { if (d[k] && d[k].__delete__) delete cur[k]; else cur[k] = clone(d[k]); });
-          return write(p, cur);
+          return mutate(function (tx) {
+            var cur = tx.get(p) || {};
+            Object.keys(d).forEach(function (k) { if (d[k] && d[k].__delete__) delete cur[k]; else cur[k] = clone(d[k]); });
+            tx.set(p, cur);
+          });
         },
         delete: function () { return write(p, null); }
       };
