@@ -35,7 +35,7 @@ async function open({width=390,height=844,seed=initial,legacy={},base=false,day=
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
  if(!base&&!failUpgrade){await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);await page.evaluate(()=>__qa.idle());}
- await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(page));
+ if(!shell)await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(page));
  await dismiss(page);return {page,context};
 }
 async function dismiss(p){await p.evaluate(()=>{for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});}
@@ -60,11 +60,13 @@ try {
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    if(width<1050){await p.locator('.citadel-shell-tail.left').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');
    if(width===390)await p.screenshot({path:resolve(out,'shell-left-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:width-5,y:100}});assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
+   if(width===390){for(const [label,id] of [['Хроника','week'],['Траты','spend'],['Авито','avito']]){await p.locator('.citadel-shell-tail.left').click();await p.locator('.citadel-shell-drawer.left button').filter({hasText:label}).click();assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}}
    await p.locator('.citadel-shell-tail.right').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'right');
    if(width===390)await p.screenshot({path:resolve(out,'shell-right-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:5,y:100}});}
    await p.locator('.citadel-shell-nav button').filter({hasText:'Задания'}).click();assert(await p.locator('.citadel-system-dialog').isVisible());assert(await p.locator('.citadel-system-dialog #qlist').isVisible());
    await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('#citadel-castle').isVisible());
    for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}
+   if(width===390){await p.locator('.citadel-shell-nav button').filter({hasText:'Настройки'}).click();assert(await p.locator('#setup').isVisible());await p.locator('#setup-x').click();await p.locator('.citadel-shell-nav button').filter({hasText:'Достижения'}).click();assert(await p.locator('#trophy').isVisible());await p.locator('#trophy-x').click();}
    await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});if(width===390)await p.screenshot({path:resolve(out,'shell-room-390.png')});
    await p.locator('.citadel-shell-nav button').filter({hasText:'Цитадель'}).click();assert(await p.locator('#citadel-castle').isVisible());
