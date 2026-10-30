@@ -1,9 +1,9 @@
 /* Service worker: версия кэша = хэш файлов (подставляет build.py). */
-var VERSION = '1dc3997c18';
+var VERSION = '0efbcd0ea4';
 var CACHE_PREFIX = 'plan-shell-' + encodeURIComponent(self.registration.scope) + '-';
 var CACHE = CACHE_PREFIX + VERSION;
 var FONT_CACHE = CACHE_PREFIX + 'fonts';
-var SHELL = ["./", "index.html", "manifest.json", "config.js", "localdb.js", "citadel-world.js", "icon-192.png", "icon-512.png", "icon-512-maskable.png", "citadel.html", "citadel.js", "citadel-life.js", "citadel-weather.js"];
+var SHELL = ["./", "index.html", "manifest.json", "config.js", "localdb.js", "citadel-world.js", "icon-192.png", "icon-512.png", "icon-512-maskable.png", "citadel.html", "citadel.js", "citadel-life.js", "citadel-weather.js", "citadel-art.css", "assets/citadel/archive-upgrade.svg", "assets/citadel/archive-upgrade3.svg", "assets/citadel/archive.webp", "assets/citadel/archivist.svg", "assets/citadel/cloister-upgrade.svg", "assets/citadel/cloister-upgrade3.svg", "assets/citadel/cloister.webp", "assets/citadel/forge-upgrade.svg", "assets/citadel/forge-upgrade3.svg", "assets/citadel/forge.webp", "assets/citadel/gatehouse-upgrade.svg", "assets/citadel/gatehouse-upgrade3.svg", "assets/citadel/gatehouse.webp", "assets/citadel/guardian.svg", "assets/citadel/observatory-upgrade.svg", "assets/citadel/observatory-upgrade3.svg", "assets/citadel/observatory.webp", "assets/citadel/refectory-upgrade.svg", "assets/citadel/refectory-upgrade3.svg", "assets/citadel/refectory.webp", "assets/citadel/rest-upgrade.svg", "assets/citadel/rest-upgrade3.svg", "assets/citadel/rest.webp", "assets/citadel/sky.webp", "assets/citadel/smith.svg", "assets/citadel/stairs.svg", "assets/citadel/stone.svg", "assets/citadel/study-upgrade.svg", "assets/citadel/study-upgrade3.svg", "assets/citadel/study.webp", "assets/citadel/throne-upgrade.svg", "assets/citadel/throne-upgrade3.svg", "assets/citadel/throne.webp", "assets/citadel/treasurer.svg", "assets/citadel/vault-upgrade.svg", "assets/citadel/vault-upgrade3.svg", "assets/citadel/vault.webp"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return Promise.all(SHELL.map(function (u) { return fetch(new Request(u, { cache: 'reload' })).then(function (r) { if (!r.ok) throw new Error(u); return c.put(u, r); }); })); }));
@@ -16,7 +16,7 @@ self.addEventListener('activate', function (e) {
 });
 self.addEventListener('message', function (e) {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
-  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('41777bad3d55');
+  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('6cbb47f57ab0');
 });
 
 self.addEventListener('fetch', function (e) {

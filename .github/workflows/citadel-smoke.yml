@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - 'src/citadel*.js'
+      - 'src/citadel*.css'
+      - 'src/assets/citadel/**'
       - 'src/game.html'
       - 'src/localdb.js'
       - 'src/config*.js'
@@ -50,6 +52,12 @@ jobs:
           assert '<script src="citadel-world.js"></script>' in game
           assert Path('docs/citadel-world.js').is_file()
           assert 'citadel-world.js' in Path('docs/sw.js').read_text()
+          art = list(Path('src/assets/citadel').iterdir())
+          assert len(art) == 37
+          assert Path('docs/citadel-art.css').is_file()
+          for asset in art:
+              assert Path('docs/assets/citadel', asset.name).read_bytes() == asset.read_bytes()
+              assert 'assets/citadel/' + asset.name in Path('docs/sw.js').read_text()
           assert 'data-croom="gatehouse"' in game and 'data-croom="vault"' in game
           assert 'id="citadel-frame"' not in game
           assert 'data-t="citadel"' not in game

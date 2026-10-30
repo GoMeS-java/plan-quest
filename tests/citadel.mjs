@@ -15,7 +15,7 @@ const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
 const baseline = '<!doctype html><html><head><meta charset="utf-8"><script src="/config.js"></script><script src="/localdb.js"></script></head><body>'+baselineSrc+'</body></html>';
 const servedOverrides=new Map();
-const server=createServer(async(req,res)=>{try { const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname); const file=resolve(root,'.'+(path==='/'?'/index.html':path)); if(!file.startsWith(root+'/'))throw Error(); const body=servedOverrides.has(file)?servedOverrides.get(file):await readFile(file); if(file.endsWith('/sw.js'))res.setHeader('Cache-Control','no-cache'); res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(file)]||'text/plain');res.end(body); }catch{res.writeHead(404);res.end();}});
+const server=createServer(async(req,res)=>{try { const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname); const file=resolve(root,'.'+(path==='/'?'/index.html':path)); if(!file.startsWith(root+'/'))throw Error(); const body=servedOverrides.has(file)?servedOverrides.get(file):await readFile(file); if(file.endsWith('/sw.js'))res.setHeader('Cache-Control','no-cache'); res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp'})[extname(file)]||'text/plain');res.end(body); }catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}:{} )});
@@ -47,6 +47,43 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('graphics assets, renovation layers, live mobile RPG views and animation lifecycle',async()=>{
+  const images=['sky','throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'];
+  for(const width of [320,360,390,430,768,1280]){
+   const {page:p,context}=await open({width,seed:advancedSeed(),day:'2027-04-16'});await castle(p);
+   const loadedArt=await p.evaluate(async names=>Promise.all(names.map(name=>new Promise(resolve=>{const im=new Image();im.onload=()=>resolve(im.naturalWidth>0);im.onerror=()=>resolve(false);im.src='assets/citadel/'+name+'.webp';}))),images);
+   assert(loadedArt.every(Boolean),'all original scenes must decode');
+   assert.equal(await p.locator('[data-croom]').count(),10);assert.equal(await p.locator('.citadel-floor').count(),5);
+   assert(await p.locator('[data-croom="rest"]').evaluate(n=>getComputedStyle(n,'::before').backgroundImage.includes('rest.webp')));
+   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   await p.locator('#citadel-castle').screenshot({path:resolve(out,'graphics-castle-'+width+'.png')});
+   await p.locator('[data-art-view="room"]').click();assert(await p.locator('#citadel-interior').isVisible());
+   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-rest-'+width+'.png')});
+   await p.locator('[data-art-view="upgrades"]').click();assert(await p.locator('#citadel-upgrade').evaluate(n=>{const r=n.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}));
+   const before=await p.locator('#citadel-interior-stage').screenshot();await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
+   const middle=await p.locator('#citadel-interior-stage').screenshot();assert(!before.equals(middle),'paid tier 2 must change rendered pixels');
+   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='3');
+   const after=await p.locator('#citadel-interior-stage').screenshot();assert(!middle.equals(after),'paid tier 3 must change rendered pixels');
+   if(width===390||width===1280)await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-rest-upgraded-'+width+'.png')});
+   await p.locator('[data-art-view="people"]').click();assert(await p.locator('#citadel-residents').evaluate(n=>{const r=n.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}));
+   await p.locator('#citadel-fullscreen').click();assert(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-expanded')));
+   await p.locator('[data-art-view="overview"]').click();assert(await p.locator('#citadel-castle').isVisible());assert(!(await p.locator('#citadel-interior').isVisible()));
+   await p.screenshot({path:resolve(out,'graphics-game-screen-'+width+'.png')});
+   // Capture the whole interactive cutaway without viewport clipping on tall mobile scenes.
+   await p.setViewportSize({width,height:1300});
+   await p.locator('#citadel-castle').screenshot({path:resolve(out,'graphics-full-castle-'+width+'.png')});
+   await p.locator('[data-art-view="room"]').click();assert(await p.locator('#citadel-interior').isVisible());
+   await p.goBack();assert(!(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-expanded'))));
+   await context.close();
+  }
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);await p.emulateMedia({reducedMotion:'no-preference'});
+  await p.clock.setFixedTime(new Date('2027-04-16T10:00:07+03:00'));await p.evaluate(()=>__qa.render());
+  await p.evaluate(()=>{Object.defineProperty(document,'hidden',{get:()=>true,configurable:true});document.dispatchEvent(new Event('visibilitychange'));});
+  assert(await p.locator('#citadel-home').evaluate(n=>n.getAnimations({subtree:true}).every(a=>a.playState==='paused'||a.playState==='finished')),'hidden scene must pause animation');
+  await p.evaluate(()=>{delete document.hidden;document.dispatchEvent(new Event('visibilitychange'));});
+  await p.emulateMedia({reducedMotion:'reduce'});assert(await p.locator('#citadel-home').evaluate(n=>n.getAnimations({subtree:true}).every(a=>a.playState==='finished')));
+  await context.close();
+ });
  await check('original economy and progress parity on synthetic saves',async()=>{
   for(const complete of [false,true]){const seed=structuredClone(initial);for(let d=19;d<=30;d++)seed['days/2026-10-'+d]={q:Array(10).fill(complete),steps:complete?12000:0,kcal:complete?2100:2500};const a=await open({seed}),b=await open({seed,base:true});assert.deepEqual(await a.page.evaluate(()=>__qa.points()),await b.page.evaluate(()=>__qa.points()));assert.deepEqual(await a.page.evaluate(()=>__qa.steps()),await b.page.evaluate(()=>__qa.steps()));await a.context.close();await b.context.close();}
  });
@@ -200,7 +237,7 @@ try {
    for(const width of [320,360,390,430,768,1280]){
     await p.setViewportSize({width,height:900});
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
-    assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth),'interior overflow '+room+' at '+width);
+    assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth),'interior overflow '+room+' at '+width+' '+JSON.stringify(await p.locator('#citadel-interior').evaluate(n=>({self:{w:n.clientWidth,sw:n.scrollWidth,r:n.getBoundingClientRect().right},children:Array.from(n.querySelectorAll('*')).map(c=>({id:c.id,cls:c.className,w:c.getBoundingClientRect().width,r:c.getBoundingClientRect().right,sw:c.scrollWidth,cw:c.clientWidth})).filter(c=>c.r>n.getBoundingClientRect().right-1)}))));
     assert.equal(await p.locator('.citadel-interior-renovation').evaluate(n=>getComputedStyle(n).display),'block');
     await p.locator('#citadel-interior-object').focus();await p.keyboard.press('Enter');assert((await p.locator('#citadel-object-status').innerText()).includes(':'));
    }
@@ -264,7 +301,7 @@ try {
    for(const width of [320,360,390,430,768,1280]){
     await p.setViewportSize({width,height:900});
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
-    assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth),'interior overflow '+room+' at '+width);
+    assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth),'interior overflow '+room+' at '+width+' '+JSON.stringify(await p.locator('#citadel-interior').evaluate(n=>({self:{w:n.clientWidth,sw:n.scrollWidth,r:n.getBoundingClientRect().right},children:Array.from(n.querySelectorAll('*')).map(c=>({id:c.id,cls:c.className,w:c.getBoundingClientRect().width,r:c.getBoundingClientRect().right,sw:c.scrollWidth,cw:c.clientWidth})).filter(c=>c.r>n.getBoundingClientRect().right-1)}))));
     await p.locator('#citadel-interior-object').focus();await p.keyboard.press('Enter');assert.match(await p.locator('#citadel-object-status').innerText(),/:/);
     assert(await p.locator('#citadel-exits button:enabled').count());
     if(width===320||width===1280)await p.locator('#citadel-interior').screenshot({path:resolve(out,'cycle2-'+room+'-'+width+'.png')});
@@ -463,17 +500,17 @@ try {
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
  });
  await check('production PWA upgrades previous release and keeps a pre-update recovery copy',async()=>{
-  for(const name of ['index.html','localdb.js','sw.js'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','fdd756a:docs/'+name]));
+  for(const name of ['index.html','localdb.js','sw.js'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','893e9be:docs/'+name]));
   const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(20000);
   await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2027-04-12');localStorage.setItem('msum','2027-04');localStorage.setItem('trialSeen','2027-04-16');},advancedSeed());
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
   await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(p));
-  await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.56');
+  await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.57');
   await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);
   const before=await docs(p);servedOverrides.clear();await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
-  await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();await p.waitForFunction(()=>window.APP_VERSION==='0.57');await p.waitForLoadState('load');await p.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated');await castle(p);
+  await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();await p.waitForFunction(()=>window.APP_VERSION==='0.58');await p.waitForLoadState('load');await p.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated');await castle(p);
   assert.deepEqual(await docs(p),before,'update must preserve every original record and timestamp');assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
-  await p.clock.runFor(1000);await context.setOffline(true);await p.reload();await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.57');assert.deepEqual(await docs(p),before);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
+  await p.clock.runFor(1000);await context.setOffline(true);await p.reload();await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.58');assert.deepEqual(await docs(p),before);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
  });
  await check('production PWA construction offline survives reload with one durable payment',async()=>{
   const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(15000);
@@ -481,7 +518,7 @@ try {
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
   await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(p));
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);
-  await context.setOffline(true);await p.reload();await castle(p);assert(await p.evaluate(()=>!!window.CitadelWorld));await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
+  await context.setOffline(true);await p.reload();await castle(p);assert(await p.evaluate(()=>!!window.CitadelWorld));const artCache=await p.evaluate(async()=>Promise.all(['citadel-art.css','assets/citadel/rest.webp','assets/citadel/sky.webp','assets/citadel/guardian.svg','assets/citadel/rest-upgrade3.svg'].map(path=>caches.match(new URL(path,location.href)).then(Boolean))));assert(artCache.every(Boolean),'offline shell must include textures, sprites and renovation art');await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
   assert.equal(Number(await p.locator('#upg').innerText()),Number(before)-1);await p.reload();await castle(p);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');
   assert.equal(Object.keys(await docs(p)).filter(k=>k==='buys/citadel-study-2').length,1);assert.equal(Number(await p.locator('#upg').innerText()),Number(before)-1);await context.close();
