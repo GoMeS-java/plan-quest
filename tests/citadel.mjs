@@ -60,6 +60,17 @@ try {
    await p.screenshot({path:resolve(out,'citadel-'+width+'.png'),fullPage:true});await context.close();
   }
  });
+ await check('citadel journal reflects original daily quest completion without mutating saves',async()=>{
+  const {page:p,context}=await open();await castle(p);
+  const before=await docs(p);
+  await p.locator('.citadel-daily-journal summary').click();
+  const rows=p.locator('#citadel-daily-details .citadel-daily-quest');
+  assert.equal(await rows.count(),await p.evaluate(()=>__qa.S.days['2026-10-30']?document.querySelectorAll('#qlist button.q').length:0));
+  assert.deepEqual(await docs(p),before,'opening journal must not write to storage');
+  await p.locator('#qlist button.q').first().click();await p.waitForTimeout(60);await dismiss(p);
+  assert.equal(await p.locator('#citadel-daily-details .citadel-daily-quest.is-done').count(),1);
+  await context.close();
+ });
  await check('legacy cosmetics migrate once and shared data wins on another device',async()=>{
   const legacy={'plan.citadel.selectedRoom.v1':'study','plan.citadel.decor.v1.study':'banner'};
   const a=await open({legacy});await a.page.waitForTimeout(60);const saved=await docs(a.page);assert.equal(saved['cfg/citadel'].d.decor.study,'banner');await a.context.close();
