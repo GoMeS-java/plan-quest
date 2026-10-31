@@ -57,7 +57,9 @@ try {
   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await p.screenshot({path:resolve(out,'graphics-landscape-844x390.png')});
   await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();
-  await p.locator('[data-croom="forge"]').click();
+  await p.locator('.citadel-viewport').evaluate(n=>{n.scrollTop=300;n.scrollLeft=120;});
+  assert(await p.locator('.citadel-viewport').evaluate(n=>n.scrollTop>100));
+  await p.locator('[data-croom="forge"]').click({position:{x:40,y:35}});
   assert(await p.locator('#citadel-interior').isVisible());
   await p.screenshot({path:resolve(out,'graphics-landscape-forge-844x390.png')});
   await context.close();
