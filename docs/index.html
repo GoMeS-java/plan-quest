@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1a1511"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.65";window.APP_BUILD="631fc89e4acf";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1a1511"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.65";window.APP_BUILD="bf1ca03e0882";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Заклятие</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -955,7 +955,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <h2>ВЕРСИЯ 0.65</h2>
-    <div class="hint">Сборка 631fc89e4acf</div>
+    <div class="hint">Сборка bf1ca03e0882</div>
     <div class="goal vhist">
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -4468,7 +4468,7 @@ function renderAllInner() {
     var viewport=document.createElement('div');viewport.className='citadel-viewport';inside.insertBefore(viewport,castle);viewport.appendChild(castle);
     var header=document.createElement('header');header.className='citadel-shell-header';
     var title=document.createElement('strong');title.className='citadel-shell-title';title.textContent='⚜ ЗАКЛЯТИЕ КОШМАРА';header.appendChild(title);
-    var nav=document.createElement('nav');nav.className='citadel-shell-nav';nav.id='citadel-shell-nav';nav.setAttribute('aria-label','Разделы игры');header.appendChild(nav);header.appendChild($('plslot'));home.insertBefore(header,inside);
+    var nav=document.createElement('nav');nav.className='citadel-shell-nav';nav.id='citadel-shell-nav';nav.setAttribute('aria-label','Разделы игры');header.appendChild(nav);home.insertBefore(header,inside);
     var menuButton=document.createElement('button');menuButton.type='button';menuButton.className='citadel-shell-menu-toggle';menuButton.textContent='РАЗДЕЛЫ';menuButton.setAttribute('aria-label','Открыть разделы игры');menuButton.setAttribute('aria-controls','citadel-shell-nav');menuButton.setAttribute('aria-expanded','false');header.insertBefore(menuButton,nav);
     function closeMenu(){home.dataset.menu='';menuButton.setAttribute('aria-expanded','false');}
     menuButton.onclick=function(){var open=home.dataset.menu==='open';home.dataset.menu=open?'':'open';menuButton.setAttribute('aria-expanded',open?'false':'true');};
@@ -4491,6 +4491,7 @@ function renderAllInner() {
     [['overview','Цитадель'],['wardrobe','Профиль'],['today','Задания'],['money','Финансы'],['shop','Воспоминания'],['diet','Тело'],['goals','Путь'],['achievements','Достижения'],['settings','Настройки']].forEach(function(entry){
       var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];b.onclick=function(){closeMenu();if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};nav.appendChild(b);
     });
+    nav.appendChild($('plslot'));
     var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Воспоминания']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});
     var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.onclick=function(){menuButton.click();};dock.appendChild(dockMenu);
