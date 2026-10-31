@@ -27,7 +27,15 @@ try{
  await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&!!window.PlanSync);
  await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
  const dismiss=()=>p.evaluate(()=>{for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await dismiss();
- assert.equal(await p.title(),'Заклятие Кошмара · ТЕСТ');
+ assert.equal(await p.title(),'Вкач · ТЕСТ');
+ const testManifest=await p.evaluate(async()=>await (await fetch('manifest.json')).json());
+ assert.equal(testManifest.name,'Вкач · ТЕСТ');assert.equal(testManifest.short_name,'Вкач ТЕСТ');
+ assert.equal(testManifest.id,'./android-test');
+ for(const icon of testManifest.icons){const response=await p.request.get(url+'/android-test/'+icon.src);assert.equal(response.status(),200);assert.equal(response.headers()['content-type'],'image/png');assert((await response.body()).length>1000);}
+ const productionManifest=JSON.parse(await readFile(resolve(root,'docs/manifest.json'),'utf8'));
+ assert.equal(productionManifest.name,'Вкач');assert.equal(productionManifest.short_name,'Вкач');
+ assert.equal(productionManifest.start_url,'./');assert.equal(productionManifest.scope,'./');
+ assert.equal(productionManifest.display,'standalone');
  assert.equal(await p.evaluate(()=>PLAN_CONFIG.cloudEnabled),false);assert.equal(await p.evaluate(()=>PLAN_CONFIG.clientId),'');
  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),production);
  assert.equal(await p.evaluate(()=>!!PlanSync._docs()['cfg/production-sentinel']),false);
