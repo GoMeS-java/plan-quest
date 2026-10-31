@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1a1511"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.62";window.APP_BUILD="6a34f855660b";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1a1511"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.62";window.APP_BUILD="a6bf380b7e71";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Заклятие</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -955,7 +955,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <h2>ВЕРСИЯ 0.62</h2>
-    <div class="hint">Сборка 6a34f855660b</div>
+    <div class="hint">Сборка a6bf380b7e71</div>
     <div class="goal vhist">
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -4516,6 +4516,13 @@ function renderAllInner() {
     if(savedCamera&&Number.isFinite(savedCamera.zoom))zoom=Math.max(.55,Math.min(2,savedCamera.zoom));
     cameraSize();function restoreCamera(){requestAnimationFrame(function(){cameraSize();if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);else viewport.scrollTo(Math.max(0,(castle.scrollWidth-viewport.clientWidth)/2),0);citadelPosition();});}restoreCamera();window.addEventListener('load',restoreCamera,{once:true});
     var saveCamera=0;viewport.addEventListener('scroll',function(){clearTimeout(saveCamera);saveCamera=setTimeout(function(){try{localStorage.setItem('plan.citadel.camera.v1',JSON.stringify({left:viewport.scrollLeft,top:viewport.scrollTop,zoom:zoom}));}catch(e){}},300);},{passive:true});
+    var pinch=null,lastPinch=0;
+    function pinchCenter(a,b){var box=viewport.getBoundingClientRect();return {x:(a.clientX+b.clientX)/2-box.left,y:(a.clientY+b.clientY)/2-box.top,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)};}
+    viewport.addEventListener('touchstart',function(e){if(e.touches.length!==2)return;var c=pinchCenter(e.touches[0],e.touches[1]);pinch={distance:Math.max(1,c.d),zoom:zoom,x:(viewport.scrollLeft+c.x)/zoom,y:(viewport.scrollTop+c.y)/zoom};},{passive:true});
+    viewport.addEventListener('touchmove',function(e){if(!pinch||e.touches.length!==2)return;e.preventDefault();var c=pinchCenter(e.touches[0],e.touches[1]);zoom=Math.max(.55,Math.min(2,pinch.zoom*c.d/pinch.distance));cameraSize();viewport.scrollLeft=pinch.x*zoom-c.x;viewport.scrollTop=pinch.y*zoom-c.y;lastPinch=Date.now();},{passive:false});
+    viewport.addEventListener('touchend',function(e){if(e.touches.length<2&&pinch){pinch=null;lastPinch=Date.now();}},{passive:true});
+    viewport.addEventListener('touchcancel',function(){pinch=null;lastPinch=Date.now();},{passive:true});
+    viewport.addEventListener('click',function(e){if(Date.now()-lastPinch<450){e.preventDefault();e.stopImmediatePropagation();}},true);
     window.addEventListener('resize',cameraSize);
     window.addEventListener('popstate',function(){if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);

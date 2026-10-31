@@ -186,6 +186,11 @@ body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel
 .citadel-shell .citadel-moon{z-index:0;right:23%;top:7px}
 .citadel-shell .citadel-sky{height:114px}
 @media(max-width:600px){.citadel-shell .citadel-sky{height:108px}}
+.citadel-shell .citadel-sky:before{content:'';position:absolute;inset:36% -12% 0;z-index:0;pointer-events:none;opacity:.52;background:linear-gradient(0deg,#b18aaf28 0 4px,transparent 4px 11px,#7a638d27 11px 15px,transparent 15px 26px,#b49abc1b 26px 31px,transparent 31px);animation:citadelSkyMist 24s steps(6,end) infinite alternate}
+@keyframes citadelSkyMist{to{translate:22px 0;opacity:.33}}
+.citadel-shell .citadel-room[data-room-level="3"]{box-shadow:inset 0 0 0 2px #d3a673,inset 0 0 24px #efc07855!important}
+.citadel-shell .citadel-room[data-room-level="1"]{box-shadow:inset 0 0 25px #03050bc9!important}
+@media(prefers-reduced-motion:reduce){.citadel-shell .citadel-sky:before{animation:none}}
 /* The purchased tier changes the same room instead of replacing its spatial layout. */
 .citadel-shell .citadel-room[data-room-level="1"]:before{opacity:.73;filter:brightness(.59) saturate(.56)}
 .citadel-shell .citadel-room[data-room-level="1"]:after{opacity:1;background:url('assets/citadel/abandoned.svg') center/100% 100%!important}

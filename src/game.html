@@ -4515,6 +4515,13 @@ function renderAllInner() {
     if(savedCamera&&Number.isFinite(savedCamera.zoom))zoom=Math.max(.55,Math.min(2,savedCamera.zoom));
     cameraSize();function restoreCamera(){requestAnimationFrame(function(){cameraSize();if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);else viewport.scrollTo(Math.max(0,(castle.scrollWidth-viewport.clientWidth)/2),0);citadelPosition();});}restoreCamera();window.addEventListener('load',restoreCamera,{once:true});
     var saveCamera=0;viewport.addEventListener('scroll',function(){clearTimeout(saveCamera);saveCamera=setTimeout(function(){try{localStorage.setItem('plan.citadel.camera.v1',JSON.stringify({left:viewport.scrollLeft,top:viewport.scrollTop,zoom:zoom}));}catch(e){}},300);},{passive:true});
+    var pinch=null,lastPinch=0;
+    function pinchCenter(a,b){var box=viewport.getBoundingClientRect();return {x:(a.clientX+b.clientX)/2-box.left,y:(a.clientY+b.clientY)/2-box.top,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)};}
+    viewport.addEventListener('touchstart',function(e){if(e.touches.length!==2)return;var c=pinchCenter(e.touches[0],e.touches[1]);pinch={distance:Math.max(1,c.d),zoom:zoom,x:(viewport.scrollLeft+c.x)/zoom,y:(viewport.scrollTop+c.y)/zoom};},{passive:true});
+    viewport.addEventListener('touchmove',function(e){if(!pinch||e.touches.length!==2)return;e.preventDefault();var c=pinchCenter(e.touches[0],e.touches[1]);zoom=Math.max(.55,Math.min(2,pinch.zoom*c.d/pinch.distance));cameraSize();viewport.scrollLeft=pinch.x*zoom-c.x;viewport.scrollTop=pinch.y*zoom-c.y;lastPinch=Date.now();},{passive:false});
+    viewport.addEventListener('touchend',function(e){if(e.touches.length<2&&pinch){pinch=null;lastPinch=Date.now();}},{passive:true});
+    viewport.addEventListener('touchcancel',function(){pinch=null;lastPinch=Date.now();},{passive:true});
+    viewport.addEventListener('click',function(e){if(Date.now()-lastPinch<450){e.preventDefault();e.stopImmediatePropagation();}},true);
     window.addEventListener('resize',cameraSize);
     window.addEventListener('popstate',function(){if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
