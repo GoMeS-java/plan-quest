@@ -4533,7 +4533,7 @@ function renderAllInner() {
       cameraFrame=0;if(home.dataset.uiView!=='overview')return;
       var v=viewport.getBoundingClientRect(),left=v.left+viewport.clientLeft,right=left+viewport.clientWidth;
       castle.querySelectorAll('.citadel-floor-caption').forEach(function(n){n.style.transform='translateX('+Math.round(viewport.scrollLeft)+'px)';n.style.maxWidth=Math.max(80,viewport.clientWidth-24)+'px';});
-      var sky=castle.querySelector('.citadel-skyline');sky.style.left=(viewport.scrollLeft+12)+'px';sky.style.maxWidth=Math.max(80,viewport.clientWidth-24)+'px';
+      var sky=castle.querySelector('.citadel-skyline');sky.style.left=(viewport.scrollLeft+24)+'px';sky.style.maxWidth=Math.max(80,viewport.clientWidth-48)+'px';
       castle.querySelectorAll('[data-croom]').forEach(function(room){var r=room.getBoundingClientRect(),name=room.querySelector('.citadel-room-name'),visible=Math.min(r.right,right)-Math.max(r.left,left);name.style.left=Math.max(4,left-r.left+6)+'px';name.style.maxWidth=Math.max(0,Math.min(r.right,right)-Math.max(r.left,left)-12)+'px';name.style.visibility=visible<76?'hidden':'visible';});
     }
     function scheduleCaptions(){if(!cameraFrame)cameraFrame=requestAnimationFrame(cameraCaptions);}

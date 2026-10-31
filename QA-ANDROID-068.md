@@ -13,7 +13,7 @@ no deployment of the main game, no balance changes and no save migration.
   default scale. Saved pan/zoom is retained. Explicit Overview fits the width;
   zoom and pinch still support close inspection. Camera controls occupy a
   measured row outside the art, not an overlay over the roof/captions.
-- Visible floor/sky/room captions follow the camera. Partly visible room labels
+- Visible floor/sky/room captions follow the camera, with a safe inset beyond the decorative wall. Partly visible room labels
   wrap within the available part of their room and hide only when too little
   room is visible to show a readable label. Hit areas and world layout stay fixed.
 - The existing Citadel/resident drawer triggers live in Sections instead of over
