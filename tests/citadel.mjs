@@ -61,7 +61,8 @@ try {
   const target=await p.locator('[data-croom="forge"]').evaluate(n=>{const r=n.getBoundingClientRect(),x=Math.round(r.left+40),y=Math.round(r.top+35);return {x,y,visible:document.elementFromPoint(x,y)?.closest('[data-croom="forge"]')===n,room:[r.left,r.top,r.right,r.bottom],viewport:[innerWidth,innerHeight]};});
   assert(target.visible,'landscape camera must expose selected room: '+JSON.stringify(target));
   await p.touchscreen.tap(target.x,target.y);
-  await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='room');
+  const selection=await p.locator('[data-croom="forge"]').evaluate(n=>({selected:n.getAttribute('aria-pressed'),view:document.querySelector('#citadel-home').dataset.uiView,rank:document.querySelector('#citadel-live-rank').textContent,disabled:n.getAttribute('aria-disabled'),hit:document.elementFromPoint(n.getBoundingClientRect().left+40,n.getBoundingClientRect().top+35)?.outerHTML.slice(0,140)}));
+  assert.equal(selection.view,'room','landscape touch must enter forge: '+JSON.stringify(selection));
   assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'forge');
   await p.screenshot({path:resolve(out,'graphics-landscape-forge-844x390.png')});
   await context.close();
