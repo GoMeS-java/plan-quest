@@ -181,3 +181,6 @@ body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel
 .citadel-shell-meter{height:10px;border:1px solid #735083;background:#24172e;margin:-5px 0 14px;image-rendering:pixelated}.citadel-shell-meter i{display:block;height:100%;background:linear-gradient(90deg,#724395,#be82cf)}
 .citadel-shell .citadel-moon{display:block;right:31%;top:12px;width:36px;height:36px;border-radius:0;background:#dc89ac;clip-path:polygon(25% 0,75% 0,75% 8%,92% 8%,92% 25%,100% 25%,100% 75%,92% 75%,92% 92%,75% 92%,75% 100%,25% 100%,25% 92%,8% 92%,8% 75%,0 75%,0 25%,8% 25%,8% 8%,25% 8%);filter:drop-shadow(0 0 9px #ba6cba);opacity:.8}
 @media(max-width:600px){.citadel-shell .citadel-moon{width:28px;height:28px;top:10px}}
+.citadel-shell .citadel-sky:after{content:'';position:absolute;inset:0;z-index:1;background:url('assets/citadel/roof.svg') center bottom/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none}
+.citadel-shell .citadel-skyline{z-index:2;bottom:5px;left:18px;color:#f0d7ef;text-shadow:1px 1px #080814,2px 2px #080814}
+.citadel-shell .citadel-moon{z-index:0;right:23%;top:7px}
