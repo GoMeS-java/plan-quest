@@ -35,7 +35,7 @@ open(f'{DIST}/index.html', 'w', encoding='utf-8').write(html)
 
 if TEST:
     page = open(f'{DIST}/index.html', encoding='utf-8').read()
-    page = re.sub(r'<title>.*?</title>', '<title>Заклятие Кошмара · ТЕСТ</title>', page, count=1)
+    page = re.sub(r'<title>.*?</title>', '<title>Вкач · ТЕСТ</title>', page, count=1)
     page = page.replace('Они доступны на всех твоих устройствах.', 'В тестовой версии они хранятся отдельно на этом устройстве; сохраняйте резервные копии.')
     page = page.replace('<body>', '<body><div role="status" style="padding:6px;background:#30213d;color:#e7c7e9;text-align:center;font:12px sans-serif">ТЕСТОВАЯ ВЕРСИЯ · Отдельные сохранения</div>', 1)
     open(f'{DIST}/index.html', 'w', encoding='utf-8').write(page)
@@ -82,7 +82,7 @@ for f in ['manifest.json', 'config.js', 'localdb.js', 'privacy.html', 'citadel-w
 
 if TEST:
     manifest = json.load(open(f'{DIST}/manifest.json', encoding='utf-8'))
-    manifest.update(name='Заклятие Кошмара · ТЕСТ', short_name='Кошмар ТЕСТ', id='./android-test')
+    manifest.update(name='Вкач · ТЕСТ', short_name='Вкач ТЕСТ', id='./android-test')
     open(f'{DIST}/manifest.json', 'w', encoding='utf-8').write(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
 
 # --- Отдельная тестовая Цитадель (не заменяет основную игру)
