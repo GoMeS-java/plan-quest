@@ -84,10 +84,10 @@ try {
    if(width===390){for(const [label,id] of [['Хроника','week'],['Траты','spend'],['Авито','avito']]){await p.locator('.citadel-shell-tail.left').click();await p.locator('.citadel-shell-drawer.left button').filter({hasText:label}).click();assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}}
    await p.locator('.citadel-shell-tail.right').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'right');
    if(width===390)await p.screenshot({path:resolve(out,'shell-right-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:5,y:100}});}
-   await shellNav(p,'Задания');assert(await p.locator('.citadel-system-dialog').isVisible());assert(await p.locator('.citadel-system-dialog #qlist').isVisible());
+   await shellNav(p,'Задания');assert(await p.locator('.citadel-system-dialog').isVisible());assert(await p.locator('.citadel-system-dialog #qlist').isVisible());if(width===390)await p.screenshot({path:resolve(out,'rpg-tasks-390.png')});
    await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('#citadel-castle').isVisible());
-   for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}
-   if(width===390){await shellNav(p,'Настройки');assert(await p.locator('#setup').isVisible());await p.locator('#setup-x').click();await shellNav(p,'Достижения');assert(await p.locator('#trophy').isVisible());await p.locator('#trophy-x').click();}
+   for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());if(width===390)await p.screenshot({path:resolve(out,'rpg-'+id+'-390.png')});await p.locator('.citadel-system-dialog header button').click();}
+   if(width===390){await shellNav(p,'Настройки');assert(await p.locator('#setup').isVisible());await p.screenshot({path:resolve(out,'rpg-settings-390.png')});await p.locator('#setup-x').click();await shellNav(p,'Достижения');assert(await p.locator('#trophy').isVisible());await p.screenshot({path:resolve(out,'rpg-achievements-390.png')});await p.locator('#trophy-x').click();}
    await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});if(width===390)await p.screenshot({path:resolve(out,'shell-room-390.png')});
    await shellNav(p,'Цитадель');assert(await p.locator('#citadel-castle').isVisible());
@@ -102,6 +102,29 @@ try {
    await context.close();
   }
  });
+ await check('saved renovation controls visible room artwork, purchase and reload',async()=>{
+  const fresh=await open({width:390,shell:true,seed:initial});
+  assert.equal(await fresh.page.evaluate(()=>__qa.roomLevel('study')),1);
+  assert(await fresh.page.locator('[data-croom="study"]').evaluate(n=>getComputedStyle(n,'::before').backgroundImage.includes('stone.svg')));
+  await fresh.page.locator('[data-croom="study"]').click();
+  assert.equal(await fresh.page.locator('#citadel-interior-stage').getAttribute('data-level'),'1');
+  assert(await fresh.page.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n,'::before').backgroundImage.includes('stone.svg')));
+  await fresh.page.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-study-abandoned-390.png')});
+  await fresh.context.close();
+  const {page:p,context}=await open({width:390,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  assert((await p.evaluate(()=>__qa.S.buys)).length===0);
+  await p.locator('[data-croom="rest"]').click();
+  assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'1');
+  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-abandoned-390.png')});
+  await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
+  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-restored-390.png')});
+  await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='3');
+  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-grand-390.png')});
+  await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&document.querySelector('[data-croom="rest"]').dataset.roomLevel==='3');
+  assert.equal(await p.evaluate(()=>__qa.roomLevel('rest')),3);
+  assert.equal(await p.evaluate(()=>__qa.roomLevel('study')),1);
+  await context.close();
+ });
  await check('graphics assets, renovation layers, live mobile RPG views and animation lifecycle',async()=>{
   const images=['sky','throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'];
   for(const width of [320,360,390,430,768,1280]){
@@ -110,7 +133,7 @@ try {
    assert(loadedArt.every(Boolean),'all original scenes must decode');
    if(width===390){const scenes=['throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'].flatMap(room=>[0,1,2].map(tier=>room+'-scene'+tier+'.svg'));const decoded=await p.evaluate(async names=>Promise.all(names.map(name=>new Promise(resolve=>{const im=new Image();im.onload=()=>resolve(im.naturalWidth>0);im.onerror=()=>resolve(false);im.src='assets/citadel/'+name;}))),scenes);assert(decoded.every(Boolean),'all 30 room-state layers must decode');assert(await p.locator('[data-croom="rest"]').evaluate(n=>getComputedStyle(n).getPropertyValue('--scene-art').includes('rest-scene0.svg')),'saved room tier must select its own pixel layer');}
    assert.equal(await p.locator('[data-croom]').count(),10);assert.equal(await p.locator('.citadel-floor').count(),5);
-   assert(await p.locator('[data-croom="rest"]').evaluate(n=>getComputedStyle(n,'::before').backgroundImage.includes('rest.webp')));
+   assert(await p.locator('[data-croom="rest"]').evaluate(n=>getComputedStyle(n,'::before').backgroundImage.includes('stone.svg')));
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await p.locator('#citadel-castle').screenshot({path:resolve(out,'graphics-castle-'+width+'.png')});
    await p.locator('[data-art-view="room"]').click();assert(await p.locator('#citadel-interior').isVisible());
