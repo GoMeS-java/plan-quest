@@ -1,0 +1,133 @@
+name: Integrated Citadel smoke test
+on:
+  push:
+    branches: [citadel-development-20261030]
+  pull_request:
+    paths:
+      - 'src/citadel*.js'
+      - 'src/citadel*.css'
+      - 'src/rpg-ui.css'
+      - 'src/assets/citadel/**'
+      - 'src/game.html'
+      - 'src/localdb.js'
+      - 'src/config*.js'
+      - 'src/sw.template.js'
+      - 'src/manifest.json'
+      - 'prototype/citadel.html'
+      - 'build.py'
+      - 'tests/**'
+      - 'package*.json'
+      - '.github/workflows/citadel-smoke.yml'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - name: Build and verify Citadel assets
+        run: |
+          python build.py
+          python - <<'PY'
+          from pathlib import Path
+          page = Path('docs/citadel.html').read_text(encoding='utf-8')
+          assert 'root.Citadel = Object.freeze' in page
+          assert 'root.CitadelLife' in page
+          assert 'root.CitadelWeather' in page
+          assert '<script src="../src/' not in page
+          assert '../src/' not in page
+          for name in ('citadel.js', 'citadel-life.js', 'citadel-weather.js', 'sw.js'):
+              assert Path('docs', name).is_file(), name
+          game = Path('docs/index.html').read_text(encoding='utf-8')
+          for marker in ('id="citadel-castle"', 'id="citadel-avatar-canvas"', 'id="citadel-interior-hero"', 'function citadelMove(', 'function syncCitadelAvatar(', 'id="citadel-live-cash"', 'function citadelRenderDecor(', 'function citadelInspectObject(', 'id="citadel-decor-options"', 'function citadelRenderActivities(', 'function citadelNpcSpeak(', 'id="citadel-activity-actions"', 'function citadelSyncWeekly(', 'function citadelSyncDaily(', 'function citadelNavigate(', 'function citadelSyncTrial('):
+              assert marker in game, marker
+          assert '<script src="citadel-world.js"></script>' in game
+          assert Path('docs/citadel-world.js').is_file()
+          assert 'citadel-world.js' in Path('docs/sw.js').read_text()
+          art = list(Path('src/assets/citadel').iterdir())
+          assert len(art) >= 37
+          assert {'roof.svg', 'abandoned.svg'}.issubset({asset.name for asset in art})
+          assert Path('docs/citadel-art.css').is_file()
+          for asset in art:
+              assert Path('docs/assets/citadel', asset.name).read_bytes() == asset.read_bytes()
+              assert 'assets/citadel/' + asset.name in Path('docs/sw.js').read_text()
+          assert 'data-croom="gatehouse"' in game and 'data-croom="vault"' in game
+          assert 'id="citadel-frame"' not in game
+          assert 'data-t="citadel"' not in game
+          print('Integrated Citadel and prototype verified')
+          PY
+      - name: Citadel integration contract checks
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          game = Path('docs/index.html').read_text(encoding='utf-8')
+          required = (
+              "function citadelTrialClock()",
+              "function citadelSyncTrial()",
+              "function citadelSyncWeekly()",
+              "function citadelSyncDaily()",
+              "function citadelNavigate(",
+              "trialOf(today)",
+              "trialProg(today,t)",
+              "citadelNavigate('today','trialbox')",
+              "citadelNavigate(btn.dataset.citadelTab)",
+              'id="citadel-trial-clock"',
+              'data-citadel-tab="week"',
+              'data-citadel-tab="today"',
+          )
+          for token in required:
+              assert token in game, "Missing integration: " + token
+          assert "data-t=\"citadel\"" not in game
+          assert "id=\"citadel-frame\"" not in game
+          print("Read-only quest mirrors and navigation contracts verified")
+          PY
+      - name: JavaScript syntax checks
+        run: |
+          node --check docs/citadel.js
+          node --check docs/citadel-world.js
+          node --check docs/citadel-life.js
+          node --check docs/citadel-weather.js
+          node --check docs/localdb.js
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path('docs/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', html, re.I)
+          assert scripts
+          for i, source in enumerate(scripts):
+              Path('/tmp/citadel-inline-%d.js' % i).write_text(source, encoding='utf-8')
+          PY
+          for f in /tmp/citadel-inline-*.js; do node --check "$f"; done
+      - name: Browser regression tests
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run test:economy
+          npm test
+      - name: Isolated Android PWA safety tests
+        run: |
+          python build.py --test
+          npm run test:isolation
+          git diff --exit-code -- docs/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: citadel-browser-screenshots
+          path: test-results/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: citadel-test-build
+          path: docs/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-isolated-test-build
+          path: android-test/

@@ -1,0 +1,316 @@
+/* Original artwork is scenery only. Rooms, actors, doors and purchases remain live. */
+.citadel-integrated{--stone:#42465d;--edge:#77708a;--ink:#0b0c19;--amber:#e5bf87;border:1px solid #64506f;border-radius:3px;background:#10101e;color:#e9ddcd;font-family:system-ui,sans-serif}
+.citadel-integrated summary{font-family:system-ui,sans-serif;letter-spacing:1.4px;min-height:48px;background:linear-gradient(90deg,#302039,#161321);color:#e5bcf4;font-size:12px}
+.citadel-inside{padding:0 8px 12px;overflow-anchor:none}
+.citadel-roadmap{background:transparent;border:0;padding:9px 2px 5px;margin:0}
+.citadel-roadmap-top{font-size:11px;letter-spacing:1.4px}.citadel-roadmap-top strong{font-size:11px;color:#e9c99c}.citadel-roadmap-current{display:none}
+.citadel-vitals{gap:4px;margin:4px 0 8px}.citadel-vitals span{font-size:10px;border:0;background:#242031;padding:5px 6px;border-radius:2px}.citadel-vitals span:first-child{color:#f0ce94;background:#42304c}
+.citadel-castle{border:0;border-radius:0;padding:0 12px 6px;background:#101320;box-shadow:0 0 0 1px #5e566e,inset 0 0 30px #04050c;isolation:isolate}
+.citadel-castle:before,.citadel-castle:after{top:47px;bottom:0;width:12px;border:0;border-left:2px solid #6d687d;border-right:2px solid #23263b;background:repeating-linear-gradient(0deg,transparent 0 9px,#101320 10px 12px),repeating-linear-gradient(90deg,#42475c 0 5px,#2e3347 6px 12px);z-index:5}
+.citadel-castle:before{left:0}.citadel-castle:after{right:0}
+.citadel-sky{height:82px;margin:0 -12px;border:0;background:#17172f url('assets/citadel/sky.webp') center 49%/cover!important;image-rendering:pixelated;box-shadow:inset 0 -15px 20px #0d1020}
+.citadel-sky>i,.citadel-moon,.citadel-battlements{display:none}.citadel-skyline{bottom:12px;left:14px;font:9px system-ui,sans-serif;letter-spacing:3px;color:#e6c8f2;text-shadow:0 2px 3px #000}
+.citadel-floor-label{font:8px/1 system-ui,sans-serif;letter-spacing:1.8px;height:16px;padding:4px 5px;border:0;background:linear-gradient(#434257,#1e2031);color:#d5c6dc;box-shadow:0 1px #0a0b13;position:relative;z-index:2}
+.citadel-floor{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);gap:0;padding:0;background:#10121d}
+.citadel-floor:before{width:18px;left:calc(50% - 9px);border-width:2px;background:repeating-linear-gradient(0deg,#707185 0 2px,#393b50 3px 5px,#171a2b 6px 8px)}
+.citadel-floor:after{height:5px;background:repeating-linear-gradient(90deg,#4e5268 0 15px,#191b2b 16px 18px);border-top:1px solid #7e7484;z-index:4}
+.citadel-floor .citadel-room{min-height:0;height:108px;border:0!important;background:#131421!important;box-shadow:inset 0 0 15px #000!important;padding:0;isolation:isolate;border-radius:0;image-rendering:pixelated;overflow:hidden}
+.citadel-room:before,.citadel-interior-stage:before{content:'';position:absolute;inset:0;width:auto;height:auto;border:0;border-radius:0;background:var(--room-art) center/100% 100%;box-shadow:none;z-index:-1;image-rendering:pixelated;opacity:.83;pointer-events:none}
+.citadel-room .citadel-window,.citadel-room .citadel-prop{display:none}
+.citadel-room .citadel-room-name{top:4px;bottom:auto;left:3px;right:auto;max-width:calc(100% - 6px);padding:3px 4px;background:#090a13ce;font:9px/1.2 system-ui,sans-serif;letter-spacing:.1px;border-bottom:1px solid #ab8e6844;color:#f8e8d5;pointer-events:none}
+.citadel-room .citadel-lock{top:auto;bottom:5px;right:3px;padding:2px 4px;font:8px/1.2 system-ui,sans-serif;background:#090a14c9;border:0;color:#c8bacd;pointer-events:none}
+.citadel-room:not(.is-locked) .citadel-lock{display:none}.citadel-room.is-locked{opacity:1;filter:none}.citadel-room.is-locked:before{opacity:.52;filter:saturate(.65)}
+.citadel-room.is-selected{outline:1px solid #e4bb7f;outline-offset:-2px}.citadel-room.is-selected .citadel-room-name{color:#ffdb97;border-bottom-color:#b18957}
+.citadel-room:after{content:''!important;position:absolute!important;inset:0!important;width:auto!important;height:auto!important;border:0;background:var(--renovation) center/100% 100%!important;opacity:0;z-index:1!important;pointer-events:none}
+.citadel-room[data-room-level="2"]:after,.citadel-room[data-room-level="3"]:after{opacity:1}
+.citadel-room[data-room-level="3"]:before{opacity:1}.citadel-room[data-room-level="3"]{box-shadow:inset 0 0 0 2px #d3a673,inset 0 0 28px #e9b87a24!important}
+.citadel-corridor{min-height:18px;height:18px;padding:0 5px;border:0;border-bottom:2px solid #565069;background:repeating-linear-gradient(90deg,#282b3e 0 17px,#111526 18px 20px);font-size:6px;letter-spacing:.4px;box-shadow:inset 0 4px #0c0e1b;color:#aba0ba}
+.citadel-corridor span{max-width:43%;line-height:1}.citadel-stairs{width:18px;height:18px;left:calc(50% - 9px);bottom:0;border-width:2px;background:repeating-linear-gradient(0deg,#8c8091 0 2px,#24283d 3px 4px);box-shadow:none;transform:none}
+.citadel-scene-tools{position:sticky;top:0;z-index:12;margin:7px 0 0;background:#11101e;padding:4px 0;gap:5px}
+.citadel-controls{margin:3px 0;gap:3px}.citadel-controls button,.citadel-scene-tools button{min-height:44px;background:linear-gradient(#3d2c49,#241d32);border:1px solid #77607c;font:10px system-ui,sans-serif;color:#f1d9bc;border-radius:2px;padding:6px}
+.citadel-controls span{font:10px system-ui,sans-serif;flex:1}.citadel-inside button{cursor:pointer}.citadel-inside button:focus-visible{outline:2px solid #f9d89d;outline-offset:-3px}
+.citadel-interior{padding:6px;border:1px solid #7c637e;background:#10101d;scroll-margin-top:65px}
+.citadel-interior-top{font-size:12px;color:#ecd6b4}.citadel-interior-stage{height:auto!important;aspect-ratio:2.05;min-height:178px;border:2px solid #5a5367!important;background:#141421!important;box-shadow:inset 0 0 18px #000!important;isolation:isolate}
+.citadel-interior-stage>.citadel-interior-window,.citadel-interior-stage>.citadel-interior-furniture,.citadel-interior-stage>.citadel-interior-detail,.citadel-interior-stage>.citadel-interior-rug,.citadel-interior-stage>.citadel-interior-hearth{display:none}
+.citadel-interior-stage:after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 15% 48%,#ffc67b1c,transparent 38%),linear-gradient(transparent 76%,#080a1766);z-index:1;animation:citadelLight 5s ease-in-out infinite alternate}
+.citadel-interior-stage[data-level="3"]:before{opacity:1}.citadel-interior-stage[data-level="3"]:after{background:radial-gradient(ellipse at 80% 25%,#ab68f12a,transparent 45%),radial-gradient(ellipse at 15% 48%,#ffc67b30,transparent 38%)}
+.citadel-interior-stage .citadel-interior-renovation{inset:0!important;width:auto!important;height:auto!important;border:0!important;clip-path:none!important;border-radius:0!important;box-shadow:none!important;transform:none!important;background:var(--renovation) center/100% 100%!important;filter:none!important;z-index:2}
+.citadel-interior-stage[data-level="3"] .citadel-interior-renovation{filter:drop-shadow(0 0 3px #e9bd7770)!important}
+.citadel-interior-stage canvas{width:34px;height:55px;left:45%;bottom:10%;z-index:5;filter:drop-shadow(2px 2px #080a15);animation:citadelHeroIdle 3.6s steps(2,end) infinite}
+.citadel-interior-upgrade{font:9px system-ui,sans-serif;bottom:0;background:#090b16b8}.citadel-interior-object{right:10%;bottom:12%;height:65%;width:38%;border:1px dashed #e4be6d44;z-index:4;min-width:44px;min-height:44px}
+.citadel-interior-object:before{content:'✧';position:absolute;right:5%;top:5%;color:#e9c98d;animation:citadelLight 3s infinite alternate}.citadel-scene-door{bottom:10%;width:44px;height:64px;border:2px solid #86778c;background:repeating-linear-gradient(90deg,#101321 0 5px,#323345 6px 8px);opacity:.85;font-size:16px;z-index:8}
+.citadel-interior-decoration{transform:scale(.65);transform-origin:top right;z-index:3}.citadel-interior-action{position:sticky;bottom:0;z-index:11;padding:5px;background:#10101eea;margin:4px 0}.citadel-interior-action button{min-height:46px;width:100%;background:linear-gradient(#765080,#412947);border:1px solid #b08cac;font:11px system-ui,sans-serif;color:#fff0d6;letter-spacing:1px}
+.citadel-building,.citadel-room-board{padding:10px;margin-top:9px;border-color:#5e4b65;background:#1c1829;font:12px/1.5 system-ui,sans-serif}.citadel-building p{margin:6px 0}.citadel-building .hint{font-size:10px}.citadel-building button{min-height:48px;background:#57394e;color:#ffe0af}.citadel-decor-panel{padding:10px 0}.citadel-decor-option{font:11px system-ui,sans-serif}
+.citadel-residents{gap:6px}.citadel-resident{background:#171523;border-color:#493951}.citadel-resident button{font:11px/1.5 system-ui,sans-serif;background:#282033}.citadel-worldline{padding:8px 2px;font:10px system-ui,sans-serif;color:#bfa4cf}
+.citadel-art-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:6px 0 8px}.citadel-art-nav button{min-height:44px;border:1px solid #634f6d;background:#20192c;color:#d9c6e1;font:11px system-ui,sans-serif;padding:5px 1px}.citadel-art-nav button[aria-pressed="true"]{background:#57345f;border-color:#c397c7;color:#ffe6b8}
+.citadel-art-help{font:10px/1.5 system-ui,sans-serif;color:#ac9bb9;text-align:center;margin:5px 0}
+.citadel-art-details{margin-top:7px;border-top:1px solid #3c3048}.citadel-art-details>summary{padding:8px;min-height:44px;font:11px system-ui,sans-serif;background:#211b2d;color:#d3bddd;letter-spacing:.5px}
+.citadel-person{width:24px;height:40px;border-radius:0;background:var(--actor-sheet) 0 0/144px 40px;box-shadow:none;bottom:11px;image-rendering:pixelated;animation:citadelActorIdle 4s steps(1,end) infinite;filter:drop-shadow(1px 2px #080913) drop-shadow(-1px 0 #c8916b55);z-index:5}
+.citadel-person:before{display:none}.citadel-person:after{display:none!important}.citadel-person[data-person="guardian"]{--actor-sheet:url('assets/citadel/guardian.svg')}.citadel-person[data-person="archivist"]{--actor-sheet:url('assets/citadel/archivist.svg')}.citadel-person[data-person="smith"]{--actor-sheet:url('assets/citadel/smith.svg')}.citadel-person[data-person="treasurer"]{--actor-sheet:url('assets/citadel/treasurer.svg')}
+.citadel-person.is-travelling{transition:left 1s linear,top 1s linear;animation:citadelActorWalk .65s steps(2,end) infinite;background-position:0 0}.citadel-person[data-facing="left"]{scale:-1 1}
+.citadel-person[data-mode="work"]{animation:citadelActorWork 1.4s steps(2,end) infinite}.citadel-person[data-mode="interaction"]{animation:citadelActorTalk .8s steps(2,end) infinite;outline:0;filter:drop-shadow(0 0 3px #e4b976)}
+.citadel-person[data-mode="rest"]{background-position:-120px 0;animation:none;transform:rotate(-8deg);opacity:.9}
+.citadel-interior-stage .citadel-person{bottom:10%;width:24px;height:40px}.citadel-avatar{height:60px;width:45px;transition:none;transform:none!important}.citadel-avatar canvas{width:27px;height:44px;left:9px;bottom:4px;filter:drop-shadow(1px 2px #0c0a17);animation:citadelHeroIdle 4s steps(2,end) infinite}.citadel-avatar-shadow{width:26px;height:4px;left:9px;bottom:2px}.citadel-avatar[data-moving="true"] canvas{animation:citadelHeroWalk .4s steps(2,end) infinite}.citadel-avatar[data-facing="left"] canvas{scale:-1 1}
+.citadel-sconce{right:6px;top:40%;transform:scale(.55);transform-origin:right center;box-shadow:0 0 20px 5px #efab4425}.citadel-room[data-croom="forge"] .citadel-sconce{right:46%;top:50%}
+.citadel-sconce:before{left:-4px;bottom:13px;width:12px;height:18px;background:linear-gradient(90deg,transparent 0 16%,#b65b51 16% 33%,#f2a15e 33% 50%,#ffe2a0 50% 67%,#de7853 67% 84%,transparent 84%);clip-path:polygon(50% 0,67% 22%,83% 33%,83% 67%,100% 78%,83% 100%,17% 100%,0 78%,17% 55%,33% 33%,33% 22%);filter:drop-shadow(0 0 3px #e99b57);image-rendering:pixelated}
+.citadel-castle[data-phase="ДЕНЬ"] .citadel-room:before,.citadel-interior-stage[data-phase="ДЕНЬ"]:before{filter:brightness(1.16) saturate(.82)}.citadel-castle[data-phase="УТРО"] .citadel-room:before{filter:sepia(.14) brightness(1.06)}.citadel-castle[data-phase="НОЧЬ"] .citadel-room:before{filter:brightness(.83) saturate(.92)}
+@keyframes citadelLight{from{opacity:.6}to{opacity:1}}
+@keyframes citadelActorIdle{0%,84%,100%{background-position:0 0;translate:0 0}89%,94%{background-position:-24px 0;translate:0 -1px}}
+@keyframes citadelActorWalk{0%{background-position:-48px 0;translate:0 0}50%{background-position:-72px 0;translate:0 -1px}100%{background-position:-48px 0;translate:0 0}}
+@keyframes citadelActorWork{0%,100%{background-position:-96px 0;translate:0 0}50%{background-position:-120px 0;translate:0 -1px}}
+@keyframes citadelActorTalk{0%,100%{background-position:0 0}50%{background-position:-24px 0}}
+@media(prefers-reduced-motion:reduce){.citadel-person,.citadel-person.is-travelling,.citadel-person[data-mode="work"],.citadel-person[data-mode="interaction"]{animation:none!important;transition:none!important;translate:none!important}}
+@keyframes citadelHeroIdle{50%{translate:0 -1px}}@keyframes citadelHeroWalk{50%{translate:0 -2px;rotate:2deg}}
+.citadel-expanded{position:fixed;inset:0;z-index:25;max-width:1180px;margin:0 auto!important;border-radius:0;overflow:auto;overscroll-behavior:contain;background:#0d0d19;padding:env(safe-area-inset-top,0px) max(0px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px);scrollbar-width:thin}
+.citadel-expanded>summary{position:sticky;top:0;z-index:15;border-bottom:1px solid #604766}.citadel-expanded .citadel-scene-tools{top:48px}.citadel-expanded .citadel-castle{max-width:none}.citadel-expanded .citadel-floor .citadel-room{height:126px;min-height:0}.citadel-expanded .citadel-sky{height:110px}
+@media(min-width:700px){.app:has(#citadel-home[open]){max-width:1060px}.app:has(#citadel-home[open])>.stage,.app:has(#citadel-home[open])>.points{max-width:440px;width:100%;align-self:center}.citadel-inside{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,32%);gap:0 14px;padding:0 14px 14px;align-items:start}.citadel-roadmap,.citadel-vitals,.citadel-art-nav{grid-column:1/-1}.citadel-castle{grid-column:1;grid-row:4/19}.citadel-inside> :not(.citadel-roadmap):not(.citadel-vitals):not(.citadel-art-nav):not(.citadel-castle){grid-column:2}.citadel-floor .citadel-room,.citadel-expanded .citadel-floor .citadel-room{height:clamp(120px,12vw,180px)}.citadel-sky,.citadel-expanded .citadel-sky{height:130px}.citadel-interior-stage{aspect-ratio:1.65;min-height:180px}.citadel-interior{margin-top:4px}.citadel-scene-tools{position:static}.citadel-controls{flex-wrap:wrap}.citadel-interior-action{position:static}.citadel-corridor{height:24px;min-height:24px}.citadel-stairs{height:24px}.citadel-room .citadel-room-name{font-size:11px}.citadel-sconce{transform:scale(.8)}}
+@media(max-width:370px){.citadel-inside{padding-inline:4px}.citadel-floor .citadel-room{height:94px}.citadel-room .citadel-room-name{font-size:8px}.citadel-person{left:calc(2% + var(--person-slot)*20%)}.citadel-vitals span{font-size:9px}.citadel-interior-stage canvas{width:30px;height:49px}.citadel-interior-stage .citadel-person{left:calc(18% + var(--person-slot)*15%)}}
+.citadel-integrated:not([open]) *,.citadel-suspended .citadel-integrated *{animation-play-state:paused!important}.citadel-suspended .citadel-person{transition:none!important}
+@media(prefers-reduced-motion:reduce){.citadel-integrated *,.citadel-integrated *:before,.citadel-integrated *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+body.citadel-modal-open{overflow:hidden}.citadel-art-nav{scroll-margin-top:100px}.citadel-building,.citadel-residents,.citadel-castle{scroll-margin-top:110px}
+
+[data-croom="throne"],.citadel-interior-stage[data-room="throne"]{--room-art:url("assets/citadel/throne.webp");--renovation:url("assets/citadel/throne-upgrade.svg")}
+[data-croom="observatory"],.citadel-interior-stage[data-room="observatory"]{--room-art:url("assets/citadel/observatory.webp");--renovation:url("assets/citadel/observatory-upgrade.svg")}
+[data-croom="rest"],.citadel-interior-stage[data-room="rest"]{--room-art:url("assets/citadel/rest.webp");--renovation:url("assets/citadel/rest-upgrade.svg")}
+[data-croom="study"],.citadel-interior-stage[data-room="study"]{--room-art:url("assets/citadel/study.webp");--renovation:url("assets/citadel/study-upgrade.svg")}
+[data-croom="archive"],.citadel-interior-stage[data-room="archive"]{--room-art:url("assets/citadel/archive.webp");--renovation:url("assets/citadel/archive-upgrade.svg")}
+[data-croom="forge"],.citadel-interior-stage[data-room="forge"]{--room-art:url("assets/citadel/forge.webp");--renovation:url("assets/citadel/forge-upgrade.svg")}
+[data-croom="gatehouse"],.citadel-interior-stage[data-room="gatehouse"]{--room-art:url("assets/citadel/gatehouse.webp");--renovation:url("assets/citadel/gatehouse-upgrade.svg")}
+[data-croom="refectory"],.citadel-interior-stage[data-room="refectory"]{--room-art:url("assets/citadel/refectory.webp");--renovation:url("assets/citadel/refectory-upgrade.svg")}
+[data-croom="cloister"],.citadel-interior-stage[data-room="cloister"]{--room-art:url("assets/citadel/cloister.webp");--renovation:url("assets/citadel/cloister-upgrade.svg")}
+[data-croom="vault"],.citadel-interior-stage[data-room="vault"]{--room-art:url("assets/citadel/vault.webp");--renovation:url("assets/citadel/vault-upgrade.svg")}
+[data-croom="throne"][data-room-level="3"],.citadel-interior-stage[data-room="throne"][data-level="3"]{--renovation:url("assets/citadel/throne-upgrade3.svg")}
+[data-croom="observatory"][data-room-level="3"],.citadel-interior-stage[data-room="observatory"][data-level="3"]{--renovation:url("assets/citadel/observatory-upgrade3.svg")}
+[data-croom="rest"][data-room-level="3"],.citadel-interior-stage[data-room="rest"][data-level="3"]{--renovation:url("assets/citadel/rest-upgrade3.svg")}
+[data-croom="study"][data-room-level="3"],.citadel-interior-stage[data-room="study"][data-level="3"]{--renovation:url("assets/citadel/study-upgrade3.svg")}
+[data-croom="archive"][data-room-level="3"],.citadel-interior-stage[data-room="archive"][data-level="3"]{--renovation:url("assets/citadel/archive-upgrade3.svg")}
+[data-croom="forge"][data-room-level="3"],.citadel-interior-stage[data-room="forge"][data-level="3"]{--renovation:url("assets/citadel/forge-upgrade3.svg")}
+[data-croom="gatehouse"][data-room-level="3"],.citadel-interior-stage[data-room="gatehouse"][data-level="3"]{--renovation:url("assets/citadel/gatehouse-upgrade3.svg")}
+[data-croom="refectory"][data-room-level="3"],.citadel-interior-stage[data-room="refectory"][data-level="3"]{--renovation:url("assets/citadel/refectory-upgrade3.svg")}
+[data-croom="cloister"][data-room-level="3"],.citadel-interior-stage[data-room="cloister"][data-level="3"]{--renovation:url("assets/citadel/cloister-upgrade3.svg")}
+[data-croom="vault"][data-room-level="3"],.citadel-interior-stage[data-room="vault"][data-level="3"]{--renovation:url("assets/citadel/vault-upgrade3.svg")}.citadel-integrated:not([open]) *:before,.citadel-integrated:not([open]) *:after,.citadel-suspended .citadel-integrated *:before,.citadel-suspended .citadel-integrated *:after{animation-play-state:paused!important}
+/* The immersive view has four real panes, sharing the same DOM and game state. */
+.citadel-expanded .citadel-inside{display:flex;flex-direction:column;gap:0}
+.citadel-expanded .citadel-inside>*{width:100%;flex-shrink:0}
+.citadel-expanded .citadel-roadmap{display:none}.citadel-expanded .citadel-vitals{padding-top:6px}
+.citadel-expanded .citadel-art-nav{position:sticky;top:48px;z-index:14;background:#10101e;margin:0;padding:4px 0}
+.citadel-expanded .citadel-scene-tools{position:static}.citadel-expanded .citadel-interior-action{position:static}
+.citadel-expanded[data-ui-view="overview"] .citadel-inside>:not(.citadel-vitals):not(.citadel-art-nav):not(.citadel-castle):not(.citadel-controls):not(.citadel-interior-action):not(.citadel-scene-tools):not(.citadel-room-info){display:none!important}
+.citadel-expanded:not([data-ui-view="overview"]) .citadel-castle,.citadel-expanded:not([data-ui-view="overview"]) .citadel-controls,.citadel-expanded:not([data-ui-view="overview"]) .citadel-interior-action{display:none}
+.citadel-expanded[data-ui-view="room"] .citadel-inside>:not(.citadel-vitals):not(.citadel-art-nav):not(.citadel-interior):not(.citadel-scene-tools){display:none!important}
+.citadel-expanded[data-ui-view="upgrades"] .citadel-inside>:not(.citadel-vitals):not(.citadel-art-nav):not(.citadel-interior):not(.citadel-scene-tools){display:none!important}
+.citadel-expanded[data-ui-view="people"] .citadel-inside>:not(.citadel-vitals):not(.citadel-art-nav):not(.citadel-worldline):not(.citadel-residents):not(.citadel-npc-dialogue):not(.citadel-npc-actions):not(.citadel-scene-tools){display:none!important}
+.citadel-expanded[data-ui-view="room"] .citadel-building,.citadel-expanded[data-ui-view="upgrades"] .citadel-room-board,.citadel-expanded[data-ui-view="upgrades"] .citadel-decor-panel,.citadel-expanded[data-ui-view="upgrades"] .citadel-interior-caption,.citadel-expanded[data-ui-view="upgrades"] .citadel-object-status,.citadel-expanded[data-ui-view="upgrades"] .citadel-exits{display:none}
+.citadel-expanded .citadel-interior{width:100%;max-width:900px;align-self:center}.citadel-expanded .citadel-interior-stage{aspect-ratio:2.4;max-height:45svh;min-height:178px}
+.citadel-expanded .citadel-interior-stage canvas{width:44px;height:72px}.citadel-expanded .citadel-interior-stage .citadel-person{scale:1.25;transform-origin:bottom center}
+.citadel-expanded .citadel-sky{height:70px}.citadel-expanded .citadel-floor .citadel-room{height:clamp(72px,calc((100svh - 365px)/5),132px)}
+.citadel-expanded .citadel-floor-label{height:12px;font-size:7px;padding:3px 5px}.citadel-expanded .citadel-corridor{height:12px;min-height:12px}.citadel-expanded .citadel-corridor span{display:none}.citadel-expanded .citadel-stairs{height:12px}
+.citadel-expanded .citadel-scene-tools{margin-top:3px;padding:2px 0}.citadel-expanded .citadel-room-info{font-size:10px;padding:5px;margin:2px 0}
+@media(min-width:700px){.citadel-expanded[data-ui-view="overview"] .citadel-castle{max-width:880px;align-self:center}.citadel-expanded[data-ui-view="overview"] .citadel-inside{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:0 14px}.citadel-expanded[data-ui-view="overview"] .citadel-vitals,.citadel-expanded[data-ui-view="overview"] .citadel-art-nav{grid-column:1/-1}.citadel-expanded[data-ui-view="overview"] .citadel-castle{grid-row:3/12;grid-column:1}.citadel-expanded[data-ui-view="overview"] .citadel-inside>:not(.citadel-vitals):not(.citadel-art-nav):not(.citadel-castle){grid-column:2}.citadel-expanded .citadel-floor .citadel-room{height:clamp(95px,calc((100svh - 220px)/5),170px)}.citadel-expanded .citadel-sky{height:90px}.citadel-expanded .citadel-residents{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.citadel-castle:before,.citadel-castle:after{background:#34394e url('assets/citadel/stone.svg') 0 0/48px 12px;image-rendering:pixelated}
+.citadel-floor{grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr)}.citadel-floor:before{width:24px;left:calc(50% - 12px);border:0;background:#171b2e url('assets/citadel/stairs.svg') center/24px 100%;image-rendering:pixelated}
+.citadel-corridor{background:#252a40 url('assets/citadel/stone.svg') center/96px 24px}.citadel-corridor span{color:#b5a5c1;text-shadow:1px 1px #000}.citadel-stairs{width:24px;left:calc(50% - 12px)}
+.citadel-interior-stage .citadel-person[role="button"]:before{content:'';display:block;position:absolute;inset:-2px -10px;background:none;width:auto;height:auto;border-radius:0}
+.citadel-interior-stage{width:100%;max-width:100%;min-width:0}
+.citadel-avatar canvas,.citadel-interior-stage #citadel-interior-hero{opacity:0}
+.citadel-hero-sprite{position:absolute;pointer-events:none;width:27px;height:44px;left:9px;bottom:4px;background:var(--hero-sheet) 0 0/400% 100%;image-rendering:pixelated;filter:drop-shadow(1px 2px #080a16);animation:citadelHeroBlink 6s steps(1,end) infinite;z-index:5}
+.citadel-avatar[data-facing="left"] .citadel-hero-sprite{scale:-1 1}.citadel-avatar[data-moving="true"] .citadel-hero-sprite{animation:citadelHeroStride .5s steps(2,end) infinite}
+.citadel-interior-stage .citadel-hero-sprite{width:34px;height:55px;left:45%;bottom:10%}.citadel-expanded .citadel-interior-stage .citadel-hero-sprite{width:44px;height:72px}
+@media(max-width:370px){.citadel-interior-stage .citadel-hero-sprite{width:30px;height:49px}}
+@keyframes citadelHeroBlink{0%,94%,100%{background-position:0 0}96%{background-position:33.333% 0}}
+@keyframes citadelHeroStride{from{background-position:66.666% 0}to{background-position:133.333% 0}}
+.citadel-motes{position:absolute;inset:20% 10%;z-index:3;pointer-events:none;background:radial-gradient(circle at 17% 70%,#e1b99a 0 1px,transparent 1.5px),radial-gradient(circle at 35% 33%,#b998da 0 1px,transparent 1.5px),radial-gradient(circle at 60% 55%,#e4bd8e 0 1px,transparent 1.5px),radial-gradient(circle at 83% 22%,#b7a1e1 0 1px,transparent 1.5px);animation:citadelMotes 8s ease-in-out infinite alternate;opacity:.4}
+@keyframes citadelMotes{from{translate:0 4px;opacity:.2}to{translate:2px -5px;opacity:.6}}
+.citadel-sky:after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 10%,#ac83b620 45%,transparent 80%);animation:citadelCloud 18s ease-in-out infinite alternate;pointer-events:none}
+@keyframes citadelCloud{to{translate:12px 0;opacity:.4}}
+.citadel-castle[data-phase="ДЕНЬ"] .citadel-sky{filter:brightness(1.2) saturate(.7)}.citadel-castle[data-phase="УТРО"] .citadel-sky{filter:sepia(.2) brightness(1.1)}.citadel-castle[data-phase="НОЧЬ"] .citadel-sky{filter:brightness(.77)}
+.citadel-expanded[data-ui-view="overview"] .citadel-room-info{display:none!important}
+.citadel-interior-object:after{display:none}
+
+/* One continuous Citadel shell; the existing game panels are mounted in its journal. */
+body.citadel-shell-active{overflow:hidden;background:#0b0917}
+body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel-shell-active .stage{display:none!important}
+.citadel-shell.citadel-expanded{position:fixed;inset:0;z-index:25;max-width:none;margin:0!important;padding:0;display:flex;flex-direction:column;overflow:hidden;background:#090817;color:#e8d5ed}
+.citadel-shell>summary{display:none!important}
+.citadel-shell .citadel-shell-header{flex:none;min-height:52px;padding:env(safe-area-inset-top,0px) max(42px,env(safe-area-inset-right,0px)) 0 max(42px,env(safe-area-inset-left,0px));background:#100d20;border-bottom:2px solid #594367;display:flex;align-items:center;gap:15px;box-sizing:content-box;z-index:22}
+.citadel-shell-title{font-family:Georgia,serif;font-size:clamp(13px,2vw,22px);letter-spacing:1px;color:#d8a8e9;white-space:nowrap}
+.citadel-shell-nav{display:flex;overflow:auto;gap:2px;scrollbar-width:none;flex:1;min-width:0}
+.citadel-shell-nav button,.citadel-shell-camera button{border:1px solid #473451;background:#171326;color:#d7c3dd;min-height:40px;padding:5px 10px;font:inherit;font-size:10px;white-space:nowrap;cursor:pointer}
+.citadel-shell-nav button:focus-visible,.citadel-shell-camera button:focus-visible,.citadel-shell-tail:focus-visible{outline:2px solid #f0caad}
+.citadel-shell .citadel-inside{display:flex!important;flex:1;min-height:0;overflow:hidden;padding:0!important;background:#0b0918}
+.citadel-shell .citadel-inside>.citadel-vitals,.citadel-shell .citadel-inside>.citadel-art-nav,.citadel-shell .citadel-inside>.citadel-scene-tools,.citadel-shell .citadel-inside>.citadel-controls,.citadel-shell .citadel-inside>.citadel-interior-action,.citadel-shell .citadel-inside>.citadel-room-info{display:none!important}
+.citadel-shell[data-ui-view="overview"] .citadel-inside>.citadel-viewport{display:block!important}
+.citadel-shell .citadel-viewport{flex:1;width:100%;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;scrollbar-width:thin;scrollbar-color:#664477 #191324;background:radial-gradient(ellipse at 50% 15%,#352146,#0b0918 72%)}
+.citadel-shell .citadel-viewport .citadel-castle{display:block!important;width:var(--castle-width,900px);max-width:none!important;margin:0 auto!important;transform:none}
+.citadel-shell:not([data-ui-view="overview"]) .citadel-viewport{display:none!important}
+.citadel-shell[data-ui-view="overview"] .citadel-inside>.citadel-interior{display:none!important}
+.citadel-shell[data-ui-view="room"] .citadel-inside>.citadel-interior,.citadel-shell[data-ui-view="upgrades"] .citadel-inside>.citadel-interior{display:block!important;overflow:auto;max-width:100%;height:100%;padding:8px 14px 100px;box-sizing:border-box}
+.citadel-shell .citadel-interior-stage{max-height:none;min-height:clamp(250px,55svh,560px)}
+.citadel-shell-camera{position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:18;display:flex;gap:4px;background:#100d20d9;padding:3px;border:1px solid #6c4a75}
+.citadel-shell:not([data-ui-view="overview"]) .citadel-shell-camera{display:none}
+.citadel-shell-tail{position:absolute;top:48%;z-index:24;min-height:90px;width:31px;border:1px solid #956d9e;background:#271833;color:#ead1ee;cursor:pointer;font-size:15px;writing-mode:vertical-rl}
+.citadel-shell-tail.left{left:0;border-radius:0 8px 8px 0}.citadel-shell-tail.right{right:0;border-radius:8px 0 0 8px}
+.citadel-shell-shade{position:absolute;inset:52px 0 0;z-index:25;background:#070511aa;display:none}
+.citadel-shell[data-drawer]:not([data-drawer=""]) .citadel-shell-shade{display:block}
+.citadel-shell-drawer{position:absolute;top:52px;bottom:0;z-index:26;width:min(295px,82vw);overflow:auto;padding:16px 14px 70px;background:#151021;border:1px solid #74527d;box-sizing:border-box;box-shadow:0 0 24px #05030d;transition:transform .2s ease}
+.citadel-shell-drawer.left{left:0;transform:translateX(-105%)}.citadel-shell-drawer.right{right:0;transform:translateX(105%)}
+.citadel-shell[data-drawer="left"] .citadel-shell-drawer.left,.citadel-shell[data-drawer="right"] .citadel-shell-drawer.right{transform:translateX(0)}
+.citadel-shell-drawer h2{font-size:14px;color:#dfb2e8;margin:4px 0 15px}.citadel-shell-drawer p{line-height:1.6;font-size:12px;color:#cbb9d0}
+.citadel-shell-drawer button{width:100%;min-height:43px;margin:3px 0;text-align:left;background:#251a32;color:#eedcf0;border:1px solid #634a70;font:inherit;font-size:11px;padding:9px;cursor:pointer}
+.citadel-shell-drawer button:hover{border-color:#c990d0}
+.citadel-system-dialog{width:min(780px,96vw);max-height:92svh;background:#171120;color:#eadce7;border:2px solid #815c88;padding:12px;overflow:auto;box-sizing:border-box}
+.citadel-system-dialog::backdrop{background:#06030bdd}.citadel-system-dialog .panel{display:block;margin:0}.citadel-system-dialog header{position:sticky;top:-12px;background:#171120;z-index:2;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #674d72;padding:8px}
+.citadel-system-dialog header button{min-width:44px;min-height:44px;background:#352341;color:#fff;border:1px solid #92749b}
+@media(max-width:600px){.citadel-shell .citadel-shell-header{gap:5px}.citadel-shell-title{font-size:12px;max-width:100px;white-space:normal;line-height:1.15}.citadel-shell-nav button{font-size:9px;padding:3px 6px}.citadel-shell .citadel-floor .citadel-room{height:clamp(92px,16svh,150px)}.citadel-shell .citadel-sky{height:95px}}
+@media(prefers-reduced-motion:reduce){.citadel-shell-drawer{transition:none}}
+#citadel-home.citadel-shell[data-ui-view="overview"] .citadel-inside>.citadel-viewport{display:block!important}
+#citadel-home.citadel-shell{overflow:clip}
+#citadel-home.citadel-shell .citadel-inside{height:0;flex:1 1 0;min-height:0}
+#citadel-home.citadel-shell .citadel-inside>.citadel-viewport{height:100%;flex:1 1 0!important;min-height:0}
+#citadel-home.citadel-shell .citadel-inside{height:calc(100dvh - 54px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));flex:none;min-height:0}
+#citadel-home.citadel-shell .citadel-inside>.citadel-viewport{height:100%;flex:1 1 auto!important}
+@media(min-width:1050px){
+ #citadel-home.citadel-shell[data-ui-view="overview"] .citadel-viewport{width:calc(100% - 500px)!important;margin:0 250px;flex:none!important}
+ .citadel-shell .citadel-shell-drawer{top:54px;bottom:0;width:250px;transform:none!important;background:#100d1cf0;z-index:20}
+ .citadel-shell .citadel-shell-drawer.left{left:0}.citadel-shell .citadel-shell-drawer.right{right:0}
+ .citadel-shell .citadel-shell-tail,.citadel-shell .citadel-shell-shade{display:none!important}
+ .citadel-shell .citadel-shell-camera{right:265px}
+}
+.citadel-shell-nav #plslot{flex:none;display:flex;align-items:center;max-width:88px}
+.citadel-shell-header .pl-chip{min-height:40px}
+@media(max-width:600px){.citadel-shell-nav #plslot{max-width:none}.citadel-shell-nav .pl-chip{font-size:9px;padding:4px}}
+.citadel-shell .citadel-shell-header{background:linear-gradient(180deg,#29263b 0 3px,#131222 3px 75%,#090b18);border-bottom:3px solid #786783;box-shadow:inset 0 -1px #c69c79,0 4px 0 #090a15;font-family:Georgia,serif}
+.citadel-shell-title{color:#e6bee5;text-shadow:1px 1px #080710,0 0 7px #8a5089;letter-spacing:1.7px}
+.citadel-shell-nav button,.citadel-shell-menu-toggle,.citadel-shell-dock button{position:relative;border:2px solid #51465f;background:linear-gradient(180deg,#393047 0 3px,#231d33 3px 80%,#151322);box-shadow:inset 1px 1px #9a788c,inset -2px -2px #0b0a17;color:#e9d9e7;font-family:Georgia,serif;text-shadow:1px 1px #0b0915;transition:background-color .15s,border-color .15s}
+.citadel-shell-nav button:hover,.citadel-shell-menu-toggle:hover,.citadel-shell-dock button:hover{border-color:#c39a81;background:#403047}
+.citadel-shell-nav button:active,.citadel-shell-menu-toggle:active,.citadel-shell-dock button:active{transform:translateY(1px);box-shadow:inset 2px 2px #10101c}
+.citadel-shell-nav [data-section="overview"]{color:#f2c5e8;border-bottom-color:#b370af}
+.citadel-shell-menu-toggle,.citadel-shell-dock{display:none}
+.citadel-shell-drawer{background:linear-gradient(90deg,#262033 0 4px,#130f20 4px 100%);border:2px solid #796378;box-shadow:inset 3px 0 #9d7c87,0 0 24px #05030d}
+.citadel-shell-drawer h2,.citadel-system-dialog header strong{font-family:Georgia,serif;font-variant:small-caps;letter-spacing:1.5px;color:#e8c0dc;text-shadow:1px 2px #080711}
+.citadel-shell-drawer button,.citadel-system-dialog header button{border:1px solid #705771;background:linear-gradient(180deg,#37283d,#22192f);box-shadow:inset 1px 1px #9e7891,inset -1px -1px #090811;color:#f0ddef}
+.citadel-shell-drawer button:hover,.citadel-system-dialog header button:hover{border-color:#d2a985}
+.citadel-system-dialog{border:3px solid #877185;box-shadow:inset 0 0 0 2px #241b30,inset 0 0 0 4px #513c54,0 12px 40px #040309;background:#171322 url('assets/citadel/stone.svg') center/96px 24px;color:#f2dfec}
+.citadel-system-dialog header{background:linear-gradient(180deg,#38273d,#191423);border-bottom:2px solid #a17e87}
+@media(max-width:699px){
+ .citadel-shell-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
+ .citadel-shell .citadel-shell-header{min-height:48px;padding:env(safe-area-inset-top,0px) max(8px,env(safe-area-inset-right,0px)) 0 max(8px,env(safe-area-inset-left,0px));gap:6px}
+ .citadel-shell-title{font-size:clamp(11px,3.5vw,16px);line-height:1.1;max-width:none;flex:1;letter-spacing:.7px}
+ .citadel-shell-header #plslot{max-width:48px}
+ .citadel-shell-menu-toggle{display:block;flex:none;min-width:66px;min-height:42px;padding:5px;font-size:9px;cursor:pointer}
+ .citadel-shell-nav{display:none;position:absolute;left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right));bottom:calc(62px + env(safe-area-inset-bottom));z-index:24;max-height:min(58svh,360px);overflow:auto;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:10px;background:#130e20;border:3px solid #8b6d83;box-shadow:inset 0 0 0 2px #39283f,0 0 0 999vmax #05030b9c;box-sizing:border-box}
+ .citadel-shell[data-menu="open"] .citadel-shell-nav{display:grid}
+ .citadel-shell-nav button{min-height:48px;white-space:normal;font-size:10px;padding:5px 3px}
+ .citadel-shell-dock{position:absolute;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;left:0;right:0;bottom:0;z-index:23;min-height:56px;padding:4px max(3px,env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(3px,env(safe-area-inset-left));background:#120d1d;border-top:2px solid #a07c8d;box-sizing:border-box}
+ .citadel-shell-dock button{min-height:44px;padding:3px 1px;font-size:clamp(7px,2.3vw,10px);white-space:normal;overflow-wrap:anywhere;cursor:pointer}
+ .citadel-shell .citadel-viewport{padding-bottom:calc(56px + env(safe-area-inset-bottom));box-sizing:border-box}
+ .citadel-shell .citadel-shell-camera{right:7px;top:calc(58px + env(safe-area-inset-top));bottom:auto;gap:2px;padding:2px}
+ .citadel-shell-camera button{min-height:36px;padding:3px 5px;font-size:9px}
+ .citadel-shell-tail{top:44%;min-height:70px;width:26px;font-size:12px}
+ .citadel-shell-drawer{bottom:calc(56px + env(safe-area-inset-bottom));width:min(260px,74vw)}
+ .citadel-shell .citadel-inside>.citadel-interior{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+}
+@media(min-width:1050px){#citadel-home.citadel-shell .citadel-floor .citadel-room{height:clamp(80px,calc((100svh - 300px)/5),130px)}}
+.citadel-shell-meter{height:10px;border:1px solid #735083;background:#24172e;margin:-5px 0 14px;image-rendering:pixelated}.citadel-shell-meter i{display:block;height:100%;background:linear-gradient(90deg,#724395,#be82cf)}
+.citadel-shell .citadel-moon{display:block;right:31%;top:12px;width:36px;height:36px;border-radius:0;background:#dc89ac;clip-path:polygon(25% 0,75% 0,75% 8%,92% 8%,92% 25%,100% 25%,100% 75%,92% 75%,92% 92%,75% 92%,75% 100%,25% 100%,25% 92%,8% 92%,8% 75%,0 75%,0 25%,8% 25%,8% 8%,25% 8%);filter:drop-shadow(0 0 9px #ba6cba);opacity:.8}
+@media(max-width:600px){.citadel-shell .citadel-moon{width:28px;height:28px;top:10px}}
+.citadel-shell .citadel-sky:after{content:'';position:absolute;inset:0;z-index:1;background:url('assets/citadel/roof.svg') center bottom/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none}
+.citadel-shell .citadel-skyline{z-index:2;bottom:5px;left:18px;color:#f0d7ef;text-shadow:1px 1px #080814,2px 2px #080814}
+.citadel-shell .citadel-moon{z-index:0;right:23%;top:7px}
+.citadel-shell .citadel-sky{height:114px}
+@media(max-width:600px){.citadel-shell .citadel-sky{height:108px}}
+.citadel-shell .citadel-sky:before{content:'';position:absolute;inset:36% -12% 0;z-index:0;pointer-events:none;opacity:.52;background:linear-gradient(0deg,#b18aaf28 0 4px,transparent 4px 11px,#7a638d27 11px 15px,transparent 15px 26px,#b49abc1b 26px 31px,transparent 31px);animation:citadelSkyMist 24s steps(6,end) infinite alternate}
+@keyframes citadelSkyMist{to{translate:22px 0;opacity:.33}}
+.citadel-shell .citadel-room[data-room-level="3"]{box-shadow:inset 0 0 0 2px #d3a673,inset 0 0 24px #efc07855!important}
+.citadel-shell .citadel-room[data-room-level="1"]{box-shadow:inset 0 0 25px #03050bc9!important}
+@media(prefers-reduced-motion:reduce){.citadel-shell .citadel-sky:before{animation:none}}
+@media(max-width:699px){
+ .citadel-shell-nav #plslot{grid-column:1/-1;max-width:none;justify-content:center}
+ .citadel-shell .citadel-shell-camera{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:116px;max-width:calc(100vw - 16px);right:7px;top:calc(58px + env(safe-area-inset-top));box-sizing:border-box}
+ .citadel-shell-camera button{min-width:0;min-height:34px;white-space:normal;line-height:1.1;padding:2px}
+}
+/* The purchased tier changes the same room instead of replacing its spatial layout. */
+.citadel-room[data-room-level="1"]:before{opacity:.83;filter:brightness(.72) saturate(.64)}
+.citadel-room[data-room-level="1"]:after{opacity:1}
+.citadel-room[data-room-level="2"]:before{opacity:.91;filter:brightness(.83) saturate(.85)}
+.citadel-room[data-room-level="3"]:before{opacity:1;filter:brightness(1.13) saturate(1.08)}
+.citadel-interior-stage[data-level="1"]:before{opacity:.84;filter:brightness(.74) saturate(.67)}
+.citadel-interior-stage[data-level="2"]:before{opacity:.94;filter:brightness(.9)}
+.citadel-interior-stage[data-level="3"]:before{filter:brightness(1.12) saturate(1.08)}
+
+/* Generated room-specific pixel layers: scripts/citadel_states.py */
+.citadel-room[data-room-level="1"]:after{background:var(--scene-art) center/100% 100%,url("assets/citadel/abandoned.svg") center/100% 100%!important}
+.citadel-room[data-room-level="2"]:after,.citadel-room[data-room-level="3"]:after{background:var(--scene-art) center/100% 100%,var(--renovation) center/100% 100%!important}
+.citadel-interior-stage[data-level="1"]:after{background:var(--scene-art) center/100% 100%,url("assets/citadel/abandoned.svg") center/100% 100%,linear-gradient(transparent 55%,#090b17a8)}
+.citadel-interior-stage[data-level="2"] .citadel-interior-renovation,.citadel-interior-stage[data-level="3"] .citadel-interior-renovation{background:var(--scene-art) center/100% 100%,var(--renovation) center/100% 100%!important}
+[data-croom="throne"][data-room-level="1"],.citadel-interior-stage[data-room="throne"][data-level="1"]{--scene-art:url("assets/citadel/throne-scene0.svg")}
+[data-croom="throne"][data-room-level="2"],.citadel-interior-stage[data-room="throne"][data-level="2"]{--scene-art:url("assets/citadel/throne-scene1.svg")}
+[data-croom="throne"][data-room-level="3"],.citadel-interior-stage[data-room="throne"][data-level="3"]{--scene-art:url("assets/citadel/throne-scene2.svg")}
+[data-croom="observatory"][data-room-level="1"],.citadel-interior-stage[data-room="observatory"][data-level="1"]{--scene-art:url("assets/citadel/observatory-scene0.svg")}
+[data-croom="observatory"][data-room-level="2"],.citadel-interior-stage[data-room="observatory"][data-level="2"]{--scene-art:url("assets/citadel/observatory-scene1.svg")}
+[data-croom="observatory"][data-room-level="3"],.citadel-interior-stage[data-room="observatory"][data-level="3"]{--scene-art:url("assets/citadel/observatory-scene2.svg")}
+[data-croom="rest"][data-room-level="1"],.citadel-interior-stage[data-room="rest"][data-level="1"]{--scene-art:url("assets/citadel/rest-scene0.svg")}
+[data-croom="rest"][data-room-level="2"],.citadel-interior-stage[data-room="rest"][data-level="2"]{--scene-art:url("assets/citadel/rest-scene1.svg")}
+[data-croom="rest"][data-room-level="3"],.citadel-interior-stage[data-room="rest"][data-level="3"]{--scene-art:url("assets/citadel/rest-scene2.svg")}
+[data-croom="study"][data-room-level="1"],.citadel-interior-stage[data-room="study"][data-level="1"]{--scene-art:url("assets/citadel/study-scene0.svg")}
+[data-croom="study"][data-room-level="2"],.citadel-interior-stage[data-room="study"][data-level="2"]{--scene-art:url("assets/citadel/study-scene1.svg")}
+[data-croom="study"][data-room-level="3"],.citadel-interior-stage[data-room="study"][data-level="3"]{--scene-art:url("assets/citadel/study-scene2.svg")}
+[data-croom="archive"][data-room-level="1"],.citadel-interior-stage[data-room="archive"][data-level="1"]{--scene-art:url("assets/citadel/archive-scene0.svg")}
+[data-croom="archive"][data-room-level="2"],.citadel-interior-stage[data-room="archive"][data-level="2"]{--scene-art:url("assets/citadel/archive-scene1.svg")}
+[data-croom="archive"][data-room-level="3"],.citadel-interior-stage[data-room="archive"][data-level="3"]{--scene-art:url("assets/citadel/archive-scene2.svg")}
+[data-croom="forge"][data-room-level="1"],.citadel-interior-stage[data-room="forge"][data-level="1"]{--scene-art:url("assets/citadel/forge-scene0.svg")}
+[data-croom="forge"][data-room-level="2"],.citadel-interior-stage[data-room="forge"][data-level="2"]{--scene-art:url("assets/citadel/forge-scene1.svg")}
+[data-croom="forge"][data-room-level="3"],.citadel-interior-stage[data-room="forge"][data-level="3"]{--scene-art:url("assets/citadel/forge-scene2.svg")}
+[data-croom="gatehouse"][data-room-level="1"],.citadel-interior-stage[data-room="gatehouse"][data-level="1"]{--scene-art:url("assets/citadel/gatehouse-scene0.svg")}
+[data-croom="gatehouse"][data-room-level="2"],.citadel-interior-stage[data-room="gatehouse"][data-level="2"]{--scene-art:url("assets/citadel/gatehouse-scene1.svg")}
+[data-croom="gatehouse"][data-room-level="3"],.citadel-interior-stage[data-room="gatehouse"][data-level="3"]{--scene-art:url("assets/citadel/gatehouse-scene2.svg")}
+[data-croom="refectory"][data-room-level="1"],.citadel-interior-stage[data-room="refectory"][data-level="1"]{--scene-art:url("assets/citadel/refectory-scene0.svg")}
+[data-croom="refectory"][data-room-level="2"],.citadel-interior-stage[data-room="refectory"][data-level="2"]{--scene-art:url("assets/citadel/refectory-scene1.svg")}
+[data-croom="refectory"][data-room-level="3"],.citadel-interior-stage[data-room="refectory"][data-level="3"]{--scene-art:url("assets/citadel/refectory-scene2.svg")}
+[data-croom="cloister"][data-room-level="1"],.citadel-interior-stage[data-room="cloister"][data-level="1"]{--scene-art:url("assets/citadel/cloister-scene0.svg")}
+[data-croom="cloister"][data-room-level="2"],.citadel-interior-stage[data-room="cloister"][data-level="2"]{--scene-art:url("assets/citadel/cloister-scene1.svg")}
+[data-croom="cloister"][data-room-level="3"],.citadel-interior-stage[data-room="cloister"][data-level="3"]{--scene-art:url("assets/citadel/cloister-scene2.svg")}
+[data-croom="vault"][data-room-level="1"],.citadel-interior-stage[data-room="vault"][data-level="1"]{--scene-art:url("assets/citadel/vault-scene0.svg")}
+[data-croom="vault"][data-room-level="2"],.citadel-interior-stage[data-room="vault"][data-level="2"]{--scene-art:url("assets/citadel/vault-scene1.svg")}
+[data-croom="vault"][data-room-level="3"],.citadel-interior-stage[data-room="vault"][data-level="3"]{--scene-art:url("assets/citadel/vault-scene2.svg")}
+/* Tier one cannot reveal the former, fully furnished base illustration through
+   the transparent abandoned layer. Keep purchased layers and save data intact. */
+.citadel-room[data-room-level="1"]:before,.citadel-interior-stage[data-level="1"]:before{background:#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:brightness(.55) saturate(.6)}
+.citadel-interior-stage[data-level="1"] .citadel-interior-renovation,.citadel-interior-stage[data-level="1"] :is(.citadel-interior-furniture,.citadel-interior-detail,.citadel-interior-rug,.citadel-interior-hearth,.citadel-interior-window){display:none!important}
+/* Shared RPG surfaces: the existing panels and controls retain their handlers. */
+body.citadel-shell-active{--bg:#12101c;--panel:#211b2b;--panel-2:#302438;--line:#66546e;--fg:#eee1e9;--muted:#b7a9ba;--gold:#d7ad74;--gold-dark:#8e6b62;font:15px/1.45 system-ui,sans-serif}
+body.citadel-shell-active :is(.citadel-system-dialog,.setup,.lvup,.toast){font:15px/1.45 system-ui,sans-serif;color:#eee1e9}
+body.citadel-shell-active .citadel-system-dialog{width:min(760px,calc(100vw - 20px));height:min(790px,calc(100dvh - 32px));max-height:none;overflow:hidden;padding:0;display:none;flex-direction:column;background:#14111f}
+body.citadel-shell-active .citadel-system-dialog[open]{display:flex}
+body.citadel-shell-active .citadel-system-dialog>header{position:relative;top:auto;flex:none;min-height:55px;padding:8px 12px;gap:10px}
+body.citadel-shell-active .citadel-system-dialog>header strong{font:600 clamp(15px,4vw,22px)/1.2 Georgia,serif;letter-spacing:.8px;min-width:0;overflow-wrap:anywhere}
+body.citadel-shell-active .citadel-system-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:12px 14px calc(20px + env(safe-area-inset-bottom));scrollbar-color:#715676 #17131f}
+body.citadel-shell-active .citadel-system-content :is(.panel,.page){min-width:0;gap:8px}
+body.citadel-shell-active :is(.citadel-system-content,.setup .sbox) h2{font:600 13px/1.35 Georgia,serif;color:#e8bcce;letter-spacing:.6px;overflow-wrap:anywhere;text-wrap:wrap}
+body.citadel-shell-active :is(.citadel-system-content,.setup .sbox) :is(.big,.lbig){font-size:clamp(16px,4.3vw,23px);line-height:1.3;overflow-wrap:anywhere}
+body.citadel-shell-active :is(.citadel-system-content,.setup .sbox) :is(.q,.goal,.note,.legend li,.trial,.upg,.shopitem,.card){border:1px solid #6a536d;background:linear-gradient(145deg,#2b2334,#1c1829);box-shadow:inset 2px 2px #ffffff12,inset -2px -2px #080710;min-width:0}
+body.citadel-shell-active .citadel-system-content .q{min-height:54px;padding:8px 10px;gap:9px;font:14px/1.35 system-ui,sans-serif}
+body.citadel-shell-active .citadel-system-content .q .box{width:25px;height:25px;border-width:2px}
+body.citadel-shell-active .citadel-system-content .q .t b{display:block;font:500 14px/1.35 system-ui,sans-serif;overflow-wrap:anywhere}
+body.citadel-shell-active .citadel-system-content .q .t span{font:12px/1.35 system-ui,sans-serif;overflow-wrap:anywhere}
+body.citadel-shell-active .citadel-system-content .q .pts{font:600 11px Georgia,serif}
+body.citadel-shell-active :is(.citadel-system-content,.setup .sbox) :is(.tab,.daysw button,.btn){min-height:42px;border:1px solid #756078;background:linear-gradient(#3a2b42,#261d33);color:#eee1e9;box-shadow:inset 1px 1px #aa8299;font:600 11px/1.25 system-ui,sans-serif;padding:8px;overflow-wrap:anywhere}
+body.citadel-shell-active :is(.citadel-system-content,.setup .sbox) :is(.tab[aria-selected="true"],.daysw button[aria-pressed="true"],.btn.go){background:#57405b;color:#fff0d5;border-color:#c79c86}
+body.citadel-shell-active :is(.citadel-system-content,.setup .sbox) :is(input,select,textarea){max-width:100%;min-width:0;font:14px/1.3 system-ui,sans-serif}
+body.citadel-shell-active .setup{z-index:40;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:#070612e8;overflow:auto}
+body.citadel-shell-active .setup .sbox{width:min(600px,100%);min-width:0;max-width:none;min-height:0;margin:auto;padding:12px;gap:10px;border:2px solid #88718b;background:#161220;box-shadow:inset 0 0 0 2px #413349}
+body.citadel-shell-active .setup .shead{position:sticky;top:0;z-index:3;padding:4px 0 8px;background:#161220;border-bottom:1px solid #816582;font:600 15px Georgia,serif;color:#e9c4de;gap:8px}
+body.citadel-shell-active .setup .shead b{min-width:0;overflow-wrap:anywhere}
+body.citadel-shell-active .setup .shead .gear{width:44px;height:44px;flex:none}
+body.citadel-shell-active .setup .goal{padding:10px}
+body.citadel-shell-active .setup .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(125px,100%),1fr));gap:8px}
+body.citadel-shell-active .setup label{font:13px/1.4 system-ui,sans-serif}
+body.citadel-shell-active .setup select{width:100%;min-height:42px;font-size:14px}
+body.citadel-shell-active .setup .vhist{max-height:200px;overflow:auto}
+body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anywhere}
+@media(max-width:699px){
+ body.citadel-shell-active .citadel-system-dialog{width:calc(100vw - 12px);height:calc(100dvh - 76px - env(safe-area-inset-top) - env(safe-area-inset-bottom));max-height:none;margin:auto auto calc(64px + env(safe-area-inset-bottom));}
+ body.citadel-shell-active .citadel-system-content{padding:10px 10px calc(12px + env(safe-area-inset-bottom))}
+ body.citadel-shell-active .citadel-system-content .q{padding:7px 8px;gap:7px}
+ body.citadel-shell-active .citadel-system-content .tabs{grid-template-columns:repeat(auto-fit,minmax(88px,1fr))}
+}

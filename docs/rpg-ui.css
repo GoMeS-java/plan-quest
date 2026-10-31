@@ -1,0 +1,219 @@
+/* 0.67 — one compact, readable RPG interface. No save or economy selectors. */
+body.citadel-shell-active{--bg:#100f19;--panel:#201c2a;--panel-2:#2b2536;--line:#51465e;--fg:#e9e1e7;--muted:#b3a8bc;--gold:#cead7b;--gold-dark:#7e624d;--font-body:system-ui,-apple-system,"Segoe UI",sans-serif;--font-display:Georgia,"Times New Roman",serif;font:14px/1.45 var(--font-body);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body.citadel-shell-active :is(button,input,select,textarea){font-family:var(--font-body);touch-action:manipulation}
+body.citadel-shell-active :is(button,input,select,textarea):focus-visible{outline:2px solid #d3b486;outline-offset:2px}
+body.citadel-shell-active :is(.setup,.lvup,.citadel-system-dialog,.pl-menu){color:var(--fg);font:14px/1.45 var(--font-body)}
+body.citadel-shell-active :is(.setup,.lvup,.citadel-system-dialog,.pl-menu) :is(h1,h2,h3,.px,.big,.lbig,.pct,.price,.n){font-family:var(--font-body);font-weight:600;letter-spacing:.02em;text-wrap:wrap;overflow-wrap:anywhere}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog,.pl-menu) h2{font-size:12px;line-height:1.4;letter-spacing:.1em;margin:12px 0 5px;color:var(--gold)}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog,.pl-menu) :is(.hint,.note,.foot,small){font:12px/1.5 var(--font-body);color:var(--muted);overflow-wrap:anywhere}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog,.pl-menu,.lvup) :is(button,.btn,.chip,.linkbtn){min-height:44px;border:1px solid #63536f;border-radius:3px;padding:9px 12px;background:linear-gradient(#30283c,#211c2c);box-shadow:inset 0 1px #ffffff0d;color:#e4d9e7;font:600 12px/1.3 var(--font-body);letter-spacing:.015em;overflow-wrap:anywhere;white-space:normal}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog,.pl-menu,.lvup) button:disabled{opacity:.48;cursor:default}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog,.pl-menu,.lvup) :is(.btn.go,.btn[aria-pressed="true"],.daysw button[aria-pressed="true"]){border-color:#9a789b;background:linear-gradient(#50375d,#37263f);color:#f6e6ce}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog,.pl-menu) :is(input:not([type="checkbox"]),select,textarea){width:100%;max-width:100%;min-width:0;min-height:44px;padding:9px 10px;border:1px solid #594e65;border-radius:3px;background:#12101c;color:var(--fg);font:16px/1.35 var(--font-body);box-shadow:inset 0 2px 5px #0004}
+body.citadel-shell-active input[type="checkbox"]{width:20px;height:20px;flex:none;accent-color:#b78bc6}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog) :is(.goal,.shop,.acc,.free,.note,.legend li,.log li){border:1px solid var(--line);border-radius:4px;padding:10px;background:linear-gradient(120deg,#211e2b,#191622);box-shadow:inset 0 1px #ffffff08;min-width:0;gap:7px}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog) .row{gap:7px}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog) .goal-head{align-items:center;flex-wrap:wrap;gap:5px 10px}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog) .goal-head b{font:600 14px/1.4 var(--font-body)}
+body.citadel-shell-active :is(.setup,.citadel-system-dialog) :is(.pct,.price,.acc .n){font-size:13px;line-height:1.4}
+body.citadel-shell-active .citadel-system-dialog{width:min(720px,calc(100vw - 24px));height:min(820px,calc(100dvh - 40px));margin:auto;border:1px solid #8c7097;border-radius:6px;box-shadow:0 18px 80px #000b,inset 0 0 0 3px #32273c;background:#14111e}
+body.citadel-shell-active .citadel-system-dialog::backdrop{background:#070510c7;backdrop-filter:blur(3px)}
+body.citadel-shell-active .citadel-system-dialog>header{min-height:54px;padding:6px 10px 6px 16px;background:linear-gradient(#31243c,#1d1728);border-bottom:1px solid #68526f;position:relative;top:0}
+body.citadel-shell-active .citadel-system-dialog>header strong{font:600 18px/1.3 Georgia,serif;letter-spacing:.05em;color:#e9d1e8}
+body.citadel-shell-active .citadel-system-dialog>header button{width:44px;height:44px;flex:none;font-size:22px;padding:4px;border-color:transparent;background:transparent;box-shadow:none}
+body.citadel-shell-active .citadel-system-content{padding:12px 14px 22px;overflow:auto;overscroll-behavior:contain;scroll-padding:12px;scrollbar-gutter:stable}
+body.citadel-shell-active .citadel-system-content .panel{display:flex;gap:9px}
+body.citadel-shell-active .citadel-system-content :is(#qlist,#plist,#wlist,#slist,#slist2){gap:6px!important}
+body.citadel-shell-active .citadel-system-content .q{min-height:58px;padding:9px 10px;border:1px solid #4e435d;border-radius:4px;background:linear-gradient(110deg,#252031,#1b1825);box-shadow:inset 3px 0 #735085;gap:10px;font:14px/1.35 var(--font-body)}
+body.citadel-shell-active .citadel-system-content .q .box{width:22px;height:22px;border:1px solid #82718d;border-radius:2px;background:#13101c}
+body.citadel-shell-active .citadel-system-content .q .t b{font:500 14px/1.35 var(--font-body)}
+body.citadel-shell-active .citadel-system-content .q .t span{font:12px/1.4 var(--font-body);color:#ada0b7;margin-top:2px}
+body.citadel-shell-active .citadel-system-content .q .pts{font:600 12px/1.3 var(--font-body);color:#d5b584;max-width:50px;text-align:right}
+body.citadel-shell-active .citadel-system-content .q[aria-pressed="true"]{border-color:#617d71;box-shadow:inset 3px 0 #87b49b;background:#1b2926}
+body.citadel-shell-active .citadel-system-content .q[aria-pressed="true"] .box{background:#85b59c;border-color:#85b59c}
+.quest-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0}
+.quest-heading #qh{margin:0}.quest-heading #quest-progress{font:600 12px/1.3 var(--font-body);color:#d6b989;white-space:nowrap;padding:4px 8px;border:1px solid #584a64;border-radius:20px;background:#221b2c}
+body.citadel-shell-active .citadel-system-content .trial{padding:10px;border:1px solid #8a495d;box-shadow:inset 3px 0 #b3637a;animation:none;background:#271923}
+body.citadel-shell-active .citadel-system-content .trial :is(.tt,.trow,.tr){font:13px/1.45 var(--font-body);margin:5px 0}
+body.citadel-shell-active .citadel-system-content .trial .tk{font:600 11px/1.4 var(--font-body);letter-spacing:.05em}
+body.citadel-shell-active .citadel-system-content .daysw{position:static;gap:6px}
+body.citadel-shell-active .citadel-system-content .daysw button{font-size:12px;flex:1}
+body.citadel-shell-active .citadel-system-content :is(.free .num,.wbig){font-size:24px;line-height:1.3;color:#b8cbb4}
+body.citadel-shell-active .citadel-system-content .upg{padding:8px 10px;border:1px solid #60506b;border-radius:4px;align-items:center;font-size:13px}
+body.citadel-shell-active .citadel-system-content .shop-head{align-items:start;gap:12px}.citadel-system-content .shop-head>b{font-size:14px;font-weight:600}
+body.citadel-shell-active .citadel-system-content .legend :is(.lt small,.lv small,.dcenter span){font-size:12px}
+body.citadel-shell-active .citadel-system-content .log li{font-size:13px}
+body.citadel-shell-active .citadel-system-content :is(.rrow,.roomrow){min-width:0;overflow-wrap:anywhere}
+body.citadel-shell-active .setup{padding:12px max(8px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));overflow:auto;overscroll-behavior:contain;background:#090711e8;backdrop-filter:blur(3px)}
+body.citadel-shell-active .setup .sbox{position:relative;width:min(560px,100%);padding:0 14px 18px;border:1px solid #897090;border-radius:6px;background:#17131f;box-shadow:0 12px 50px #0009;gap:9px}
+body.citadel-shell-active .setup .shead{position:sticky;top:-12px;min-height:56px;margin:0 -14px;padding:6px 10px 6px 14px;background:linear-gradient(#35273e,#211929);border-bottom:1px solid #67516e;font:600 16px/1.3 Georgia,serif;letter-spacing:.04em}
+body.citadel-shell-active .setup .shead .gear{border:0;background:none;box-shadow:none;font-size:22px}
+body.citadel-shell-active #setup .settings-effects{display:flex;flex-direction:column;gap:8px;padding:6px 10px 10px}
+body.citadel-shell-active #setup .settings-effects .row{display:flex;flex-direction:column;gap:0}
+body.citadel-shell-active #setup .settings-effects label{display:grid;grid-template-columns:minmax(0,1fr) minmax(105px,43%);align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #ffffff0c;font:13px/1.4 var(--font-body);flex:auto!important;min-height:58px}
+body.citadel-shell-active #setup .settings-effects label br{display:none}
+body.citadel-shell-active #setup .settings-effects select{width:100%;min-height:44px;font-size:14px}
+.release-stamp{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-top:1px solid #4f405b;font:12px/1.5 var(--font-body);color:var(--muted)}
+.release-stamp b{font-size:14px;color:#dfc5e3}.release-stamp span{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere}
+.release-notes>summary{padding:12px 0;cursor:pointer;color:#bba4c6;font-size:13px}
+body.citadel-shell-active .setup .vhist{max-height:none;overflow:visible;display:flex;flex-direction:column;gap:8px}
+body.citadel-shell-active .lvup{z-index:60;overflow:auto;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));background:#080611d9}
+body.citadel-shell-active .lvup .lbox{max-height:calc(100dvh - 28px);overflow:auto;border:1px solid #a684a6;border-radius:6px;box-shadow:0 12px 60px #000b;background:linear-gradient(140deg,#302138,#17131f);gap:12px;padding:20px}
+body.citadel-shell-active .lvup .lbig{font:600 20px/1.4 Georgia,serif;color:#dfbd8e}
+body.citadel-shell-active .toast{z-index:100;bottom:calc(74px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 28px);padding:11px 15px;border:1px solid #8d7099;border-radius:4px;background:#21182ef5;box-shadow:0 6px 24px #0008;font:13px/1.45 var(--font-body)}
+body.citadel-shell-active .pl-menu{border:1px solid #8a7395;border-radius:5px;background:#1b1525;box-shadow:0 16px 50px #000b;padding:12px;top:58px;left:max(8px,env(safe-area-inset-left));width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 80px)}
+body.citadel-shell-active .pl-menu :is(.pl-t,.pl-s){font:13px/1.5 var(--font-body)}
+body.citadel-shell-active .citadel-shell-header{font-family:var(--font-body);border-bottom:1px solid #776080;min-height:50px;box-shadow:0 2px 8px #0009}
+body.citadel-shell-active .citadel-shell-title{font:600 15px/1.2 Georgia,serif;letter-spacing:.05em}
+.citadel-shell-status{font:11px/1.3 system-ui,sans-serif;white-space:nowrap;color:#c6aece;padding:4px 7px;border:1px solid #5e4b6c;border-radius:3px}
+body.citadel-shell-active .citadel-shell-dock button{font:500 11px/1.2 var(--font-body);box-shadow:none;border:0;border-top:2px solid transparent;background:#1a1424;border-radius:0;color:#ad9ab9;min-height:48px}
+body.citadel-shell-active .citadel-shell-dock button[aria-current="page"]{color:#f1d2a5;background:#30213c;border-top-color:#ba8aca}
+body.citadel-shell-active .citadel-shell-dock{gap:0;border-top:1px solid #665171;background:#15101f;padding-top:0;padding-bottom:env(safe-area-inset-bottom)}
+body.citadel-shell-active .citadel-shell-nav button{font:500 12px/1.3 var(--font-body);min-height:46px;border:1px solid #604d6e;box-shadow:none;border-radius:3px;white-space:normal}
+body.citadel-shell-active .citadel-shell-nav #plslot{border-top:1px solid #5a4567;padding-top:8px;margin-top:4px}
+body.citadel-shell-active .citadel-shell-drawer{padding:14px 12px 24px;border:1px solid #76607f;background:linear-gradient(120deg,#241a30,#12101e)}
+body.citadel-shell-active .citadel-shell-drawer h2{font:600 16px/1.3 Georgia,serif;letter-spacing:.03em;margin:4px 0 12px}
+body.citadel-shell-active .citadel-shell-drawer button{min-height:44px;font:13px/1.4 var(--font-body);box-shadow:none;border:1px solid #52415e;border-radius:3px;padding:9px 10px;margin:3px 0}
+body.citadel-shell-active .citadel-shell-tail{font:11px/1.4 var(--font-body);width:24px;background:#241a30e8;border:1px solid #72587e;box-shadow:none}
+.citadel-room-tools{display:none;flex:none;gap:6px;padding:6px max(12px,env(safe-area-inset-right)) 6px max(12px,env(safe-area-inset-left));border-bottom:1px solid #403449;background:#17121f}
+.citadel-shell:not([data-ui-view="overview"]) .citadel-room-tools{display:flex}
+.citadel-room-tools button{flex:1;min-height:40px;padding:6px;border:1px solid #61506f;border-radius:3px;background:#2a2035;color:#d6c1df;font:12px/1.3 system-ui,sans-serif}
+body.citadel-shell-active .citadel-interior-top{min-height:48px;gap:10px;margin:0 0 8px}
+body.citadel-shell-active #citadel-interior-title{font:600 14px/1.4 Georgia,serif;color:#e2c8dc;letter-spacing:.04em}
+body.citadel-shell-active #citadel-interior-close{min-width:44px;min-height:44px;border:1px solid #574560;background:#21172d;font:22px/1 system-ui,sans-serif;color:#ddc5df}
+body.citadel-shell-active :is(.citadel-building,.citadel-room-board,.citadel-resident,.citadel-room-conversation,.citadel-npc-dialogue,.citadel-activity){border:1px solid #5d4c67;border-radius:4px;background:linear-gradient(135deg,#261e31,#171320);box-shadow:inset 0 1px #ffffff0a;padding:10px;font:13px/1.5 var(--font-body)}
+body.citadel-shell-active :is(.citadel-building,.citadel-room-conversation,.citadel-npc-actions,.citadel-activity,.citadel-exits) button{min-height:44px;border:1px solid #796084;border-radius:3px;background:linear-gradient(#3d2c49,#261e32);padding:8px;color:#ead8ef;font:12px/1.4 var(--font-body);white-space:normal}
+body.citadel-shell-active .citadel-building button:disabled{opacity:.5}
+body.citadel-shell-active .citadel-exits{gap:6px;margin:10px 0}
+body.citadel-shell-active .citadel-exits button{min-width:0;overflow-wrap:anywhere}
+body.citadel-shell-active .citadel-interior-stage .citadel-hero-sprite{width:40px;height:65px;filter:drop-shadow(0 2px 1px #000) drop-shadow(1px 0 #aa7c8733)}
+body.citadel-shell-active .citadel-interior-stage .citadel-hero-sprite:after{content:'';position:absolute;bottom:-2px;left:12%;right:12%;height:4px;border-radius:50%;background:#0005;z-index:-1}
+@media(max-width:699px){
+ body.citadel-shell-active .citadel-shell-menu-toggle{display:none}
+ body.citadel-shell-active .citadel-shell-header{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));min-height:48px}
+ body.citadel-shell-active .citadel-shell-title{font-size:14px}
+ body.citadel-shell-active .citadel-shell-nav{bottom:calc(54px + env(safe-area-inset-bottom));border:1px solid #8f6d9d;border-radius:6px;grid-template-columns:repeat(2,minmax(0,1fr));padding:12px;gap:6px;max-height:calc(100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+ body.citadel-shell-active .citadel-system-dialog{width:calc(100vw - 12px);height:calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:auto;border-radius:5px}
+ body.citadel-shell-active .citadel-system-content{padding:8px 10px 20px;scrollbar-gutter:auto}
+ body.citadel-shell-active .citadel-system-content .q{min-height:56px;padding:8px 9px}
+ body.citadel-shell-active .citadel-inside{height:auto!important;flex:1 1 0!important;padding-bottom:calc(50px + env(safe-area-inset-bottom))!important;min-height:0}
+ body.citadel-shell-active .citadel-viewport{padding-bottom:0!important}
+ body.citadel-shell-active .citadel-inside>.citadel-interior{padding:8px 30px 18px!important;flex:1;min-width:0;max-width:100%;width:100%}
+ body.citadel-shell-active .citadel-shell-drawer{bottom:calc(50px + env(safe-area-inset-bottom));top:calc(49px + env(safe-area-inset-top));width:min(280px,84vw)}
+ body.citadel-shell-active .citadel-interior-stage{min-height:clamp(240px,52svh,440px)}
+ body.citadel-shell-active .citadel-shell-tail{top:45%;min-height:66px}
+}
+@media(max-width:350px){body.citadel-shell-active .citadel-shell-title{font-size:12px}.citadel-shell-status{font-size:10px;padding:4px}.citadel-system-content .accounts{grid-template-columns:1fr 1fr}}
+@media(orientation:landscape) and (max-height:500px){
+ body.citadel-shell-active .citadel-shell-header{min-height:40px}
+ body.citadel-shell-active .citadel-inside{flex:1 1 0!important;height:auto!important;min-height:0}
+ body.citadel-shell-active .citadel-interior-stage{min-height:230px}
+ body.citadel-shell-active .citadel-system-dialog{height:calc(100dvh - 12px);margin:6px auto}
+ body.citadel-shell-active .setup{padding-top:6px;padding-bottom:6px}
+ body.citadel-shell-active .setup .shead{top:-6px}
+}
+@media(prefers-reduced-motion:reduce){body.citadel-shell-active *,body.citadel-shell-active *:before,body.citadel-shell-active *:after{scroll-behavior:auto!important}}
+/* Subtle breathing and a deliberate four-frame stride, stopped off-screen by
+   the existing visibility lifecycle. Reduced-motion uses the static frame. */
+body.citadel-shell-active .citadel-hero-sprite{animation:citadelHeroBlink 6s steps(1,end) infinite,citadelBreath 3.8s steps(2,end) infinite;transform-origin:center bottom}
+body.citadel-shell-active .citadel-avatar[data-moving="true"] .citadel-hero-sprite{animation:citadelHeroStride .48s steps(2,end) infinite}
+@keyframes citadelBreath{0%,100%{translate:0 0}50%{translate:0 -1px}}
+@media(prefers-reduced-motion:reduce){body.citadel-shell-active .citadel-hero-sprite{animation:none!important}}
+
+body.citadel-shell-active [data-croom="throne"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="throne"][data-level="1"]:before{background:url("assets/citadel/throne-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="observatory"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="observatory"][data-level="1"]:before{background:url("assets/citadel/observatory-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="rest"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="rest"][data-level="1"]:before{background:url("assets/citadel/rest-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="study"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="study"][data-level="1"]:before{background:url("assets/citadel/study-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="archive"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="archive"][data-level="1"]:before{background:url("assets/citadel/archive-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="forge"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="forge"][data-level="1"]:before{background:url("assets/citadel/forge-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="gatehouse"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="gatehouse"][data-level="1"]:before{background:url("assets/citadel/gatehouse-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="refectory"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="refectory"][data-level="1"]:before{background:url("assets/citadel/refectory-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="cloister"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="cloister"][data-level="1"]:before{background:url("assets/citadel/cloister-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+
+body.citadel-shell-active [data-croom="vault"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="vault"][data-level="1"]:before{background:url("assets/citadel/vault-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
+/* <details> has an internal content box: explicit available height prevents its
+   scroller from expanding to the castle's height on Android and Chromium. */
+body.citadel-shell-active #citadel-home.citadel-shell .citadel-inside{height:calc(100dvh - 54px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;flex:none!important;padding-bottom:0!important}
+body.citadel-shell-active #citadel-home.citadel-shell:not([data-ui-view="overview"]) .citadel-inside{height:calc(100dvh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important}
+@media(max-width:699px){
+ body.citadel-shell-active #citadel-home.citadel-shell .citadel-inside{height:calc(100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important}
+ body.citadel-shell-active #citadel-home.citadel-shell:not([data-ui-view="overview"]) .citadel-inside{height:calc(100dvh - 154px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important}
+}
+@media(orientation:landscape) and (max-height:500px) and (min-width:700px){
+ body.citadel-shell-active #citadel-home.citadel-shell .citadel-inside{height:calc(100dvh - 44px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important}
+ body.citadel-shell-active #citadel-home.citadel-shell:not([data-ui-view="overview"]) .citadel-inside{height:calc(100dvh - 98px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important}
+}
+body.citadel-shell-active .citadel-interior-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+body.citadel-shell-active .citadel-interior-top strong{flex:1;min-width:100px}
+.room-condition{font:11px/1.4 system-ui,sans-serif;color:#bda6c6;padding:3px 7px;border:1px solid #4e3f58;border-radius:3px;max-width:100%;overflow-wrap:anywhere}
+body.citadel-shell-active .citadel-shell-header #plslot>.gear{display:none}
+/* 0.68 — keep scene labels and controls in the visible camera area. */
+body.citadel-shell-active .citadel-shell-camera{position:static!important;display:flex!important;flex:none;width:100%!important;max-width:none!important;gap:5px;padding:5px max(10px,env(safe-area-inset-right)) 5px max(10px,env(safe-area-inset-left));border:0;border-bottom:1px solid #4f405b;background:#17121f;box-sizing:border-box}
+body.citadel-shell-active .citadel-shell-camera button{flex:1;min-height:40px;min-width:0;font:12px/1.2 var(--font-body);padding:5px 7px;white-space:nowrap;border:1px solid #594765;border-radius:3px}
+body.citadel-shell-active .citadel-shell-camera button:first-child,body.citadel-shell-active .citadel-shell-camera button:nth-child(3){flex:0 0 44px;font-size:18px}
+body.citadel-shell-active .citadel-shell:not([data-ui-view="overview"]) .citadel-shell-camera{display:none!important}
+body.citadel-shell-active #citadel-home.citadel-shell .citadel-inside,body.citadel-shell-active #citadel-home.citadel-shell:not([data-ui-view="overview"]) .citadel-inside{height:calc(100dvh - var(--shell-top,100px) - var(--shell-bottom,0px))!important}
+body.citadel-shell-active .citadel-shell-nav .citadel-shell-tail{position:static;display:block!important;writing-mode:horizontal-tb;width:auto;min-height:46px;margin:0;border-radius:3px;font:12px/1.3 var(--font-body);padding:7px}
+body.citadel-shell-active .citadel-shell-nav .citadel-shell-tail[aria-expanded="true"]{border-color:#c6a07d}
+body.citadel-shell-active .citadel-shell-drawer{top:var(--shell-top,54px);bottom:var(--shell-bottom,0px);z-index:26}
+body.citadel-shell-active .citadel-shell-shade{inset:var(--shell-top,54px) 0 var(--shell-bottom,0px)}
+body.citadel-shell-active .citadel-shell-dock button{white-space:nowrap;overflow-wrap:normal;font-size:11px;min-height:48px;padding:6px 2px}
+body.citadel-shell-active .citadel-shell-dock{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:max(4px,env(safe-area-inset-bottom))}
+body.citadel-shell-active .citadel-floor-label{height:21px;min-height:21px;padding:4px 10px;font:10px/1.3 var(--font-body);letter-spacing:.08em;overflow:hidden}
+.citadel-floor-caption{display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:top;will-change:transform}
+body.citadel-shell-active .citadel-room .citadel-room-name{font:10px/1.3 var(--font-body);white-space:normal;overflow-wrap:anywhere;padding:4px 5px;max-width:calc(100% - 12px);text-align:left}
+body.citadel-shell-active .citadel-skyline{font:10px/1.4 var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.12em}
+body.citadel-shell-active .citadel-inside>.citadel-interior{padding:8px 12px 18px!important}
+body.citadel-shell-active .citadel-shell[data-ui-view="people"] .citadel-inside{overflow:auto!important;padding:8px 12px 18px!important}
+/* One compact finance presentation for empty and populated data. */
+body.citadel-shell-active #money .accounts{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+body.citadel-shell-active #money .acc{padding:8px;gap:4px;min-height:67px;justify-content:space-between}
+body.citadel-shell-active #money .acc .hint{font-size:11px}
+body.citadel-shell-active #money .acc .n{font:600 clamp(12px,3.5vw,17px)/1.3 var(--font-body);overflow-wrap:anywhere}
+body.citadel-shell-active #money .free{padding:9px 10px;gap:5px}
+body.citadel-shell-active #money .free>.hint{font-size:11px;line-height:1.4}
+body.citadel-shell-active #money .free .num{font-size:21px;line-height:1.2}
+body.citadel-shell-active #money .free .res{font-size:11px;line-height:1.4}
+body.citadel-shell-active #money[data-empty="true"] .free .num{font-size:14px;color:var(--muted)}
+body.citadel-shell-active .finance-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;align-items:start}
+body.citadel-shell-active .finance-form :is(input,select,button){width:100%;max-width:100%;min-width:0;min-height:44px;margin:0;padding:8px;font:14px/1.3 var(--font-body);border-width:1px}
+body.citadel-shell-active .finance-form #cat,body.citadel-shell-active .finance-form #what{grid-column:1/-1}
+body.citadel-shell-active .finance-form #add{min-height:44px;grid-column:2}
+body.citadel-shell-active #money :is(.goal,.log li){padding:8px 10px}
+body.citadel-shell-active #money .log li>span{min-width:0;overflow-wrap:anywhere}
+body.citadel-shell-active #spend .donutwrap{width:180px;height:180px;margin:6px auto}
+body.citadel-shell-active #spend .donutwrap[hidden]{display:none!important}
+body.citadel-shell-active #spend .donutwrap canvas{width:180px;height:180px}
+body.citadel-shell-active #spend .dcenter{padding:0 48px;gap:4px}
+body.citadel-shell-active #spend .dcenter b{font:600 13px/1.3 var(--font-body);overflow-wrap:anywhere}
+body.citadel-shell-active #spend .dcenter span{font:11px/1.3 var(--font-body)}
+body.citadel-shell-active #spend .finance-empty{display:flex;flex-direction:column;gap:5px;padding:14px 12px;min-height:78px;border:1px dashed #685474;background:#21192d}
+body.citadel-shell-active #spend .finance-empty b{font:600 14px/1.4 var(--font-body);color:#dfc6e5}
+body.citadel-shell-active #spend .finance-empty span{font:12px/1.5 var(--font-body);color:var(--muted)}
+body.citadel-shell-active #spend #sp-extra{padding:8px 10px;font-size:12px}
+body.citadel-shell-active .citadel-avatar[data-moving="true"] .citadel-hero-sprite{animation:citadelHeroStep068 .56s steps(1,end) infinite}
+@keyframes citadelHeroStep068{0%,49.99%{background-position:66.6667% 0;translate:0 -1px}50%,100%{background-position:100% 0;translate:0 0}}
+@media(prefers-reduced-motion:reduce){body.citadel-shell-active .citadel-avatar[data-moving="true"] .citadel-hero-sprite{animation:none!important}}
+@media(min-width:1050px){body.citadel-shell-active .citadel-shell-nav .citadel-shell-tail{display:none!important}}
+@media(max-width:350px){body.citadel-shell-active .citadel-shell-dock button{font-size:10px}.citadel-shell-camera button{font-size:11px}}
+@media(orientation:landscape) and (max-height:500px){body.citadel-shell-active #money .accounts{grid-template-columns:repeat(3,minmax(0,1fr))}body.citadel-shell-active #spend .donutwrap,body.citadel-shell-active #spend .donutwrap canvas{width:150px;height:150px}}
+body.citadel-shell-active #citadel-home .citadel-shell-drawer{top:var(--shell-top,54px);bottom:var(--shell-bottom,0px)}
+body.citadel-shell-active #citadel-home .citadel-shell-shade{inset:var(--shell-top,54px) 0 var(--shell-bottom,0px)}
+@media(min-width:600px){body.citadel-shell-active .finance-form{grid-template-columns:repeat(3,minmax(0,1fr))}body.citadel-shell-active .finance-form #cat{grid-column:1}body.citadel-shell-active .finance-form #what{grid-column:2}body.citadel-shell-active .finance-form #add{grid-column:3}}
+body.citadel-shell-active .citadel-system-dialog:has(#spend[data-empty="true"]){height:auto;min-height:240px;max-height:calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+body.citadel-shell-active .finance-form #cat,body.citadel-shell-active .finance-form #what,body.citadel-shell-active .finance-form #add{grid-column:auto}
+body.citadel-shell-active .finance-form #cat{font-size:12px}
+
+/* 0.69 — persistent finance tabs, sharing the existing panels and chart. */
+body.citadel-shell-active .citadel-finance-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:7px 10px;flex:none;border-bottom:1px solid #51465e;background:#1c1626}
+body.citadel-shell-active .citadel-finance-nav[hidden]{display:none}
+body.citadel-shell-active .citadel-finance-nav button{min-width:0;min-height:44px;padding:7px 3px;font:600 12px/1.3 var(--font-body);white-space:nowrap;overflow-wrap:normal}
+body.citadel-shell-active .citadel-finance-nav button[aria-selected="true"]{border-color:#c7a57b;background:linear-gradient(#50375d,#37263f);color:#f6e6ce;box-shadow:inset 0 -2px #c7a57b}

@@ -1,0 +1,13 @@
+{
+  "name": "plan-quest-checks",
+  "private": true,
+  "scripts": {
+    "test": "node tests/citadel.mjs",
+    "test:isolation": "node tests/android-isolation.mjs",
+    "test:all": "npm run test:economy && npm test && npm run test:isolation",
+    "test:economy": "node tests/abyss-economy.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
