@@ -211,3 +211,9 @@ body.citadel-shell-active #citadel-home .citadel-shell-shade{inset:var(--shell-t
 body.citadel-shell-active .citadel-system-dialog:has(#spend[data-empty="true"]){height:auto;min-height:240px;max-height:calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
 body.citadel-shell-active .finance-form #cat,body.citadel-shell-active .finance-form #what,body.citadel-shell-active .finance-form #add{grid-column:auto}
 body.citadel-shell-active .finance-form #cat{font-size:12px}
+
+/* 0.69 — persistent finance tabs, sharing the existing panels and chart. */
+body.citadel-shell-active .citadel-finance-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:7px 10px;flex:none;border-bottom:1px solid #51465e;background:#1c1626}
+body.citadel-shell-active .citadel-finance-nav[hidden]{display:none}
+body.citadel-shell-active .citadel-finance-nav button{min-width:0;min-height:44px;padding:7px 3px;font:600 12px/1.3 var(--font-body);white-space:nowrap;overflow-wrap:normal}
+body.citadel-shell-active .citadel-finance-nav button[aria-selected="true"]{border-color:#c7a57b;background:linear-gradient(#50375d,#37263f);color:#f6e6ce;box-shadow:inset 0 -2px #c7a57b}

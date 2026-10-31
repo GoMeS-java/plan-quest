@@ -53,6 +53,78 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('Android 0.69 finance wheel uses the existing chart and persistent four-tab navigation',async()=>{
+  for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]])for(const populated of [false,true]){
+   const seed=populated?structuredClone(initial):{};
+   if(populated)seed['tx/wheel']={amt:125.5,kind:'out',acc:'cash',cat:'Продукты',what:'Synthetic wheel',date,ts:1,counted:true};
+   const {page:p,context}=await open({width,height,mobile:true,shell:true,seed});
+   const before=await docs(p),balance=await p.evaluate(()=>__qa.balance());
+   await p.evaluate(()=>window.__sameDocument={});const marker=await p.evaluateHandle(()=>window.__sameDocument);
+   await shellNav(p,'Финансы');
+   const nav=p.locator('.citadel-finance-nav');assert(await nav.isVisible());
+   assert.deepEqual(await nav.locator('button').allTextContents(),['Траты','Деньги','Авито','Колесо']);
+   assert(await nav.locator('button').evaluateAll(ns=>ns.every(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().height>=44)));
+   const originalChart=await p.locator('#donut').elementHandle();
+   for(const id of ['wheel','spend','money','avito','wheel','money','wheel']){
+    await nav.locator('[data-finance="'+id+'"]').click();await p.clock.runFor(32);
+    assert.equal(await nav.locator('[aria-selected="true"]').getAttribute('data-finance'),id);
+    assert(await nav.isVisible());assert.equal(await p.locator('.citadel-system-content .panel').count(),1);
+    assert(await p.locator('.citadel-system-content #'+(id==='wheel'?'spend':id)).isVisible());
+    assert.equal(await p.evaluate(m=>window.__sameDocument===m,marker),true,'tab switches must not reload');
+    if(id==='wheel'||id==='spend'){
+     assert.equal(await p.locator('#donut').count(),1);assert(await p.locator('#donut').evaluate((n,old)=>n===old,originalChart),'chart must be moved, never cloned');
+     assert.equal(await p.locator('#donutwrap').isVisible(),populated);
+     if(populated)assert.match(await p.locator('#dc-sum').innerText(),/126/);else assert(await p.locator('.finance-empty').isVisible());
+    }
+    assert(await p.locator('.citadel-system-dialog').evaluate(n=>n.scrollWidth<=n.clientWidth));
+    assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
+   }
+   for(const period of ['p-week','p-month','p-day']){await p.locator('#'+period).click();assert.equal(await p.locator('#'+period).getAttribute('aria-pressed'),'true');}
+   if(width===390)await p.screenshot({path:resolve(out,'android-069-wheel-'+(populated?'filled':'empty')+'-390.png')});
+   assert.deepEqual(await docs(p),before);assert.deepEqual(await p.evaluate(()=>__qa.balance()),balance);
+   await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));
+   await context.close();
+  }
+ });
+ await check('Android 0.69 room focus, overview and zoom move only the camera without accumulating drift',async()=>{
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,mobile:true,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+   await p.clock.runFor(64);const viewport=p.locator('.citadel-viewport'),camera=p.locator('.citadel-shell-camera');
+   async function shellGeometry(){return p.evaluate(()=>{const v=document.querySelector('.citadel-viewport'),r=v.getBoundingClientRect(),anc=[];for(let n=v.parentElement;n;n=n.parentElement)anc.push([n.id||n.className,n.scrollLeft,n.scrollTop]);return {anc,rect:[r.left,r.top,r.width,r.height]};});}
+   const geometry=await shellGeometry();
+   const economy=await p.evaluate(()=>({balance:__qa.balance(),abyss:JSON.parse(JSON.stringify(__qa.S.abyss)),buys:JSON.parse(JSON.stringify(__qa.S.buys))}));
+   for(const room of ['study','rest','vault','study']){
+    await p.evaluate(id=>__qa.move(id),room);await p.evaluate(()=>__qa.idle());await p.clock.runFor(64);
+    for(let repeat=0;repeat<3;repeat++){
+     const expected=await viewport.evaluate((v,id)=>{const r=document.querySelector('[data-croom="'+id+'"]').getBoundingClientRect(),b=v.getBoundingClientRect();return {left:Math.max(0,Math.min(v.scrollWidth-v.clientWidth,v.scrollLeft+r.left-b.left-v.clientLeft+(r.width-v.clientWidth)/2)),top:Math.max(0,Math.min(v.scrollHeight-v.clientHeight,v.scrollTop+r.top-b.top-v.clientTop+(r.height-v.clientHeight)/2))};},room);
+     await camera.getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(64);
+     const pos=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));
+     assert(Math.abs(pos.left-expected.left)<=1&&Math.abs(pos.top-expected.top)<=1,'focus must center and clamp inside viewport: '+JSON.stringify({width,room,pos,expected}));
+     assert.deepEqual(await shellGeometry(),geometry,'focus must not scroll shell ancestors or displace the viewport');
+    }
+    if(width===390&&room==='study')await p.screenshot({path:resolve(out,'android-069-room-focus-390.png')});
+    for(const name of ['+','−']){await camera.getByRole('button',{name,exact:true}).click();await p.clock.runFor(64);assert.deepEqual(await shellGeometry(),geometry);}
+    await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+    assert(await viewport.evaluate(v=>v.scrollLeft===0&&v.scrollTop===0&&document.querySelector('#citadel-castle').getBoundingClientRect().width<=v.clientWidth+1));
+    assert.deepEqual(await shellGeometry(),geometry);
+    assert(await p.locator('.citadel-floor-caption,.citadel-skyline').evaluateAll(ns=>{const v=document.querySelector('.citadel-viewport').getBoundingClientRect();return ns.every(n=>{const r=n.getBoundingClientRect();return r.left>=v.left&&r.right<=v.right;});}));
+   }
+   if(width===390)await p.screenshot({path:resolve(out,'android-069-overview-390.png')});
+   // Pinch uses actual rendered castle bounds, including centered margins at overview scale.
+   await viewport.evaluate(v=>{const r=v.getBoundingClientRect(),y=r.top+Math.min(100,r.height/2),x=r.left+r.width/2;function touches(d){return [new Touch({identifier:1,target:v,clientX:x-d,clientY:y}),new Touch({identifier:2,target:v,clientX:x+d,clientY:y})];}v.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:touches(30)}));v.dispatchEvent(new TouchEvent('touchmove',{bubbles:true,cancelable:true,touches:touches(60)}));v.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[]}));});
+   await p.clock.runFor(500);assert.deepEqual(await shellGeometry(),geometry,'pinch must never scroll ancestors');
+   await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+   await camera.getByRole('button',{name:'+',exact:true}).click();await camera.getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(500);
+   const position=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));
+   await p.reload();await p.waitForFunction(()=>window.__qa?.S.abyss?.rank>=24);await dismiss(p);await p.clock.runFor(500);
+   const restored=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));assert.deepEqual(restored,position,'camera preference survives reload without shifting ancestors');
+   assert.deepEqual(await shellGeometry(),geometry);
+   assert.deepEqual(await p.evaluate(()=>({balance:__qa.balance(),abyss:JSON.parse(JSON.stringify(__qa.S.abyss)),buys:JSON.parse(JSON.stringify(__qa.S.buys))})),economy);
+   await p.setViewportSize({width:height,height:width});await p.clock.runFor(64);await dismiss(p);await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   await context.close();
+  }
+ });
  await check('landscape mobile castle keeps rooms and camera reachable',async()=>{
   const {page:p,context}=await open({width:844,height:390,mobile:true,shell:true,seed:advancedSeed()});
   assert(await p.locator('#citadel-castle').isVisible());
@@ -733,21 +805,21 @@ try {
   await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
  });
- await check('0.67 to 0.68 PWA update replaces cached UI while preserving synthetic saves',async()=>{
-  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','15acef42ab6cb9b631e49cdd9850623eb58a1864:docs/'+name]));
+ await check('0.68 to 0.69 PWA update replaces cached UI while preserving synthetic saves',async()=>{
+  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','fbe6f935569a798b5b9ed3109b7a260668e8b96a:docs/'+name]));
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(20000);
   const seed=advancedSeed();seed['buys/citadel-study-2']={kind:'citadel-room',currency:'abyss',room:'study',level:2,item:'citadel-study-2',name:'Synthetic renovation',cost:5,ts:1};
   await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2027-04-12');localStorage.setItem('msum','2027-04');localStorage.setItem('trialSeen','2027-04-16');},seed);
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
   await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden])').first(),()=>dismiss(p));
-  await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&document.querySelector('[data-croom="study"]').dataset.roomLevel==='2');await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.67');
+  await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&document.querySelector('[data-croom="study"]').dataset.roomLevel==='2');await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.68');
   await p.waitForFunction(()=>PlanSync._docs()['cfg/abyss-economy'].d.rank>=24);await p.evaluate(()=>PlanSync.beforeUpdate());
   const before=await docs(p);servedOverrides.clear();await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
   await shellMenu(p);await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();await p.waitForFunction(v=>APP_VERSION===v,currentVersion);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&document.querySelector('[data-croom="study"]').dataset.roomLevel==='2');await dismiss(p);
   assert.equal(await p.locator('.citadel-shell-dock [data-section="shop"]').innerText(),'Память');assert.equal(await p.locator('.citadel-shell-tail.left').evaluate(n=>n.parentElement.id),'citadel-shell-nav');
-  assert(await p.evaluate(async()=>{const response=await caches.match(new URL('rpg-ui.css',location.href));return response&&(await response.text()).includes('0.68 — keep scene labels');}),'new stylesheet must replace cached 0.67 CSS');
+  assert(await p.evaluate(async()=>{const response=await caches.match(new URL('rpg-ui.css',location.href));return response&&(await response.text()).includes('0.69 — persistent finance tabs');}),'new stylesheet must replace cached 0.68 CSS');
   const after=await docs(p);for(const[key,value]of Object.entries(before))assert.deepEqual(after[key],value,'update changed '+key);assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
-  await p.clock.runFor(1000);await context.setOffline(true);await p.reload();await p.waitForFunction(()=>APP_VERSION==='0.68'&&document.querySelector('[data-croom="study"]').dataset.roomLevel==='2');await dismiss(p);await shellNav(p,'Траты');assert(!(await p.locator('#donutwrap').isVisible()));assert(await p.locator('.finance-empty').isVisible());await context.close();
+  await p.clock.runFor(1000);await context.setOffline(true);await p.reload();await p.waitForFunction(v=>APP_VERSION===v&&document.querySelector('[data-croom="study"]').dataset.roomLevel==='2',currentVersion);await dismiss(p);await shellNav(p,'Траты');await p.locator('[data-finance="wheel"]').click();assert(!(await p.locator('#donutwrap').isVisible()));assert(await p.locator('.finance-empty').isVisible());assert.equal(await p.locator('[data-finance="wheel"]').getAttribute('aria-selected'),'true');await context.close();
  });
  await check('production PWA upgrades previous release and keeps a pre-update recovery copy',async()=>{
   for(const name of ['index.html','localdb.js','sw.js'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','893e9be:docs/'+name]));

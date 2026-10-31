@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.68";window.APP_BUILD="b67514510679";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.69";window.APP_BUILD="2ba08a88e34d";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Заклятие</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -955,8 +955,8 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.68</b><span>Сборка b67514510679</span></div>
-    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
+    <div class="release-stamp"><b>Версия 0.69</b><span>Сборка 2ba08a88e34d</span></div>
+    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
@@ -1030,7 +1030,7 @@ html,body{overflow-anchor:none}
 </div>
 
 <script src="citadel-world.js"></script>
-<script>window.APP_VERSION = "0.68";
+<script>window.APP_VERSION = "0.69";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -4486,9 +4486,18 @@ function renderAllInner() {
     var moved=null,anchor=null,origin=null,drawer='',zoom=window.innerWidth<650?.85:1,baseWidth=760;
     function restore(){if(moved&&origin){origin.insertBefore(moved,anchor);moved=null;origin=null;anchor=null;}}
     function closeSystem(silent){if(dialog.open)dialog.close();restore();if(!silent&&history.state?.citadelOverlay==='system')history.back();}
-    dialog.addEventListener('close',restore);dialog.querySelector('header button').onclick=closeSystem;
+    // One shared finance switcher stays outside the scrolling panel. Wheel reuses spend.
+    var financeNav=document.createElement('nav');financeNav.className='citadel-finance-nav';financeNav.setAttribute('aria-label','Финансы');financeNav.setAttribute('role','tablist');financeNav.hidden=true;
+    [['spend','Траты'],['money','Деньги'],['avito','Авито'],['wheel','Колесо']].forEach(function(item){var b=document.createElement('button');b.type='button';b.role='tab';b.dataset.finance=item[0];b.textContent=item[1];b.onclick=function(){showSystem(item[0],item[1]);};financeNav.appendChild(b);});
+    dialog.insertBefore(financeNav,dialog.querySelector('.citadel-system-content'));
+    financeNav.addEventListener('keydown',function(e){var buttons=Array.from(financeNav.children),index=buttons.indexOf(document.activeElement);if(index<0)return;var next=e.key==='ArrowRight'?(index+1)%4:e.key==='ArrowLeft'?(index+3)%4:e.key==='Home'?0:e.key==='End'?3:-1;if(next<0)return;e.preventDefault();buttons[next].click();buttons[next].focus();});
+    dialog.addEventListener('close',function(){if(!dialog.open)restore();});dialog.querySelector('header button').onclick=closeSystem;
     function showSystem(id,label){
-      closeDrawer(true);closeSystem(true);
+      var financeId=id,isFinance=['spend','money','avito','wheel'].indexOf(id)>=0;
+      closeDrawer(true);if(dialog.open&&isFinance)restore();else closeSystem(true);
+      financeNav.hidden=!isFinance;
+      financeNav.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.finance===financeId?'true':'false');b.tabIndex=b.dataset.finance===financeId?0:-1;});
+      if(id==='wheel')id='spend';
       if(id==='settings'){$('gear').click();pushOverlay('settings');return;}
       if(id==='achievements'){$('trophy-btn').click();pushOverlay('achievements');return;}
       if(id==='wardrobe'){$('wopen').click();}
@@ -4496,7 +4505,7 @@ function renderAllInner() {
       var panel=$(id);if(!panel)return;
       moved=panel;origin=panel.parentNode;anchor=panel.nextSibling;
       dialog.querySelector('.citadel-system-content').appendChild(panel);dialog.querySelector('#citadel-system-title').textContent=label;
-      dialog.showModal();pushOverlay('system');
+      if(!dialog.open)dialog.showModal();dialog.querySelector('.citadel-system-content').scrollTop=0;pushOverlay('system');
     }
     [['overview','Цитадель'],['wardrobe','Профиль'],['today','Задания'],['week','Хроника'],['money','Финансы'],['spend','Траты'],['avito','Авито'],['shop','Воспоминания'],['diet','Тело'],['goals','Путь'],['achievements','Достижения'],['settings','Настройки']].forEach(function(entry){
       var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};nav.appendChild(b);
@@ -4539,15 +4548,35 @@ function renderAllInner() {
     }
     function scheduleCaptions(){if(!cameraFrame)cameraFrame=requestAnimationFrame(cameraCaptions);}
     function cameraSize(){baseWidth=Math.max(390,viewport.clientWidth<650?760:Math.min(1100,viewport.clientWidth));castle.style.setProperty('--castle-width',Math.round(baseWidth*zoom)+'px');measureShell();requestAnimationFrame(function(){citadelPosition();citadelPositionResidents();cameraCaptions();});}
-    [['−',function(){zoom=Math.max(.4,zoom-.2);cameraSize();}],['Общий вид',function(){zoom=Math.max(.4,viewport.clientWidth/baseWidth);cameraSize();viewport.scrollTo({left:0,top:0});}],['+',function(){zoom=Math.min(2,zoom+.2);cameraSize();}],['К комнате',function(){var room=document.querySelector('[data-croom="'+citadelSelected+'"]');if(room)room.scrollIntoView({block:'center',inline:'center'});}]].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[0];b.onclick=item[1];camera.appendChild(b);});
+    // Never scroll ancestors: scrollIntoView also moves the clipped shell/inside.
+    // All camera coordinates below are rendered CSS pixels in this viewport only.
+    function cameraScroll(left,top){
+      viewport.scrollTo({left:Math.max(0,Math.min(left,viewport.scrollWidth-viewport.clientWidth)),top:Math.max(0,Math.min(top,viewport.scrollHeight-viewport.clientHeight)),behavior:'instant'});
+      lastCamera={left:viewport.scrollLeft,top:viewport.scrollTop};cameraCaptions();persistCamera();
+    }
+    function cameraZoom(next){
+      var before=castle.getBoundingClientRect(),v=viewport.getBoundingClientRect(),x=(v.left+viewport.clientWidth/2-before.left)/before.width,y=(v.top+viewport.clientHeight/2-before.top)/before.height;
+      zoom=Math.max(.4,Math.min(2,next));cameraSize();
+      var after=castle.getBoundingClientRect();
+      cameraScroll(viewport.scrollLeft+after.left-v.left+x*after.width-viewport.clientWidth/2,viewport.scrollTop+after.top-v.top+y*after.height-viewport.clientHeight/2);
+    }
+    function focusRoom(){
+      cameraSize();var room=castle.querySelector('[data-croom="'+citadelSelected+'"]');if(!room)return;
+      var r=room.getBoundingClientRect(),v=viewport.getBoundingClientRect();
+      cameraScroll(viewport.scrollLeft+r.left-v.left-viewport.clientLeft+(r.width-viewport.clientWidth)/2,viewport.scrollTop+r.top-v.top-viewport.clientTop+(r.height-viewport.clientHeight)/2);
+    }
+    // Also route the original focus action through the same viewport-only camera.
+    $('citadel-focus').removeEventListener('click',citadelFocus);$('citadel-focus').addEventListener('click',focusRoom);
+    [['−',function(){cameraZoom(zoom-.2);}],['Общий вид',function(){zoom=Math.max(.4,viewport.clientWidth/baseWidth);cameraSize();cameraScroll(0,0);}],['+',function(){cameraZoom(zoom+.2);}],['К комнате',focusRoom]].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[0];b.onclick=item[1];camera.appendChild(b);});
     var savedCamera=null;try{savedCamera=JSON.parse(localStorage.getItem('plan.citadel.camera.v1')||'null');}catch(e){}
     if(savedCamera&&Number.isFinite(savedCamera.zoom))zoom=Math.max(.4,Math.min(2,savedCamera.zoom));
     cameraSize();function restoreCamera(){requestAnimationFrame(function(){cameraSize();if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);else viewport.scrollTo(0,0);lastCamera={left:viewport.scrollLeft,top:viewport.scrollTop};citadelPosition();cameraCaptions();});}restoreCamera();window.addEventListener('load',restoreCamera,{once:true});
-    var saveCamera=0;viewport.addEventListener('scroll',function(){if(home.dataset.uiView!=='overview')return;lastCamera={left:viewport.scrollLeft,top:viewport.scrollTop};cameraCaptions();clearTimeout(saveCamera);saveCamera=setTimeout(function(){try{localStorage.setItem('plan.citadel.camera.v1',JSON.stringify({left:viewport.scrollLeft,top:viewport.scrollTop,zoom:zoom}));}catch(e){}},300);},{passive:true});
+    var saveCamera=0;function persistCamera(){clearTimeout(saveCamera);saveCamera=setTimeout(function(){try{localStorage.setItem('plan.citadel.camera.v1',JSON.stringify({left:lastCamera.left,top:lastCamera.top,zoom:zoom}));}catch(e){}},300);}
+    viewport.addEventListener('scroll',function(){if(home.dataset.uiView!=='overview')return;lastCamera={left:viewport.scrollLeft,top:viewport.scrollTop};cameraCaptions();persistCamera();},{passive:true});
     var pinch=null,lastPinch=0;
     function pinchCenter(a,b){var box=viewport.getBoundingClientRect();return {x:(a.clientX+b.clientX)/2-box.left,y:(a.clientY+b.clientY)/2-box.top,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)};}
-    viewport.addEventListener('touchstart',function(e){if(e.touches.length!==2)return;var c=pinchCenter(e.touches[0],e.touches[1]);pinch={distance:Math.max(1,c.d),zoom:zoom,x:(viewport.scrollLeft+c.x)/zoom,y:(viewport.scrollTop+c.y)/zoom};},{passive:true});
-    viewport.addEventListener('touchmove',function(e){if(!pinch||e.touches.length!==2)return;e.preventDefault();var c=pinchCenter(e.touches[0],e.touches[1]);zoom=Math.max(.4,Math.min(2,pinch.zoom*c.d/pinch.distance));cameraSize();viewport.scrollLeft=pinch.x*zoom-c.x;viewport.scrollTop=pinch.y*zoom-c.y;lastPinch=Date.now();},{passive:false});
+    viewport.addEventListener('touchstart',function(e){if(e.touches.length!==2)return;var c=pinchCenter(e.touches[0],e.touches[1]),r=castle.getBoundingClientRect(),v=viewport.getBoundingClientRect();pinch={distance:Math.max(1,c.d),zoom:zoom,x:(v.left+c.x-r.left)/r.width,y:(v.top+c.y-r.top)/r.height};},{passive:true});
+    viewport.addEventListener('touchmove',function(e){if(!pinch||e.touches.length!==2)return;e.preventDefault();var c=pinchCenter(e.touches[0],e.touches[1]);zoom=Math.max(.4,Math.min(2,pinch.zoom*c.d/pinch.distance));cameraSize();var r=castle.getBoundingClientRect(),v=viewport.getBoundingClientRect();cameraScroll(viewport.scrollLeft+r.left-v.left+pinch.x*r.width-c.x,viewport.scrollTop+r.top-v.top+pinch.y*r.height-c.y);lastPinch=Date.now();},{passive:false});
     viewport.addEventListener('touchend',function(e){if(e.touches.length<2&&pinch){pinch=null;lastPinch=Date.now();}},{passive:true});
     viewport.addEventListener('touchcancel',function(){pinch=null;lastPinch=Date.now();},{passive:true});
     viewport.addEventListener('click',function(e){if(Date.now()-lastPinch<450){e.preventDefault();e.stopImmediatePropagation();}},true);
