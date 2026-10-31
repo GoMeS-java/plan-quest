@@ -184,3 +184,12 @@ body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel
 .citadel-shell .citadel-sky:after{content:'';position:absolute;inset:0;z-index:1;background:url('assets/citadel/roof.svg') center bottom/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none}
 .citadel-shell .citadel-skyline{z-index:2;bottom:5px;left:18px;color:#f0d7ef;text-shadow:1px 1px #080814,2px 2px #080814}
 .citadel-shell .citadel-moon{z-index:0;right:23%;top:7px}
+/* The purchased tier changes the same room instead of replacing its spatial layout. */
+.citadel-shell .citadel-room[data-room-level="1"]:before{opacity:.73;filter:brightness(.59) saturate(.56)}
+.citadel-shell .citadel-room[data-room-level="1"]:after{opacity:1;background:url('assets/citadel/abandoned.svg') center/100% 100%!important}
+.citadel-shell .citadel-room[data-room-level="2"]:before{opacity:.91;filter:brightness(.83) saturate(.85)}
+.citadel-shell .citadel-room[data-room-level="3"]:before{opacity:1;filter:brightness(1.13) saturate(1.08)}
+.citadel-shell .citadel-interior-stage[data-level="1"]:before{opacity:.75;filter:brightness(.64) saturate(.6)}
+.citadel-shell .citadel-interior-stage[data-level="1"]:after{background:url('assets/citadel/abandoned.svg') center/100% 100%,linear-gradient(transparent 55%,#090b17a8)}
+.citadel-shell .citadel-interior-stage[data-level="2"]:before{opacity:.94;filter:brightness(.9)}
+.citadel-shell .citadel-interior-stage[data-level="3"]:before{filter:brightness(1.12) saturate(1.08)}

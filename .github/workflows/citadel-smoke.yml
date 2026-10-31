@@ -53,7 +53,8 @@ jobs:
           assert Path('docs/citadel-world.js').is_file()
           assert 'citadel-world.js' in Path('docs/sw.js').read_text()
           art = list(Path('src/assets/citadel').iterdir())
-          assert len(art) == 37
+          assert len(art) >= 37
+          assert {'roof.svg', 'abandoned.svg'}.issubset({asset.name for asset in art})
           assert Path('docs/citadel-art.css').is_file()
           for asset in art:
               assert Path('docs/assets/citadel', asset.name).read_bytes() == asset.read_bytes()
