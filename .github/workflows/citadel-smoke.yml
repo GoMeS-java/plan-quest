@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/citadel*.js'
       - 'src/citadel*.css'
+      - 'src/rpg-ui.css'
       - 'src/assets/citadel/**'
       - 'src/game.html'
       - 'src/localdb.js'

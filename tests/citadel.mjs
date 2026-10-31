@@ -149,6 +149,67 @@ try {
   await context.close();
   }
  });
+ await check('Android RPG panels are compact, scrollable, keyboard safe and keep real changes',async()=>{
+  for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,mobile:true,shell:true});
+   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   if(width<700){assert(!(await p.locator('.citadel-shell-menu-toggle').isVisible()));assert(await p.locator('.citadel-shell-dock').isVisible());}
+   await shellNav(p,'Задания');
+   assert(await p.locator('#qh').evaluate(n=>{const r=n.getBoundingClientRect(),h=document.querySelector('.citadel-system-dialog>header').getBoundingClientRect();return r.top>=h.bottom;}),'quest heading must be below dialog header');
+   assert(await p.locator('#qlist .q').first().evaluate(n=>{const r=n.getBoundingClientRect();return r.height>=44&&r.height<140&&parseFloat(getComputedStyle(n.querySelector('.t b')).fontSize)<=16;}));
+   assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
+   await p.locator('#qlist button.q').first().click();await p.evaluate(()=>__qa.idle());await dismiss(p);
+   const saved=await docs(p);
+   assert(await p.locator('#qlist button.q').first().getAttribute('aria-pressed')==='true');
+   if(width===390)await p.screenshot({path:resolve(out,'android-067-tasks-390.png')});
+   await p.locator('.citadel-system-dialog header button').click();
+   for(const [label,id] of [['Профиль','wardrobe'],['Финансы','money'],['Воспоминания','shop'],['Тело','diet'],['Путь','goals']]){
+    await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());
+    assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth+1),'overflow in '+id+' at '+width);
+    if(width===390)await p.screenshot({path:resolve(out,'android-067-'+id+'-390.png')});
+    await p.locator('.citadel-system-dialog header button').click();
+   }
+   await shellNav(p,'Настройки');
+   assert(await p.locator('#setup h2').first().evaluate(n=>parseFloat(getComputedStyle(n).fontSize)<=14));
+   assert(!(await p.locator('.release-notes').getAttribute('open')));
+   assert(await p.locator('#setup .sbox').evaluate(n=>n.scrollWidth<=n.clientWidth+1));
+   assert(await p.locator('#fx-shake').evaluate(n=>n.getBoundingClientRect().height>=44));
+   await p.locator('#fx-shake').selectOption('off');
+   if(width===390)await p.screenshot({path:resolve(out,'android-067-settings-390.png')});
+   await p.goBack();assert(!(await p.locator('#setup').isVisible()),'Android Back closes settings first');
+   await shellNav(p,'Достижения');
+   assert(await p.locator('#trophy .sbox').evaluate(n=>n.scrollWidth<=n.clientWidth+1));
+   if(width===390)await p.screenshot({path:resolve(out,'android-067-achievements-390.png')});
+   await p.goBack();assert(!(await p.locator('#trophy').isVisible()));
+   if(width<700){await shellMenu(p);await p.goBack();assert.equal(await p.locator('#citadel-home').getAttribute('data-menu'),'');}
+   await p.reload();await p.waitForFunction(()=>!!window.__citadelShell);await dismiss(p);
+   const after=await docs(p);for(const [key,value]of Object.entries(saved))assert.deepEqual(after[key],value,'UI reload altered '+key);
+   await shellNav(p,'Настройки');assert.equal(await p.locator('#fx-shake').inputValue(),'off');await p.locator('#setup-x').click();
+   await context.close();
+  }
+ });
+ await check('all ten shell rooms use opaque ruins and two real paid states without save migration',async()=>{
+  const {page:p,context}=await open({width:390,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  const rooms=['throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'];
+  await p.addLocatorHandler(p.locator('#achup:not([hidden])'),()=>p.locator('#ac-ok').click());
+  for(const room of rooms){
+   if(!(await p.locator('#citadel-castle').isVisible()))await p.locator('[data-room-view="overview"]').click();
+   await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+   assert.equal(await p.evaluate(room=>__qa.roomLevel(room),room),1);
+   assert.equal(await p.locator('#citadel-room-condition').innerText(),'Заброшенная');
+   assert(await p.locator('#citadel-interior-title').evaluate(n=>n.getBoundingClientRect().top>=document.querySelector('.citadel-room-tools').getBoundingClientRect().bottom),'room title must not scroll behind the toolbar');
+   const art=await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n,'::before').backgroundImage);
+   assert(art.includes(room+'-ruins.svg')&&!art.includes('.webp'),'abandoned room cannot reveal luxury backdrop');
+   assert(await p.evaluate(src=>new Promise(r=>{const im=new Image();im.onload=()=>r(im.naturalWidth>0);im.onerror=()=>r(false);im.src=src;}),'assets/citadel/'+room+'-ruins.svg'));
+   await p.screenshot({path:resolve(out,'android-067-'+room+'-state0.png')});
+   await p.locator('[data-room-view="upgrades"]').click();
+   for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});assert.equal(await p.locator('#citadel-room-condition').innerText(),level===2?'Восстановленная':'Роскошная');await p.screenshot({path:resolve(out,'android-067-'+room+'-state'+(level-1)+'.png')});}
+  }
+  const paid=await docs(p);assert.equal(Object.keys(paid).filter(k=>/^buys\/citadel-/.test(k)).length,20);
+  await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&window.__qa&&__qa.roomLevel('vault')===3);await dismiss(p);
+  for(const room of rooms){if(!(await p.locator('#citadel-castle').isVisible()))await p.locator('[data-room-view="overview"]').click();await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'3');}
+  await context.close();
+ });
  await check('graphics assets, renovation layers, live mobile RPG views and animation lifecycle',async()=>{
   const images=['sky','throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'];
   for(const width of [320,360,390,430,768,1280]){
@@ -631,7 +692,7 @@ try {
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
   await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(p));
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);
-  await context.setOffline(true);await p.reload();await castle(p);assert(await p.evaluate(()=>!!window.CitadelWorld));const artCache=await p.evaluate(async()=>Promise.all(['citadel-art.css','assets/citadel/rest.webp','assets/citadel/sky.webp','assets/citadel/roof.svg','assets/citadel/abandoned.svg','assets/citadel/guardian.svg','assets/citadel/rest-upgrade3.svg'].map(path=>caches.match(new URL(path,location.href)).then(Boolean))));assert(artCache.every(Boolean),'offline shell must include textures, roof, room states, sprites and renovation art');await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
+  await context.setOffline(true);await p.reload();await castle(p);assert(await p.evaluate(()=>!!window.CitadelWorld));const artCache=await p.evaluate(async()=>Promise.all(['rpg-ui.css','assets/citadel/rest-ruins.svg','citadel-art.css','assets/citadel/rest.webp','assets/citadel/sky.webp','assets/citadel/roof.svg','assets/citadel/abandoned.svg','assets/citadel/guardian.svg','assets/citadel/rest-upgrade3.svg'].map(path=>caches.match(new URL(path,location.href)).then(Boolean))));assert(artCache.every(Boolean),'offline shell must include textures, roof, room states, sprites and renovation art');await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
   assert.equal(Number(await p.locator('#upg').innerText()),Number(before));await p.reload();await castle(p);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');
   assert.equal(Object.keys(await docs(p)).filter(k=>k==='buys/citadel-study-2').length,1);assert.equal(Number(await p.locator('#upg').innerText()),Number(before));await context.close();
