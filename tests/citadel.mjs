@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={S:S,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
+const expose = `window.__qa={S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
@@ -43,6 +43,7 @@ async function dismiss(p){await p.evaluate(()=>{for(const id of ['achup','lvup',
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));}
 async function shellMenu(p){if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
 async function shellNav(p,label){if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();}
+async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await b.isVisible()))await shellMenu(p);await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=await claude.use('db');await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
 function advancedSeed(){
@@ -80,10 +81,10 @@ try {
    if(width<700)await shellMenu(p);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    if(width===390){await p.locator('.citadel-shell-dock button').last().click();assert.equal(await p.locator('.citadel-shell-menu-toggle').getAttribute('aria-expanded'),'true');await p.screenshot({path:resolve(out,'shell-menu-390.png')});await shellMenu(p);}
-   if(width<1050){await p.locator('.citadel-shell-tail.left').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');
+   if(width<1050){await shellDrawer(p,'left');assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');
    if(width===390)await p.screenshot({path:resolve(out,'shell-left-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:width-5,y:100}});assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
    if(width===390){for(const [label,id] of [['Хроника','week'],['Траты','spend'],['Авито','avito']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}}
-   await p.locator('.citadel-shell-tail.right').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'right');
+   await shellDrawer(p,'right');assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'right');
    if(width===390)await p.screenshot({path:resolve(out,'shell-right-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:5,y:100}});}
    await shellNav(p,'Задания');assert(await p.locator('.citadel-system-dialog').isVisible());assert(await p.locator('.citadel-system-dialog #qlist').isVisible());if(width===390)await p.screenshot({path:resolve(out,'rpg-tasks-390.png')});
    await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('#citadel-castle').isVisible());
@@ -95,7 +96,7 @@ try {
    await p.screenshot({path:resolve(out,'shell-game-'+width+'.png')});
    if(width===390){
     const pinch=await p.locator('.citadel-viewport').evaluate(n=>{const castle=document.querySelector('#citadel-castle'),before=castle.clientWidth,t=(id,x)=>new Touch({identifier:id,target:n,clientX:x,clientY:400}),send=(type,a,b)=>n.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,touches:[t(1,a),t(2,b)],targetTouches:[t(1,a),t(2,b)]}));send('touchstart',120,220);send('touchmove',70,270);n.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[],targetTouches:[]}));return {before,after:castle.clientWidth};});assert(pinch.after>pinch.before,'two-finger gesture must enlarge the castle');await p.clock.runFor(500);
-    await p.locator('.citadel-shell-tail.left').click();await p.goBack();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
+    await shellDrawer(p,'left');await p.goBack();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
     await shellNav(p,'Задания');await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));
     await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.goBack();assert(await p.locator('#citadel-castle').isVisible());
     await p.locator('.citadel-viewport').evaluate(n=>{n.scrollLeft=150;n.scrollTop=95;});await p.waitForTimeout(400);await p.reload();await p.waitForFunction(()=>!!window.__citadelShell);await p.waitForFunction(()=>document.querySelector('.citadel-viewport').scrollLeft>=100&&document.querySelector('.citadel-viewport').scrollTop>=75);
@@ -123,7 +124,7 @@ try {
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-abandoned-'+width+'x'+height+'.png')});
   // The shell hides the classic art navigation. Use the same room drawer as a player.
   assert(!(await p.locator('[data-art-view="upgrades"]').isVisible()));
-  await p.locator('.citadel-shell-tail.right').click();
+  await shellDrawer(p,'right');
   await p.locator('.citadel-shell-drawer.right button').getByText('Улучшить',{exact:true}).click();
   assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'upgrades');
   assert(await p.locator('#citadel-upgrade').isVisible(),'upgrade panel must open from the room');
@@ -209,6 +210,63 @@ try {
   await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&window.__qa&&__qa.roomLevel('vault')===3);await dismiss(p);
   for(const room of rooms){if(!(await p.locator('#citadel-castle').isVisible()))await p.locator('[data-room-view="overview"]').click();await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'3');}
   await context.close();
+ });
+ await check('Android 0.68 camera captions, unobstructed scenes and dock survive pan and rotation',async()=>{
+  for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,mobile:true,shell:true,seed:{}});
+   await p.clock.runFor(64);
+   const viewport=p.locator('.citadel-viewport');
+   assert.equal(await viewport.evaluate(n=>n.scrollLeft),0,'fresh camera starts at the readable left edge');
+   async function captions(){await p.clock.runFor(64);await p.waitForFunction(()=>{const v=document.querySelector('.citadel-viewport').getBoundingClientRect();return Array.from(document.querySelectorAll('.citadel-floor-caption,.citadel-skyline,.citadel-room-name')).filter(n=>getComputedStyle(n).visibility!=='hidden').every(n=>{const r=n.getBoundingClientRect();return r.left>=v.left-1&&r.right<=v.right+1;});});}
+   await captions();
+   if(width<700){assert.equal(await p.locator('.citadel-shell-dock [data-section="shop"]').innerText(),'Память');assert(await p.locator('.citadel-shell-dock button').evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().height>=44)));}
+   assert(await p.locator('.citadel-shell-tail').evaluateAll(nodes=>nodes.every(n=>{if(!n.getClientRects().length)return true;const a=n.getBoundingClientRect(),target=document.querySelector('#citadel-home').dataset.uiView==='overview'?document.querySelector('.citadel-viewport'):document.querySelector('#citadel-interior-stage'),b=target.getBoundingClientRect();return a.bottom<=b.top||a.top>=b.bottom||a.right<=b.left||a.left>=b.right;})),'drawer triggers must stay outside the artwork');
+   await viewport.evaluate(n=>{n.scrollLeft=155;n.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[new Touch({identifier:1,target:n,clientX:240,clientY:300})]}));n.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[],changedTouches:[new Touch({identifier:1,target:n,clientX:70,clientY:305})]}));});
+   await captions();assert(!(await p.locator('#pg-a').evaluate(n=>n.hidden)),'castle pan must never switch to legacy finance page');assert(await p.locator('#citadel-home').isVisible());
+   if(width===390)await p.screenshot({path:resolve(out,'android-068-castle-panned-390.png')});
+   await p.locator('.citadel-shell-camera button').filter({hasText:'Общий вид'}).click();await captions();
+   assert(await viewport.evaluate(n=>document.querySelector('#citadel-castle').getBoundingClientRect().width<=n.clientWidth+1),'explicit overview fits both room columns');
+   if(width===390)await p.screenshot({path:resolve(out,'android-068-castle-overview-390.png')});
+   await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();await captions();
+   await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+   assert(await p.locator('.citadel-shell-tail').evaluateAll(nodes=>nodes.every(n=>{if(!n.getClientRects().length)return true;const a=n.getBoundingClientRect(),target=document.querySelector('#citadel-home').dataset.uiView==='overview'?document.querySelector('.citadel-viewport'):document.querySelector('#citadel-interior-stage'),b=target.getBoundingClientRect();return a.bottom<=b.top||a.top>=b.bottom||a.right<=b.left||a.left>=b.right;})),'drawer triggers must stay outside the artwork');
+   assert.equal(await p.locator('#citadel-room-condition').innerText(),'Заброшенная');
+   if(width===390)await p.screenshot({path:resolve(out,'android-068-room-390.png')});
+   await p.locator('[data-room-view="overview"]').click();await captions();
+   await p.setViewportSize({width:height,height:width});await p.clock.runFor(64);
+   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   await context.close();
+  }
+ });
+ await check('Android 0.68 empty and populated finances preserve balances, chart and transaction history',async()=>{
+  const filled=structuredClone(initial);filled['cfg/opening']={cash:50000,card:100000};
+  const tx=[['food',{amt:125.5,kind:'out',acc:'cash',cat:'Продукты',what:'Synthetic food'}],['taxi',{amt:75.25,kind:'out',acc:'card',cat:'Такси',what:'Synthetic taxi'}],['work',{amt:200,kind:'out',acc:'cash',cat:'Работа: такси',what:'Synthetic work',work:true}],['large',{amt:25000,kind:'out',acc:'card',cat:'Покупки',what:'Synthetic large'}],['income',{amt:500,kind:'in',acc:'card',cat:'Работа: другое',what:'Synthetic income'}],['transfer',{amt:100,kind:'xfer',acc:'cash',what:'Synthetic transfer'}]];
+  tx.forEach(([id,t],i)=>filled['tx/'+id]={...t,date,ts:100+i});
+  const baseline=await open({seed:filled,base:true});const originalBalance=await baseline.page.evaluate(()=>__qa.balance());await baseline.context.close();
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   for(const populated of [false,true]){
+    const {page:p,context}=await open({width,height,mobile:true,shell:true,seed:populated?filled:{}});
+    await shellNav(p,'Траты');
+    assert.equal(await p.locator('#donutwrap').isVisible(),populated);
+    if(!populated){assert(await p.locator('.finance-empty').evaluate(n=>n.getBoundingClientRect().height<150));}
+    else{assert.match(await p.locator('#dc-sum').innerText(),/201/);assert.deepEqual(await p.evaluate(()=>__qa.balance()),originalBalance);}
+    assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
+    if(width===390)await p.screenshot({path:resolve(out,'android-068-spend-'+(populated?'filled':'empty')+'-390.png')});
+    await p.locator('.citadel-system-dialog header button').click();await shellNav(p,'Финансы');
+    assert(await p.locator('#money .accounts').evaluate(n=>n.getBoundingClientRect().height<100));
+    assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
+    assert(await p.locator('.finance-form').evaluate(n=>Array.from(n.children).every(c=>c.getBoundingClientRect().height>=44&&c.scrollWidth<=c.clientWidth+1)));
+    if(width===390)await p.screenshot({path:resolve(out,'android-068-money-'+(populated?'filled':'empty')+'-390.png')});
+    if(populated){
+     await p.locator('#amt').fill('37.25');await p.locator('#acc').selectOption('card');await p.locator('#kind').selectOption('out');await p.locator('#cat').selectOption({label:'Продукты'});await p.locator('#what').fill('Synthetic browser purchase');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await p.evaluate(()=>__qa.idle());await dismiss(p);
+     const paid=await docs(p),balance=await p.evaluate(()=>__qa.balance());assert.equal(balance.cash,originalBalance.cash);assert.equal(balance.card,originalBalance.card-37.25);
+     await p.reload();await p.waitForFunction(()=>!!window.__qa&&__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await dismiss(p);await shellNav(p,'Финансы');assert.deepEqual(await p.evaluate(()=>__qa.balance()),balance);
+     const reloaded=await docs(p);for(const[key,value]of Object.entries(paid))if(key.startsWith('tx/')||key==='cfg/opening')assert.deepEqual(reloaded[key],value);
+    }
+    await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));assert(await p.locator('#citadel-home').isVisible());
+    await context.close();
+   }
+  }
  });
  await check('graphics assets, renovation layers, live mobile RPG views and animation lifecycle',async()=>{
   const images=['sky','throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'];
