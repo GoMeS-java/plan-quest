@@ -103,8 +103,8 @@ def room_detail(room, tier):
         pieces += [rect(176, 146, 31, 4, metal), rect(180, 151, 3, 28, metal),
                    rect(201, 151, 3, 28, metal)]
     elif room == 'forge':
-        pieces += [path('M158 114h128v8H158zM165 122h113v42H165z', shadow, '.9'),
-                   rect(188, 142, 68, 13, '#7d382f' if tier else '#452b31'),
+        pieces += [path('M158 114h128v2H158zM165 122h113v2H165z', metal, '.8'),
+                   rect(188, 142, 68, 3, '#a95c39' if tier else '#59404a'),
                    rect(202, 135, 41, 5, light, '.8'),
                    path('M307 146h38v6h-12v8h-16v-8h-10z', metal),
                    rect(319, 160, 5, 25, shadow)]
@@ -122,7 +122,7 @@ def room_detail(room, tier):
         if tier > 0:
             for xx in (124, 342): pieces += [rect(xx, 143, 24, 4, metal), rect(xx+5, 148, 4, 22, metal)]
     elif room == 'refectory':
-        pieces += [rect(98, 133, 280, 8, '#674a3d' if tier == 0 else '#aa7950'),
+        pieces += [rect(98, 133, 280, 3, '#674a3d' if tier == 0 else '#aa7950'),
                    rect(111, 141, 8, 29, shadow), rect(358, 141, 8, 29, shadow)]
         for xx in (128, 190, 250, 311):
             pieces += [rect(xx, 129, 20, 3, metal), rect(xx+8, 122, 3, 7, light)]
@@ -133,7 +133,7 @@ def room_detail(room, tier):
         for xx in (65, 139, 324, 395):
             pieces += [rect(xx, 47, 6, 113, metal, '.7'), rect(xx-7, 44, 20, 5, metal),
                        rect(xx-9, 159, 24, 5, shadow)]
-        pieces += [path('M207 156h66v5h-66zM219 161h42v17h-42z', metal),
+        pieces += [path('M207 156h66v2h-66zM219 161h42v2h-42z', metal),
                    rect(237, 137, 5, 21, '#6d93a3' if tier else '#595e71')]
         for i in range(15):
             xx = 57 + (i*47)%366
@@ -141,8 +141,8 @@ def room_detail(room, tier):
             pieces.append(rect(xx, yy, 4+(i%3)*2, 3, '#4d8065' if tier else '#485650'))
     elif room == 'vault':
         for xx, yy, ww in ((105, 137, 76), (285, 133, 77)):
-            pieces += [rect(xx, yy, ww, 33, '#624b42' if tier else shadow),
-                       rect(xx, yy, ww, 5, metal), rect(xx+4, yy+8, ww-8, 2, metal),
+            pieces += [rect(xx, yy, ww, 3, metal), rect(xx+2, yy+17, ww-4, 2, shadow),
+                       rect(xx+4, yy+25, ww-8, 2, metal), rect(xx, yy, ww, 5, metal), rect(xx+4, yy+8, ww-8, 2, metal),
                        rect(xx+ww//2-3, yy+12, 6, 11, light)]
         for i in range(20 if tier == 2 else 7):
             xx = 188+(i*31)%92
@@ -165,40 +165,6 @@ def stage(room, tier):
                     path('M13 184h23v-8h13v8h20v5H13zM367 187h28v-9h19v9h18v5h-65z', STONE),
                     path('M24 11h15v3H24zM39 14h3v14h-3zM42 27h20v3H42zM435 18h25v3h-25zM435 21h3v15h-3z', DUST),
                     rect(58, 151, 39, 4, DUST, '.7'), rect(351, 161, 42, 3, DUST, '.7')))
-        ruins = {
-            'throne': (rect(212, 84, 55, 54, INK, '.83') + path('M218 138V96h8v-13h6v26h11V91h7v47z', STONE)
-                       + path('M165 20h18v63h-8V51h-10zM333 18h16v69h-8V50h-8z', '#261c31')
-                       + rect(223, 138, 72, 6, DUST)),
-            'observatory': (path('M223 95h95v12h-95zM229 107h82v5h-82z', INK)
-                            + path('M240 86h34v8h-34zM283 80h23v6h-23zM277 89h6v22h-6z', STONE)
-                            + rect(199, 140, 54, 5, DUST)),
-            'rest': (path('M118 76h24v64h-12v-42h-12zM146 142h132v27H146z', '#251a29')
-                     + path('M160 153h50v8h-50zM235 153h30v8h-30zM122 31h20v43h-7V51h-13z', DUST)
-                     + rect(153, 170, 111, 5, INK)),
-            'study': (path('M193 118h126v28H193zM202 146h24v25h-24zM301 146h12v25h-12z', '#191825')
-                      + path('M215 120h50v8h-50zM278 126h34v5h-34zM344 89h42v55h-42z', STONE)
-                      + rect(222, 147, 41, 5, DUST)),
-            'archive': (path('M10 37h65v125H10zM400 25h67v139h-67z', '#171a29')
-                        + path('M18 81h48v4H18zM414 64h42v5h-42zM415 122h35v7h-35z', DUST)
-                        + rect(194, 161, 64, 7, STONE)),
-            'forge': (path('M154 95h147v75H154z', '#19161d', '.89')
-                      + path('M170 117h116v43H170z', '#25202a')
-                      + path('M294 151h53v10h-53zM307 161h7v24h-7zM338 161h7v24h-7z', STONE)
-                      + rect(180, 161, 82, 4, DUST)),
-            'gatehouse': (path('M164 44h12v112h-12zM201 40h10v118h-10zM238 40h11v118h-11zM277 44h12v112h-12z', '#353041')
-                          + path('M148 157h58v15h-58zM273 155h67v17h-67z', STONE)
-                          + rect(220, 165, 32, 7, DUST)),
-            'refectory': (path('M98 129h281v27H98zM117 157h16v28h-16zM348 157h16v28h-16z', '#201c28')
-                           + path('M100 136h75v7h-75zM256 132h95v6h-95z', DUST)
-                           + rect(177, 158, 56, 5, STONE)),
-            'cloister': (path('M68 149h48v34H68zM296 156h75v28h-75z', '#242333')
-                         + path('M54 36h10v61h-10zM74 40h8v48h-8zM347 42h10v57h-10z', '#3e3544')
-                         + path('M120 169h46v4h-46zM194 177h63v5h-63z', DUST)),
-            'vault': (path('M97 131h96v45H97zM274 129h91v48h-91z', '#171724')
-                      + path('M103 137h72v7h-72zM291 140h65v7h-65z', STONE)
-                      + rect(209, 163, 76, 10, DUST)),
-        }
-        art.append(ruins[room])
         for x, y in ((84, 87), (389, 105), (277, 69)):
             art.append(path(f'M{x} {y}h3v7h7v3h-7v7h-3z', '#777082', '.65'))
         art.append('</g>')
