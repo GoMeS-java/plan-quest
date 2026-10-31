@@ -57,9 +57,10 @@ try {
   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await p.screenshot({path:resolve(out,'graphics-landscape-844x390.png')});
   await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();
-  await p.locator('.citadel-viewport').evaluate(n=>{n.scrollTop=300;n.scrollLeft=120;});
-  assert(await p.locator('.citadel-viewport').evaluate(n=>n.scrollTop>100));
-  await p.locator('[data-croom="forge"]').click({position:{x:40,y:35}});
+  await p.locator('[data-croom="forge"]').evaluate(n=>n.scrollIntoView({block:'center',inline:'center'}));
+  const target=await p.locator('[data-croom="forge"]').evaluate(n=>{const r=n.getBoundingClientRect(),x=Math.round(r.left+r.width/2),y=Math.round(r.top+r.height/2);return {x,y,visible:document.elementFromPoint(x,y)?.closest('[data-croom="forge"]')===n,room:[r.left,r.top,r.right,r.bottom],viewport:[innerWidth,innerHeight]};});
+  assert(target.visible,'landscape camera must expose selected room: '+JSON.stringify(target));
+  await p.touchscreen.tap(target.x,target.y);
   assert(await p.locator('#citadel-interior').isVisible());
   await p.screenshot({path:resolve(out,'graphics-landscape-forge-844x390.png')});
   await context.close();
