@@ -36,6 +36,14 @@ try{
  assert.equal(productionManifest.name,'Вкач');assert.equal(productionManifest.short_name,'Вкач');
  assert.equal(productionManifest.start_url,'./');assert.equal(productionManifest.scope,'./');
  assert.equal(productionManifest.display,'standalone');
+ // Branding is metadata-only: the installed application's origin/scope and
+ // the local-save namespace must stay stable through an update.
+ const oldManifest={name:'Заклятие Кошмара',short_name:'Кошмар',start_url:'./',scope:'./',display:'standalone',orientation:'any',background_color:'#100f19',theme_color:'#17121f',lang:'ru'};
+ for(const key of ['start_url','scope','display','orientation','background_color','theme_color','lang'])assert.equal(productionManifest[key],oldManifest[key],'renaming must preserve '+key);
+ assert.equal(productionManifest.id,undefined,'do not change production PWA identity');
+ assert.deepEqual(productionManifest.icons.map(i=>[i.src,i.sizes,i.purpose]),[['icon-192.png','192x192','any'],['icon-512.png','512x512','any'],['icon-512-maskable.png','512x512','maskable']]);
+ for(const icon of productionManifest.icons){const data=await readFile(resolve(root,'docs',icon.src));assert.equal(data.subarray(0,8).toString('hex'),'89504e470d0a1a0a');assert.equal(data.readUInt32BE(16),Number(icon.sizes.split('x')[0]));assert.equal(data.readUInt32BE(20),Number(icon.sizes.split('x')[1]));}
+
  assert.equal(await p.evaluate(()=>PLAN_CONFIG.cloudEnabled),false);assert.equal(await p.evaluate(()=>PLAN_CONFIG.clientId),'');
  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),production);
  assert.equal(await p.evaluate(()=>!!PlanSync._docs()['cfg/production-sentinel']),false);
