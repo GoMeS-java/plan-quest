@@ -76,5 +76,30 @@ for x in (117, 314, 491, 687):
     rect(x, 54, 5, 9, '#edac6b')
     rect(x + 1, 50, 3, 5, '#ffe1a2')
 
+# Courses of chipped slate, lancet openings, and a continuous drain make the
+# skyline read as one inhabited stone building at both desktop and phone zoom.
+for x, w, top in ((7, 67, 19), (726, 67, 12), (147, 45, 37), (607, 45, 34)):
+    for row in range(3):
+        yy = top + 4 + row * 6
+        for xx in range(x + 4 + (row % 2) * 6, x + w - 5, 12):
+            rect(xx, yy, 8, 2, '#4b405a')
+            rect(xx + 2, yy + 2, 2, 2, '#77647a')
+    for yy in range(top + 37, 75, 11):
+        rect(x + 7, yy, 5, 2, '#71677d')
+        rect(x + w - 17, yy + 3, 7, 2, '#514c68')
+for x, w in ((78, 65), (197, 135), (467, 134), (656, 67)):
+    for xx in range(x + 8, x + w - 5, 13):
+        rect(xx, 78, 10, 2, '#666078')
+        rect(xx + 3, 84, 2, 8, '#343249')
+        rect(xx + 5, 92, 7, 2, '#756b82')
+for x in (92, 215, 475, 670):
+    rect(x, 83, 14, 2, '#a28786')
+    rect(x + 2, 85, 10, 12, '#151526')
+    rect(x + 4, 87, 6, 8, '#705077')
+    rect(x + 6, 88, 2, 6, '#e0a476')
+for x in range(15, 792, 38):
+    rect(x, 101, 13, 2, '#696178')
+    rect(x + 14, 114, 15, 2, '#4a465d')
+
 parts.append('</svg>')
 Path('src/assets/citadel/roof.svg').write_text(''.join(parts) + '\n', encoding='utf-8')
