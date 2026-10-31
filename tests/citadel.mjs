@@ -219,6 +219,7 @@ try {
    assert.equal(await viewport.evaluate(n=>n.scrollLeft),0,'fresh camera starts at the readable left edge');
    async function captions(){await p.clock.runFor(64);await p.waitForFunction(()=>{const v=document.querySelector('.citadel-viewport').getBoundingClientRect();return Array.from(document.querySelectorAll('.citadel-floor-caption,.citadel-skyline,.citadel-room-name')).filter(n=>getComputedStyle(n).visibility!=='hidden').every(n=>{const r=n.getBoundingClientRect();return r.left>=v.left-1&&r.right<=v.right+1;});});}
    await captions();
+   if(width===390)await p.screenshot({path:resolve(out,'android-068-castle-default-390.png')});
    if(width<700){assert.equal(await p.locator('.citadel-shell-dock [data-section="shop"]').innerText(),'Память');assert(await p.locator('.citadel-shell-dock button').evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().height>=44)));}
    assert(await p.locator('.citadel-shell-tail').evaluateAll(nodes=>nodes.every(n=>{if(!n.getClientRects().length)return true;const a=n.getBoundingClientRect(),target=document.querySelector('#citadel-home').dataset.uiView==='overview'?document.querySelector('.citadel-viewport'):document.querySelector('#citadel-interior-stage'),b=target.getBoundingClientRect();return a.bottom<=b.top||a.top>=b.bottom||a.right<=b.left||a.left>=b.right;})),'drawer triggers must stay outside the artwork');
    await viewport.evaluate(n=>{n.scrollLeft=155;n.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[new Touch({identifier:1,target:n,clientX:240,clientY:300})]}));n.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[],changedTouches:[new Touch({identifier:1,target:n,clientX:70,clientY:305})]}));});
@@ -241,7 +242,7 @@ try {
  await check('Android 0.68 empty and populated finances preserve balances, chart and transaction history',async()=>{
   const filled=structuredClone(initial);filled['cfg/opening']={cash:50000,card:100000};
   const tx=[['food',{amt:125.5,kind:'out',acc:'cash',cat:'Продукты',what:'Synthetic food'}],['taxi',{amt:75.25,kind:'out',acc:'card',cat:'Такси',what:'Synthetic taxi'}],['work',{amt:200,kind:'out',acc:'cash',cat:'Работа: такси',what:'Synthetic work',work:true}],['large',{amt:25000,kind:'out',acc:'card',cat:'Покупки',what:'Synthetic large'}],['income',{amt:500,kind:'in',acc:'card',cat:'Работа: другое',what:'Synthetic income'}],['transfer',{amt:100,kind:'xfer',acc:'cash',what:'Synthetic transfer'}]];
-  tx.forEach(([id,t],i)=>filled['tx/'+id]={...t,date,ts:100+i});
+  tx.forEach(([id,t],i)=>filled['tx/'+id]={...t,date,ts:100+i,counted:true});
   const baseline=await open({seed:filled,base:true});const originalBalance=await baseline.page.evaluate(()=>__qa.balance());await baseline.context.close();
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    for(const populated of [false,true]){
@@ -260,7 +261,7 @@ try {
     if(populated){
      await p.locator('#amt').fill('37.25');await p.locator('#acc').selectOption('card');await p.locator('#kind').selectOption('out');await p.locator('#cat').selectOption({label:'Продукты'});await p.locator('#what').fill('Synthetic browser purchase');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await p.evaluate(()=>__qa.idle());await dismiss(p);
      const paid=await docs(p),balance=await p.evaluate(()=>__qa.balance());assert.equal(balance.cash,originalBalance.cash);assert.equal(balance.card,originalBalance.card-37.25);
-     await p.reload();await p.waitForFunction(()=>!!window.__qa&&__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await dismiss(p);await shellNav(p,'Финансы');assert.deepEqual(await p.evaluate(()=>__qa.balance()),balance);
+     await p.reload();await p.waitForFunction(()=>!!window.__qa&&!!__qa.S.opening&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …'&&__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await dismiss(p);await shellNav(p,'Финансы');assert.deepEqual(await p.evaluate(()=>__qa.balance()),balance);
      const reloaded=await docs(p);for(const[key,value]of Object.entries(paid))if(key.startsWith('tx/')||key==='cfg/opening')assert.deepEqual(reloaded[key],value);
     }
     await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));assert(await p.locator('#citadel-home').isVisible());
@@ -730,6 +731,22 @@ try {
   await p.evaluate(async restore=>{const db=await claude.use('db');await db.runTransaction(tx=>{for(const [path,value]of Object.entries(restore))tx.set(path,value);});},restore);
   await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
+ });
+ await check('0.67 to 0.68 PWA update replaces cached UI while preserving synthetic saves',async()=>{
+  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','15acef42ab6cb9b631e49cdd9850623eb58a1864:docs/'+name]));
+  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(20000);
+  const seed=advancedSeed();seed['buys/citadel-study-2']={kind:'citadel-room',currency:'abyss',room:'study',level:2,item:'citadel-study-2',name:'Synthetic renovation',cost:5,ts:1};
+  await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2027-04-12');localStorage.setItem('msum','2027-04');localStorage.setItem('trialSeen','2027-04-16');},seed);
+  await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
+  await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden])').first(),()=>dismiss(p));
+  await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&document.querySelector('[data-croom="study"]').dataset.roomLevel==='2');await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.67');
+  await p.waitForFunction(()=>PlanSync._docs()['cfg/abyss-economy'].d.rank>=24);await p.evaluate(()=>PlanSync.beforeUpdate());
+  const before=await docs(p);servedOverrides.clear();await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
+  await shellMenu(p);await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();await p.waitForFunction(v=>APP_VERSION===v,currentVersion);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&document.querySelector('[data-croom="study"]').dataset.roomLevel==='2');await dismiss(p);
+  assert.equal(await p.locator('.citadel-shell-dock [data-section="shop"]').innerText(),'Память');assert.equal(await p.locator('.citadel-shell-tail.left').evaluate(n=>n.parentElement.id),'citadel-shell-nav');
+  assert(await p.evaluate(async()=>{const response=await caches.match(new URL('rpg-ui.css',location.href));return response&&(await response.text()).includes('0.68 — keep scene labels');}),'new stylesheet must replace cached 0.67 CSS');
+  const after=await docs(p);for(const[key,value]of Object.entries(before))assert.deepEqual(after[key],value,'update changed '+key);assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
+  await p.clock.runFor(1000);await context.setOffline(true);await p.reload();await p.waitForFunction(()=>APP_VERSION==='0.68'&&document.querySelector('[data-croom="study"]').dataset.roomLevel==='2');await dismiss(p);await shellNav(p,'Траты');assert(!(await p.locator('#donutwrap').isVisible()));assert(await p.locator('.finance-empty').isVisible());await context.close();
  });
  await check('production PWA upgrades previous release and keeps a pre-update recovery copy',async()=>{
   for(const name of ['index.html','localdb.js','sw.js'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','893e9be:docs/'+name]));
