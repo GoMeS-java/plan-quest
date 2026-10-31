@@ -132,4 +132,4 @@ try{
  }
  console.log('PASS invalid test OAuth configuration fails closed');passed++;
  assert.deepEqual(errors,[]);console.log('PASS '+passed+' Android-build isolation groups; no runtime errors');
-}catch(e){console.error('FAIL Android-build isolation:',String(e));process.exitCode=1;}finally{await browser.close();await new Promise(r=>server.close(r));}
+}catch(e){console.error('FAIL Android-build isolation:',e?.stack||String(e));process.exitCode=1;}finally{await browser.close();await new Promise(r=>server.close(r));}
