@@ -1,7 +1,7 @@
 // Only synthetic data; localhost here is a secure-context browser test, not a physical Android test.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {readFile} from 'node:fs/promises';
+import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
@@ -15,6 +15,7 @@ const server=createServer(async(req,res)=>{try{
 }catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}:{} )});
+const shotDir=resolve(process.env.TEST_OUTPUT||'test-results');await mkdir(shotDir,{recursive:true});
 let passed=0;
 try{
  const ctx=await browser.newContext({viewport:{width:320,height:640},isMobile:true,hasTouch:true,reducedMotion:'reduce',serviceWorkers:'allow'});
@@ -58,6 +59,49 @@ try{
  await ctx.setOffline(true);await p.reload();await p.waitForFunction(()=>!!PlanSync);assert.equal(await p.title(),'Заклятие Кошмара · ТЕСТ');
  console.log('PASS separate manifest and scoped service worker caches coexist');passed++;
  await ctx.close();
+ // Exercise the exact isolated release bundle, not an instrumented production page.
+ for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]])for(const populated of [false,true]){
+  const mobile=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,reducedMotion:'reduce',serviceWorkers:'block'});
+  const day=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Moscow'}),seed={};
+  if(populated){seed['cfg/opening']={cash:5000,card:10000};seed['tx/test-wheel']={amt:125.5,kind:'out',acc:'cash',cat:'Продукты',what:'Тестовая операция',date:day,ts:1,counted:true};}
+  await mobile.addInitScript(seed=>{localStorage.setItem('plan.android-test.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));},seed);
+  await mobile.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));
+  const t=await mobile.newPage();t.on('pageerror',e=>errors.push(String(e)));await t.goto(url+'/android-test/');
+  await t.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
+  await t.evaluate(()=>{for(const id of ['achup','lvup','setup','trophy'])document.getElementById(id).hidden=true;});
+  await t.evaluate(()=>PlanSync.beforeUpdate());
+  const financial=()=>t.evaluate(()=>Object.fromEntries(Object.entries(PlanSync._docs()).filter(([k])=>k==='cfg/opening'||k==='cfg/abyss-economy'||k.startsWith('tx/')||k.startsWith('buys/'))));
+  const before=await financial(),version=(await readFile('src/version.txt','utf8')).trim();
+  assert.equal(await t.evaluate(()=>APP_VERSION),version);assert.equal(await t.evaluate(()=>PLAN_CONFIG.cloudEnabled),false);
+  if(!(await t.locator('.citadel-shell-nav').isVisible())){if(await t.locator('.citadel-shell-menu-toggle').isVisible())await t.locator('.citadel-shell-menu-toggle').click();else await t.locator('.citadel-shell-dock button').last().click();}
+  await t.locator('.citadel-shell-nav [data-section="money"]').click();
+  for(const id of ['wheel','spend','money','avito','wheel']){
+   await t.locator('[data-finance="'+id+'"]').click();
+   assert.equal(await t.locator('.citadel-finance-nav [aria-selected="true"]').getAttribute('data-finance'),id);
+   assert(await t.locator('.citadel-finance-nav button').evaluateAll(ns=>ns.every(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().height>=44)));
+   assert(await t.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
+  }
+  assert.equal(await t.locator('#donutwrap').isVisible(),populated);
+  if(populated)assert.match(await t.locator('#dc-sum').innerText(),/126/);else assert(await t.locator('.finance-empty').isVisible());
+  if(width===390)await t.screenshot({path:resolve(shotDir,'android-069-test-wheel-'+(populated?'filled':'empty')+'-390.png')});
+  await t.locator('.citadel-system-dialog header button').click();
+  const camera=t.locator('.citadel-shell-camera');await camera.getByRole('button',{name:'Общий вид',exact:true}).click();
+  await t.locator('[data-croom="study"]').click();await t.locator('#citadel-interior').waitFor({state:'visible'});
+  await t.locator('[data-room-view="overview"]').click();
+  await camera.getByRole('button',{name:'+',exact:true}).click();
+  for(let repeat=0;repeat<3;repeat++){
+   await camera.getByRole('button',{name:'К комнате',exact:true}).click();
+   assert(await t.locator('.citadel-viewport').evaluate(v=>{const r=document.querySelector('[data-croom="study"]').getBoundingClientRect(),b=v.getBoundingClientRect();let ancestors=true;for(let n=v.parentElement;n;n=n.parentElement)if(n.scrollLeft!==0||n.scrollTop!==0)ancestors=false;return ancestors&&r.right>b.left&&r.left<b.right&&r.bottom>b.top&&r.top<b.bottom;}));
+  }
+  if(width===390&&!populated)await t.screenshot({path:resolve(shotDir,'android-069-test-room-focus-390.png')});
+  await camera.getByRole('button',{name:'Общий вид',exact:true}).click();
+  assert(await t.locator('.citadel-viewport').evaluate(v=>v.scrollLeft===0&&v.scrollTop===0&&document.querySelector('#citadel-castle').getBoundingClientRect().width<=v.clientWidth+1));
+  if(width===390&&!populated)await t.screenshot({path:resolve(shotDir,'android-069-test-overview-390.png')});
+  assert(await t.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  assert.deepEqual(await financial(),before);assert.equal(await t.evaluate(()=>localStorage.getItem('plan.store.v1')),null);
+  await mobile.close();
+ }
+ console.log('PASS isolated mobile wheel navigation and camera at 320, 360, 390, 430 and landscape preserve synthetic finances and economy');passed++;
  // Defense in depth against accidentally enabling the production client or wrong origin.
  const fakeOrigin='https://android-isolation.invalid';
  for(const cfg of [
