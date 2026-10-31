@@ -69,8 +69,8 @@ for y in range(0, 128, 64):
         xx = 3 + rise * 2
         yy = y + step * 4
         if xx > 19: xx = 19
-        bits += [rect(4, yy, 16, 4, '#252839'),
-                 rect(xx, yy, 19-xx, 2, '#8e8796'),
+        bits += [rect(xx, yy, 20-xx, 4, '#292b3c'),
+                 rect(xx, yy, 20-xx, 2, '#8e8796'),
                  rect(xx+1, yy+2, 18-xx, 1, '#54566b'),
                  rect(xx, yy+3, 19-xx, 1, '#242637')]
         if step % 2 == 0:

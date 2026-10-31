@@ -115,10 +115,13 @@ def room_detail(room, tier):
         for xx in (366, 380, 394):
             pieces.append(path(f'M{xx} 67v35h3V67z', metal))
     elif room == 'gatehouse':
-        for xx in range(166, 321, 18):
-            pieces += [rect(xx, 49, 4, 108, metal, '.8'), rect(xx-3, 95, 10, 3, shadow)]
-        pieces += [path('M149 47h180v8H149zM149 151h180v5H149z', shadow),
-                   rect(225, 76, 31, 34, fabric), emblem(232, 81, light)]
+        # Keep the original portcullis visible; reinforce its joints instead
+        # of drawing a second oversized grid over the gate and armour.
+        for xx in range(172, 314, 21):
+            pieces += [rect(xx, 93, 3, 3, metal, '.75'),
+                       rect(xx+1, 95, 1, 2, shadow)]
+        pieces += [path('M149 47h180v2H149zM149 151h180v2H149z', metal, '.7'),
+                   rect(225, 76, 31, 2, fabric), emblem(232, 81, light)]
         if tier > 0:
             for xx in (124, 342): pieces += [rect(xx, 143, 24, 4, metal), rect(xx+5, 148, 4, 22, metal)]
     elif room == 'refectory':
@@ -131,8 +134,10 @@ def room_detail(room, tier):
         for xx in (210, 234, 258): pieces.append(rect(xx, 76, 3, 8, light))
     elif room == 'cloister':
         for xx in (65, 139, 324, 395):
-            pieces += [rect(xx, 47, 6, 113, metal, '.7'), rect(xx-7, 44, 20, 5, metal),
-                       rect(xx-9, 159, 24, 5, shadow)]
+            pieces += [rect(xx-7, 44, 20, 2, metal),
+                       rect(xx-9, 159, 24, 2, shadow),
+                       rect(xx+2, 74, 2, 7, '#526955' if tier else '#434e50'),
+                       rect(xx-1, 78, 3, 3, '#709067' if tier else '#55655e')]
         pieces += [path('M207 156h66v2h-66zM219 161h42v2h-42z', metal),
                    rect(237, 137, 5, 21, '#6d93a3' if tier else '#595e71')]
         for i in range(15):
