@@ -116,7 +116,11 @@ try {
   await p.locator('[data-croom="rest"]').click();
   assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'1');
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-abandoned-390.png')});
-  await p.locator('[data-art-view="upgrades"]').click();
+  // The shell hides the classic art navigation. Use the same room drawer as a player.
+  assert(!(await p.locator('[data-art-view="upgrades"]').isVisible()));
+  await p.locator('.citadel-shell-tail.right').click();
+  await p.locator('.citadel-shell-drawer.right button').getByText('Улучшить',{exact:true}).click();
+  assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'upgrades');
   assert(await p.locator('#citadel-upgrade').isVisible(),'upgrade panel must open from the room');
   assert(await p.locator('#citadel-upgrade').isEnabled(),await p.locator('#citadel-building-next').innerText()+' '+await p.locator('#citadel-building-balance').innerText());
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
