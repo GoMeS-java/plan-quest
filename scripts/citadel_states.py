@@ -127,13 +127,13 @@ style = Path('src/citadel-art.css')
 marker = '\n/* Generated room-specific pixel layers: scripts/citadel_states.py */\n'
 original = style.read_text(encoding='utf-8').split(marker)[0]
 rules = [
-    '.citadel-shell .citadel-room[data-room-level="1"]:after{background:var(--scene-art) center/100% 100%,url("assets/citadel/abandoned.svg") center/100% 100%!important}',
-    '.citadel-shell .citadel-room[data-room-level="2"]:after,.citadel-shell .citadel-room[data-room-level="3"]:after{background:var(--scene-art) center/100% 100%,var(--renovation) center/100% 100%!important}',
-    '.citadel-shell .citadel-interior-stage[data-level="1"]:after{background:var(--scene-art) center/100% 100%,url("assets/citadel/abandoned.svg") center/100% 100%,linear-gradient(transparent 55%,#090b17a8)}',
-    '.citadel-shell .citadel-interior-stage[data-level="2"] .citadel-interior-renovation,.citadel-shell .citadel-interior-stage[data-level="3"] .citadel-interior-renovation{background:var(--scene-art) center/100% 100%,var(--renovation) center/100% 100%!important}',
+    '.citadel-room[data-room-level="1"]:after{background:var(--scene-art) center/100% 100%,url("assets/citadel/abandoned.svg") center/100% 100%!important}',
+    '.citadel-room[data-room-level="2"]:after,.citadel-room[data-room-level="3"]:after{background:var(--scene-art) center/100% 100%,var(--renovation) center/100% 100%!important}',
+    '.citadel-interior-stage[data-level="1"]:after{background:var(--scene-art) center/100% 100%,url("assets/citadel/abandoned.svg") center/100% 100%,linear-gradient(transparent 55%,#090b17a8)}',
+    '.citadel-interior-stage[data-level="2"] .citadel-interior-renovation,.citadel-interior-stage[data-level="3"] .citadel-interior-renovation{background:var(--scene-art) center/100% 100%,var(--renovation) center/100% 100%!important}',
 ]
 for room in ROOMS:
     for tier in range(3):
         level = tier + 1
-        rules.append(f'.citadel-shell [data-croom="{room}"][data-room-level="{level}"],.citadel-shell .citadel-interior-stage[data-room="{room}"][data-level="{level}"]{{--scene-art:url("assets/citadel/{room}-scene{tier}.svg")}}')
+        rules.append(f'[data-croom="{room}"][data-room-level="{level}"],.citadel-interior-stage[data-room="{room}"][data-level="{level}"]{{--scene-art:url("assets/citadel/{room}-scene{tier}.svg")}}')
 style.write_text(original + marker + '\n'.join(rules) + '\n', encoding='utf-8')
