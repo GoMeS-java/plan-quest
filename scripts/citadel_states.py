@@ -204,41 +204,13 @@ def stage(room, tier):
         art.append('</g>')
     elif tier == 1:
         # Repaired floors, practical objects and a restrained color accent for each profession.
-        art.extend((rect(68, 180, 342, 4, '#74677c', '.8'),
-                    rect(120, 184, 230, 3, '#966f6b', '.7')))
-        restored = {
-            'throne': rect(200, 149, 80, 12, '#6d3a5e') + rect(227, 143, 27, 5, GOLD) + torch(180, 112),
-            'observatory': path('M286 120h36v5h-36zM294 125h4v40h-4zM316 125h4v40h-4z', GOLD) + rect(338, 145, 44, 5, '#667794'),
-            'rest': rect(149, 151, 118, 12, '#77506c') + rect(153, 145, 35, 8, '#e3d3ba') + rect(109, 167, 28, 5, GOLD),
-            'study': rect(210, 122, 103, 5, '#aa8867') + rect(238, 116, 31, 7, '#ddd1b2') + rect(292, 106, 5, 16, '#b99964'),
-            'archive': rect(121, 99, 42, 5, GOLD) + rect(132, 84, 4, 15, '#c48570') + rect(141, 86, 6, 13, '#7f86a3') + rect(250, 158, 78, 5, '#795d53'),
-            'forge': rect(176, 126, 95, 36, '#803e2c', '.6') + rect(214, 140, 45, 16, '#ce7441') + rect(315, 150, 41, 6, '#8b8a91'),
-            'gatehouse': rect(162, 48, 5, 102, '#8d8298') + rect(308, 48, 5, 102, '#8d8298') + path('M357 108h5v46h-5zM347 127h25v5h-25z', GOLD),
-            'refectory': rect(118, 132, 242, 8, '#895c46') + rect(196, 125, 30, 7, '#c1a06c') + rect(297, 125, 24, 7, '#e8d3a9'),
-            'cloister': path('M78 149h31v29H78zM303 154h57v27h-57z', '#31534b') + rect(169, 167, 137, 4, '#6e8a66') + rect(228, 151, 6, 16, '#7e9e72'),
-            'vault': rect(130, 137, 52, 27, '#73523d') + rect(137, 140, 38, 5, GOLD) + rect(301, 139, 50, 22, '#6c5360'),
-        }
-        art.append(restored[room])
+        # The room-specific furniture is drawn by room_detail below; the
+        # legacy block silhouettes would conceal the detailed base artwork.
         for x in (35, 435):
             art.append(torch(x, 110))
     else:
         # Purchased grandeur adds a room-specific focal piece and stronger architecture.
-        art.extend((path('M42 25h23v4H42zM415 25h23v4h-23z', GOLD),
-                    rect(110, 179, 260, 4, '#b08267'),
-                    rect(180, 185, 120, 4, '#6b326a')))
-        grand = {
-            'throne': emblem(230, 83, GOLD) + rect(185, 151, 110, 15, '#8c396e') + rect(230, 148, 25, 3, '#f3d9a0'),
-            'observatory': path('M194 47h65v4h-65zM225 37h4v23h-4zM293 110h43v4h-43z', GOLD) + emblem(352, 71, PURPLE),
-            'rest': path('M103 44h177v5H103zM103 49h5v54h-5zM275 49h5v54h-5z', GOLD) + rect(157, 155, 105, 9, '#b34d79') + emblem(300, 39, GOLD),
-            'study': path('M207 114h107v4H207zM207 117h4v42h-4zM310 117h4v42h-4z', GOLD) + emblem(367, 39, PURPLE),
-            'archive': path('M21 54h58v4H21zM401 55h58v4h-58z', GOLD) + rect(219, 141, 49, 5, '#b48758') + emblem(230, 54, PURPLE),
-            'forge': path('M169 105h112v5H169zM166 110h6v61h-6zM278 110h6v61h-6z', GOLD) + rect(209, 130, 51, 23, '#b55b41') + emblem(366, 58, PURPLE),
-            'gatehouse': path('M146 53h7v101h-7zM326 53h7v101h-7zM146 53h187v5H146z', GOLD) + emblem(244, 77, PURPLE),
-            'refectory': path('M111 125h256v5H111zM129 129h5v44h-5zM343 129h5v44h-5z', GOLD) + emblem(231, 40, GOLD),
-            'cloister': path('M86 155h24v24H86zM306 154h50v26h-50z', '#56947b') + rect(174, 163, 128, 4, GOLD) + emblem(230, 52, PURPLE),
-            'vault': path('M126 131h61v4h-61zM126 135h5v39h-5zM182 135h5v39h-5z', GOLD) + emblem(241, 50, PURPLE) + rect(301, 152, 52, 6, '#b68c57'),
-        }
-        art.append(grand[room])
+        # Grand accents are in room_detail and the restrained upgrade3 layer.
         for x in (43, 427):
             art.append(torch(x, 99))
     art.append(room_detail(room, tier))
