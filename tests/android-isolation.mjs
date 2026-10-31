@@ -68,11 +68,11 @@ try{
  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),production);await ctx.setOffline(false);await p.evaluate(()=>PlanSync.sync(true));
  assert(!requests.some(u=>u.includes('accounts.google.com')||u.includes('sheets.googleapis.com')||u.includes('/drive/')));
  console.log('PASS isolated PWA offline write, reload, JSON restore and reconnect preserve production sentinel');passed++;
- const manifest=JSON.parse(await readFile('android-test/manifest.json','utf8'));assert.equal(manifest.short_name,'Кошмар ТЕСТ');assert.equal(manifest.id,'./android-test');
+ const manifest=JSON.parse(await readFile('android-test/manifest.json','utf8'));assert.equal(manifest.short_name,'Вкач ТЕСТ');assert.equal(manifest.id,'./android-test');
  // Activate another scoped worker; it must not remove the first app shell cache.
  const before=await p.evaluate(()=>caches.keys());const q=await ctx.newPage();await q.goto(url+'/docs/');await q.evaluate(()=>navigator.serviceWorker.ready);await q.waitForFunction(()=>!!navigator.serviceWorker.controller);
  const after=await p.evaluate(()=>caches.keys());for(const name of before)assert(after.includes(name),'another scope removed '+name);
- await ctx.setOffline(true);await p.reload();await p.waitForFunction(()=>!!PlanSync);assert.equal(await p.title(),'Заклятие Кошмара · ТЕСТ');
+ await ctx.setOffline(true);await p.reload();await p.waitForFunction(()=>!!PlanSync);assert.equal(await p.title(),'Вкач · ТЕСТ');
  console.log('PASS separate manifest and scoped service worker caches coexist');passed++;
  await ctx.close();
  // Exercise the exact isolated release bundle, not an instrumented production page.
