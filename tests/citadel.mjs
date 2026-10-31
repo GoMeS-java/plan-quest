@@ -61,6 +61,8 @@ try {
   const target=await p.locator('[data-croom="forge"]').evaluate(n=>{const r=n.getBoundingClientRect(),x=Math.round(r.left+r.width/2),y=Math.round(r.top+r.height/2);return {x,y,visible:document.elementFromPoint(x,y)?.closest('[data-croom="forge"]')===n,room:[r.left,r.top,r.right,r.bottom],viewport:[innerWidth,innerHeight]};});
   assert(target.visible,'landscape camera must expose selected room: '+JSON.stringify(target));
   await p.touchscreen.tap(target.x,target.y);
+  await p.waitForFunction(()=>document.querySelector('[data-croom="forge"]').getAttribute('aria-pressed')==='true');
+  await p.touchscreen.tap(target.x,target.y);
   assert(await p.locator('#citadel-interior').isVisible());
   await p.screenshot({path:resolve(out,'graphics-landscape-forge-844x390.png')});
   await context.close();
