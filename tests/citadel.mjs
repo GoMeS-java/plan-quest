@@ -111,11 +111,15 @@ try {
   assert(await fresh.page.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n,'::before').backgroundImage.includes('stone.svg')));
   await fresh.page.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-study-abandoned-390.png')});
   await fresh.context.close();
-  const {page:p,context}=await open({width:390,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  for(const [width,height] of [[320,844],[360,844],[390,844],[430,844],[844,390]]){
+  const {page:p,context}=await open({width,height,mobile:true,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  const original=await docs(p);
+  const balance=()=>p.evaluate(()=>{const d=PlanSync._docs();return d['cfg/abyss-economy'].d.earned-Object.entries(d).reduce((sum,[key,v])=>sum+(key.startsWith('buys/')&&v.d.currency==='abyss'?v.d.cost:0),0);});
+  const essence=await balance();
   assert((await p.evaluate(()=>__qa.S.buys)).length===0);
   await p.locator('[data-croom="rest"]').click();
   assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'1');
-  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-abandoned-390.png')});
+  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-abandoned-'+width+'x'+height+'.png')});
   // The shell hides the classic art navigation. Use the same room drawer as a player.
   assert(!(await p.locator('[data-art-view="upgrades"]').isVisible()));
   await p.locator('.citadel-shell-tail.right').click();
@@ -124,13 +128,25 @@ try {
   assert(await p.locator('#citadel-upgrade').isVisible(),'upgrade panel must open from the room');
   assert(await p.locator('#citadel-upgrade').isEnabled(),await p.locator('#citadel-building-next').innerText()+' '+await p.locator('#citadel-building-balance').innerText());
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
-  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-restored-390.png')});
+  assert.equal(await balance(),essence-5);
+  const paidOnce=await docs(p);
+  await p.evaluate(()=>{__qa.upgrade('rest',1);__qa.upgrade('rest',1);return __qa.idle();});
+  assert.deepEqual(await docs(p),paidOnce,'stale repeated purchase must not write or charge');
+  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-restored-'+width+'x'+height+'.png')});
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='3');
-  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-grand-390.png')});
+  assert.equal(await balance(),essence-17);
+  assert(await p.locator('#citadel-upgrade').isDisabled());
+  const completed=await docs(p);
+  for(const [key,value] of Object.entries(original))assert.deepEqual(completed[key],value,'shell renovation modified '+key);
+  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-grand-'+width+'x'+height+'.png')});
   await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&document.querySelector('[data-croom="rest"]').dataset.roomLevel==='3');
   assert.equal(await p.evaluate(()=>__qa.roomLevel('rest')),3);
   assert.equal(await p.evaluate(()=>__qa.roomLevel('study')),1);
+  assert.equal(await balance(),essence-17);
+  const reloaded=await docs(p);
+  for(const [key,value] of Object.entries(completed))assert.deepEqual(reloaded[key],value,'reload modified '+key);
   await context.close();
+  }
  });
  await check('graphics assets, renovation layers, live mobile RPG views and animation lifecycle',async()=>{
   const images=['sky','throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'];
