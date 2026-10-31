@@ -8,6 +8,7 @@ import {resolve, extname} from 'node:path';
 const require = createRequire(import.meta.url);
 const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
+const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
 const expose = `window.__qa={S:S,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
@@ -551,9 +552,9 @@ try {
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.57');
   await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);
   const before=await docs(p);servedOverrides.clear();await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
-  await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();await p.waitForFunction(()=>window.APP_VERSION==='0.60');await p.waitForLoadState('load');await p.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated');await castle(p);
+  await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();await p.waitForFunction(v=>window.APP_VERSION===v,currentVersion);await p.waitForLoadState('load');await p.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated');await castle(p);
   const migrated=await docs(p);for(const [key,value]of Object.entries(before))if(key!=='cfg/abyss-economy')assert.deepEqual(migrated[key],value,'update must preserve '+key);assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
-  await p.clock.runFor(1000);await context.setOffline(true);await p.reload();await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.60');for(const [key,value]of Object.entries(before))if(key!=='cfg/abyss-economy')assert.deepEqual((await docs(p))[key],value);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
+  await p.clock.runFor(1000);await context.setOffline(true);await p.reload();await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),currentVersion);for(const [key,value]of Object.entries(before))if(key!=='cfg/abyss-economy')assert.deepEqual((await docs(p))[key],value);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
  });
  await check('production PWA construction offline survives reload with one durable payment',async()=>{
   const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(15000);
