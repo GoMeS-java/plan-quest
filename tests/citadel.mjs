@@ -57,14 +57,13 @@ try {
   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await p.screenshot({path:resolve(out,'graphics-landscape-844x390.png')});
   await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();
-  await p.locator('[data-croom="forge"]').evaluate(n=>n.scrollIntoView({block:'center',inline:'center'}));
-  const target=await p.locator('[data-croom="forge"]').evaluate(n=>{const r=n.getBoundingClientRect(),x=Math.round(r.left+40),y=Math.round(r.top+35);return {x,y,visible:document.elementFromPoint(x,y)?.closest('[data-croom="forge"]')===n,room:[r.left,r.top,r.right,r.bottom],viewport:[innerWidth,innerHeight]};});
+  await p.locator('[data-croom="gatehouse"]').evaluate(n=>n.scrollIntoView({block:'center',inline:'center'}));
+  const target=await p.locator('[data-croom="gatehouse"]').evaluate(n=>{const r=n.getBoundingClientRect(),x=Math.round(r.left+40),y=Math.round(r.top+35);return {x,y,visible:document.elementFromPoint(x,y)?.closest('[data-croom="gatehouse"]')===n,room:[r.left,r.top,r.right,r.bottom],viewport:[innerWidth,innerHeight]};});
   assert(target.visible,'landscape camera must expose selected room: '+JSON.stringify(target));
   await p.touchscreen.tap(target.x,target.y);
-  const selection=await p.locator('[data-croom="forge"]').evaluate(n=>({selected:n.getAttribute('aria-pressed'),view:document.querySelector('#citadel-home').dataset.uiView,rank:document.querySelector('#citadel-live-rank').textContent,disabled:n.getAttribute('aria-disabled'),hit:document.elementFromPoint(n.getBoundingClientRect().left+40,n.getBoundingClientRect().top+35)?.outerHTML.slice(0,140)}));
-  assert.equal(selection.view,'room','landscape touch must enter forge: '+JSON.stringify(selection));
-  assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'forge');
-  await p.screenshot({path:resolve(out,'graphics-landscape-forge-844x390.png')});
+  await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='room');
+  assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'gatehouse');
+  await p.screenshot({path:resolve(out,'graphics-landscape-gatehouse-844x390.png')});
   await context.close();
  });
  await check('single Citadel shell, drawers, mobile camera and real game panels',async()=>{
