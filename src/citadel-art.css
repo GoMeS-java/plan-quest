@@ -176,9 +176,9 @@ body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel
  .citadel-shell .citadel-shell-tail,.citadel-shell .citadel-shell-shade{display:none!important}
  .citadel-shell .citadel-shell-camera{right:265px}
 }
-.citadel-shell-header #plslot{flex:none;display:flex;align-items:center;max-width:88px}
+.citadel-shell-nav #plslot{flex:none;display:flex;align-items:center;max-width:88px}
 .citadel-shell-header .pl-chip{min-height:40px}
-@media(max-width:600px){.citadel-shell-header #plslot{max-width:54px}.citadel-shell-header .pl-chip{font-size:8px;padding:4px}}
+@media(max-width:600px){.citadel-shell-nav #plslot{max-width:none}.citadel-shell-nav .pl-chip{font-size:9px;padding:4px}}
 .citadel-shell .citadel-shell-header{background:linear-gradient(180deg,#29263b 0 3px,#131222 3px 75%,#090b18);border-bottom:3px solid #786783;box-shadow:inset 0 -1px #c69c79,0 4px 0 #090a15;font-family:Georgia,serif}
 .citadel-shell-title{color:#e6bee5;text-shadow:1px 1px #080710,0 0 7px #8a5089;letter-spacing:1.7px}
 .citadel-shell-nav button,.citadel-shell-menu-toggle,.citadel-shell-dock button{position:relative;border:2px solid #51465f;background:linear-gradient(180deg,#393047 0 3px,#231d33 3px 80%,#151322);box-shadow:inset 1px 1px #9a788c,inset -2px -2px #0b0a17;color:#e9d9e7;font-family:Georgia,serif;text-shadow:1px 1px #0b0915;transition:background-color .15s,border-color .15s}
@@ -225,7 +225,7 @@ body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel
 .citadel-shell .citadel-room[data-room-level="1"]{box-shadow:inset 0 0 25px #03050bc9!important}
 @media(prefers-reduced-motion:reduce){.citadel-shell .citadel-sky:before{animation:none}}
 @media(max-width:699px){
- .citadel-shell-header #plslot{flex:0 0 auto;max-width:48px;overflow:hidden}
+ .citadel-shell-nav #plslot{grid-column:1/-1;max-width:none;justify-content:center}
  .citadel-shell .citadel-shell-camera{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:116px;max-width:calc(100vw - 16px);right:7px;top:calc(58px + env(safe-area-inset-top));box-sizing:border-box}
  .citadel-shell-camera button{min-width:0;min-height:34px;white-space:normal;line-height:1.1;padding:2px}
 }

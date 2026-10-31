@@ -74,7 +74,9 @@ try {
    assert(await p.locator('#citadel-castle').isVisible());assert(!(await p.locator('.stage').isVisible()));
    assert.equal(await p.locator('[data-croom]').count(),10);
    assert.match(await p.locator('.citadel-shell-drawer.left').innerText(),/Ранг 24/);
-   assert(await p.locator('.citadel-shell-header .pl-chip').isVisible());await p.locator('.citadel-shell-header .pl-chip').click();assert(await p.locator('.pl-menu').isVisible());await p.locator('.pl-menu').getByRole('button',{name:'ЗАКРЫТЬ',exact:true}).click();
+   if(width<700)await p.locator('.citadel-shell-menu-toggle').click();
+   assert(await p.locator('.citadel-shell-nav .pl-chip').isVisible());await p.locator('.citadel-shell-nav .pl-chip').click();assert(await p.locator('.pl-menu').isVisible());await p.locator('.pl-menu').getByRole('button',{name:'ЗАКРЫТЬ',exact:true}).click();
+   if(width<700)await p.locator('.citadel-shell-menu-toggle').click();
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    if(width===390){await p.locator('.citadel-shell-dock button').last().click();assert.equal(await p.locator('.citadel-shell-menu-toggle').getAttribute('aria-expanded'),'true');await p.screenshot({path:resolve(out,'shell-menu-390.png')});await p.locator('.citadel-shell-menu-toggle').click();}
    if(width<1050){await p.locator('.citadel-shell-tail.left').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');

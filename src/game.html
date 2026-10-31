@@ -4467,7 +4467,7 @@ function renderAllInner() {
     var viewport=document.createElement('div');viewport.className='citadel-viewport';inside.insertBefore(viewport,castle);viewport.appendChild(castle);
     var header=document.createElement('header');header.className='citadel-shell-header';
     var title=document.createElement('strong');title.className='citadel-shell-title';title.textContent='⚜ ЗАКЛЯТИЕ КОШМАРА';header.appendChild(title);
-    var nav=document.createElement('nav');nav.className='citadel-shell-nav';nav.id='citadel-shell-nav';nav.setAttribute('aria-label','Разделы игры');header.appendChild(nav);header.appendChild($('plslot'));home.insertBefore(header,inside);
+    var nav=document.createElement('nav');nav.className='citadel-shell-nav';nav.id='citadel-shell-nav';nav.setAttribute('aria-label','Разделы игры');header.appendChild(nav);home.insertBefore(header,inside);
     var menuButton=document.createElement('button');menuButton.type='button';menuButton.className='citadel-shell-menu-toggle';menuButton.textContent='РАЗДЕЛЫ';menuButton.setAttribute('aria-label','Открыть разделы игры');menuButton.setAttribute('aria-controls','citadel-shell-nav');menuButton.setAttribute('aria-expanded','false');header.insertBefore(menuButton,nav);
     function closeMenu(){home.dataset.menu='';menuButton.setAttribute('aria-expanded','false');}
     menuButton.onclick=function(){var open=home.dataset.menu==='open';home.dataset.menu=open?'':'open';menuButton.setAttribute('aria-expanded',open?'false':'true');};
@@ -4490,6 +4490,7 @@ function renderAllInner() {
     [['overview','Цитадель'],['wardrobe','Профиль'],['today','Задания'],['money','Финансы'],['shop','Воспоминания'],['diet','Тело'],['goals','Путь'],['achievements','Достижения'],['settings','Настройки']].forEach(function(entry){
       var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];b.onclick=function(){closeMenu();if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};nav.appendChild(b);
     });
+    nav.appendChild($('plslot'));
     var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Воспоминания']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});
     var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.onclick=function(){menuButton.click();};dock.appendChild(dockMenu);
