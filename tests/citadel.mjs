@@ -26,8 +26,8 @@ async function check(name,fn){if(process.env.TEST_FILTER&&!new RegExp(process.en
 const date='2026-10-30';
 const initial={'cfg/opening':{cash:1200.5,card:3400},'weights/test':{kg:143.7,date,ts:1},['days/'+date]:{q:[false,false,false,false,false,false,false,false,false,false],steps:1200,kcal:2100},'spont/old':{name:'Synthetic task',date,done:false,heavy:true,ts:1},'cfg/outfit':{outer:'none'}};
 // Computed keys are assigned separately to remain compatible with plain JavaScript.
-async function open({width=390,height=844,seed=initial,legacy={},base=false,day=date,sw=false,failUpgrade=false,shell=false}={}){
- const context=await browser.newContext({viewport:{width,height},isMobile:width<600,hasTouch:width<600,timezoneId:'Europe/Moscow',reducedMotion:'reduce',serviceWorkers:sw?'allow':'block'});
+async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={},base=false,day=date,sw=false,failUpgrade=false,shell=false}={}){
+ const context=await browser.newContext({viewport:{width,height},isMobile:mobile,hasTouch:mobile,timezoneId:'Europe/Moscow',reducedMotion:'reduce',serviceWorkers:sw?'allow':'block'});
  context.setDefaultTimeout(15000);
  const page=await context.newPage();page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('Failed to load resource'))errors.push(m.text());});
@@ -50,6 +50,18 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('landscape mobile castle keeps rooms and camera reachable',async()=>{
+  const {page:p,context}=await open({width:844,height:390,mobile:true,shell:true,seed:advancedSeed()});
+  assert(await p.locator('#citadel-castle').isVisible());
+  assert.equal(await p.locator('[data-croom]').count(),10);
+  assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await p.screenshot({path:resolve(out,'graphics-landscape-844x390.png')});
+  await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();
+  await p.locator('[data-croom="forge"]').click();
+  assert(await p.locator('#citadel-interior').isVisible());
+  await p.screenshot({path:resolve(out,'graphics-landscape-forge-844x390.png')});
+  await context.close();
+ });
  await check('single Citadel shell, drawers, mobile camera and real game panels',async()=>{
   for(const width of [320,360,390,430,768,1280]){
    const {page:p,context}=await open({width,shell:true,seed:advancedSeed(),day:'2027-04-16'});

@@ -77,7 +77,7 @@ def room_detail(room, tier):
             pieces += [path('M360 105h45v2h-45zM381 85h2v43h-2z', metal),
                        rect(384, 91, 5, 5, light)]
     elif room == 'rest':
-        pieces += [rect(151, 153, 111, 5, fabric), rect(155, 147, 36, 7, '#b1a2a1' if tier == 0 else '#e2d0b6'),
+        pieces += [rect(151, 153, 111, 2, fabric), rect(155, 147, 36, 3, '#b1a2a1' if tier == 0 else '#e2d0b6'),
                    rect(149, 165, 118, 3, metal), rect(112, 148, 24, 4, metal),
                    rect(115, 152, 4, 19, shadow), rect(131, 152, 4, 19, shadow)]
         for xx in (134, 260):
@@ -85,7 +85,7 @@ def room_detail(room, tier):
         for xx in range(163, 258, 17):
             pieces.append(rect(xx, 158, 7, 2, light, '.7'))
     elif room == 'study':
-        pieces += [rect(200, 128, 120, 6, metal), rect(211, 134, 5, 34, shadow),
+        pieces += [rect(200, 128, 120, 2, metal), rect(211, 134, 3, 34, shadow),
                    rect(303, 134, 5, 34, shadow), rect(234, 120, 41, 4, '#d0bea5'),
                    path('M244 111l3 8 2-8 4-6z', light), rect(272, 112, 3, 13, metal)]
         for i in range(13):
@@ -106,8 +106,8 @@ def room_detail(room, tier):
         pieces += [path('M158 114h128v2H158zM165 122h113v2H165z', metal, '.8'),
                    rect(188, 142, 68, 3, '#a95c39' if tier else '#59404a'),
                    rect(202, 135, 41, 5, light, '.8'),
-                   path('M307 146h38v6h-12v8h-16v-8h-10z', metal),
-                   rect(319, 160, 5, 25, shadow)]
+                   path('M307 146h38v2h-12v2h-16v-2h-10z', metal),
+                   rect(319, 160, 3, 25, shadow)]
         for i in range(13):
             xx = 187 + (i*19)%70
             yy = 133 + (i*13)%26
