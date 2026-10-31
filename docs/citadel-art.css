@@ -178,6 +178,36 @@ body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel
 .citadel-shell-header #plslot{flex:none;display:flex;align-items:center;max-width:88px}
 .citadel-shell-header .pl-chip{min-height:40px}
 @media(max-width:600px){.citadel-shell-header #plslot{max-width:54px}.citadel-shell-header .pl-chip{font-size:8px;padding:4px}}
+.citadel-shell .citadel-shell-header{background:linear-gradient(180deg,#29263b 0 3px,#131222 3px 75%,#090b18);border-bottom:3px solid #786783;box-shadow:inset 0 -1px #c69c79,0 4px 0 #090a15;font-family:Georgia,serif}
+.citadel-shell-title{color:#e6bee5;text-shadow:1px 1px #080710,0 0 7px #8a5089;letter-spacing:1.7px}
+.citadel-shell-nav button,.citadel-shell-menu-toggle,.citadel-shell-dock button{position:relative;border:2px solid #51465f;background:linear-gradient(180deg,#393047 0 3px,#231d33 3px 80%,#151322);box-shadow:inset 1px 1px #9a788c,inset -2px -2px #0b0a17;color:#e9d9e7;font-family:Georgia,serif;text-shadow:1px 1px #0b0915;transition:background-color .15s,border-color .15s}
+.citadel-shell-nav button:hover,.citadel-shell-menu-toggle:hover,.citadel-shell-dock button:hover{border-color:#c39a81;background:#403047}
+.citadel-shell-nav button:active,.citadel-shell-menu-toggle:active,.citadel-shell-dock button:active{transform:translateY(1px);box-shadow:inset 2px 2px #10101c}
+.citadel-shell-nav [data-section="overview"]{color:#f2c5e8;border-bottom-color:#b370af}
+.citadel-shell-menu-toggle,.citadel-shell-dock{display:none}
+.citadel-shell-drawer{background:linear-gradient(90deg,#262033 0 4px,#130f20 4px 100%);border:2px solid #796378;box-shadow:inset 3px 0 #9d7c87,0 0 24px #05030d}
+.citadel-shell-drawer h2,.citadel-system-dialog header strong{font-family:Georgia,serif;font-variant:small-caps;letter-spacing:1.5px;color:#e8c0dc;text-shadow:1px 2px #080711}
+.citadel-shell-drawer button,.citadel-system-dialog header button{border:1px solid #705771;background:linear-gradient(180deg,#37283d,#22192f);box-shadow:inset 1px 1px #9e7891,inset -1px -1px #090811;color:#f0ddef}
+.citadel-shell-drawer button:hover,.citadel-system-dialog header button:hover{border-color:#d2a985}
+.citadel-system-dialog{border:3px solid #877185;box-shadow:inset 0 0 0 2px #241b30,inset 0 0 0 4px #513c54,0 12px 40px #040309;background:#171322 url('assets/citadel/stone.svg') center/96px 24px;color:#f2dfec}
+.citadel-system-dialog header{background:linear-gradient(180deg,#38273d,#191423);border-bottom:2px solid #a17e87}
+@media(max-width:699px){
+ .citadel-shell .citadel-shell-header{min-height:48px;padding:env(safe-area-inset-top,0px) max(8px,env(safe-area-inset-right,0px)) 0 max(8px,env(safe-area-inset-left,0px));gap:6px}
+ .citadel-shell-title{font-size:clamp(11px,3.5vw,16px);line-height:1.1;max-width:none;flex:1;letter-spacing:.7px}
+ .citadel-shell-header #plslot{max-width:48px}
+ .citadel-shell-menu-toggle{display:block;flex:none;min-width:66px;min-height:42px;padding:5px;font-size:9px;cursor:pointer}
+ .citadel-shell-nav{display:none;position:absolute;left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right));bottom:calc(62px + env(safe-area-inset-bottom));z-index:24;max-height:min(58svh,360px);overflow:auto;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:10px;background:#130e20;border:3px solid #8b6d83;box-shadow:inset 0 0 0 2px #39283f,0 0 0 999vmax #05030b9c;box-sizing:border-box}
+ .citadel-shell[data-menu="open"] .citadel-shell-nav{display:grid}
+ .citadel-shell-nav button{min-height:48px;white-space:normal;font-size:10px;padding:5px 3px}
+ .citadel-shell-dock{position:absolute;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;left:0;right:0;bottom:0;z-index:23;min-height:56px;padding:4px max(3px,env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(3px,env(safe-area-inset-left));background:#120d1d;border-top:2px solid #a07c8d;box-sizing:border-box}
+ .citadel-shell-dock button{min-height:44px;padding:3px 1px;font-size:clamp(7px,2.3vw,10px);white-space:normal;overflow-wrap:anywhere;cursor:pointer}
+ .citadel-shell .citadel-viewport{padding-bottom:calc(56px + env(safe-area-inset-bottom));box-sizing:border-box}
+ .citadel-shell .citadel-shell-camera{right:7px;top:calc(58px + env(safe-area-inset-top));bottom:auto;gap:2px;padding:2px}
+ .citadel-shell-camera button{min-height:36px;padding:3px 5px;font-size:9px}
+ .citadel-shell-tail{top:44%;min-height:70px;width:26px;font-size:12px}
+ .citadel-shell-drawer{bottom:calc(56px + env(safe-area-inset-bottom));width:min(260px,74vw)}
+ .citadel-shell .citadel-inside>.citadel-interior{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+}
 @media(min-width:1050px){#citadel-home.citadel-shell .citadel-floor .citadel-room{height:clamp(80px,calc((100svh - 300px)/5),130px)}}
 .citadel-shell-meter{height:10px;border:1px solid #735083;background:#24172e;margin:-5px 0 14px;image-rendering:pixelated}.citadel-shell-meter i{display:block;height:100%;background:linear-gradient(90deg,#724395,#be82cf)}
 .citadel-shell .citadel-moon{display:block;right:31%;top:12px;width:36px;height:36px;border-radius:0;background:#dc89ac;clip-path:polygon(25% 0,75% 0,75% 8%,92% 8%,92% 25%,100% 25%,100% 75%,92% 75%,92% 92%,75% 92%,75% 100%,25% 100%,25% 92%,8% 92%,8% 75%,0 75%,0 25%,8% 25%,8% 8%,25% 8%);filter:drop-shadow(0 0 9px #ba6cba);opacity:.8}

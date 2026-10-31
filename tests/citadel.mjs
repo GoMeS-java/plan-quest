@@ -41,6 +41,7 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
 }
 async function dismiss(p){await p.evaluate(()=>{for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});}
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));}
+async function shellNav(p,label){if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=await claude.use('db');await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
 function advancedSeed(){
@@ -80,18 +81,18 @@ try {
    if(width===390){for(const [label,id] of [['Хроника','week'],['Траты','spend'],['Авито','avito']]){await p.locator('.citadel-shell-tail.left').click();await p.locator('.citadel-shell-drawer.left button').filter({hasText:label}).click();assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}}
    await p.locator('.citadel-shell-tail.right').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'right');
    if(width===390)await p.screenshot({path:resolve(out,'shell-right-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:5,y:100}});}
-   await p.locator('.citadel-shell-nav button').filter({hasText:'Задания'}).click();assert(await p.locator('.citadel-system-dialog').isVisible());assert(await p.locator('.citadel-system-dialog #qlist').isVisible());
+   await shellNav(p,'Задания');assert(await p.locator('.citadel-system-dialog').isVisible());assert(await p.locator('.citadel-system-dialog #qlist').isVisible());
    await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('#citadel-castle').isVisible());
-   for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}
-   if(width===390){await p.locator('.citadel-shell-nav button').filter({hasText:'Настройки'}).click();assert(await p.locator('#setup').isVisible());await p.locator('#setup-x').click();await p.locator('.citadel-shell-nav button').filter({hasText:'Достижения'}).click();assert(await p.locator('#trophy').isVisible());await p.locator('#trophy-x').click();}
+   for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}
+   if(width===390){await shellNav(p,'Настройки');assert(await p.locator('#setup').isVisible());await p.locator('#setup-x').click();await shellNav(p,'Достижения');assert(await p.locator('#trophy').isVisible());await p.locator('#trophy-x').click();}
    await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});if(width===390)await p.screenshot({path:resolve(out,'shell-room-390.png')});
-   await p.locator('.citadel-shell-nav button').filter({hasText:'Цитадель'}).click();assert(await p.locator('#citadel-castle').isVisible());
+   await shellNav(p,'Цитадель');assert(await p.locator('#citadel-castle').isVisible());
    await p.screenshot({path:resolve(out,'shell-game-'+width+'.png')});
    if(width===390){
     const pinch=await p.locator('.citadel-viewport').evaluate(n=>{const castle=document.querySelector('#citadel-castle'),before=castle.clientWidth,t=(id,x)=>new Touch({identifier:id,target:n,clientX:x,clientY:400}),send=(type,a,b)=>n.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,touches:[t(1,a),t(2,b)],targetTouches:[t(1,a),t(2,b)]}));send('touchstart',120,220);send('touchmove',70,270);n.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[],targetTouches:[]}));return {before,after:castle.clientWidth};});assert(pinch.after>pinch.before,'two-finger gesture must enlarge the castle');await p.clock.runFor(500);
     await p.locator('.citadel-shell-tail.left').click();await p.goBack();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
-    await p.locator('.citadel-shell-nav button').filter({hasText:'Задания'}).click();await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));
+    await shellNav(p,'Задания');await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));
     await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.goBack();assert(await p.locator('#citadel-castle').isVisible());
     await p.locator('.citadel-viewport').evaluate(n=>{n.scrollLeft=150;n.scrollTop=95;});await p.waitForTimeout(400);await p.reload();await p.waitForFunction(()=>!!window.__citadelShell);await p.waitForFunction(()=>document.querySelector('.citadel-viewport').scrollLeft>=100&&document.querySelector('.citadel-viewport').scrollTop>=75);
    }
