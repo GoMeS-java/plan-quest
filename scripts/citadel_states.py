@@ -36,6 +36,7 @@ def stage(room, tier):
     art = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200" shape-rendering="crispEdges">']
     if tier == 0:
         # Damage stays on the same architecture: debris, broken silhouettes and darkened fixtures.
+        art.append('<g opacity=".35">')
         art.extend((rect(0, 185, 480, 15, INK, '.38'),
                     path('M13 184h23v-8h13v8h20v5H13zM367 187h28v-9h19v9h18v5h-65z', STONE),
                     path('M24 11h15v3H24zM39 14h3v14h-3zM42 27h20v3H42zM435 18h25v3h-25zM435 21h3v15h-3z', DUST),
@@ -76,6 +77,7 @@ def stage(room, tier):
         art.append(ruins[room])
         for x, y in ((84, 87), (389, 105), (277, 69)):
             art.append(path(f'M{x} {y}h3v7h7v3h-7v7h-3z', '#777082', '.65'))
+        art.append('</g>')
     elif tier == 1:
         # Repaired floors, practical objects and a restrained color accent for each profession.
         art.extend((rect(68, 180, 342, 4, '#74677c', '.8'),

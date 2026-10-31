@@ -192,11 +192,11 @@ body.citadel-shell-active .app>.top,body.citadel-shell-active #pgsw,body.citadel
 .citadel-shell .citadel-room[data-room-level="1"]{box-shadow:inset 0 0 25px #03050bc9!important}
 @media(prefers-reduced-motion:reduce){.citadel-shell .citadel-sky:before{animation:none}}
 /* The purchased tier changes the same room instead of replacing its spatial layout. */
-.citadel-room[data-room-level="1"]:before{opacity:.73;filter:brightness(.59) saturate(.56)}
+.citadel-room[data-room-level="1"]:before{opacity:.83;filter:brightness(.72) saturate(.64)}
 .citadel-room[data-room-level="1"]:after{opacity:1}
 .citadel-room[data-room-level="2"]:before{opacity:.91;filter:brightness(.83) saturate(.85)}
 .citadel-room[data-room-level="3"]:before{opacity:1;filter:brightness(1.13) saturate(1.08)}
-.citadel-interior-stage[data-level="1"]:before{opacity:.75;filter:brightness(.64) saturate(.6)}
+.citadel-interior-stage[data-level="1"]:before{opacity:.84;filter:brightness(.74) saturate(.67)}
 .citadel-interior-stage[data-level="2"]:before{opacity:.94;filter:brightness(.9)}
 .citadel-interior-stage[data-level="3"]:before{filter:brightness(1.12) saturate(1.08)}
 
