@@ -76,6 +76,7 @@ try {
    assert.match(await p.locator('.citadel-shell-drawer.left').innerText(),/Ранг 24/);
    assert(await p.locator('.citadel-shell-header .pl-chip').isVisible());await p.locator('.citadel-shell-header .pl-chip').click();assert(await p.locator('.pl-menu').isVisible());await p.locator('.pl-menu').getByRole('button',{name:'ЗАКРЫТЬ',exact:true}).click();
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   if(width===390){await p.locator('.citadel-shell-dock button').last().click();assert.equal(await p.locator('.citadel-shell-menu-toggle').getAttribute('aria-expanded'),'true');await p.screenshot({path:resolve(out,'shell-menu-390.png')});await p.locator('.citadel-shell-menu-toggle').click();}
    if(width<1050){await p.locator('.citadel-shell-tail.left').click();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');
    if(width===390)await p.screenshot({path:resolve(out,'shell-left-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:width-5,y:100}});assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
    if(width===390){for(const [label,id] of [['Хроника','week'],['Траты','spend'],['Авито','avito']]){await p.locator('.citadel-shell-tail.left').click();await p.locator('.citadel-shell-drawer.left button').filter({hasText:label}).click();assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}}

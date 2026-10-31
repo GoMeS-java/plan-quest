@@ -23,25 +23,51 @@ def actor(name, colors):
                 rect(9, 20, 7, 1, glint), rect(9, 29, 8, 2, trim),
                 rect(11, 30, 3, 1, accent), rect(6, 33, 3, 2, '#1b1827'),
                 rect(16, 33, 3, 2, '#1b1827'),
-                rect(10, 11, 3, 1, '#f3d6b2'), rect(15, 11, 2, 1, '#d49c82')]
+                rect(10, 11, 3, 1, '#f3d6b2'), rect(15, 11, 2, 1, '#d49c82'),
+                rect(9, 9, 2, 1, '#302838'), rect(15, 9, 2, 1, '#302838'),
+                rect(13, 13, 2, 1, '#a97372'), rect(10, 15, 6, 1, '#b88679'),
+                rect(7, 6, 2, 3, '#443744'), rect(17, 5, 2, 4, '#292335'),
+                rect(8, 18, 2, 2, glint), rect(15, 18, 2, 2, trim),
+                rect(7, 26, 2, 2, '#252236'), rect(16, 26, 2, 2, '#252236'),
+                rect(8, 34, 2, 2, trim), rect(16, 34, 2, 2, trim)]
         if name == 'guardian':
             bits += [rect(4, 19, 2, 11, '#a6a7b5'), rect(5, 17, 3, 2, glint),
                      rect(16, 20, 4, 3, '#515775'), rect(17, 20, 2, 1, glint),
-                     rect(19 if work else 20, 18 if work else 17, 2, 14, '#9e907e')]
+                     rect(19 if work else 20, 18 if work else 17, 2, 14, '#9e907e'),
+                     rect(5, 15, 3, 3, '#4a496c'), rect(18, 16, 2, 3, '#b7b1b7'),
+                     rect(11, 23, 2, 4, '#a8a8b6'), rect(14, 23, 1, 4, '#3a3954'),
+                     rect(7, 2, 9, 1, '#48425d'), rect(11, 3, 3, 1, '#777087')]
+            if work: bits += [rect(20, 15 if i == 4 else 13, 2, 3, '#d1c3a8'),rect(19, 20, 2, 2, '#ecd2a1')]
         elif name == 'archivist':
             bits += [rect(5, 20, 2, 10, accent), rect(4, 28, 4, 2, trim),
                      rect(18, 23 if work else 26, 4, 5, '#c8b28f'),
-                     rect(19, 25 if work else 28, 2, 1, '#795f70')]
+                     rect(19, 25 if work else 28, 2, 1, '#795f70'),
+                     rect(4, 4, 3, 13, '#6c4b5f'), rect(6, 3, 7, 1, '#a77f7c'),
+                     rect(6, 18, 2, 11, '#a1849e'), rect(17, 18, 2, 9, '#4a3155'),
+                     rect(10, 23, 4, 1, '#c7a982'), rect(11, 24, 2, 2, '#f0d0a1')]
+            if work: bits += [rect(16, 23 if i == 4 else 21, 6, 2, '#e4cd9e'),rect(17, 22 if i == 4 else 20, 1, 2, '#795071')]
         elif name == 'smith':
             bits += [rect(8, 22, 9, 7, '#49312e'), rect(9, 23, 2, 4, '#b37a54'),
                      rect(19, 19 if work else 23, 2, 11, '#907f82'),
-                     rect(18, 19 if work else 22, 4, 2, '#c4b1a2')]
+                     rect(18, 19 if work else 22, 4, 2, '#c4b1a2'),
+                     rect(6, 16, 2, 10, '#765047'), rect(17, 18, 2, 9, '#9e6652'),
+                     rect(11, 19, 2, 8, '#b9876b'), rect(15, 19, 2, 8, '#5a382f'),
+                     rect(8, 28, 9, 2, '#aa7450'), rect(8, 3, 7, 1, '#644b47')]
+            if work: bits += [rect(18, 16 if i == 4 else 12, 4, 2, '#dac4a8'),rect(20, 15 if i == 4 else 11, 2, 2, '#e9aa60')]
         else:
             bits += [rect(8, 24, 9, 2, '#c1a05f'), rect(12, 25, 2, 2, '#f5db95'),
                      rect(19, 25 if work else 27, 3, 4, '#b79861'),
-                     rect(19, 26 if work else 28, 2, 1, '#f2d990')]
+                     rect(19, 26 if work else 28, 2, 1, '#f2d990'),
+                     rect(8, 1, 10, 2, '#35615d'), rect(10, 2, 5, 1, '#d1bb83'),
+                     rect(5, 18, 2, 10, '#386661'), rect(18, 18, 2, 9, '#9db5a0'),
+                     rect(10, 20, 2, 4, '#9da48a'), rect(15, 20, 2, 4, '#395c59'),
+                     rect(9, 28, 7, 2, '#dac380')]
+            if work: bits += [rect(19, 22 if i == 4 else 20, 3, 2, '#f5d990'),rect(18, 24 if i == 4 else 22, 2, 1, '#6d875f')]
         if moving:
-            bits += [rect(4, 37, 5, 1, '#4a4056'), rect(17, 37, 5, 1, '#4a4056')]
+            bits += [rect(4, 37, 5, 1, '#4a4056'), rect(17, 37, 5, 1, '#4a4056'),
+                     rect(3 if i == 2 else 5, 24, 2, 6, trim),
+                     rect(18 if i == 2 else 20, 27, 2, 5, accent),
+                     rect(5 if i == 2 else 15, 36, 5, 2, '#141522')]
         frames.append('<g data-polish="1">'+''.join(bits)+'</g>')
     pos = iter(frames)
     # The input sheets contain exactly six top-level frame groups.
