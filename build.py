@@ -17,14 +17,14 @@ g = open(f'{SRC}/game.html', encoding='utf-8').read()
 g = g.replace('__VER__', open(f'{SRC}/version.txt', encoding='utf-8').read().strip())
 art_assets = sorted(Path(SRC).glob('assets/citadel/*'))
 art_hash = hashlib.sha256(b''.join(p.read_bytes() for p in art_assets)).hexdigest()
-build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'citadel-world.js', 'sw.template.js', 'manifest.json', config_source]) + art_hash + open(f'{SRC}/citadel-art.css', encoding='utf-8').read() + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
+build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'citadel-world.js', 'sw.template.js', 'manifest.json', config_source]) + art_hash + open(f'{SRC}/citadel-art.css', encoding='utf-8').read() + open(f'{SRC}/rpg-ui.css', encoding='utf-8').read() + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
 g = g.replace('__BUILD__', build_id)
-i = g.index('<link rel="stylesheet" href="citadel-art.css">') + len('<link rel="stylesheet" href="citadel-art.css">')
+i = g.index('<link rel="stylesheet" href="rpg-ui.css">') + len('<link rel="stylesheet" href="rpg-ui.css">')
 head_part, body_part = g[:i], g[i:]
 head_part = head_part.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '')
 html = ('<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
-        '<meta name="theme-color" content="#1a1511">'
+        '<meta name="theme-color" content="#17121f">'
         '<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">'
         '<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">'
         '<link rel="apple-touch-icon" href="icon-192.png">'
@@ -37,7 +37,7 @@ if TEST:
     page = open(f'{DIST}/index.html', encoding='utf-8').read()
     page = re.sub(r'<title>.*?</title>', '<title>Заклятие Кошмара · ТЕСТ</title>', page, count=1)
     page = page.replace('Они доступны на всех твоих устройствах.', 'В тестовой версии они хранятся отдельно на этом устройстве; сохраняйте резервные копии.')
-    page = page.replace('<body>', '<body><div role="status" style="padding:10px;background:#422d0a;color:#fff;text-align:center;font:16px sans-serif">ТЕСТОВАЯ ВЕРСИЯ · Отдельные сохранения</div>', 1)
+    page = page.replace('<body>', '<body><div role="status" style="padding:6px;background:#30213d;color:#e7c7e9;text-align:center;font:12px sans-serif">ТЕСТОВАЯ ВЕРСИЯ · Отдельные сохранения</div>', 1)
     open(f'{DIST}/index.html', 'w', encoding='utf-8').write(page)
 
 # --- pixel-иконка
@@ -97,11 +97,12 @@ open(f'{DIST}/citadel.html', 'w', encoding='utf-8').write(citadel)
 
 # Original scenery and sprites are first-party offline shell assets.
 shutil.copy(f'{SRC}/citadel-art.css', f'{DIST}/citadel-art.css')
+shutil.copy(f'{SRC}/rpg-ui.css', f'{DIST}/rpg-ui.css')
 shutil.copytree(f'{SRC}/assets', f'{DIST}/assets')
 
 # --- sw.js с версией = хэш содержимого
 shell = ['./', 'index.html', 'manifest.json', 'config.js', 'localdb.js', 'citadel-world.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
-shell += ['citadel-art.css'] + ['assets/citadel/' + name for name in sorted(os.listdir(f'{SRC}/assets/citadel'))]
+shell += ['citadel-art.css', 'rpg-ui.css'] + ['assets/citadel/' + name for name in sorted(os.listdir(f'{SRC}/assets/citadel'))]
 h = hashlib.sha256()
 for f in sorted(set(shell) - {'./'}):
     h.update(open(f'{DIST}/{f}', 'rb').read())
