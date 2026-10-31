@@ -116,6 +116,9 @@ try {
   await p.locator('[data-croom="rest"]').click();
   assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'1');
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-abandoned-390.png')});
+  await p.locator('[data-art-view="upgrades"]').click();
+  assert(await p.locator('#citadel-upgrade').isVisible(),'upgrade panel must open from the room');
+  assert(await p.locator('#citadel-upgrade').isEnabled(),await p.locator('#citadel-building-next').innerText()+' '+await p.locator('#citadel-building-balance').innerText());
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-restored-390.png')});
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='3');
