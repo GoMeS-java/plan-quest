@@ -955,7 +955,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <div class="release-stamp"><b>Версия __VER__</b><span>Сборка __BUILD__</span></div>
-    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
+    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
@@ -1035,8 +1035,8 @@ html,body{overflow-anchor:none}
   var W = 32, H = 52;
   var g = new Array(W * H).fill(null);
   var C = {
-    hair: '#aa7048', hair2: '#6b4737', hair3: '#d49b62',
-    skin: '#d4ad96', skin2: '#a97c6f', blush: '#b88a7b',
+    hair: '#c88538', hair2: '#92532e', hair3: '#e5ac56',
+    skin: '#e2b99d', skin2: '#b8867b', blush: '#ce9385',
     eye: '#343444', mouth: '#845d5c',
     so: '#554536', so2: '#927b5b', out: '#15131f'
   };
@@ -1066,18 +1066,26 @@ html,body{overflow-anchor:none}
   ];
 
   function drawHead() {
-    // Smaller portrait, asymmetric hair and a calm face lit from upper left.
-    rect(12,3,19,4,C.hair);span(2,14,18,C.hair2);px(17,2,C.hair3);
-    rect(10,5,21,9,C.hair2);rect(11,4,20,7,C.hair);
-    span(4,12,18,C.hair3);span(5,11,15,C.hair3);px(19,6,C.hair3);
-    rect(11,8,20,12,C.skin);rect(10,9,10,11,C.skin2);rect(21,9,21,11,C.skin2);
-    span(8,11,13,C.hair2);px(14,8,C.hair);span(7,15,20,C.hair2);
-    span(9,12,13,C.hair2);span(9,18,19,C.hair2);
-    px(13,10,'#232231');px(18,10,'#232231');px(12,10,'#f3d9b7');px(17,10,'#f3d9b7');px(12,11,C.skin);px(19,11,C.skin2);
-    px(16,11,C.skin2);px(16,12,'#b78379');px(12,12,C.blush);
-    span(13,12,19,C.skin2);span(13,14,17,C.skin);span(14,13,18,C.skin2);
-    span(12,14,15,C.skin);span(13,15,16,C.mouth);rect(14,15,17,16,C.skin2);
-    px(20,10,'#936b65');px(19,12,'#b58c7a');px(11,9,'#edc9a8');px(14,12,'#e4bf9e');
+    px(12, 1, C.hair); px(15, 1, C.hair3); px(16, 1, C.hair); px(19, 1, C.hair);
+    span(2, 11, 20, C.hair);
+    span(3, 10, 21, C.hair); px(14, 3, C.hair3); px(15, 3, C.hair3); px(18, 3, C.hair2);
+    span(4, 9, 22, C.hair); px(12, 4, C.hair3); px(13, 4, C.hair3); px(17, 4, C.hair2);
+    span(5, 9, 22, C.hair); px(11, 5, C.hair2); px(20, 5, C.hair2);
+    span(6, 9, 22, C.hair);
+    span(7, 9, 22, C.hair); span(7, 13, 18, C.skin);
+    px(12, 7, C.hair2); px(19, 7, C.hair2); px(15, 7, C.hair); px(16, 7, C.hair);
+    span(8, 9, 11, C.hair); span(8, 12, 19, C.skin); span(8, 20, 22, C.hair);
+    span(9, 9, 10, C.hair); span(9, 11, 20, C.skin); span(9, 21, 22, C.hair);
+    span(9, 12, 14, C.hair2); span(9, 17, 19, C.hair2);
+    rect(10, 10, 21, 13, C.skin);
+    rect(9, 10, 9, 12, C.skin2); rect(22, 10, 22, 12, C.skin2);
+    span(10, 13, 14, C.eye); span(10, 17, 18, C.eye);
+    span(11, 13, 14, C.skin2); span(11, 17, 18, C.skin2);
+    px(15, 12, C.skin2); px(16, 12, C.skin2);
+    px(11, 12, C.blush); px(20, 12, C.blush);
+    span(13, 14, 17, C.mouth);
+    span(14, 11, 20, C.skin); px(11, 14, C.skin2); px(20, 14, C.skin2);
+    span(15, 13, 18, C.skin2);
   }
   function drawHands() {
     rect(2, 33, 5, 36, C.skin); rect(26, 33, 29, 36, C.skin);
@@ -3666,7 +3674,14 @@ function citadelSetDecor(room,id){var item=citadelDecorChoices.find(function(c){
 function citadelRenderDecor(){if(!loaded)return;var room=citadelSelected,rank=pointsInfo().L,selected=citadelGetDecor(room),item=citadelDecorChoices.find(function(c){return c.id===selected;});if(item&&rank<item.rank)selected='none';var decor=$('citadel-interior-decoration');if(decor)decor.dataset.decor=selected;var host=$('citadel-decor-options');if(!host)return;host.textContent='';citadelDecorChoices.forEach(function(choice){var button=document.createElement('button');button.type='button';button.disabled=rank<choice.rank;button.className='citadel-decor-option'+(choice.id===selected?' is-active':'');button.textContent=choice.name+(rank<choice.rank?' · ранг '+choice.rank:'');button.setAttribute('aria-pressed',choice.id===selected?'true':'false');button.addEventListener('click',function(){citadelSetDecor(room,choice.id);});host.appendChild(button);});$('citadel-decor-status').textContent='Оформление: '+(citadelDecorChoices.find(function(c){return c.id===selected;})||citadelDecorChoices[0]).name+'. Косметика без затрат и без влияния на прогресс.';}
 var citadelObjects={gatehouse:['Засов ворот','Кованые створки закрывают проход от холодного ветра. Дозорный проверяет их каждый день.'],refectory:['Длинный стол','К вечеру здесь собираются жители Цитадели.'],cloister:['Каменная арка','Под сводом растёт мох. Сквозь решётку падает свет внешнего двора.'],vault:['Книга казны','Ядра души общие со Воспоминаниями. Все расходы записаны в истории покупок.'],throne:['Древний трон','Камень помнит каждого, кто решался на нём сидеть.'],observatory:['Звёздная линза','Сквозь мутное стекло видны созвездия, которых нет на обычном небе.'],rest:['Старая кровать','Место, где даже кошмары ненадолго теряют власть.'],study:['Книга записей','На страницах отражается путь, который ты проходишь в реальности.'],archive:['Стеллаж воспоминаний','Время не трогает эти страницы.'],forge:['Горн','Угли ждут часа, когда мастерская пробудится.']};
 function citadelInspectObject(){if(!loaded||$('citadel-interior').hidden)return;var selected=document.querySelector('[data-croom="'+citadelSelected+'"]');if(selected&&pointsInfo().L<Number(selected.getAttribute('data-min-rank')||1))return;var item=citadelObjects[citadelSelected];if(item)$('citadel-object-status').textContent=item[0]+': '+item[1];}
-$('citadel-interior-object').addEventListener('click',citadelInspectObject);$('citadel-interior-object').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();citadelInspectObject();}});
+function citadelHeroReact(){
+ if(document.hidden||window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+ var sprite=$('citadel-interior-stage').querySelector('.citadel-hero-sprite');if(!sprite)return;
+ // A finite integer-pixel acknowledgement; no timer or save writes.
+ if(sprite._reaction)sprite._reaction.cancel();
+ sprite._reaction=sprite.animate([{translate:'0 0'},{translate:'0 -2px'},{translate:'0 0'}],{duration:320,easing:'steps(2,end)'});
+}
+$('citadel-interior-object').addEventListener('click',citadelInspectObject);$('citadel-interior-object').addEventListener('click',citadelHeroReact);$('citadel-interior-object').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();citadelInspectObject();}});
 function citadelEnter(){var scene=$('citadel-interior'),room=$('citadel-interior-stage');if(!scene||!room||!loaded)return;var selectedBtn=document.querySelector('[data-croom="'+citadelSelected+'"]');if(selectedBtn&&pointsInfo().L<Number(selectedBtn.getAttribute('data-min-rank')||1)){citadelMove('rest');return;}room.dataset.room=citadelSelected;$('citadel-interior-object').setAttribute('aria-label','Осмотреть: '+citadelObjects[citadelSelected][0]);$('citadel-interior-title').textContent=$('citadel-location').textContent;$('citadel-interior-caption').textContent=citadelRoomInfo[citadelSelected];scene.hidden=false;if($('citadel-home').classList.contains('citadel-expanded')&&$('citadel-home').dataset.uiView!=='upgrades')citadelSetArtView('room');citadelRenderExits();citadelRoomConversation();syncCitadelAvatar();citadelRenderDecor();citadelRenderBuilding();$('citadel-object-status').textContent='Нажми на светящийся предмет, чтобы осмотреть его.';if($('citadel-home').classList.contains('citadel-shell')){scene.scrollTop=0;scene.parentElement.scrollTop=0;if($('citadel-home').dataset.uiView==='upgrades'){var building=scene.querySelector('.citadel-building');scene.scrollTop=building.getBoundingClientRect().top-scene.getBoundingClientRect().top-8;}}else scene.scrollIntoView({behavior:'auto',block:'nearest'});}
 $('citadel-enter').addEventListener('click',citadelEnter);$('citadel-interior-close').addEventListener('click',function(){$('citadel-interior').hidden=true;if($('citadel-home').classList.contains('citadel-expanded')){citadelSetArtView('overview');requestAnimationFrame(citadelPosition);}});
 function citadelFocus(){if(!loaded)return;if($('citadel-home').classList.contains('citadel-expanded'))citadelSetArtView('overview');var room=document.querySelector('[data-croom="'+citadelSelected+'"]');if(room)room.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});}
@@ -3878,7 +3893,7 @@ function citadelHeroFrames(copy){
  if(source!==citadelHeroSource){
   var sheet=document.createElement('canvas');sheet.width=128;sheet.height=52;var ctx=sheet.getContext('2d');ctx.imageSmoothingEnabled=false;
   for(var f=0;f<4;f++){ctx.save();ctx.translate(f*32,0);ctx.drawImage(copy,0,0);
-   if(f===1){ctx.fillStyle=C.skin2;ctx.fillRect(12,10,2,1);ctx.fillRect(17,10,2,1);ctx.fillStyle=C.skin;ctx.fillRect(13,11,1,1);ctx.fillRect(18,11,1,1);}
+   if(f===1){ctx.fillStyle=C.skin2;ctx.fillRect(13,10,2,1);ctx.fillRect(17,10,2,1);ctx.fillStyle=C.skin;ctx.fillRect(13,11,1,1);ctx.fillRect(18,11,1,1);}
    if(f>1){var step=f===2?1:-1;ctx.clearRect(0,20,6,17);ctx.clearRect(26,20,6,17);ctx.drawImage(copy,0,20,6,17,0,20+step,6,17);ctx.drawImage(copy,26,20,6,17,26,20-step,6,17);ctx.clearRect(0,40,32,12);ctx.drawImage(copy,0,40,16,12,-step,40-step,16,12);ctx.drawImage(copy,16,40,16,12,16+step,40+step,16,12);}
    ctx.restore();
   }

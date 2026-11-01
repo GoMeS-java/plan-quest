@@ -217,3 +217,7 @@ body.citadel-shell-active .citadel-finance-nav{display:grid;grid-template-column
 body.citadel-shell-active .citadel-finance-nav[hidden]{display:none}
 body.citadel-shell-active .citadel-finance-nav button{min-width:0;min-height:44px;padding:7px 3px;font:600 12px/1.3 var(--font-body);white-space:nowrap;overflow-wrap:normal}
 body.citadel-shell-active .citadel-finance-nav button[aria-selected="true"]{border-color:#c7a57b;background:linear-gradient(#50375d,#37263f);color:#f6e6ce;box-shadow:inset 0 -2px #c7a57b}
+
+/* 0.70: warm rim light against violet stone; original sprite proportions. */
+body.citadel-shell-active .citadel-hero-sprite{filter:drop-shadow(0 2px #090812) drop-shadow(-1px 0 #c9a47755) drop-shadow(1px 0 #70578166)}
+body.citadel-shell-active .citadel-interior-stage .citadel-hero-sprite{filter:drop-shadow(0 2px #090812) drop-shadow(-1px 0 #c9a47755) drop-shadow(1px 0 #70578166)}

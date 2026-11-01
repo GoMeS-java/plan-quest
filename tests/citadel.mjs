@@ -53,6 +53,15 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.70 original ginger silhouette is shared by profile and both Citadel sprites',async()=>{
+  const {page:p,context}=await open({shell:true,seed:initial});
+  await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  const pixels=await p.evaluate(()=>['hero','citadel-avatar-canvas','citadel-interior-hero'].map(id=>{const c=document.getElementById(id);return Array.from(c.getContext('2d').getImageData(0,0,32,52).data);}));
+  assert.deepEqual(pixels[1],pixels[2]);assert.deepEqual(pixels[0],pixels[1]);
+  assert(pixels[1][(1*32+12)*4+3]>0,'original crown of ginger hair must be restored');
+  await p.locator('#citadel-interior-object').click();assert.equal(await p.locator('.citadel-interior-stage .citadel-hero-sprite').evaluate(n=>n.getAnimations().length),0,'reduced motion keeps sprite still');
+  await p.screenshot({path:resolve(out,'hero-070-room-390.png')});await context.close();
+ });
  await check('Android 0.69 finance wheel uses the existing chart and persistent four-tab navigation',async()=>{
   for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]])for(const populated of [false,true]){
    const seed=populated?structuredClone(initial):{};
