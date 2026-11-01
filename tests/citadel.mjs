@@ -223,9 +223,12 @@ try {
     await shellDrawer(p,'left');await p.goBack();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
     await shellNav(p,'Задания');await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));
     await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.goBack();assert(await p.locator('#citadel-castle').isVisible());
+    // Finish the room-to-overview animation frame before issuing a new pan.
+    await p.clock.runFor(64);
     // Camera offsets are clamped by the real viewport dimensions; compare with the actual scroll position.
     const cameraBefore=await p.locator('.citadel-viewport').evaluate(n=>{n.scrollLeft=150;n.scrollTop=95;return {left:n.scrollLeft,top:n.scrollTop};});
     assert(cameraBefore.left>0||cameraBefore.top>0,'camera viewport must allow panning after pinch zoom');
+    await p.clock.runFor(64); // deliver native scroll and its persistence debounce
     await p.clock.runFor(450);
     await p.waitForFunction(expected=>{const c=JSON.parse(localStorage.getItem('plan.citadel.camera.v1')||'null');return c&&Math.abs(c.left-expected.left)<=2&&Math.abs(c.top-expected.top)<=2;},cameraBefore);
     await p.reload();await p.waitForFunction(()=>!!window.__citadelShell);
