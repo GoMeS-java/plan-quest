@@ -115,6 +115,15 @@ try{
   await t.locator('.citadel-system-dialog header button').click();
   const camera=t.locator('.citadel-shell-camera');await camera.getByRole('button',{name:'Общий вид',exact:true}).click();
   await t.locator('[data-croom="study"]').click();await t.locator('#citadel-interior').waitFor({state:'visible'});
+  // Exercise 0.77 through the actual isolated bundle and its own storage keys.
+  const roomSave=await t.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));
+  for(let i=0;i<5;i++)await t.locator('[data-room-moment]').click();
+  assert.match(await t.locator('#citadel-object-status').innerText(),/страницу/);
+  assert.deepEqual(await t.evaluate(()=>PlanSync._docs()),roomSave,'isolated quiet actions wrote progress');
+  assert(await t.locator('.is-locked').evaluateAll(ns=>ns.every(n=>getComputedStyle(n).backgroundColor==='rgb(0, 0, 0)'&&getComputedStyle(n,'::after').display==='none')));
+  assert(await t.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth));
+  if(width===390&&!populated)await t.screenshot({path:resolve(shotDir,'android-077-room-action-390.png')});
+
   await t.locator('[data-room-view="overview"]').click();
   await camera.getByRole('button',{name:'+',exact:true}).click();
   for(let repeat=0;repeat<3;repeat++){

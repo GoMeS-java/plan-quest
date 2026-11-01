@@ -4,8 +4,9 @@
   "scripts": {
     "test": "node tests/citadel.mjs",
     "test:isolation": "node tests/android-isolation.mjs",
-    "test:all": "npm run test:economy && npm test && npm run test:isolation",
-    "test:economy": "node tests/abyss-economy.mjs"
+    "test:all": "npm run test:world && npm run test:economy && npm test && npm run test:isolation",
+    "test:economy": "node tests/abyss-economy.mjs",
+    "test:world": "node tests/citadel-world.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
