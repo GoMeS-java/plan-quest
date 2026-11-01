@@ -1114,12 +1114,10 @@ html,body{overflow-anchor:none}
     span(16, 12, 19, c.shade); span(16, 14, 17, C.skin2); span(17, 13, 18, c.alt);
     for (var y = 16; y <= 31; y++) for (var x = 2; x <= 29; x++) {
       if (g[y * W + x] !== c.base) continue;
-      if ((x * 7 + y * 13) % (wash ? 11 : 9) === 0) g[y * W + x] = c.alt;
+      if (wash ? ((x * 7 + y * 13) % 6 === 0) : (x % 2 === 1)) g[y * W + x] = c.alt;
     }
     for (var y2 = 18; y2 <= 30; y2++) { px(6, y2, c.shade); px(25, y2, c.shade); }
-    for(var yy=20;yy<30;yy++){px(8,yy,c.alt);px(23,yy,c.shade);if(yy>25)px(19,yy,c.shade);}
-    span(18,10,21,c.alt);span(19,11,20,c.base);
-    if (!wash) { span(29, 7, 24, c.shade); span(30, 7, 24, c.alt); }
+    if (!wash) { span(29, 7, 24, c.alt); span(30, 7, 24, c.alt); }
     else { span(30, 6, 25, c.shade); span(31, 2, 5, c.shade); span(31, 26, 29, c.shade); }
   }
   function coatL(y) { return y < 18 ? 8 : y < 22 ? 5 : y < 38 ? 4 : 3; }
