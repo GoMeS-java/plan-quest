@@ -122,12 +122,27 @@ jobs:
       - name: Synchronize generated docs in development branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/citadel-development-20261030'
         run: |
+          # A newer development commit may arrive while browser tests run.
+          # Never publish generated output from an obsolete checkout over it.
+          git fetch --no-tags origin citadel-development-20261030
+          if [ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]; then
+            echo "A newer development commit exists; its workflow owns docs synchronization"
+            exit 0
+          fi
           if ! git diff --quiet -- docs/ || [ -n "$(git ls-files --others --exclude-standard docs/)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -- docs/
             git commit -m "build: synchronize generated docs after passing tests [skip ci]"
-            git push origin HEAD:citadel-development-20261030
+            if ! git push origin HEAD:citadel-development-20261030; then
+              git fetch --no-tags origin citadel-development-20261030
+              if [ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]; then
+                echo "Development advanced during synchronization; preserving the newer remote history"
+              else
+                echo "Docs push failed without a newer commit"
+                exit 1
+              fi
+            fi
           else
             echo "Generated docs are already synchronized"
           fi
