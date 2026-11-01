@@ -99,6 +99,15 @@ try {
   assert.equal(await p.locator('#citadel-interior-stage [data-occupation="meal"]').count(),4);
   await p.locator('[data-room-moment]').click();assert.match(await p.locator('#citadel-object-status').innerText(),/Страж/);await context.close();
  });
+ await check('0.77 treasury reactions acknowledge an existing essence conflict without optimistic reassurance',async()=>{
+  const seed=advancedSeed();seed['cfg/abyss-economy']={version:1,rank:100000,earned:-100000,claims:{}};
+  const {page:p,context}=await open({shell:true,seed,day:'2027-04-16'});
+  await p.evaluate(()=>{__qa.move('vault');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
+  assert.match(text,/Расходы требуют сверки/);assert(!/Записи сходятся/.test(text));
+  await p.locator('#citadel-interior-stage [data-person="treasurer"]').click();assert.match(await p.locator('#citadel-room-speech').innerText(),/несогласованные расходы/);
+  assert.deepEqual(await docs(p),before);await context.close();
+ });
  await check('0.77 clock jumps and resize recover NPC routes without interpolating across rooms',async()=>{
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);await p.emulateMedia({reducedMotion:'no-preference'});
   await p.clock.setFixedTime(new Date('2027-04-16T10:00:07+03:00'));await p.evaluate(()=>__qa.render());
@@ -840,6 +849,7 @@ try {
   assert((await p.evaluate(()=>__qa.S.buys)).length===0);
   await p.locator('[data-croom="rest"]').click();
   assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'1');
+  assert(await p.locator('.citadel-finish-detail').isHidden());
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-abandoned-'+width+'x'+height+'.png')});
   // The shell hides the classic art navigation. Use the same room drawer as a player.
   assert(!(await p.locator('[data-art-view="upgrades"]').isVisible()));
@@ -850,12 +860,15 @@ try {
   assert(await p.locator('#citadel-upgrade').isEnabled(),await p.locator('#citadel-building-next').innerText()+' '+await p.locator('#citadel-building-balance').innerText());
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
   assert.equal(await balance(),essence-5);
+  assert(await p.locator('.citadel-finish-detail').isVisible());
+  const restoredTrim=await p.locator('.citadel-finish-detail').evaluate(n=>getComputedStyle(n).borderTopWidth);
   const paidOnce=await docs(p);
   await p.evaluate(()=>{__qa.upgrade('rest',1);__qa.upgrade('rest',1);return __qa.idle();});
   assert.deepEqual(await docs(p),paidOnce,'stale repeated purchase must not write or charge');
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-restored-'+width+'x'+height+'.png')});
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='3');
   assert.equal(await balance(),essence-17);
+  assert.notEqual(await p.locator('.citadel-finish-detail').evaluate(n=>getComputedStyle(n).borderTopWidth),restoredTrim);
   assert(await p.locator('#citadel-upgrade').isDisabled());
   const completed=await docs(p);
   for(const [key,value] of Object.entries(original))assert.deepEqual(completed[key],value,'shell renovation modified '+key);

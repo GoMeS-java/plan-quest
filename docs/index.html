@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.77";window.APP_BUILD="c4cbaaded25d";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.77";window.APP_BUILD="d8af481ab0af";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -960,7 +960,7 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.77</b><span>Сборка c4cbaaded25d</span></div>
+    <div class="release-stamp"><b>Версия 0.77</b><span>Сборка d8af481ab0af</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -3878,24 +3878,24 @@ function citadelRoomResponse(){
 }
 // One quiet action per room. These are presentation only, never a reward source.
 var citadelMoments={
- rest:{label:'Присесть у очага',line:'Ты садишься у очага. На минуту шум внешнего мира отступает.',improved:'Тёплый свет ложится на новый балдахин.'},
+ rest:{label:'Погреться у очага',line:'Ты задерживаешься у очага. На минуту шум внешнего мира отступает.',improved:'Тёплый свет ложится на новый балдахин.'},
  study:{label:'Перелистнуть книгу дня',line:'Ты переворачиваешь страницу. Каждая отметка здесь начинается с настоящего дела.',improved:'На обустроенном столе записи лежат в порядке.'},
  throne:{label:'Прислушаться к залу',line:'Под сводом затихает эхо твоих шагов. Цитадель отвечает тишиной.',improved:'Мягкая дорожка глушит шаги у трона.'},
  observatory:{label:'Навести звёздную линзу',line:'Ты осторожно наводишь линзу. В стекле проступают далёкие огни.',improved:'Латунная оправа удерживает линзу без дрожи.'},
  archive:{label:'Открыть летопись',line:'Ты снимаешь книгу со стеллажа. Сухой шелест страниц нарушает тишину.',improved:'На новых полках больше нет пыли.'},
  forge:{label:'Проверить снаряжение',line:'Ты поправляешь одежду перед отражением в тёмном металле.',improved:'В обустроенной мастерской свет горна ровнее.'},
  gatehouse:{label:'Проверить засов',line:'Ты проверяешь тяжёлый засов. Из-за створок доносится ветер.',improved:'Укреплённые ворота держатся уверенно.'},
- refectory:{label:'Присесть за стол',line:'Ты садишься за длинный стол. От очага тянет теплом.',improved:'На восстановленном столе мерцает свет свечей.'},
+ refectory:{label:'Остановиться у стола',line:'Ты останавливаешься у длинного стола. От очага тянет теплом.',improved:'На восстановленном столе мерцает свет свечей.'},
  cloister:{label:'Остановиться под аркой',line:'Ты останавливаешься под аркой. Сквозняк шевелит мох между камнями.',improved:'Сквозь восстановленные арки ложатся полосы света.'},
  vault:{label:'Сверить книгу казны',line:'Ты сверяешь записи в книге казны. Каждая покупка остаётся в общей истории.',improved:'В кованых сундуках всё на своих местах.'}
 };
 function citadelRoomMoment(){
  if(!loaded||$('citadel-interior').hidden||!citadelRoomOpen(citadelSelected))return;
- var moment=citadelMoments[citadelSelected],level=citadelRoomLevel(citadelSelected);
+ var moment=citadelMoments[citadelSelected],level=citadelRoomLevel(citadelSelected),p=pointsInfo();
  citadelHeroReact();citadelRoomResponse();
  var text=moment.line+(level>1?' '+moment.improved:'')+(level===3?' Свет подчёркивает завершённое обустройство.':'');
- var person=citadelPeople.find(function(p){var st=citadelNpcState(p);return pointsInfo().L>=p.rank&&!st.moving&&st.room===citadelSelected&&st.mode!=='rest';});
- if(person){var replies={guardian:'«Здесь спокойно. Я проверил проходы».',archivist:'«Не торопись. Для новой строки всегда есть место».',smith:'«Хорошие вещи любят внимательный уход».',treasurer:'«Записи сходятся. Осмотр не меняет запасов». '};text+=' '+person.name+': '+replies[person.key];var actor=$('citadel-interior-stage').querySelector('[data-person="'+person.key+'"]');citadelFiniteEffect(actor,[{translate:'0 0'},{translate:'0 -2px'},{translate:'0 0'}],420);}
+ var person=citadelPeople.find(function(p){var st=citadelNpcState(p);return citadelResidentRank>=p.rank&&!st.moving&&st.room===citadelSelected&&st.mode!=='rest';});
+ if(person){var replies={guardian:'«Здесь спокойно. Я проверил проходы».',archivist:'«Не торопись. Для новой строки всегда есть место».',smith:'«Хорошие вещи любят внимательный уход».',treasurer:p.avail<0||abyssBalance(S.abyss)<0?'«Расходы требуют сверки. Новые покупки пока остановлены».':'«Записи сходятся. Осмотр не меняет запасов».'};text+=' '+person.name+': '+replies[person.key];var actor=$('citadel-interior-stage').querySelector('[data-person="'+person.key+'"]');citadelFiniteEffect(actor,[{translate:'0 0'},{translate:'0 -2px'},{translate:'0 0'}],420);}
  $('citadel-object-status').textContent=text+citadelObjectContext();
 }
 function citadelHeroReact(){
@@ -4014,7 +4014,7 @@ function citadelNpcSpeak(key,refresh) {
   line+=' '+(current.done===current.total?'Все основные записи сегодняшнего дня завершены.':'В сегодняшних записях выполнено '+current.done+' из '+current.total+' дел.');
   line+=' На неделе: английский '+engWeek(mondayKey(day))+' / 7, питание '+kcalWeek(mondayKey(day))+' / 7.';
  }else if(key==='smith')line+=' '+(citadelRoomLevel('forge')>1?'Горн обустроен — работать стало уютнее.':'Каменный горн ждёт обустройства.')+' Снаряжение сверяю с твоей «Оболочкой».';
- else line+=' '+(p.avail<0?'Обнаружены несогласованные расходы между устройствами.':'Свободно ядер души: '+p.avail+'.')+' Ядра души — для «Воспоминаний». Для обустройства: '+abyssBalance(S.abyss)+' Эссенции Бездны.';
+ else line+=' '+(p.avail<0||abyssBalance(S.abyss)<0?'Обнаружены несогласованные расходы между устройствами.':'Свободно ядер души: '+p.avail+'.')+' Ядра души — для «Воспоминаний». Для обустройства: '+abyssBalance(S.abyss)+' Эссенции Бездны.';
  document.querySelectorAll('.citadel-interior-stage .citadel-person').forEach(function(n){n.dataset.mode=n.dataset.person===key?'interaction':citadelNpcState(citadelPeople.find(function(p){return p.key===n.dataset.person;})).mode;});
  citadelFaceResidents();
  $('citadel-npc-dialogue').textContent=person.name+' · '+state.activity+': «'+line+'»';

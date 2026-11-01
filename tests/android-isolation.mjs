@@ -116,6 +116,7 @@ try{
   const camera=t.locator('.citadel-shell-camera');await camera.getByRole('button',{name:'Общий вид',exact:true}).click();
   await t.locator('[data-croom="study"]').click();await t.locator('#citadel-interior').waitFor({state:'visible'});
   // Exercise 0.77 through the actual isolated bundle and its own storage keys.
+  await t.waitForFunction(()=>PlanSync._docs()['cfg/citadel']?.d.selectedRoom==='study');
   const roomSave=await t.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));
   for(let i=0;i<5;i++)await t.locator('[data-room-moment]').click();
   assert.match(await t.locator('#citadel-object-status').innerText(),/страницу/);

@@ -3876,24 +3876,24 @@ function citadelRoomResponse(){
 }
 // One quiet action per room. These are presentation only, never a reward source.
 var citadelMoments={
- rest:{label:'Присесть у очага',line:'Ты садишься у очага. На минуту шум внешнего мира отступает.',improved:'Тёплый свет ложится на новый балдахин.'},
+ rest:{label:'Погреться у очага',line:'Ты задерживаешься у очага. На минуту шум внешнего мира отступает.',improved:'Тёплый свет ложится на новый балдахин.'},
  study:{label:'Перелистнуть книгу дня',line:'Ты переворачиваешь страницу. Каждая отметка здесь начинается с настоящего дела.',improved:'На обустроенном столе записи лежат в порядке.'},
  throne:{label:'Прислушаться к залу',line:'Под сводом затихает эхо твоих шагов. Цитадель отвечает тишиной.',improved:'Мягкая дорожка глушит шаги у трона.'},
  observatory:{label:'Навести звёздную линзу',line:'Ты осторожно наводишь линзу. В стекле проступают далёкие огни.',improved:'Латунная оправа удерживает линзу без дрожи.'},
  archive:{label:'Открыть летопись',line:'Ты снимаешь книгу со стеллажа. Сухой шелест страниц нарушает тишину.',improved:'На новых полках больше нет пыли.'},
  forge:{label:'Проверить снаряжение',line:'Ты поправляешь одежду перед отражением в тёмном металле.',improved:'В обустроенной мастерской свет горна ровнее.'},
  gatehouse:{label:'Проверить засов',line:'Ты проверяешь тяжёлый засов. Из-за створок доносится ветер.',improved:'Укреплённые ворота держатся уверенно.'},
- refectory:{label:'Присесть за стол',line:'Ты садишься за длинный стол. От очага тянет теплом.',improved:'На восстановленном столе мерцает свет свечей.'},
+ refectory:{label:'Остановиться у стола',line:'Ты останавливаешься у длинного стола. От очага тянет теплом.',improved:'На восстановленном столе мерцает свет свечей.'},
  cloister:{label:'Остановиться под аркой',line:'Ты останавливаешься под аркой. Сквозняк шевелит мох между камнями.',improved:'Сквозь восстановленные арки ложатся полосы света.'},
  vault:{label:'Сверить книгу казны',line:'Ты сверяешь записи в книге казны. Каждая покупка остаётся в общей истории.',improved:'В кованых сундуках всё на своих местах.'}
 };
 function citadelRoomMoment(){
  if(!loaded||$('citadel-interior').hidden||!citadelRoomOpen(citadelSelected))return;
- var moment=citadelMoments[citadelSelected],level=citadelRoomLevel(citadelSelected);
+ var moment=citadelMoments[citadelSelected],level=citadelRoomLevel(citadelSelected),p=pointsInfo();
  citadelHeroReact();citadelRoomResponse();
  var text=moment.line+(level>1?' '+moment.improved:'')+(level===3?' Свет подчёркивает завершённое обустройство.':'');
- var person=citadelPeople.find(function(p){var st=citadelNpcState(p);return pointsInfo().L>=p.rank&&!st.moving&&st.room===citadelSelected&&st.mode!=='rest';});
- if(person){var replies={guardian:'«Здесь спокойно. Я проверил проходы».',archivist:'«Не торопись. Для новой строки всегда есть место».',smith:'«Хорошие вещи любят внимательный уход».',treasurer:'«Записи сходятся. Осмотр не меняет запасов». '};text+=' '+person.name+': '+replies[person.key];var actor=$('citadel-interior-stage').querySelector('[data-person="'+person.key+'"]');citadelFiniteEffect(actor,[{translate:'0 0'},{translate:'0 -2px'},{translate:'0 0'}],420);}
+ var person=citadelPeople.find(function(p){var st=citadelNpcState(p);return citadelResidentRank>=p.rank&&!st.moving&&st.room===citadelSelected&&st.mode!=='rest';});
+ if(person){var replies={guardian:'«Здесь спокойно. Я проверил проходы».',archivist:'«Не торопись. Для новой строки всегда есть место».',smith:'«Хорошие вещи любят внимательный уход».',treasurer:p.avail<0||abyssBalance(S.abyss)<0?'«Расходы требуют сверки. Новые покупки пока остановлены».':'«Записи сходятся. Осмотр не меняет запасов».'};text+=' '+person.name+': '+replies[person.key];var actor=$('citadel-interior-stage').querySelector('[data-person="'+person.key+'"]');citadelFiniteEffect(actor,[{translate:'0 0'},{translate:'0 -2px'},{translate:'0 0'}],420);}
  $('citadel-object-status').textContent=text+citadelObjectContext();
 }
 function citadelHeroReact(){
@@ -4012,7 +4012,7 @@ function citadelNpcSpeak(key,refresh) {
   line+=' '+(current.done===current.total?'Все основные записи сегодняшнего дня завершены.':'В сегодняшних записях выполнено '+current.done+' из '+current.total+' дел.');
   line+=' На неделе: английский '+engWeek(mondayKey(day))+' / 7, питание '+kcalWeek(mondayKey(day))+' / 7.';
  }else if(key==='smith')line+=' '+(citadelRoomLevel('forge')>1?'Горн обустроен — работать стало уютнее.':'Каменный горн ждёт обустройства.')+' Снаряжение сверяю с твоей «Оболочкой».';
- else line+=' '+(p.avail<0?'Обнаружены несогласованные расходы между устройствами.':'Свободно ядер души: '+p.avail+'.')+' Ядра души — для «Воспоминаний». Для обустройства: '+abyssBalance(S.abyss)+' Эссенции Бездны.';
+ else line+=' '+(p.avail<0||abyssBalance(S.abyss)<0?'Обнаружены несогласованные расходы между устройствами.':'Свободно ядер души: '+p.avail+'.')+' Ядра души — для «Воспоминаний». Для обустройства: '+abyssBalance(S.abyss)+' Эссенции Бездны.';
  document.querySelectorAll('.citadel-interior-stage .citadel-person').forEach(function(n){n.dataset.mode=n.dataset.person===key?'interaction':citadelNpcState(citadelPeople.find(function(p){return p.key===n.dataset.person;})).mode;});
  citadelFaceResidents();
  $('citadel-npc-dialogue').textContent=person.name+' · '+state.activity+': «'+line+'»';
