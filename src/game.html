@@ -225,6 +225,18 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .chip .coin { margin: 0; }
 .looksec { display: flex; flex-direction: column; gap: 6px; }
 .looksec > b { font-family: var(--font-display); font-size: 9px; color: var(--muted); font-weight: 400; }
+.look-intro { padding: 12px; border: 2px solid var(--line); background: var(--panel-2); font-size: 12px; line-height: 1.6; color: var(--muted); }
+.look-group { border: 2px solid var(--line); background: var(--panel); }
+.look-group > summary { cursor: pointer; padding: 13px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: var(--font-display); font-size: 10px; color: var(--fg); list-style: none; }
+.look-group > summary::-webkit-details-marker { display: none; }
+.look-group > summary::after { content: '+'; color: var(--gold); font-size: 16px; }
+.look-group[open] > summary::after { content: '−'; }
+.look-group-content { padding: 0 12px 14px; display: flex; flex-direction: column; gap: 16px; }
+.look-group-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.look-group-count { font-family: var(--font-display); font-size: 8px; color: var(--gold); white-space: nowrap; }
+.looksec > b { color: var(--fg); }
+.looksec .chip { min-height: 42px; text-align: left; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .looksec .chip { font-size: 9px; padding: 9px; } .look-group > summary { font-size: 9px; } }
 
 
 /* ---- фаза 3: анимированные награды ---- */
@@ -967,7 +979,8 @@ html,body{overflow-anchor:none}
       <button class="btn alt" type="button" id="fx-test" style="cursor:pointer">ПОКАЗАТЬ НОВЫЙ РАНГ</button>
       <div class="hint">Настройки эффектов входят в резервную копию.</div>
     </div>
-    <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
+    <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
+    <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <div class="release-stamp"><b>Версия __VER__</b><span>Сборка __BUILD__</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
@@ -1904,7 +1917,7 @@ html,body{overflow-anchor:none}
   COS2.forEach(function (c) { COS[c[0]] = { cat: c[1], n: c[2], sw: c[3], key: c[4], pv: c[5] }; });
   COS.p_gold = { cat: 'theme', n: 'Казна', prem: 'gold', sw: '#f2c14e' };
   COS.p_mirror = { cat: 'theme', n: 'Зеркало', prem: 'mirror', sw: '#4ac7e8' };
-  COS_CATS = [{ k: 'theme', n: 'ЦВЕТ' }, { k: 'bg', n: 'ФОН УБЕЖИЩА' }, { k: 'frame', n: 'РАМКА УБЕЖИЩА' }, { k: 'aura', n: 'АУРА ПЕРСОНАЖА' },
+  COS_CATS = [{ k: 'theme', n: 'ТЕМА ИНТЕРФЕЙСА' }, { k: 'bg', n: 'ФОН УБЕЖИЩА' }, { k: 'frame', n: 'РАМКА УБЕЖИЩА' }, { k: 'aura', n: 'АУРА ПЕРСОНАЖА' },
     { k: 'coin', n: 'ОСКОЛОК ДУШИ' }, { k: 'bar', n: 'ШКАЛА ДУШИ' }, { k: 'pat', n: 'УЗОР ФОНА' }, { k: 'font', n: 'СТИЛЬ ТЕКСТА' },
     { k: 'chk', n: 'ГАЛОЧКА' }, { k: 'tab', n: 'ВКЛАДКИ' }, { k: 'fx', n: 'ЭФФЕКТ НАЖАТИЯ' }, { k: 'lv', n: 'ЭФФЕКТ НОВОГО РАНГА' }, { k: 'snd', n: 'ЗВУКИ' }];
   function lookId(cat) {
@@ -2032,15 +2045,32 @@ html,body{overflow-anchor:none}
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
     if (!box) return;
+    var openGroups = Array.from(box.querySelectorAll('.look-group')).map(function (d) { return d.open; });
     clear(box);
     var any = false;
     if (un) Object.keys(un).forEach(function () { any = true; });
     var tl = titleList();
     if (tl.length) any = true;
     $('look-h').hidden = !any;
+    $('look-intro').hidden = !any;
     if ($('look-none')) $('look-none').hidden = any;
     if (!any) return;
     var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
+    var groups = [
+      { name: 'ПЕРСОНАЖ', note: 'Титул и аура твоего единого героя.', cats: ['title', 'aura'] },
+      { name: 'ЦИТАДЕЛЬ И УБЕЖИЩЕ', note: 'Наследие убежища остаётся доступным в комнате героя. Оформление Цитадели развивается вместе с ней.', cats: ['bg', 'frame'] },
+      { name: 'ИНТЕРФЕЙС', note: 'Цвета, шкалы и другие детали экрана.', cats: ['theme', 'coin', 'bar', 'pat', 'font', 'chk', 'tab'] },
+      { name: 'ЗВУКИ И ЭФФЕКТЫ', note: 'Косметические эффекты касаний и новых рангов.', cats: ['fx', 'lv', 'snd'] }
+    ];
+    function groupFor(cat) { return groups.filter(function (g) { return g.cats.indexOf(cat) !== -1; })[0]; }
+    groups.forEach(function (g, index) {
+      var d = el('details', 'look-group'); d.open = openGroups.length ? !!openGroups[index] : index === 0;
+      var summary = el('summary', null, g.name);
+      var count = el('span', 'look-group-count', '0 открыто');
+      summary.appendChild(count); d.appendChild(summary);
+      var content = el('div', 'look-group-content'); content.appendChild(el('div', 'look-group-note', g.note));
+      d.appendChild(content); box.appendChild(d); g.content = content; g.details = d; g.count = count; g.total = 0;
+    });
     if (tl.length) {
       var tsec = el('div', 'looksec'); tsec.appendChild(el('b', null, 'ТИТУЛ'));
       var tch = el('div', 'chips'), cur = '';
@@ -2054,7 +2084,8 @@ html,body{overflow-anchor:none}
       }
       tchip('', 'ПОСЛЕДНИЙ');
       tl.forEach(function (x) { tchip(x.id, x.title); });
-      tsec.appendChild(tch); box.appendChild(tsec);
+      tsec.appendChild(tch); groupFor('title').content.appendChild(tsec);
+      groupFor('title').total += tl.length;
     }
     COS_CATS.forEach(function (c) {
       var ids = Object.keys(COS).filter(function (id) { return COS[id].cat === c.k && un[id]; });
@@ -2085,7 +2116,12 @@ html,body{overflow-anchor:none}
         else { pv = el('i', 'sw'); pv.style.background = it.sw; }
         chip(id, it.n.toUpperCase(), pv);
       });
-      sec.appendChild(chips); box.appendChild(sec);
+      sec.appendChild(chips); groupFor(c.k).content.appendChild(sec);
+      groupFor(c.k).total += ids.length;
+    });
+    groups.forEach(function (g) {
+      g.count.textContent = g.total + ' открыто';
+      g.details.hidden = !g.total;
     });
   }
   function dq0(day) { return !!(day.q && day.q[2]); }
