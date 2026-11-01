@@ -5036,10 +5036,25 @@ function renderAllInner() {
       dialog.querySelector('.citadel-system-content').appendChild(panel);dialog.querySelector('#citadel-system-title').textContent=label;
       if(!dialog.open)dialog.showModal();dialog.querySelector('.citadel-system-content').scrollTop=0;pushOverlay('system');
     }
-    [['overview','Цитадель'],['wardrobe','Профиль'],['today','Задания'],['week','Хроника'],['money','Финансы'],['spend','Траты'],['avito','Авито'],['shop','Воспоминания'],['diet','Тело'],['goals','Путь'],['achievements','Достижения'],['settings','Настройки']].forEach(function(entry){
-      var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};nav.appendChild(b);
-    });
-    nav.appendChild($('plslot'));
+    function navAction(entry,parent,quick){
+      var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];if(quick)b.className='citadel-menu-quick';
+      b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};
+      parent.appendChild(b);return b;
+    }
+    // Dock destinations remain reachable by their stable data-section IDs,
+    // but are no longer repeated as large menu buttons.
+    [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Воспоминания']].forEach(function(entry){navAction(entry,nav,true);});
+    function navGroup(name,items){
+      var group=document.createElement('details');group.className='citadel-menu-group';
+      var summary=document.createElement('summary');summary.textContent=name;group.appendChild(summary);
+      var content=document.createElement('div');content.className='citadel-menu-group-items';group.appendChild(content);
+      items.forEach(function(entry){navAction(entry,content,false);});nav.appendChild(group);return content;
+    }
+    navGroup('ПУТЬ И ПРОГРЕСС',[['week','Хроника'],['diet','Тело'],['goals','Путь']]);
+    navGroup('КАЗНА И ДЕЛА',[['money','Финансы'],['spend','Траты'],['avito','Авито']]);
+    navGroup('КОЛЛЕКЦИЯ',[['achievements','Достижения']]);
+    var systemLinks=navGroup('СИСТЕМА',[['settings','Настройки']]);
+    systemLinks.appendChild($('plslot'));
     var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Память']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];if(item[0]==='shop')b.setAttribute('aria-label','Воспоминания');b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});
     var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.onclick=function(){menuButton.click();};dock.appendChild(dockMenu);
@@ -5049,7 +5064,8 @@ function renderAllInner() {
     function toggleDrawer(side){if(drawer===side){closeDrawer();return;}drawer=side;home.dataset.drawer=drawer;pushOverlay('drawer');refreshDrawer();}
     var left=document.createElement('aside'),right=document.createElement('aside');left.className='citadel-shell-drawer left';right.className='citadel-shell-drawer right';
     left.setAttribute('aria-label','Управление Цитаделью');right.setAttribute('aria-label','Комната и жители');home.appendChild(left);home.appendChild(right);
-    [['left','Цитадель'],['right','Жители']].forEach(function(entry){var b=document.createElement('button');b.type='button';b.className='citadel-shell-tail '+entry[0];b.textContent=entry[1];b.setAttribute('aria-label','Открыть панель: '+entry[1]);b.dataset.drawerOpen=entry[0];b.textContent=entry[0]==='left'?'Управление замком':'Комната и жители';b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}toggleDrawer(entry[0]);};nav.insertBefore(b,$('plslot'));});
+    var castleLinks=navGroup('УПРАВЛЕНИЕ ЗАМКОМ',[]);
+    [['left','Цитадель'],['right','Жители']].forEach(function(entry){var b=document.createElement('button');b.type='button';b.className='citadel-shell-tail '+entry[0];b.textContent=entry[0]==='left'?'Строительство и обзор':'Комната и жители';b.setAttribute('aria-label','Открыть панель: '+entry[1]);b.dataset.drawerOpen=entry[0];b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}toggleDrawer(entry[0]);};castleLinks.appendChild(b);});
     function drawerButton(host,label,fn){var b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;host.appendChild(b);}
     function refreshDrawer(){
       left.textContent='';right.textContent='';var h=document.createElement('h2');h.textContent='Путь Спящего';left.appendChild(h);

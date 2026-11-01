@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="c4fefb85829d";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="aecba5eefd30";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -984,7 +984,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка c4fefb85829d</span></div>
+    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка aecba5eefd30</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -5038,10 +5038,25 @@ function renderAllInner() {
       dialog.querySelector('.citadel-system-content').appendChild(panel);dialog.querySelector('#citadel-system-title').textContent=label;
       if(!dialog.open)dialog.showModal();dialog.querySelector('.citadel-system-content').scrollTop=0;pushOverlay('system');
     }
-    [['overview','Цитадель'],['wardrobe','Профиль'],['today','Задания'],['week','Хроника'],['money','Финансы'],['spend','Траты'],['avito','Авито'],['shop','Воспоминания'],['diet','Тело'],['goals','Путь'],['achievements','Достижения'],['settings','Настройки']].forEach(function(entry){
-      var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};nav.appendChild(b);
-    });
-    nav.appendChild($('plslot'));
+    function navAction(entry,parent,quick){
+      var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];if(quick)b.className='citadel-menu-quick';
+      b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};
+      parent.appendChild(b);return b;
+    }
+    // Dock destinations remain reachable by their stable data-section IDs,
+    // but are no longer repeated as large menu buttons.
+    [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Воспоминания']].forEach(function(entry){navAction(entry,nav,true);});
+    function navGroup(name,items){
+      var group=document.createElement('details');group.className='citadel-menu-group';
+      var summary=document.createElement('summary');summary.textContent=name;group.appendChild(summary);
+      var content=document.createElement('div');content.className='citadel-menu-group-items';group.appendChild(content);
+      items.forEach(function(entry){navAction(entry,content,false);});nav.appendChild(group);return content;
+    }
+    navGroup('ПУТЬ И ПРОГРЕСС',[['week','Хроника'],['diet','Тело'],['goals','Путь']]);
+    navGroup('КАЗНА И ДЕЛА',[['money','Финансы'],['spend','Траты'],['avito','Авито']]);
+    navGroup('КОЛЛЕКЦИЯ',[['achievements','Достижения']]);
+    var systemLinks=navGroup('СИСТЕМА',[['settings','Настройки']]);
+    systemLinks.appendChild($('plslot'));
     var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Память']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];if(item[0]==='shop')b.setAttribute('aria-label','Воспоминания');b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});
     var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.onclick=function(){menuButton.click();};dock.appendChild(dockMenu);
@@ -5051,7 +5066,8 @@ function renderAllInner() {
     function toggleDrawer(side){if(drawer===side){closeDrawer();return;}drawer=side;home.dataset.drawer=drawer;pushOverlay('drawer');refreshDrawer();}
     var left=document.createElement('aside'),right=document.createElement('aside');left.className='citadel-shell-drawer left';right.className='citadel-shell-drawer right';
     left.setAttribute('aria-label','Управление Цитаделью');right.setAttribute('aria-label','Комната и жители');home.appendChild(left);home.appendChild(right);
-    [['left','Цитадель'],['right','Жители']].forEach(function(entry){var b=document.createElement('button');b.type='button';b.className='citadel-shell-tail '+entry[0];b.textContent=entry[1];b.setAttribute('aria-label','Открыть панель: '+entry[1]);b.dataset.drawerOpen=entry[0];b.textContent=entry[0]==='left'?'Управление замком':'Комната и жители';b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}toggleDrawer(entry[0]);};nav.insertBefore(b,$('plslot'));});
+    var castleLinks=navGroup('УПРАВЛЕНИЕ ЗАМКОМ',[]);
+    [['left','Цитадель'],['right','Жители']].forEach(function(entry){var b=document.createElement('button');b.type='button';b.className='citadel-shell-tail '+entry[0];b.textContent=entry[0]==='left'?'Строительство и обзор':'Комната и жители';b.setAttribute('aria-label','Открыть панель: '+entry[1]);b.dataset.drawerOpen=entry[0];b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}toggleDrawer(entry[0]);};castleLinks.appendChild(b);});
     function drawerButton(host,label,fn){var b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;host.appendChild(b);}
     function refreshDrawer(){
       left.textContent='';right.textContent='';var h=document.createElement('h2');h.textContent='Путь Спящего';left.appendChild(h);
