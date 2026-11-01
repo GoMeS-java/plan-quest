@@ -399,6 +399,11 @@ html[data-pat="diag"], html[data-pat="diag"] body { background-image: repeating-
 @keyframes inr { from { transform: translateX(28px); opacity: 0; } }
 @keyframes inl { from { transform: translateX(-28px); opacity: 0; } }
 .donutwrap { position: relative; width: 240px; height: 240px; margin: 4px auto; }
+.sp-history { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }
+.sp-history[hidden] { display: none; }
+.sp-history button { min-width: 48px; min-height: 44px; border: 2px solid var(--line); background: var(--panel-2); color: var(--fg); cursor: pointer; }
+.sp-history button:disabled { opacity: .35; cursor: default; }
+.sp-history span { flex: 1; text-align: center; font: 11px/1.5 var(--font-display); color: var(--gold); }
 .donutwrap canvas { width: 240px; height: 240px; image-rendering: pixelated; display: block; }
 .dcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; pointer-events: none; padding: 0 70px; }
 .dcenter b { font-family: var(--font-display); font-weight: 400; font-size: 11px; line-height: 1.4; }
@@ -859,6 +864,11 @@ html,body{overflow-anchor:none}
       <button type="button" id="p-day" aria-pressed="true">ДЕНЬ</button>
       <button type="button" id="p-week" aria-pressed="false">НЕДЕЛЯ</button>
       <button type="button" id="p-month" aria-pressed="false">МЕСЯЦ</button>
+    </div>
+    <div class="sp-history" id="sp-history" hidden aria-label="История расходов по месяцам">
+      <button type="button" id="sp-prev" aria-label="Предыдущий месяц">◀</button>
+      <span id="sp-history-label" aria-live="polite"></span>
+      <button type="button" id="sp-next" aria-label="Следующий месяц">▶</button>
     </div>
     <h2 id="sp-title">ТРАТЫ</h2>
     <div class="donutwrap" id="donutwrap">
@@ -3325,11 +3335,21 @@ html,body{overflow-anchor:none}
     return 'Прочее';
   }
   var spPeriod = 'day';
+  var spMonthOffset = 0;
   var MONTHS_NOM = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+  function spMonthDate(offset) { var now = new Date(); return new Date(now.getFullYear(), now.getMonth() + offset, 1); }
+  function spEarliestMonth() {
+    var earliest = null;
+    S.tx.forEach(function (t) { if (t.kind === 'out' && /^\d{4}-\d{2}-\d{2}$/.test(t.date || '') && (!earliest || t.date < earliest)) earliest = t.date; });
+    return earliest ? earliest.slice(0, 7) : dkey(new Date()).slice(0, 7);
+  }
   function spRange() {
     var today = dkey(new Date());
     if (spPeriod === 'week') return { a: mondayKey(today), b: today, label: 'Неделя с ' + dshort(mondayKey(today)) };
-    if (spPeriod === 'month') return { a: today.slice(0, 8) + '01', b: today, label: MONTHS_NOM[+today.slice(5, 7) - 1] };
+    if (spPeriod === 'month') {
+      var month = spMonthDate(spMonthOffset), start = dkey(month), end = dkey(new Date(month.getFullYear(), month.getMonth() + 1, 0));
+      return { a: start, b: spMonthOffset === 0 ? today : end, label: MONTHS_NOM[month.getMonth()] + ' ' + month.getFullYear() };
+    }
     var last = null;
     S.tx.forEach(function (t) {
       if (t.kind !== 'out' || t.cat === 'Долг' || t.date > today) return;
@@ -3344,6 +3364,12 @@ html,body{overflow-anchor:none}
       $(id).setAttribute('aria-pressed', id === 'p-' + spPeriod ? 'true' : 'false');
     });
     var r = spRange();
+    $('sp-history').hidden = spPeriod !== 'month';
+    if (spPeriod === 'month') {
+      $('sp-history-label').textContent = r.label;
+      $('sp-next').disabled = spMonthOffset >= 0;
+      $('sp-prev').disabled = r.a.slice(0, 7) <= spEarliestMonth();
+    }
     var bk = {}, work = 0, big = [], total = 0;
     S.tx.forEach(function (t) {
       if (t.kind !== 'out' || t.cat === 'Долг' || t.date < r.a || t.date > r.b) return;
@@ -3431,6 +3457,8 @@ html,body{overflow-anchor:none}
   ['day', 'week', 'month'].forEach(function (k) {
     $('p-' + k).addEventListener('click', function () { spPeriod = k; renderSpend(); });
   });
+  $('sp-prev').addEventListener('click', function () { if (!$('sp-prev').disabled) { spMonthOffset--; renderSpend(); } });
+  $('sp-next').addEventListener('click', function () { if (spMonthOffset < 0) { spMonthOffset++; renderSpend(); } });
 
   var achQueue = [], achShowing = false;
   function readAchSeen() { try { return JSON.parse(localStorage.getItem('achSeen') || 'null'); } catch (e) { return null; } }

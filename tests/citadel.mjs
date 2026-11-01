@@ -1014,6 +1014,35 @@ try {
    await context.close();
   }
  });
+ await check('1.0 finance wheel shows historical months after restoring older expenses without editing saves',async()=>{
+  const seed={
+   'cfg/opening':{cash:1000,card:2000},
+   'tx/september':{amt:40,kind:'out',acc:'cash',cat:'Продукты',date:'2026-09-20',ts:1,counted:true},
+   'tx/october':{amt:125,kind:'out',acc:'cash',cat:'Продукты',date:'2026-10-30',ts:2,counted:true}
+  };
+  for(const width of [320,390]){
+   const {page:p,context}=await open({width,height:844,mobile:true,shell:true,seed,day:'2026-11-02'});
+   const before=await docs(p),balance=await p.evaluate(()=>__qa.balance());
+   await shellNav(p,'Финансы');await p.locator('[data-finance="wheel"]').click();
+   await p.locator('#p-month').click();
+   assert(await p.locator('#sp-history').isVisible());
+   assert.match(await p.locator('#sp-history-label').innerText(),/ноябрь 2026/i);
+   assert(await p.locator('#sp-next').isDisabled());
+   await p.locator('#sp-prev').click();
+   assert.match(await p.locator('#sp-history-label').innerText(),/октябрь 2026/i);
+   assert.match(await p.locator('#dc-sum').innerText(),/125/);
+   await p.locator('#sp-prev').click();
+   assert.match(await p.locator('#sp-history-label').innerText(),/сентябрь 2026/i);
+   assert.match(await p.locator('#dc-sum').innerText(),/40/);
+   assert(await p.locator('#sp-prev').isDisabled());
+   await p.locator('#sp-next').click();await p.locator('#sp-next').click();
+   assert(await p.locator('#sp-next').isDisabled());
+   await p.locator('#p-day').click();assert(await p.locator('#sp-history').isHidden());
+   assert.deepEqual(await docs(p),before);assert.deepEqual(await p.evaluate(()=>__qa.balance()),balance);
+   assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
+   await context.close();
+  }
+ });
  await check('Android 0.69 room focus, overview and zoom move only the camera without accumulating drift',async()=>{
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    const {page:p,context}=await open({width,height,mobile:true,shell:true,seed:advancedSeed(),day:'2027-04-16'});
