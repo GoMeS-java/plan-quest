@@ -87,9 +87,13 @@ try {
  await check('0.78 scene timeout, skip, Escape and animation failure always release input',async()=>{
   const seed=structuredClone(initial);seed['cfg/legends']={version:1,unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
   const {page:p,context}=await open({shell:true,seed});await p.evaluate(()=>document.querySelector('#trophy-btn').click());
-  for(const method of ['skip','escape','timeout','failed-animation']){
+  for(const method of ['skip','escape','timeout','failed-animation','failed-canvas','failed-modal']){
    if(method==='failed-animation')await p.evaluate(()=>{Element.prototype.animate=function(){throw Error('Synthetic animation failure');};});
-   await p.locator('.legend-entry').getByRole('button',{name:'ВСПОМНИТЬ',exact:true}).click();assert(await p.locator('#legend-scene').isVisible());
+   if(method==='failed-canvas')await p.evaluate(()=>{document.querySelector('#legend-scene canvas').getContext=function(){throw Error('Synthetic canvas failure');};});
+   if(method==='failed-modal')await p.evaluate(()=>{const d=document.querySelector('#legend-scene');d.showModal=function(){throw Error('Synthetic modal failure');};});
+   await p.locator('.legend-entry').getByRole('button',{name:'ВСПОМНИТЬ',exact:true}).click();
+   if(method==='failed-modal'){assert(await p.locator('#legend-scene').isHidden());assert(await p.locator('#trophy').isVisible());continue;}
+   assert(await p.locator('#legend-scene').isVisible());
    if(method==='escape')await p.keyboard.press('Escape');else if(method==='timeout')await p.clock.runFor(7300);else await p.locator('#legend-scene button').click();
    await p.waitForTimeout(80);assert(await p.locator('#legend-scene').isHidden());assert(await p.locator('#trophy').isVisible());
   }
@@ -263,8 +267,8 @@ try {
   const failed=await p.evaluate(async full=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{await PlanDB.runTransaction(tx=>{for(const [key,value]of Object.entries(full))if(key.startsWith('days/')||key.startsWith('per/'))tx.set(key,value);});return false;}catch{return true;}finally{Storage.prototype.setItem=original;}},advancedSeed());assert(failed);
   assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.deepEqual(await docs(p),before);await context.close();
  });
- await check('0.77 old 0.74, 0.75 and 0.76 save envelopes restore exactly with unlocked rooms and reduced motion',async()=>{
-  for(const version of ['0.74','0.75','0.76']){
+ await check('0.78 old 0.74 through 0.77 save envelopes restore exactly with unlocked rooms and reduced motion',async()=>{
+  for(const version of ['0.74','0.75','0.76','0.77']){
    const {page:p,context}=await open({day:'2027-04-16',shell:true});const docsToRestore=Object.fromEntries(Object.entries(advancedSeed()).map(([k,d])=>[k,{d,u:1}]));
    docsToRestore['cfg/citadel']={d:{selectedRoom:'archive',decor:{archive:'banner'},future:{keep:version}},u:1};
    await p.evaluate(async({docs,version})=>{await PlanSync.importObj({v:1,appVersion:version,docs},true);},{docs:docsToRestore,version});
@@ -1646,8 +1650,8 @@ try {
   await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
  });
- await check('0.73, 0.74, 0.75 and 0.76 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
-  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7']]){
+ await check('0.73 through 0.77 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
+  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d']]){
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});

@@ -3469,7 +3469,7 @@ html,body{overflow-anchor:none}
   }
   var acCopyText = '';
   function showNextAch() {
-    if (achShowing || !achQueue.length) return;
+    if (achShowing || !achQueue.length || legendReturning || legendDialog&&legendDialog.open) return;
     var e = achQueue.shift();
     achShowing = true;
     if(e.legend){legendScene(e.legend,function(){achShowing=false;showNextAch();});return;}
@@ -4190,7 +4190,7 @@ function citadelSyncDaily(){if(!loaded)return;var k=dkey(new Date()),day=S.days[
 function citadelSyncWeekly(){if(!loaded)return;var mk=mondayKey(dkey(new Date())),si=stepInfo(),goal=si.goals[mk]||5000,days=0,day=parseKey(mk);for(var i=0;i<7;i++){var record=S.days[dkey(day)];if(record&&record.steps>=goal)days++;day.setDate(day.getDate()+1);}var weighed=S.weights.some(function(w){return mondayKey(w.date)===mk;}),eng=engWeek(mk),kcal=kcalWeek(mk),rows=[['Взвешивание',weighed?'Выполнено':'Не записано',weighed],['Шаги каждый день',days+' / 7 · цель '+fmt(goal),!!si.done[mk]],['Английский',eng+' / 7',eng===7],['Питание',kcal+' / 7',kcal===7]],host=$('citadel-weekly-list');if(!host)return;host.textContent='';rows.forEach(function(r){var line=document.createElement('div'),label=document.createElement('span'),state=document.createElement('span');line.className='citadel-weekly-row'+(r[2]?' is-done':'');label.textContent=r[0];state.textContent=r[1];line.appendChild(label);line.appendChild(state);host.appendChild(line);});$('citadel-weekly-count').textContent=rows.filter(function(r){return r[2];}).length+' / '+rows.length;}
 function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisibility(p.L);if(!citadelRoomOpen(citadelSelected,p.L)){citadelSelected='rest';$('citadel-interior').hidden=true;citadelMove('rest');}citadelNpcObserve();$('citadel-summary').textContent='РАНГ '+p.L+' · '+p.P+' ◇ · '+p.avail+' ✧';var weights=bodyMeasurements();var last=weights.length?Number(weights[weights.length-1].kg):null;$('citadel-live-rank').textContent='РАНГ '+p.L;$('citadel-live-body').textContent=last===null?'ТЕЛО: НЕТ ЗАПИСЕЙ':'ВЕС '+last+' КГ';$('citadel-live-points').textContent='ОСКОЛКИ '+p.P;var b=S.opening?balances():null;$('citadel-live-cash').textContent=b?'БАЛАНС '+fmtM(b.cash+b.card)+' ₽':'ФИНАНСЫ: НЕТ ДАННЫХ';var equipped=outfitIds();$('citadel-live-gear').textContent='ОБОЛОЧКА: '+(equipped.outer==='none'?'БЕЗ ПЛАЩА':'ЭКИПИРОВАНА');citadelProgressView();syncCitadelAvatar();syncCitadelResidents(p.L);citadelRenderActivities();citadelRenderBuilding();citadelRoomJournal();if(!$('citadel-interior').hidden){citadelRenderDecor();citadelRenderExits();}syncCitadelTime();citadelSyncTrial();citadelSyncWeekly();citadelSyncDaily();if($('citadel-home').open){var current=document.querySelector('[data-croom="'+citadelSelected+'"]');if(current&&p.L<Number(current.getAttribute('data-min-rank')||1))citadelMove('rest');else if(current&&current.getAttribute('aria-pressed')!=='true')citadelMove(citadelSelected);}if(window.__citadelShell)window.__citadelShell.refresh();}
   // Cosmetic unlocks are persisted independently of the existing point engine.
-  var legendSignature='',legendBusy=false,legendQueued={},legendDialog=null,legendFinish=null,legendTimer=null,legendReturning=false;
+  var legendSignature='',legendBusy=false,legendQueued={},legendDialog=null,legendFinish=null,legendTimer=null,legendReturning=false,legendReturnFinish=null,legendReturnTimer=null;
   function legendOwned(){return window.VkachLegends?VkachLegends.earned(S.legends):[];}
   function legendActive(){var id=S.legends&&S.legends.active;return legendOwned().find(function(d){return d.id===id;})||null;}
   function legendEdit(change){return enqueue(function(){return db.runTransaction(function(tx){var old=tx.get('cfg/legends')||{},next=change(old);if(next)tx.set('cfg/legends',next);});});}
@@ -4205,7 +4205,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
     return {id:id,name:g.title||'Судьбоносная отметина',phrase:'Заклятие запомнило этот миг.',color:'#c5a6e6',motif:0,rewards:rewards.join(' · '),date:lastGI.ach[key]};
   }
   function legendGlyph(canvas,d){
-    canvas.width=64;canvas.height=64;var c=canvas.getContext('2d');c.clearRect(0,0,64,64);c.fillStyle=d.color;
+    canvas.width=64;canvas.height=64;var c;try{c=canvas.getContext('2d');}catch(e){return;}if(!c)return;c.clearRect(0,0,64,64);c.fillStyle=d.color;
     // Deliberately discrete geometry: the same seal in the scene and collection.
     for(var y=0;y<13;y++)for(var x=0;x<13;x++){var dx=Math.abs(x-6),dy=Math.abs(y-6),edge=dx+dy===6;
       var ink=d.motif===1?(dx===0||dy===0||dx===dy&&dx<4):d.motif===2?(dy===0&&dx<5||dx===dy&&y<7||dx===0&&y>6):(dx===dy&&dx<4||dx+dy===2);
@@ -4215,10 +4215,12 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   function legendClose(fromBack){
     if(!legendDialog||!legendDialog.open)return;
     var finish=legendFinish;legendFinish=null;clearTimeout(legendTimer);legendTimer=null;legendDialog.close();
-    if(!fromBack&&history.state&&history.state.legendScene){legendReturning=true;history.back();}
-    if(finish)finish();
+    if(!fromBack&&history.state&&history.state.legendScene){legendReturning=true;legendReturnFinish=finish;history.back();legendReturnTimer=setTimeout(legendReturned,400);}
+    else if(finish)finish();
   }
+  function legendReturned(){legendReturning=false;clearTimeout(legendReturnTimer);var cb=legendReturnFinish;legendReturnFinish=null;if(cb)cb();}
   function legendScene(id,done){
+    if(legendReturning)return;
     var d=legendView(id);if(!d){if(done)done();return;}
     if(!legendDialog){
       legendDialog=document.createElement('dialog');legendDialog.id='legend-scene';legendDialog.className='legend-scene';
@@ -4231,7 +4233,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
     }
     if(legendDialog.open){if(done)done();return;}
     var focus=document.activeElement;
-    legendFinish=function(){if(focus&&focus.isConnected)try{focus.focus({preventScroll:true});}catch(e){}if(done)setTimeout(done,0);};
+    legendFinish=function(){if(focus&&focus.isConnected)try{focus.focus({preventScroll:true});}catch(e){}setTimeout(done||showNextAch,0);};
     $('legend-scene-title').textContent=d.name;$('legend-scene-phrase').textContent=d.phrase;
     legendDialog.style.setProperty('--legend-color',d.color);legendGlyph(legendDialog.querySelector('canvas'),d);
     legendDialog.dataset.motion=matchMedia('(prefers-reduced-motion: reduce)').matches?'reduce':'full';
@@ -4246,8 +4248,8 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
   window.addEventListener('keydown',function(e){if(e.key==='Escape'&&legendDialog&&legendDialog.open){e.preventDefault();e.stopImmediatePropagation();legendClose(false);}},true);
   window.addEventListener('popstate',function(e){
+    if(legendReturning){legendReturned();e.stopImmediatePropagation();return;}
     if(legendDialog&&legendDialog.open){legendClose(true);e.stopImmediatePropagation();return;}
-    if(legendReturning){legendReturning=false;e.stopImmediatePropagation();}
   });
   function renderLegendCollection(box){
     var all=legendOwned();
