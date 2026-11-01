@@ -330,3 +330,13 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 @media(prefers-reduced-motion:reduce){.citadel-interior-stage[data-moving="true"] .citadel-hero-sprite{animation:none}}
 
 .citadel-shell .citadel-interior{scroll-padding-top:8px;scroll-padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+
+/* 0.74: stable residents, readable interaction cues and shared facing. */
+.citadel-interior-stage .citadel-person[role="button"]{cursor:pointer}
+.citadel-interior-stage .citadel-person[role="button"]:focus-visible{outline:2px solid #f0cf91!important;outline-offset:3px;filter:drop-shadow(0 0 3px #c39c69)}
+.citadel-interior-stage .citadel-person[data-mode="interaction"]:after{content:'◆';display:block!important;position:absolute;top:-14px;left:6px;width:12px;height:12px;font:10px/12px sans-serif;color:#f4d29b;text-align:center;pointer-events:none}
+.citadel-interior-stage .citadel-person[data-facing="left"]{scale:-1 1}
+.citadel-expanded .citadel-interior-stage .citadel-person[data-facing="left"]{scale:-1.25 1.25}
+.citadel-interior-object:focus-visible{outline:2px solid #f0cf91;outline-offset:2px}
+.citadel-interior-object[data-inspected="true"]{border-color:#d8bc83;box-shadow:inset 0 0 12px #d4b17b22}
+.citadel-interior-object[data-inspected="true"]:before{content:'✓';animation:none;color:#f3dca4;opacity:1}

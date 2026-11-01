@@ -54,6 +54,40 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.74 resident controls and sprites keep focus while other schedules change',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
+  const card=p.locator('[data-resident="guardian"] button');await card.focus();const original=await card.elementHandle();
+  await p.clock.setSystemTime(new Date('2027-04-16T14:15:05+03:00'));await p.evaluate(()=>__qa.render());
+  assert(await card.evaluate((n,old)=>n===old&&document.activeElement===n,original),'another errand must not replace the focused card');
+  await p.clock.setSystemTime(new Date('2027-04-16T14:16:15+03:00'));await p.evaluate(()=>__qa.render());
+  await p.locator('[data-croom="observatory"]').click();await p.locator('#citadel-enter').click();const actor=p.locator('#citadel-interior-stage [data-person="guardian"]');await actor.focus();const sprite=await actor.elementHandle();
+  await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.clock.setSystemTime(new Date('2027-04-16T14:16:19+03:00'));await p.evaluate(()=>__qa.render());
+  assert(await actor.evaluate((n,old)=>n===old&&document.activeElement===n,sprite),'a stationary actor must retain focus and animation identity');
+  const inspect=p.locator('[data-room-inspect]');await inspect.focus();const control=await inspect.elementHandle();
+  await p.clock.setSystemTime(new Date('2027-04-16T14:16:30+03:00'));await p.evaluate(()=>__qa.render());
+  assert(await inspect.evaluate((n,old)=>n===old&&document.activeElement===n,control));assert.deepEqual(await docs(p),before);await context.close();
+ });
+ await check('0.74 departing conversation restores room focus and companions face the hero',async()=>{
+  const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16',shell:true});
+  await p.clock.setSystemTime(new Date('2027-04-16T09:59:59+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  await p.locator('[data-room-talk="smith"]').click();const actor=p.locator('#citadel-interior-stage [data-person="smith"]');
+  assert.equal(await actor.getAttribute('data-mode'),'interaction');assert(await actor.evaluate(n=>{const a=n.getBoundingClientRect(),h=document.querySelector('#citadel-interior-stage .citadel-hero-sprite').getBoundingClientRect();return n.dataset.facing===(h.left+h.width/2<a.left+a.width/2?'left':'right');}));
+  assert.equal(await actor.evaluate(n=>getComputedStyle(n,'::after').content),'"◆"');await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.clock.setSystemTime(new Date('2027-04-16T10:00:10+03:00'));await p.evaluate(()=>__qa.render());
+  assert(await p.locator('#citadel-room-conversation').isHidden());assert(await p.locator('#citadel-interior-stage').evaluate(n=>document.activeElement===n),'departing NPC must return focus to the playable room');
+  assert.equal(await p.locator('[data-room-talk="smith"]').count(),0);assert.deepEqual(await docs(p),before);await context.close();
+ });
+ await check('0.74 inspected objects give consistent touch and keyboard feedback without save writes',async()=>{
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,mobile:true,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+   const object=p.locator('#citadel-interior-object');await object.focus();await p.keyboard.press('Enter');assert.equal(await object.getAttribute('data-inspected'),'true');assert.match(await p.locator('#citadel-object-status').innerText(),/Старая кровать/);assert.equal(await object.evaluate(n=>getComputedStyle(n,'::before').animationName),'none');
+   await p.keyboard.press('Space');await p.locator('[data-room-inspect]').click();assert.deepEqual(await docs(p),before);
+   if(width===390)await p.screenshot({path:resolve(out,'android-074-object-390.png')});
+   await context.close();
+  }
+ });
+
  await check('0.73 weight mirrors use the same valid dated measurement as the shared hero',async()=>{
   const seed=structuredClone(initial);seed['weights/start']={kg:160,date:'2026-01-01',ts:0};seed['weights/test']={kg:145,date,ts:1};
   const {page:p,context}=await open({seed});await castle(p);const shape=await p.evaluate(()=>__qa.shape());
@@ -1231,7 +1265,7 @@ try {
   await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
  });
- await check('0.73 same-version PWA patch replaces APP_BUILD and preserves synthetic history',async()=>{
+ await check('0.73 to current PWA upgrade replaces APP_BUILD and preserves synthetic history',async()=>{
   const previous='2b40210b50924748a6d0d7a1d18cc91f31828205';
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
@@ -1243,7 +1277,7 @@ try {
   assert.equal(await p.evaluate(()=>APP_VERSION),'0.73');assert.notEqual(await p.evaluate(()=>APP_BUILD),expectedBuild);await p.evaluate(()=>PlanSync.beforeUpdate());const before=await docs(p);
   servedOverrides.clear();await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
   await shellMenu(p);await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();
-  await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.73');
+  await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),currentVersion);
   assert.deepEqual(await docs(p),before);assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
   await context.setOffline(true);await p.reload();await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);assert.deepEqual(await docs(p),before);await context.close();
  });

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.73";window.APP_BUILD="66772533f0f9";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.74";window.APP_BUILD="08619b78c675";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -960,8 +960,8 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.73</b><span>Сборка 66772533f0f9</span></div>
-    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
+    <div class="release-stamp"><b>Версия 0.74</b><span>Сборка 08619b78c675</span></div>
+    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
@@ -1035,7 +1035,7 @@ html,body{overflow-anchor:none}
 </div>
 
 <script src="citadel-world.js"></script>
-<script>window.APP_VERSION = "0.73";
+<script>window.APP_VERSION = "0.74";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -3742,16 +3742,18 @@ function citadelWalkTo(x,y,animate){
  var marker=$('citadel-walk-target');marker.style.left=(x*100)+'%';marker.style.bottom=(y*100)+'%';marker.hidden=animate===false;
  if(animate!==false&&!document.hidden&&!window.matchMedia('(prefers-reduced-motion:reduce)').matches){
   stage.dataset.moving='true';var movement=hero.animate([from,{left:left+'px',bottom:bottom+'px'}],{duration:Math.min(800,Math.max(200,Math.abs(parseFloat(from.left)-left)*3)),easing:'linear'});
-  citadelWalkAnimation=movement;movement.onfinish=function(){if(citadelWalkAnimation===movement){stage.dataset.moving='false';citadelWalkAnimation=null;marker.hidden=true;}};
+  citadelWalkAnimation=movement;movement.onfinish=function(){if(citadelWalkAnimation===movement){stage.dataset.moving='false';citadelWalkAnimation=null;marker.hidden=true;citadelFaceResidents();}};
  }
+ citadelFaceResidents();
 }
 function citadelRoomActions(){
  var host=$('citadel-room-actions');if(!host||!loaded)return;
  var present=citadelPeople.filter(function(p){var s=citadelNpcState(p);return pointsInfo().L>=p.rank&&!s.moving&&s.room===citadelSelected;});
  var signature=citadelSelected+'|'+present.map(function(p){return p.key;}).join('|');if(host.dataset.signature===signature)return;
- host.dataset.signature=signature;host.textContent='';
- var inspect=document.createElement('button');inspect.type='button';inspect.dataset.roomInspect='';inspect.textContent='✧ Осмотреть: '+citadelObjects[citadelSelected][0];inspect.onclick=function(){citadelInspectObject();citadelHeroReact();};host.appendChild(inspect);
- present.forEach(function(p){var b=document.createElement('button');b.type='button';b.dataset.roomTalk=p.key;b.textContent='Поговорить: '+p.name;b.onclick=function(){citadelNpcSpeak(p.key);};host.appendChild(b);});
+ host.dataset.signature=signature;
+ var inspect=host.querySelector('[data-room-inspect]');if(!inspect){inspect=document.createElement('button');inspect.type='button';inspect.dataset.roomInspect='';inspect.onclick=citadelInspectObject;host.prepend(inspect);}inspect.textContent='✧ Осмотреть: '+citadelObjects[citadelSelected][0];
+ host.querySelectorAll('[data-room-talk]').forEach(function(b){if(!present.some(function(p){return p.key===b.dataset.roomTalk;})){var focused=document.activeElement===b;b.remove();if(focused)$('citadel-interior-stage').focus({preventScroll:true});}});
+ present.forEach(function(p){var b=host.querySelector('[data-room-talk="'+p.key+'"]');if(!b){b=document.createElement('button');b.type='button';b.dataset.roomTalk=p.key;b.textContent='Поговорить: '+p.name;b.onclick=function(){citadelNpcSpeak(p.key);};host.appendChild(b);}});
 }
 var citadelWalkStage=$('citadel-interior-stage');citadelWalkStage.tabIndex=0;citadelWalkStage.setAttribute('role','group');citadelWalkStage.setAttribute('aria-label','Комната. Нажми на пол или используй стрелки, чтобы пройти.');
 citadelWalkStage.addEventListener('click',function(e){if(e.target.closest('button,[role="button"]'))return;var r=this.getBoundingClientRect(),y=(r.bottom-e.clientY)/r.height;if(y>.34)return;citadelWalkTo((e.clientX-r.left)/r.width,y);});
@@ -3760,7 +3762,7 @@ window.addEventListener('resize',function(){var p=citadelWalkPositions[citadelSe
 document.addEventListener('visibilitychange',function(){if(document.hidden)citadelStopWalk();});
 window.matchMedia('(prefers-reduced-motion:reduce)').addEventListener('change',function(e){if(e.matches)citadelStopWalk();});
 
-function citadelInspectObject(){if(!loaded||$('citadel-interior').hidden)return;var selected=document.querySelector('[data-croom="'+citadelSelected+'"]');if(selected&&pointsInfo().L<Number(selected.getAttribute('data-min-rank')||1))return;var item=citadelObjects[citadelSelected];if(item){citadelWalkTo(.7,.08);$('citadel-object-status').textContent=item[0]+': '+item[1]+(citadelRoomLevel(citadelSelected)>1?' Обустроено: '+citadelRenovations[citadelSelected][citadelRoomLevel(citadelSelected)-2]+'.':'');}}
+function citadelInspectObject(){if(!loaded||$('citadel-interior').hidden)return;var selected=document.querySelector('[data-croom="'+citadelSelected+'"]');if(selected&&pointsInfo().L<Number(selected.getAttribute('data-min-rank')||1))return;var item=citadelObjects[citadelSelected];if(item){citadelWalkTo(.7,.08);$('citadel-interior-object').dataset.inspected='true';citadelHeroReact();$('citadel-object-status').textContent=item[0]+': '+item[1]+(citadelRoomLevel(citadelSelected)>1?' Обустроено: '+citadelRenovations[citadelSelected][citadelRoomLevel(citadelSelected)-2]+'.':'');}}
 function citadelHeroReact(){
  if(document.hidden||window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
  var sprite=$('citadel-interior-stage').querySelector('.citadel-hero-sprite');if(!sprite)return;
@@ -3768,8 +3770,8 @@ function citadelHeroReact(){
  if(sprite._reaction)sprite._reaction.cancel();
  sprite._reaction=sprite.animate([{translate:'0 0'},{translate:'0 -2px'},{translate:'0 0'}],{duration:320,easing:'steps(2,end)'});
 }
-$('citadel-interior-object').addEventListener('click',citadelInspectObject);$('citadel-interior-object').addEventListener('click',citadelHeroReact);$('citadel-interior-object').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();citadelInspectObject();}});
-function citadelEnter(){var scene=$('citadel-interior'),room=$('citadel-interior-stage');if(!scene||!room||!loaded)return;var selectedBtn=document.querySelector('[data-croom="'+citadelSelected+'"]');if(selectedBtn&&pointsInfo().L<Number(selectedBtn.getAttribute('data-min-rank')||1)){citadelMove('rest');return;}room.dataset.room=citadelSelected;$('citadel-interior-object').setAttribute('aria-label','Осмотреть: '+citadelObjects[citadelSelected][0]);$('citadel-interior-title').textContent=$('citadel-location').textContent;$('citadel-interior-caption').textContent=citadelRoomInfo[citadelSelected];scene.hidden=false;if($('citadel-home').classList.contains('citadel-expanded')&&$('citadel-home').dataset.uiView!=='upgrades')citadelSetArtView('room');citadelRenderExits();citadelRoomConversation();syncCitadelAvatar();var walk=citadelWalkPositions[citadelSelected]||{x:.5,y:.08};citadelWalkTo(walk.x,walk.y,false);citadelRoomActions();citadelRenderDecor();citadelRenderBuilding();$('citadel-object-status').textContent='Нажми на светящийся предмет, чтобы осмотреть его.';if($('citadel-home').classList.contains('citadel-shell')){scene.scrollTop=0;scene.parentElement.scrollTop=0;if($('citadel-home').dataset.uiView==='upgrades'){var building=scene.querySelector('.citadel-building');scene.scrollTop=building.getBoundingClientRect().top-scene.getBoundingClientRect().top-8;}}else scene.scrollIntoView({behavior:'auto',block:'nearest'});}
+$('citadel-interior-object').addEventListener('click',citadelInspectObject);$('citadel-interior-object').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();citadelInspectObject();}});
+function citadelEnter(){var scene=$('citadel-interior'),room=$('citadel-interior-stage');if(!scene||!room||!loaded)return;var selectedBtn=document.querySelector('[data-croom="'+citadelSelected+'"]');if(selectedBtn&&pointsInfo().L<Number(selectedBtn.getAttribute('data-min-rank')||1)){citadelMove('rest');return;}room.dataset.room=citadelSelected;delete $('citadel-interior-object').dataset.inspected;$('citadel-interior-object').setAttribute('aria-label','Осмотреть: '+citadelObjects[citadelSelected][0]);$('citadel-interior-title').textContent=$('citadel-location').textContent;$('citadel-interior-caption').textContent=citadelRoomInfo[citadelSelected];scene.hidden=false;if($('citadel-home').classList.contains('citadel-expanded')&&$('citadel-home').dataset.uiView!=='upgrades')citadelSetArtView('room');citadelRenderExits();citadelRoomConversation();syncCitadelAvatar();var walk=citadelWalkPositions[citadelSelected]||{x:.5,y:.08};citadelWalkTo(walk.x,walk.y,false);citadelRoomActions();citadelRenderDecor();citadelRenderBuilding();$('citadel-object-status').textContent='Нажми на светящийся предмет, чтобы осмотреть его.';if($('citadel-home').classList.contains('citadel-shell')){scene.scrollTop=0;scene.parentElement.scrollTop=0;if($('citadel-home').dataset.uiView==='upgrades'){var building=scene.querySelector('.citadel-building');scene.scrollTop=building.getBoundingClientRect().top-scene.getBoundingClientRect().top-8;}}else scene.scrollIntoView({behavior:'auto',block:'nearest'});}
 $('citadel-enter').addEventListener('click',citadelEnter);$('citadel-interior-close').addEventListener('click',function(){citadelStopWalk();$('citadel-interior').hidden=true;if($('citadel-home').classList.contains('citadel-expanded')){citadelSetArtView('overview');requestAnimationFrame(citadelPosition);}});
 function citadelFocus(){if(!loaded)return;if($('citadel-home').classList.contains('citadel-expanded'))citadelSetArtView('overview');var room=document.querySelector('[data-croom="'+citadelSelected+'"]');if(room)room.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});}
 $('citadel-focus').addEventListener('click',citadelFocus);
@@ -3846,7 +3848,8 @@ function citadelNpcClose(){
  var previousPerson=citadelNpcSelected,restoreFocus=$('citadel-room-conversation').contains(document.activeElement);
  citadelNpcSelected=null;citadelNpcOrigin=null;$('citadel-room-conversation').hidden=true;$('citadel-npc-dialogue').textContent='';$('citadel-npc-actions').textContent='';$('citadel-npc-actions').dataset.person='';
  document.querySelectorAll('.citadel-interior-stage .citadel-person').forEach(function(n){n.dataset.mode=citadelNpcState(citadelPeople.find(function(p){return p.key===n.dataset.person;})).mode;});
- if(restoreFocus&&previousPerson){var returnTo=$('citadel-interior-stage').querySelector('[data-person="'+previousPerson+'"]');if(returnTo){returnTo.focus({preventScroll:true});returnTo.scrollIntoView({block:'nearest',behavior:'auto'});}}
+ if(restoreFocus&&previousPerson){var returnTo=$('citadel-interior-stage').querySelector('[data-person="'+previousPerson+'"]');if(!returnTo)returnTo=$('citadel-interior-stage');returnTo.focus({preventScroll:true});returnTo.scrollIntoView({block:'nearest',behavior:'auto'});}
+ citadelFaceResidents();
 }
 function citadelNpcSpeak(key,refresh) {
  if(!loaded)return;
@@ -3878,6 +3881,7 @@ function citadelNpcSpeak(key,refresh) {
  }else if(key==='smith')line+=' '+(citadelRoomLevel('forge')>1?'Горн обустроен — работать стало уютнее.':'Каменный горн ждёт обустройства.')+' Снаряжение сверяю с твоей «Оболочкой».';
  else line+=' '+(p.avail<0?'Обнаружены несогласованные расходы между устройствами.':'Свободно ядер души: '+p.avail+'.')+' Строительство и «Воспоминания» используют одну казну.';
  document.querySelectorAll('.citadel-interior-stage .citadel-person').forEach(function(n){n.dataset.mode=n.dataset.person===key?'interaction':citadelNpcState(citadelPeople.find(function(p){return p.key===n.dataset.person;})).mode;});
+ citadelFaceResidents();
  $('citadel-npc-dialogue').textContent=person.name+' · '+state.activity+': «'+line+'»';
  citadelRoomConversation();
  if(!refresh&&!$('citadel-room-conversation').hidden){$('citadel-room-conversation').focus({preventScroll:true});$('citadel-room-conversation').scrollIntoView({block:'nearest',behavior:'auto'});}
@@ -3900,30 +3904,56 @@ function citadelRoomConversation(){
 }
 $('citadel-room-npc-close').addEventListener('click',citadelNpcClose);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&citadelNpcSelected){citadelNpcClose();e.preventDefault();}});
+// Keep resident controls and sprites keyed: another resident's errand must not
+// discard keyboard focus, restart every idle animation or interrupt a touch.
+function citadelResidentSprite(person,index,inside){
+ var sprite=document.createElement('span');sprite.className='citadel-person';sprite.dataset.person=person.key;sprite.style.setProperty('--person-slot',index);
+ if(inside){sprite.setAttribute('role','button');sprite.tabIndex=0;sprite.setAttribute('aria-label','Поговорить: '+person.name);sprite.addEventListener('click',function(){citadelNpcSpeak(person.key);});sprite.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();citadelNpcSpeak(person.key);}});}
+ else sprite.setAttribute('aria-hidden','true');
+ return sprite;
+}
+function citadelRemoveResident(sprite){
+ if(!sprite)return;var focused=sprite===document.activeElement;sprite.remove();if(focused)$('citadel-interior-stage').focus({preventScroll:true});
+}
+function citadelFaceResidents(){
+ var stage=$('citadel-interior-stage'),hero=stage.querySelector('.citadel-hero-sprite');if(!hero||!stage.getClientRects().length)return;
+ var hr=hero.getBoundingClientRect(),hx=hr.left+hr.width/2;
+ stage.querySelectorAll('.citadel-person').forEach(function(n){
+  if(n.dataset.person!==citadelNpcSelected){delete n.dataset.facing;return;}
+  var nr=n.getBoundingClientRect(),nx=nr.left+nr.width/2;n.dataset.facing=hx<nx?'left':'right';stage.dataset.facing=nx<hx?'left':'right';
+ });
+}
 function syncCitadelResidents(level) {
  var host=$('citadel-residents');if(!host)return;citadelResidentRank=level;
  var states=citadelPeople.map(citadelNpcState);
  var signature=level+'|'+citadelSelected+'|'+states.map(function(st){return st.node+st.next+st.activity;}).join('|');
  if(citadelResidentSignature!==signature){
-  citadelResidentSignature=signature;host.textContent='';
-  document.querySelectorAll('.citadel-person').forEach(function(n){n.remove();});
-  var arrived=0;
+  citadelResidentSignature=signature;var arrived=0;
   citadelPeople.forEach(function(person,i){
-   var card=document.createElement('div');card.className='citadel-resident';
+   var card=host.querySelector('[data-resident="'+person.key+'"]');
+   if(!card){card=document.createElement('div');card.className='citadel-resident';card.dataset.resident=person.key;host.appendChild(card);}
+   var sprite=$('citadel-castle').querySelector('.citadel-person[data-person="'+person.key+'"]'),inside=$('citadel-interior-stage').querySelector('.citadel-person[data-person="'+person.key+'"]');
    if(level>=person.rank){
-    arrived++;var state=states[i],room=document.querySelector('[data-croom="'+state.room+'"]'),b=document.createElement('button');b.type='button';
-    b.textContent=person.mark+' '+person.name+' · '+state.activity+' · '+CitadelWorld.names[state.node];
-    b.addEventListener('click',function(){citadelNpcSpeak(person.key);});card.appendChild(b);
-    var sprite=document.createElement('span');sprite.className='citadel-person';sprite.dataset.person=person.key;sprite.dataset.mode=state.mode;sprite.style.setProperty('--person-slot',i);sprite.title=person.name+' · '+state.activity;sprite.setAttribute('aria-hidden','true');
-    if(state.moving){sprite.classList.add('is-travelling');$('citadel-castle').appendChild(sprite);}
-    else if(room){room.appendChild(sprite);if(state.room===citadelSelected){var inside=sprite.cloneNode(true);inside.removeAttribute('aria-hidden');inside.setAttribute('role','button');inside.tabIndex=0;inside.setAttribute('aria-label','Поговорить: '+person.name);inside.addEventListener('click',function(){citadelNpcSpeak(person.key);});inside.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();citadelNpcSpeak(person.key);}});$('citadel-interior-stage').appendChild(inside);}}
-   }else{card.classList.add('is-pending');card.textContent='◇ Неизвестный житель · ранг '+person.rank;}
-   host.appendChild(card);
+    arrived++;var state=states[i],room=document.querySelector('[data-croom="'+state.room+'"]'),b=card.querySelector('button');card.classList.remove('is-pending');
+    if(!b){card.textContent='';b=document.createElement('button');b.type='button';b.addEventListener('click',function(){citadelNpcSpeak(person.key);});card.appendChild(b);}
+    var label=person.mark+' '+person.name+' · '+state.activity+' · '+CitadelWorld.names[state.node];if(b.textContent!==label)b.textContent=label;
+    if(!sprite)sprite=citadelResidentSprite(person,i,false);
+    sprite.dataset.mode=state.mode;sprite.title=person.name+' · '+state.activity;sprite.classList.toggle('is-travelling',state.moving);
+    var parent=state.moving?$('citadel-castle'):room;if(parent&&sprite.parentElement!==parent)parent.appendChild(sprite);
+    if(!state.moving&&room&&state.room===citadelSelected){
+     if(!inside){inside=citadelResidentSprite(person,i,true);$('citadel-interior-stage').appendChild(inside);}
+     inside.dataset.mode=state.mode;inside.title=sprite.title;
+    }else citadelRemoveResident(inside);
+   }else{
+    card.classList.add('is-pending');var pending='◇ Неизвестный житель · ранг '+person.rank;if(card.textContent!==pending)card.textContent=pending;
+    citadelRemoveResident(sprite);citadelRemoveResident(inside);
+   }
   });
   $('citadel-population').textContent='ЖИТЕЛИ: '+arrived;
  }
  citadelPositionResidents(states);citadelRoomActions();
  if(citadelNpcSelected)citadelNpcSpeak(citadelNpcSelected,true);else citadelRoomConversation();
+ citadelFaceResidents();
 }
 function citadelFindResident(person){
  var state=citadelNpcState(person);
