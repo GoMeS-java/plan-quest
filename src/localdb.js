@@ -214,6 +214,17 @@
     var copy = { v: 2, format: 'vkach-backup', createdAt: new Date().toISOString(), appVersion: window.APP_VERSION || 'legacy', docs: clone(validDocs(records)) };
     return digest(copy).then(function (hash) { copy.integrity = { algorithm: 'SHA-256', value: hash }; return copy; });
   }
+  function parseBackupText(text) {
+    var value=JSON.parse(text), at=0;
+    function ws(){while(/\s/.test(text.charAt(at))&&at<text.length)at++;}
+    function str(){var start=at++;while(at<text.length){var c=text.charAt(at++);if(c==='\\')at++;else if(c==='"')break;}return JSON.parse(text.slice(start,at));}
+    function scan(){ws();var c=text.charAt(at);
+      if(c==='{'){at++;ws();var keys=new Set();if(text.charAt(at)==='}'){at++;return;}while(at<text.length){ws();var key=str();if(keys.has(key))throw new Error('duplicate record');keys.add(key);ws();at++;scan();ws();if(text.charAt(at++)==='}')return;}}
+      else if(c==='['){at++;ws();if(text.charAt(at)===']'){at++;return;}while(at<text.length){scan();ws();if(text.charAt(at++)===']')return;}}
+      else if(c==='"')str();else while(at<text.length&&!/[\s,}\]]/.test(text.charAt(at)))at++;
+    }
+    scan();return value;
+  }
   function validateBackup(o, restore) {
     return Promise.resolve().then(function () {
       if (!o || typeof o !== 'object' || Array.isArray(o)) throw new Error('bad format');
@@ -280,7 +291,7 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
   function exportBackup() {
-    return Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () {
+    return Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).catch(function(e){if(!upgradeBlocked || corruptRaw!==null)throw e;}).then(function () {
       return exclusive(function () { return backupFor(persistedDocs()).then(function (copy) { downloadSnapshot(copy, CFG.testMode ? 'vkach-test-backup' : 'vkach-backup'); setStatus('Файл копии подготовлен. Проверьте его в загрузках устройства.', 'ok'); }); });
     });
   }
@@ -440,6 +451,7 @@
       var m = e && e.message;
       if (m === 'conflict') setStatus('Конфликт устройств: облачная запись остановлена. Сохраните обе копии в меню.', 'warn');
       else if (e && e.code === 'quota_exceeded') setStatus('Не удалось сохранить данные на телефоне. Облако не изменено; освободите место и повторите.', 'warn');
+      else if (m === 'duplicate remote record' || m === 'incomplete remote data' || m === 'bad remote row' || m === 'bad format' || e instanceof SyntaxError) setStatus('Ошибка в облачной копии. Локальные данные сохранены; отправка остановлена.', 'warn');
       else if (m === 'noclient') setStatus('Вход в Google не настроен', 'warn');
       else if (m === 'offline' || m === 'Failed to fetch') setStatus('Нет сети: всё сохранено на телефоне', 'off');
       else if (m === 'auth' || m === 'popup_closed' || m === 'popup_failed_to_open' || m === 'access_denied' || m === 'interaction_required') setStatus('Нужно войти в Google', 'warn');
@@ -547,11 +559,11 @@
       var rd = new FileReader();
       rd.onload = function () {
         var value;
-        try { value = JSON.parse(rd.result); } catch (e) { setStatus('Не удалось прочитать файл', 'warn'); fileIn.value = ''; return; }
+        try { value = parseBackupText(rd.result); } catch (e) { setStatus('Не удалось прочитать файл', 'warn'); fileIn.value = ''; return; }
         validateBackup(value, restoring).then(function (incoming) {
           var count = Object.keys(incoming).filter(function (p) { return incoming[p].d !== null; }).length;
           if (!window.confirm((restoring ? 'Восстановить весь прогресс? Записи, которых нет в копии, будут удалены. ' : 'Объединить записи с файлом? Более новые записи могут заменить текущие. ') +
-              'В файле: ' + count + ' записей. Текущая копия будет сохранена отдельно. Можно отменить.')) return;
+              'В файле: ' + count + ' записей. Текущая копия будет сохранена отдельно. Можно отменить.')) {setStatus('Операция отменена. Данные не изменены.','');return;}
           setStatus('Проверенный файл: сохраняем данные. Не закрывайте приложение.', 'work');
           return Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () { return applyImport(incoming, restoring); }).then(function (n) {
             setStatus('Сохранено записей: ' + n + (restoring ? '. Проверьте прогресс перед включением облака.' : ''), 'ok');
@@ -596,7 +608,7 @@
       version.then(function (build) {
         if (build && build === window.APP_BUILD) { controllerAtLoad = current; reloading = false; return; }
         return Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () { location.reload(); });
-      });
+      }).catch(function(){reloading=false;setStatus('Обновление отложено: есть несохранённое изменение. Скачайте копию и повторите действие.','warn');});
     });
     navigator.serviceWorker.register('sw.js').then(function (reg) {
       swReg = reg;

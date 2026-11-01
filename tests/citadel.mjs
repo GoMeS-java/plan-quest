@@ -573,7 +573,7 @@ try {
   const before=await docs(low.page);await low.page.evaluate(()=>__qa.upgrade('rest',1));await low.page.evaluate(()=>__qa.idle());assert.deepEqual(await docs(low.page),before);await low.context.close();
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);await p.locator('#citadel-enter').click();const original=await docs(p);
   await p.evaluate(()=>{window.__realSet=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic storage full','QuotaExceededError');return window.__realSet.call(this,k,v);};});
-  await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());assert.deepEqual(await docs(p),original,'failed persistence must not grant a room or charge');assert.match(await p.locator('#toast').innerText(),/База заполнена/);
+  await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());assert.deepEqual(await docs(p),original,'failed persistence must not grant a room or charge');assert.match(await p.locator('#toast').innerText(),/Изменение не сохранено/);
   await p.evaluate(()=>{Storage.prototype.setItem=window.__realSet;});await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.roomLevel('rest')===2);await context.close();
  });
  await check('concurrent tabs share last essence and shop cores remain independent',async()=>{
@@ -825,6 +825,7 @@ try {
   let dialogs=0;p.on('dialog',async d=>{dialogs++;await d.dismiss();});
   async function upload(o){const chooserEvent=p.waitForEvent('filechooser');await button.click();const chooser=await chooserEvent;await chooser.setFiles({name:'synthetic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(o))});await p.waitForTimeout(80);}
   await upload(corrupt);assert.equal(dialogs,0);assert.match(await p.locator('.pl-menu').innerText(),/целостности/);
+  const dupeEvent=p.waitForEvent('filechooser');await button.click();const dupeChooser=await dupeEvent;await dupeChooser.setFiles({name:'duplicate.json',mimeType:'application/json',buffer:Buffer.from('{"v":1,"docs":{"weights/test":{"d":{"kg":100},"u":1},"weights/test":{"d":{"kg":160},"u":2}}}')});await p.waitForTimeout(80);assert.equal(dialogs,0);assert.deepEqual(await docs(p),before);
   await upload(valid);assert.equal(dialogs,1);assert.deepEqual(await docs(p),before);
   await context.close();
  });
