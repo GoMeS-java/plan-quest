@@ -290,7 +290,8 @@
       });
       if((local['cfg/fate']&&local['cfg/fate'].d)||(remote['cfg/fate']&&remote['cfg/fate'].d)){
         var prior=local['cfg/fate'],chosen=next['cfg/fate'];
-        next['cfg/fate']={d:retainFate(prior&&prior.d,chosen&&chosen.d),u:Math.max(Date.now(),(prior&&prior.u||0)+1,(chosen&&chosen.u||0)+1)};
+        var combined=retainFate(prior&&prior.d,remote['cfg/fate']&&remote['cfg/fate'].d);if(chosen&&chosen.d&&Object.prototype.hasOwnProperty.call(chosen.d,'active'))combined.active=chosen.d.active;
+        next['cfg/fate']={d:combined,u:Math.max(Date.now(),(prior&&prior.u||0)+1,(chosen&&chosen.u||0)+1)};
       }
       meta.accepted = accepted; meta.syncPaused = true;
       if (!jset(META, meta)) throw storageError();

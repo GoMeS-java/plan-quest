@@ -79,6 +79,16 @@ try {
   await p.evaluate(record=>PlanSync.importObj({v:1,docs:{'cfg/fate':record}}),divergent);await p.waitForTimeout(60);assert.deepEqual((await docs(p))['cfg/fate'].d,before);
   for(const [path,record]of Object.entries(old.docs))assert.deepEqual((await docs(p))[path].d,record.d);await context.close();
  });
+ await check('0.79 conflict choices retain discoveries from both devices even with an older remote ledger',async()=>{
+  for(const choice of ['local','remote']){
+   const seed=structuredClone(initial);seed['cfg/fate']={version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}};
+   const {page:p,context}=await open({shell:true,seed});const before=await docs(p),remote=structuredClone(before);remote['cfg/opening'].d.cash+=100;remote['cfg/fate']={u:0,d:{version:1,active:'',entries:{f01:{pieces:{1:{version:1,at:2,presented:true}}}}}};
+   const conflict=await p.evaluate(async remote=>{try{await PlanSync._merge({docs:remote},{detect:true});return false;}catch{return true;}},remote);assert(conflict);
+   await p.evaluate(choice=>PlanSync.resolveConflict(choice),choice);await p.waitForTimeout(60);
+   assert.equal(await p.evaluate(()=>VkachFate.discovered(PlanSync._docs()['cfg/fate'].d)[0].revealed.length),2);assert.equal(await p.evaluate(()=>VkachFate.pending(PlanSync._docs()['cfg/fate'].d).length),0);
+   assert.equal((await docs(p))['cfg/opening'].d.cash,choice==='local'?before['cfg/opening'].d.cash:remote['cfg/opening'].d.cash);await context.close();
+  }
+ });
  await check('0.79 mobile scenes assemble actual pixels, honor sound and reduced motion, and Back preserves collection',async()=>{
   const seed=structuredClone(initial);seed['cfg/effects']={shake:'off',flash:'off',sound:'off'};
   seed['cfg/fate']={version:1,active:'f01',entries:{f01:{pieces:{0:{version:1,at:1,presented:true},1:{version:1,at:2,presented:true}}}}};
