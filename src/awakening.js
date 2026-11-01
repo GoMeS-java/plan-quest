@@ -46,8 +46,9 @@
         // Trophy and settings panels do not always share the same header markup.
         // Keep the coach usable even when a panel has no .shead element.
         var heading = host.querySelector('.shead');
-        if (heading) host.insertBefore(card, heading.nextSibling);
-        else host.insertBefore(card, host.firstChild);
+        // insertBefore requires a *direct* child, not a nested heading's sibling.
+        var anchor = heading && heading.parentNode === host ? heading.nextSibling : host.firstChild;
+        host.insertBefore(card, anchor);
       }
     }
     card.classList.toggle('awakening-floating', host === document.body);
