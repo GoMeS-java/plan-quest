@@ -960,7 +960,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <div class="release-stamp"><b>Версия __VER__</b><span>Сборка __BUILD__</span></div>
-    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
+    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
@@ -4224,7 +4224,7 @@ function renderAllInner() {
     if (!db) return;
     var mk = mondayKey(dkey(new Date()));
     var cur = !!(S.weeks[mk] && S.weeks[mk].meet);
-    enqueue(function () { return db.doc('weeks/' + mk).set({ meet: !cur }); });
+    enqueue(function () { return db.doc('weeks/' + mk).update({ meet: !cur }); });
   }
   $('kcal').addEventListener('change', function () {
     if (!db) return;
@@ -4509,7 +4509,7 @@ function renderAllInner() {
     var nx = Object.assign({}, S.rare || {});
     nx[id] = dkey(new Date());
     S.rare = nx;
-    enqueue(function () { return db.doc('cfg/rare').set(nx); });
+    var patch={};patch[id]=nx[id];enqueue(function () { return db.doc('cfg/rare').update(patch); });
   }
   function timeCheck() {
     var d = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
