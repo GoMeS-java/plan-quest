@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.70";window.APP_BUILD="bf0e0cac249e";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.70";window.APP_BUILD="84b49d6e57bd";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -778,7 +778,7 @@ html,body{overflow-anchor:none}
       <div class="goal-head"><b>График веса</b></div>
       <div id="spark"></div>
       <div class="hint">Прогресс по весу и контрольные точки смотри во вкладке «Путь». Вес записывается ниже.</div>
-      <div class="row"><input id="in-weight" type="number" step="0.1" inputmode="decimal" placeholder="Вес сейчас, кг"><button class="btn go" type="button" id="w-add">ЗАПИСАТЬ</button></div>
+      <details class="goal"><summary>Телосложение героя</summary><label for="body-goal">Цель для внешности, кг (необязательно)</label><input id="body-goal" type="number" step="0.1" min="30.1" max="399.9" placeholder="Без цели"><button id="body-goal-save" type="button" class="btn">Сохранить настройку</button><p class="hint" id="body-goal-status" role="status">Герой следует последней записи веса. Без цели используются существующие диапазоны внешности.</p></details><div class="row"><input id="in-weight" type="number" step="0.1" inputmode="decimal" placeholder="Вес сейчас, кг"><button class="btn go" type="button" id="w-add">ЗАПИСАТЬ</button></div>
       <ul class="log" id="l-weight"></ul>
     </div>
   
@@ -955,7 +955,7 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.70</b><span>Сборка bf0e0cac249e</span></div>
+    <div class="release-stamp"><b>Версия 0.70</b><span>Сборка 84b49d6e57bd</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -1197,15 +1197,18 @@ html,body{overflow-anchor:none}
     else if (it.shape === 'plaid') drawPlaid(it.c);
   }
   var BODY_F = [1, 0.95, 0.9, 0.85, 0.8, 0.76], bodyStageNow = 0;
+  var bodyShapeNow=1;
   function squeezeBody() {
-    var f = BODY_F[bodyStageNow] || 1;
-    if (f >= 1) return;
-    var src = g.slice(), cx = 15.5, y, x;
-    for (y = 13; y < H; y++) {
-      var k = y < 17 ? 1 - (1 - f) * ((y - 12) / 5) : f;
-      for (x = 0; x < W; x++) {
-        var sx = Math.round(cx + (x - cx) / k);
-        g[y * W + x] = (sx >= 0 && sx < W) ? src[y * W + sx] : null;
+    var f=bodyShapeNow,src=g.slice(),cx=15.5;
+    // Inverse nearest-neighbour sampling on the original pixel grid. No CSS scale.
+    for(var y=12;y<H;y++){
+      var strength=y<16?.2:y<20?.65:y<33?1:y<40?.85:.75;
+      var k=1-(1-f)*strength;
+      for(var x=0;x<W;x++){
+        // Keep the inner face, eyes, hair and vertical coordinates unchanged.
+        if(y<16){if((x===10||x===21)&&f<.86)g[y*W+x]=null;continue;}
+        var sx=Math.round(cx+(x-cx)/k);
+        g[y*W+x]=sx>=0&&sx<W?src[y*W+sx]:null;
       }
     }
   }
@@ -3169,11 +3172,25 @@ html,body{overflow-anchor:none}
     BODY_TH.forEach(function (x) { if (t <= x) n++; });
     return n;
   }
+  function bodyMeasurements(){
+    var today=dkey(new Date());
+    return (S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&Number(w.kg)>30&&Number(w.kg)<400&&/^\d{4}-\d{2}-\d{2}$/.test(w.date)&&w.date<=today;}).slice().sort(function(a,b){return a.date.localeCompare(b.date)||(Number(a.ts)||0)-(Number(b.ts)||0)||String(a.id||'').localeCompare(String(b.id||''));});
+  }
+  function bodyShape(){
+    var records=bodyMeasurements();if(!records.length)return 1;
+    var weight=Number(records[records.length-1].kg),start=Number(records[0].kg),goal=Number((S.bodyAppearance||{}).goal);
+    if(goal>30&&goal<start)return Math.max(BODY_F[BODY_F.length-1],Math.min(1,1-(1-BODY_F[BODY_F.length-1])*(start-weight)/(start-goal)));
+    var anchors=[BODY_TH[0]+BODY_TH[0]-BODY_TH[1]].concat(BODY_TH);
+    if(weight>=anchors[0])return BODY_F[0];
+    for(var i=1;i<anchors.length;i++)if(weight>=anchors[i]){var t=(anchors[i-1]-weight)/(anchors[i-1]-anchors[i]);return BODY_F[i-1]+t*(BODY_F[i]-BODY_F[i-1]);}
+    return BODY_F[BODY_F.length-1];
+  }
   function renderWardrobe() {
-    bodyStageNow = bodyStage();
+    bodyStageNow = bodyStage();bodyShapeNow=bodyShape();
+    if(document.activeElement!==$('body-goal'))$('body-goal').value=(S.bodyAppearance||{}).goal||'';
     var ids = outfitIds();
     var list = allItems();
-    var key = JSON.stringify([ids, bodyStageNow, list.map(function (i) { return i.id; })]);
+    var key = JSON.stringify([ids, bodyShapeNow, list.map(function (i) { return i.id; })]);
     if (key === wardKey) return;
     wardKey = key;
     paintSprite($('hero'), buildSprite(outfitFrom(list, ids)));
@@ -3408,7 +3425,6 @@ html,body{overflow-anchor:none}
     if (changed || !had) writeAchSeen(seen);
     try {
       var bs = bodyStage(), bseen = localStorage.getItem('bodySeen');
-      if (bseen !== null && bs > +bseen) achQueue.push({ id: 'body:' + bs, date: today, kind: 'ФОРМА ИЗМЕНИЛАСЬ', big: 'Спящий стал стройнее', text: 'Заклятие зафиксировало изменения в весе. Модель твоего персонажа обновлена.' });
       if (bseen === null || bs !== +bseen) localStorage.setItem('bodySeen', String(bs));
     } catch (e) {}
     showNextAch();
@@ -3901,7 +3917,7 @@ function citadelHeroFrames(copy){
  var sprite=copy.parentElement.querySelector('.citadel-hero-sprite');if(!sprite){sprite=document.createElement('span');sprite.className='citadel-hero-sprite';sprite.setAttribute('aria-hidden','true');copy.parentElement.appendChild(sprite);}
  sprite.style.setProperty('--hero-sheet','url("'+citadelHeroSheet+'")');
 }
-function syncCitadelAvatar(){if(!loaded)return;['citadel-avatar-canvas','citadel-interior-hero'].forEach(function(id){var copy=$(id);if(!copy)return;try{paintSprite(copy,buildSprite(outfitFrom(allItems(),outfitIds())));citadelHeroFrames(copy);}catch(e){var original=$('hero');if(original){var ctx=copy.getContext('2d');ctx.clearRect(0,0,copy.width,copy.height);ctx.imageSmoothingEnabled=false;ctx.drawImage(original,0,0,copy.width,copy.height);}}});}
+function syncCitadelAvatar(){if(!loaded)return;bodyShapeNow=bodyShape();['citadel-avatar-canvas','citadel-interior-hero'].forEach(function(id){var copy=$(id);if(!copy)return;try{paintSprite(copy,buildSprite(outfitFrom(allItems(),outfitIds())));citadelHeroFrames(copy);}catch(e){var original=$('hero');if(original){var ctx=copy.getContext('2d');ctx.clearRect(0,0,copy.width,copy.height);ctx.imageSmoothingEnabled=false;ctx.drawImage(original,0,0,copy.width,copy.height);}}});}
 // Frequent updates only around actual departures. Idle residents need one wake per minute.
 function citadelLifeTick(){
  clearTimeout(citadelTimeTimer);citadelTimeTimer=0;
@@ -4272,6 +4288,7 @@ function renderAllInner() {
   });
   $('jar-in').addEventListener('click', function () { jarMove(1); });
   $('jar-out').addEventListener('click', function () { jarMove(-1); });
+  $('body-goal-save').addEventListener('click',function(){if(!db)return;var raw=$('body-goal').value.trim(),goal=Number(raw),records=bodyMeasurements();if(raw&&(!(goal>30&&goal<400)||records.length&&goal>=Number(records[0].kg))){$('body-goal-status').textContent='Укажи цель ниже начальной записи или оставь поле пустым.';return;}enqueue(function(){return db.doc('cfg/body-appearance').set({goal:raw?goal:null});});$('body-goal-status').textContent='Внешность синхронизирована. На награды и прогресс это не влияет.';});
   $('w-add').addEventListener('click', function () {
     if (!db) return;
     var v = Number($('in-weight').value);
@@ -4398,6 +4415,7 @@ function renderAllInner() {
       S.outfit = sn.exists ? sn.data() : null;
       firstDone('outfit'); renderAll();
     }, function (e) { dbErr(e); });
+    db.doc('cfg/body-appearance').onSnapshot(function(sn){S.bodyAppearance=sn.exists?sn.data():null;renderAll();},dbErr);
     watchCollection('weights', function (r) { S.weights = r.sort(function (a, c) { return a.ts - c.ts; }); });
     watchCollection('buys', function (r) { S.buys = r; });
     db.doc('cfg/abyss-economy').onSnapshot(function(sn){S.abyss=sn.exists?sn.data():null;firstDone('abyss');renderAll();},dbErr);
