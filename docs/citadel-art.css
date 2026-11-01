@@ -437,26 +437,16 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 .citadel-progress-sources button{flex:1 1 100px;min-width:0;min-height:44px;padding:7px;border:1px solid #786185;background:#2c2138;color:#efdcdf;font:12px/1.4 system-ui,sans-serif;white-space:normal}
 .wardrobe-worn{display:block;color:#f4d49c;font:11px/1.4 system-ui,sans-serif}
 
-/* Earned environments belong to the whole Citadel, not the retired sanctuary.
-   Only environmental artwork is tinted; heroes, inhabitants and controls stay legible. */
-:root[data-citadel-bg] .citadel-castle{--realm-sky:none;--realm-tint:none;--realm-stone:#101320;--realm-filter:none}
-:root[data-citadel-bg="winter"] .citadel-castle{--realm-sky:radial-gradient(circle at 76% 22%,#f4fbff 0 7%,transparent 8%),repeating-radial-gradient(circle at 14% 25%,#f6faff 0 1px,transparent 2px 23px),linear-gradient(#253a63,#91b2d7 65%,#e3f1ff);--realm-tint:linear-gradient(#d5ecff38,#eaf6ff18);--realm-stone:#28364b;--realm-filter:brightness(1.2) saturate(.65) hue-rotate(16deg)}
-:root[data-citadel-bg="space"] .citadel-castle{--realm-sky:radial-gradient(ellipse at 75% 30%,#cc9cf177,transparent 35%),radial-gradient(ellipse at 22% 70%,#3a5cbd99,transparent 50%),repeating-radial-gradient(circle at 12% 15%,#f8edff 0 1px,transparent 2px 31px),linear-gradient(#030515,#151044);--realm-tint:linear-gradient(#7157d030,#0b0a3422);--realm-stone:#10102e;--realm-filter:hue-rotate(34deg) saturate(1.25)}
-:root[data-citadel-bg="city"] .citadel-castle{--realm-sky:linear-gradient(90deg,transparent 5%,#171934 5% 11%,transparent 11% 23%,#222545 23% 31%,transparent 31% 47%,#22213d 47% 54%,transparent 54% 70%,#211d39 70% 81%,transparent 81%) bottom/100% 54% no-repeat,linear-gradient(#1d254b,#a45d90);--realm-tint:linear-gradient(#a9588044,transparent);--realm-filter:sepia(.12) hue-rotate(16deg)}
-:root[data-citadel-bg="library"] .citadel-castle,:root[data-citadel-bg="attic"] .citadel-castle{--realm-sky:linear-gradient(#21172c,#5b3d45 72%,#b18d61);--realm-tint:linear-gradient(#bb884c35,#35201628);--realm-stone:#241c25;--realm-filter:sepia(.45) brightness(.92)}
-:root[data-citadel-bg="abyss"] .citadel-castle,:root[data-citadel-bg="cave"] .citadel-castle{--realm-sky:radial-gradient(ellipse at 52% 70%,#8b50d066,transparent 50%),linear-gradient(#05040d,#23143f);--realm-tint:linear-gradient(#663f9a3f,#08051344);--realm-stone:#100c1c;--realm-filter:hue-rotate(28deg) brightness(.8)}
-:root[data-citadel-bg="forest"] .citadel-castle,:root[data-citadel-bg="peaks"] .citadel-castle{--realm-sky:linear-gradient(145deg,transparent 54%,#183d3a 55% 68%,transparent 69%),linear-gradient(30deg,transparent 50%,#2d5953 51% 70%,transparent 71%),linear-gradient(#142e39,#719a8b);--realm-tint:linear-gradient(#2f80531f,#0719102a);--realm-filter:hue-rotate(72deg) saturate(.8)}
-:root[data-citadel-bg="beach"] .citadel-castle,:root[data-citadel-bg="sunrise"] .citadel-castle,:root[data-citadel-bg="dawn"] .citadel-castle{--realm-sky:radial-gradient(circle at 75% 38%,#ffe2a2 0 9%,transparent 10%),linear-gradient(#344a81,#ca827e 72%,#f0bb7e);--realm-tint:linear-gradient(#e9a86d28,transparent);--realm-filter:sepia(.3) brightness(1.12)}
-:root[data-citadel-bg="sunset"] .citadel-castle{--realm-sky:radial-gradient(circle at 71% 64%,#ffb676 0 9%,transparent 10%),linear-gradient(#472653,#ae5272 65%,#d98e6c);--realm-tint:linear-gradient(#d7737540,transparent);--realm-filter:sepia(.2) hue-rotate(320deg)}
-:root[data-citadel-bg="rain"] .citadel-castle,:root[data-citadel-bg="storm"] .citadel-castle{--realm-sky:repeating-linear-gradient(108deg,transparent 0 21px,#b9c9e055 22px 23px,transparent 24px 52px),linear-gradient(#131e3a,#63768b);--realm-tint:linear-gradient(#485f8b44,#171d4230);--realm-filter:brightness(.75) saturate(.75)}
-:root[data-citadel-bg="watch"] .citadel-castle{--realm-sky:radial-gradient(circle at 77% 27%,#eee8c3 0 7%,transparent 8%),linear-gradient(#020613,#152146);--realm-tint:linear-gradient(#1c2a6133,#050a2022);--realm-filter:brightness(.8)}
-:root[data-citadel-bg="aurora"] .citadel-castle{--realm-sky:linear-gradient(115deg,transparent 20%,#4beac466 40%,#9f5de688 52%,transparent 70%),linear-gradient(#050c1d,#122b42);--realm-tint:linear-gradient(#51e2c11c,#725ab120);--realm-filter:hue-rotate(42deg)}
-:root[data-citadel-bg]:not([data-citadel-bg=""]) .citadel-castle{background:var(--realm-stone)!important}
-:root[data-citadel-bg]:not([data-citadel-bg=""]) .citadel-sky{background:var(--realm-sky)!important;box-shadow:inset 0 -15px 20px #090b22}
-:root[data-citadel-bg]:not([data-citadel-bg=""]) .citadel-room:before,:root[data-citadel-bg]:not([data-citadel-bg=""]) .citadel-interior-stage:before{filter:var(--realm-filter)}
-:root[data-citadel-bg]:not([data-citadel-bg=""]) .citadel-room{background-color:var(--realm-stone)!important}
-:root[data-citadel-bg]:not([data-citadel-bg=""]) .citadel-interior-stage{box-shadow:inset 0 0 18px #000,0 0 0 2px var(--realm-stone)!important}
-@media(prefers-reduced-motion:reduce){:root[data-citadel-bg] .citadel-sky{animation:none!important}}
-:root[data-citadel-bg="winter"] .citadel-interior-stage:before{filter:brightness(1.18) saturate(.6) hue-rotate(16deg)}
-:root[data-citadel-bg="space"] .citadel-interior-stage:before{filter:hue-rotate(34deg) saturate(1.25)}
-:root[data-citadel-bg="abyss"] .citadel-interior-stage:before{filter:hue-rotate(28deg) brightness(.8)}
+/* Keep the hand-painted castle intact. Earned environments only add sparse atmosphere. */
+.citadel-realm-particles{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;opacity:0}
+:root[data-citadel-bg="winter"] .citadel-realm-particles{opacity:.65;background-image:radial-gradient(1px 1px at 12% 25%,#fff 99%,transparent),radial-gradient(1.5px 1.5px at 49% 8%,#d8edff 99%,transparent),radial-gradient(1px 1px at 78% 62%,#fff 99%,transparent),radial-gradient(1px 1px at 92% 33%,#eaf5ff 99%,transparent);background-size:83px 66px,127px 89px,101px 74px,149px 113px;animation:citadelSnow 14s linear infinite}
+:root[data-citadel-bg="space"] .citadel-realm-particles{opacity:.75}
+:root[data-citadel-bg="space"] .citadel-realm-particles:before,:root[data-citadel-bg="space"] .citadel-realm-particles:after{content:'';position:absolute;top:-15%;left:30%;width:2px;height:15px;transform:rotate(35deg);background:linear-gradient(#d7c2ff00,#d7c2ffbb,#fff);filter:drop-shadow(0 0 2px #c9a6ff);animation:citadelMeteor 9s linear infinite}
+:root[data-citadel-bg="space"] .citadel-realm-particles:after{left:79%;animation-delay:-5s;animation-duration:13s;opacity:.7}
+:root[data-citadel-bg="rain"] .citadel-realm-particles,:root[data-citadel-bg="storm"] .citadel-realm-particles{opacity:.25;background:repeating-linear-gradient(105deg,transparent 0 39px,#b5c5e266 40px 41px,transparent 42px 78px);animation:citadelRain 8s linear infinite}
+:root[data-citadel-bg="aurora"] .citadel-realm-particles{opacity:.25;background:linear-gradient(105deg,transparent 30%,#65cfbd77 47%,#a76fe577 54%,transparent 70%);animation:citadelGlow 13s ease-in-out infinite alternate}
+@keyframes citadelSnow{to{background-position:22px 140px,-18px 110px,11px 160px,-30px 180px}}
+@keyframes citadelMeteor{0%,78%{transform:translate(0,0) rotate(35deg);opacity:0}80%{opacity:1}91%{transform:translate(-65px,100px) rotate(35deg);opacity:0}100%{opacity:0}}
+@keyframes citadelRain{to{background-position:-55px 120px}}
+@keyframes citadelGlow{to{opacity:.1;transform:translateX(15px)}}
+@media(prefers-reduced-motion:reduce){.citadel-realm-particles,.citadel-realm-particles:before,.citadel-realm-particles:after{animation:none!important}}

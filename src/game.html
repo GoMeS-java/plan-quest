@@ -1862,6 +1862,13 @@ html,body{overflow-anchor:none}
     // Earned sanctuary environments now dress the entire Citadel as well.
     // Keep the same saved look ID, so old backups and unlocks need no migration.
     root.setAttribute('data-citadel-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
+    var sky = document.querySelector('.citadel-sky');
+    if (sky && !sky.querySelector('.citadel-realm-particles')) {
+      var particles = document.createElement('div');
+      particles.className = 'citadel-realm-particles';
+      particles.setAttribute('aria-hidden', 'true');
+      sky.appendChild(particles);
+    }
     if (st) {
       st.setAttribute('data-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
       st.setAttribute('data-frame', ok(look.frame, 'frame') ? COS[look.frame].key : '');
