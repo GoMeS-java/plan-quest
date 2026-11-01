@@ -3720,7 +3720,16 @@ function citadelRenderDecor(){if(!loaded)return;var room=citadelSelected,rank=po
 var citadelObjects={gatehouse:['Засов ворот','Кованые створки закрывают проход от холодного ветра. Дозорный проверяет их каждый день.'],refectory:['Длинный стол','К вечеру здесь собираются жители Цитадели.'],cloister:['Каменная арка','Под сводом растёт мох. Сквозь решётку падает свет внешнего двора.'],vault:['Книга казны','Ядра души общие со Воспоминаниями. Все расходы записаны в истории покупок.'],throne:['Древний трон','Камень помнит каждого, кто решался на нём сидеть.'],observatory:['Звёздная линза','Сквозь мутное стекло видны созвездия, которых нет на обычном небе.'],rest:['Старая кровать','Место, где даже кошмары ненадолго теряют власть.'],study:['Книга записей','На страницах отражается путь, который ты проходишь в реальности.'],archive:['Стеллаж воспоминаний','Время не трогает эти страницы.'],forge:['Горн','Угли ждут часа, когда мастерская пробудится.']};
 // Interior motion is presentation state; it never awards or writes progress.
 var citadelWalkPositions={},citadelWalkAnimation=null;
-function citadelStopWalk(){if(citadelWalkAnimation){citadelWalkAnimation.cancel();citadelWalkAnimation=null;}$('citadel-interior-stage').dataset.moving='false';}
+function citadelStopWalk(){
+ var stage=$('citadel-interior-stage'),hero=stage.querySelector('.citadel-hero-sprite');
+ if(citadelWalkAnimation){
+  // Freeze the rendered position before cancelling WAAPI. The inline style
+  // already holds the destination, which would otherwise cause a visible jump.
+  if(hero&&stage.clientWidth&&stage.clientHeight){var style=getComputedStyle(hero),left=parseFloat(style.left),bottom=parseFloat(style.bottom);hero.style.left=left+'px';hero.style.bottom=bottom+'px';citadelWalkPositions[citadelSelected]={x:(left+hero.offsetWidth/2)/stage.clientWidth,y:bottom/stage.clientHeight};}
+  citadelWalkAnimation.cancel();citadelWalkAnimation=null;
+ }
+ stage.dataset.moving='false';$('citadel-walk-target').hidden=true;
+}
 function citadelWalkTo(x,y,animate){
  var stage=$('citadel-interior-stage'),hero=stage.querySelector('.citadel-hero-sprite');
  if(!hero||$('citadel-interior').hidden||!stage.clientWidth)return;
@@ -3736,8 +3745,8 @@ function citadelWalkTo(x,y,animate){
  var from={left:getComputedStyle(hero).left,bottom:getComputedStyle(hero).bottom};
  citadelStopWalk();citadelWalkPositions[citadelSelected]={x:x,y:y};
  var left=Math.round(w*x-hero.offsetWidth/2),bottom=Math.round(stage.clientHeight*y);
- stage.dataset.facing=x<old.x?'left':'right';hero.style.left=left+'px';hero.style.bottom=bottom+'px';
- var marker=$('citadel-walk-target');marker.style.left=(x*100)+'%';marker.style.bottom=(y*100)+'%';marker.hidden=animate===false;
+ stage.dataset.facing=left<parseFloat(from.left)?'left':'right';hero.style.left=left+'px';hero.style.bottom=bottom+'px';
+ var marker=$('citadel-walk-target');marker.style.left=(x*100)+'%';marker.style.bottom=(y*100)+'%';marker.hidden=animate===false||window.matchMedia('(prefers-reduced-motion:reduce)').matches;
  if(animate!==false&&!document.hidden&&!window.matchMedia('(prefers-reduced-motion:reduce)').matches){
   stage.dataset.moving='true';var movement=hero.animate([from,{left:left+'px',bottom:bottom+'px'}],{duration:Math.min(800,Math.max(200,Math.abs(parseFloat(from.left)-left)*3)),easing:'linear'});
   citadelWalkAnimation=movement;movement.onfinish=function(){if(citadelWalkAnimation===movement){stage.dataset.moving='false';citadelWalkAnimation=null;marker.hidden=true;citadelFaceResidents();}};
@@ -3753,6 +3762,8 @@ function citadelRoomActions(){
  host.querySelectorAll('[data-room-talk]').forEach(function(b){if(!present.some(function(p){return p.key===b.dataset.roomTalk;})){var focused=document.activeElement===b;b.remove();if(focused)$('citadel-interior-stage').focus({preventScroll:true});}});
  present.forEach(function(p){var b=host.querySelector('[data-room-talk="'+p.key+'"]');if(!b){b=document.createElement('button');b.type='button';b.dataset.roomTalk=p.key;b.textContent='Поговорить: '+p.name;b.onclick=function(){citadelNpcSpeak(p.key);};host.appendChild(b);}});
 }
+// One shared light layer per existing scene; no timers, input or save writes.
+document.querySelectorAll('[data-croom],#citadel-interior-stage').forEach(function(scene){var light=document.createElement('span');light.className='citadel-room-light';light.setAttribute('aria-hidden','true');var source=document.createElement('i');source.className='citadel-light-source';light.appendChild(source);scene.appendChild(light);});
 var citadelWalkStage=$('citadel-interior-stage');citadelWalkStage.tabIndex=0;citadelWalkStage.setAttribute('role','group');citadelWalkStage.setAttribute('aria-label','Комната. Нажми на пол или используй стрелки, чтобы пройти.');
 citadelWalkStage.addEventListener('click',function(e){if(e.target.closest('button,[role="button"]'))return;var r=this.getBoundingClientRect(),y=(r.bottom-e.clientY)/r.height;if(y>.34)return;citadelWalkTo((e.clientX-r.left)/r.width,y);});
 citadelWalkStage.addEventListener('keydown',function(e){if(e.target!==this)return;var p=citadelWalkPositions[citadelSelected]||{x:.5,y:.08},keys={ArrowLeft:[-.1,0],ArrowRight:[.1,0],ArrowUp:[0,.04],ArrowDown:[0,-.04]},d=keys[e.key];if(!d)return;e.preventDefault();citadelWalkTo(p.x+d[0],p.y+d[1]);});

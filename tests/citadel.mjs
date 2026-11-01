@@ -54,6 +54,49 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.74 final desktop interiors expose both doors between permanent side panels',async()=>{
+  for(const width of [1050,1280,1440]){
+   const {page:p,context}=await open({width,height:900,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+   const stage=await p.locator('#citadel-interior-stage').boundingBox(),left=await p.locator('.citadel-shell-drawer.left').boundingBox(),right=await p.locator('.citadel-shell-drawer.right').boundingBox();
+   assert(stage.x>=left.x+left.width&&stage.x+stage.width<=right.x,'interior must fit between drawers');
+   for(const door of await p.locator('#citadel-interior-stage .citadel-scene-door').all())assert(await door.evaluate(n=>{const b=n.getBoundingClientRect(),hit=document.elementFromPoint(b.left+b.width/2,b.top+b.height/2);return n===hit||n.contains(hit);}),'both scene doors must receive real pointer hits');
+   const destination=await p.locator('#citadel-interior-stage .citadel-scene-door').first().getAttribute('data-stage-door');await p.locator('#citadel-interior-stage .citadel-scene-door').first().click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),destination);
+   if(width===1280)await p.screenshot({path:resolve(out,'final-074-desktop-interior.png')});await context.close();
+  }
+ });
+ await check('0.74 final interrupted walking freezes position and faces the actual next target',async()=>{
+  const {page:p,context}=await open({shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  // Freeze the finite WAAPI walk at a deterministic point, then redirect to a
+  // target between the current position and the old destination.
+  const state=await p.evaluate(()=>{
+   const stage=document.querySelector('#citadel-interior-stage'),hero=stage.querySelector('.citadel-hero-sprite');
+   stage.focus();stage.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+   const walk=hero.getAnimations().find(a=>!a.animationName);if(!walk)throw Error('finite walk missing');walk.pause();walk.currentTime=20;
+   const actual=parseFloat(getComputedStyle(hero).left),target=parseFloat(hero.style.left),css=getComputedStyle(hero).animationName;
+   return {actual,target,css};
+  });
+  assert(state.target>state.actual);assert.match(state.css,/citadelHeroStride/,'walking must use stride, not the idle breathing rule');
+  await p.emulateMedia({reducedMotion:'reduce'});await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.moving==='false');
+  const stopped=await p.locator('#citadel-interior-stage .citadel-hero-sprite').evaluate(n=>parseFloat(getComputedStyle(n).left));assert(Math.abs(stopped-state.actual)<1,'cancelling must not jump to the old destination');assert(await p.locator('#citadel-walk-target').isHidden());
+  await p.emulateMedia({reducedMotion:'no-preference'});
+  await p.evaluate(()=>{const stage=document.querySelector('#citadel-interior-stage');stage.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));const hero=stage.querySelector('.citadel-hero-sprite'),walk=hero.getAnimations().find(a=>!a.animationName);walk.pause();walk.currentTime=20;const r=stage.getBoundingClientRect(),actual=parseFloat(getComputedStyle(hero).left),target=parseFloat(hero.style.left),mid=(actual+target)/2+hero.offsetWidth/2;stage.dispatchEvent(new MouseEvent('click',{clientX:r.left+stage.clientLeft+mid,clientY:r.bottom-stage.clientHeight*.08,bubbles:true}));});
+  // The new target is left of the old destination but right of the hero.
+  // Facing must follow the rendered path, not the old destination.
+  const facing=await p.locator('#citadel-interior-stage').evaluate(stage=>{const hero=stage.querySelector('.citadel-hero-sprite'),walk=hero.getAnimations().find(a=>!a.animationName),f=walk.effect.getKeyframes();return {actual:stage.dataset.facing,expected:parseFloat(f[1].left)<parseFloat(f[0].left)?'left':'right'};});assert.equal(facing.actual,facing.expected);
+  await p.emulateMedia({reducedMotion:'reduce'});assert.deepEqual(await docs(p),before);await context.close();
+ });
+ await check('0.74 final room light follows tiers and civil time without intercepting actions or writing progress',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16',shell:true});await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  assert.equal(await p.locator('.citadel-room-light').count(),11);assert.equal(await p.locator('#citadel-interior-stage .citadel-room-light').evaluate(n=>getComputedStyle(n).pointerEvents),'none');
+  const day=await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n).getPropertyValue('--window-color'));
+  await p.clock.setSystemTime(new Date('2027-04-16T23:02:00+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-phase'),'НОЧЬ');assert.notEqual(await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n).getPropertyValue('--window-color')),day);
+  const powers=await p.locator('#citadel-interior-stage').evaluate(stage=>{const light=stage.querySelector('.citadel-room-light'),level=stage.dataset.level,values=[];for(const tier of [1,2,3]){stage.dataset.level=tier;values.push(Number(getComputedStyle(light).opacity));}stage.dataset.level=level;return values;});assert(powers[0]<powers[1]&&powers[1]<powers[2]);
+  await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-object').getAttribute('data-inspected'),'true');assert.equal(await p.locator('#citadel-interior-stage .citadel-light-source').evaluate(n=>getComputedStyle(n).animationName),'none');
+  await p.emulateMedia({reducedMotion:'no-preference'});assert.notEqual(await p.locator('#citadel-interior-stage .citadel-light-source').evaluate(n=>getComputedStyle(n).animationName),'none');await p.emulateMedia({reducedMotion:'reduce'});
+  // Return to the original civil time before comparing persisted game state.
+  await p.clock.setSystemTime(new Date('2027-04-16T14:00:00+03:00'));await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),before);await context.close();
+ });
+
  await check('0.74 resident arrival clears corridor coordinates and stays inside the destination room',async()=>{
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
   await p.clock.setSystemTime(new Date('2027-04-16T14:15:05+03:00'));await p.evaluate(()=>__qa.render());

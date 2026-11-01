@@ -340,3 +340,34 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 .citadel-interior-object:focus-visible{outline:2px solid #f0cf91;outline-offset:2px}
 .citadel-interior-object[data-inspected="true"]{border-color:#d8bc83;box-shadow:inset 0 0 12px #d4b17b22}
 .citadel-interior-object[data-inspected="true"]:before{content:'✓';animation:none;color:#f3dca4;opacity:1}
+
+/* 0.74 final art pass: a window beam and a small local source in the same
+   room coordinates at every tier. Only the visible interior flame animates. */
+.citadel-room,.citadel-interior-stage{--light-x:24%;--light-y:66%;--light-color:244,177,101;--light-power:.48;--window-color:168,176,226;--window-power:.2}
+:is([data-croom="rest"],[data-room="rest"]){--light-x:24%;--light-y:68%}
+:is([data-croom="study"],[data-room="study"]){--light-x:57%;--light-y:53%}
+:is([data-croom="archive"],[data-room="archive"]){--light-x:40%;--light-y:67%}
+:is([data-croom="forge"],[data-room="forge"]){--light-x:46%;--light-y:64%;--light-color:255,123,66}
+:is([data-croom="refectory"],[data-room="refectory"]){--light-x:49%;--light-y:36%}
+:is([data-croom="gatehouse"],[data-room="gatehouse"]){--light-x:27%;--light-y:59%}
+:is([data-croom="vault"],[data-room="vault"]){--light-x:74%;--light-y:60%}
+:is([data-croom="observatory"],[data-room="observatory"]){--light-x:79%;--light-y:43%;--light-color:170,158,255}
+:is([data-croom="cloister"],[data-room="cloister"]){--light-x:50%;--light-y:66%;--light-color:124,200,194}
+.citadel-room-light{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none!important;opacity:var(--light-power);background:radial-gradient(ellipse at var(--light-x) var(--light-y),rgba(var(--light-color),.36),transparent 31%)}
+.citadel-room-light:before{content:'';position:absolute;inset:12% 13% 6% 4%;background:linear-gradient(135deg,rgba(var(--window-color),var(--window-power)),transparent 76%);clip-path:polygon(5% 0,13% 0,75% 100%,35% 100%);pointer-events:none}
+.citadel-room-light:after{content:'';position:absolute;inset:0;box-shadow:inset 0 -10px 12px #06091255,inset 8px 0 14px #05081144;pointer-events:none}
+.citadel-light-source{position:absolute;left:var(--light-x);top:var(--light-y);width:4px;height:8px;margin:-7px 0 0 -2px;background:rgb(var(--light-color));box-shadow:0 0 8px 3px rgba(var(--light-color),.55);clip-path:polygon(50% 0,75% 30%,75% 50%,100% 70%,75% 100%,25% 100%,0 70%,25% 30%);pointer-events:none}
+.citadel-interior-stage .citadel-light-source{width:6px;height:12px;margin:-11px 0 0 -3px;animation:citadelSourceFlicker 3.8s steps(3,end) infinite}
+.citadel-room[data-room-level="2"],.citadel-interior-stage[data-level="2"]{--light-power:.7}
+.citadel-room[data-room-level="3"],.citadel-interior-stage[data-level="3"]{--light-power:.95}
+.citadel-room.is-locked .citadel-room-light{opacity:.15}
+.citadel-castle[data-phase="ДЕНЬ"] .citadel-room,.citadel-interior-stage[data-phase="ДЕНЬ"]{--window-color:225,203,163;--window-power:.45}
+.citadel-castle[data-phase="УТРО"] .citadel-room,.citadel-interior-stage[data-phase="УТРО"]{--window-color:241,182,157;--window-power:.35}
+.citadel-castle[data-phase="ВЕЧЕР"] .citadel-room,.citadel-interior-stage[data-phase="ВЕЧЕР"]{--window-color:191,134,187;--window-power:.28}
+.citadel-interior-stage[data-room="forge"][data-level="1"] .citadel-light-source{visibility:hidden}
+.citadel-interior-stage[data-room="observatory"] .citadel-light-source,.citadel-interior-stage[data-room="cloister"] .citadel-light-source{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);animation-name:citadelSourceGlow}
+.citadel-interior-object{border-radius:3px;background:linear-gradient(135deg,transparent 70%,#d7b6800a);transition:border-color .15s,background-color .15s}
+.citadel-interior-object:hover{background-color:#e5bb7b0c}
+@keyframes citadelSourceFlicker{0%,100%{opacity:.8;transform:scaleY(.9)}37%{opacity:1;transform:scaleY(1.08)}71%{opacity:.65;transform:scaleY(.95)}}
+@keyframes citadelSourceGlow{0%,100%{opacity:.65}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.citadel-interior-stage .citadel-light-source{animation:none!important}.citadel-interior-object{transition:none!important}}

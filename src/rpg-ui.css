@@ -234,3 +234,13 @@ body.citadel-shell-active .citadel-interior-stage .citadel-hero-sprite{filter:dr
 #av-list input{min-width:0;max-width:100%;box-sizing:border-box}
 body.citadel-shell-active .finance-form #tx-cancel{grid-column:1/-1}
 body.citadel-shell-active #log .del{font:600 11px/1.3 var(--font-body);padding:6px}
+
+/* Keep the entire playable room between the permanent desktop side panels.
+   On phones these are drawers, so the existing full-width scene remains. */
+@media(min-width:1050px){
+ body.citadel-shell-active #citadel-home.citadel-shell .citadel-inside>.citadel-interior{width:calc(100% - 500px);max-width:calc(100% - 500px);margin-inline:250px;flex:none;padding-inline:14px}
+ body.citadel-shell-active .citadel-interior-stage{min-height:clamp(280px,48svh,500px)}
+}
+/* The walking state wins over the shared idle/breathing rule. */
+body.citadel-shell-active .citadel-interior-stage[data-moving="true"] .citadel-hero-sprite{animation:citadelHeroStride .48s steps(2,end) infinite}
+@media(prefers-reduced-motion:reduce){body.citadel-shell-active .citadel-interior-stage[data-moving="true"] .citadel-hero-sprite{animation:none!important}}

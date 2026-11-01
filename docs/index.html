@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.74";window.APP_BUILD="bd21ead047ba";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.74";window.APP_BUILD="1440287b3c7b";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -960,7 +960,7 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.74</b><span>Сборка bd21ead047ba</span></div>
+    <div class="release-stamp"><b>Версия 0.74</b><span>Сборка 1440287b3c7b</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -3722,7 +3722,16 @@ function citadelRenderDecor(){if(!loaded)return;var room=citadelSelected,rank=po
 var citadelObjects={gatehouse:['Засов ворот','Кованые створки закрывают проход от холодного ветра. Дозорный проверяет их каждый день.'],refectory:['Длинный стол','К вечеру здесь собираются жители Цитадели.'],cloister:['Каменная арка','Под сводом растёт мох. Сквозь решётку падает свет внешнего двора.'],vault:['Книга казны','Ядра души общие со Воспоминаниями. Все расходы записаны в истории покупок.'],throne:['Древний трон','Камень помнит каждого, кто решался на нём сидеть.'],observatory:['Звёздная линза','Сквозь мутное стекло видны созвездия, которых нет на обычном небе.'],rest:['Старая кровать','Место, где даже кошмары ненадолго теряют власть.'],study:['Книга записей','На страницах отражается путь, который ты проходишь в реальности.'],archive:['Стеллаж воспоминаний','Время не трогает эти страницы.'],forge:['Горн','Угли ждут часа, когда мастерская пробудится.']};
 // Interior motion is presentation state; it never awards or writes progress.
 var citadelWalkPositions={},citadelWalkAnimation=null;
-function citadelStopWalk(){if(citadelWalkAnimation){citadelWalkAnimation.cancel();citadelWalkAnimation=null;}$('citadel-interior-stage').dataset.moving='false';}
+function citadelStopWalk(){
+ var stage=$('citadel-interior-stage'),hero=stage.querySelector('.citadel-hero-sprite');
+ if(citadelWalkAnimation){
+  // Freeze the rendered position before cancelling WAAPI. The inline style
+  // already holds the destination, which would otherwise cause a visible jump.
+  if(hero&&stage.clientWidth&&stage.clientHeight){var style=getComputedStyle(hero),left=parseFloat(style.left),bottom=parseFloat(style.bottom);hero.style.left=left+'px';hero.style.bottom=bottom+'px';citadelWalkPositions[citadelSelected]={x:(left+hero.offsetWidth/2)/stage.clientWidth,y:bottom/stage.clientHeight};}
+  citadelWalkAnimation.cancel();citadelWalkAnimation=null;
+ }
+ stage.dataset.moving='false';$('citadel-walk-target').hidden=true;
+}
 function citadelWalkTo(x,y,animate){
  var stage=$('citadel-interior-stage'),hero=stage.querySelector('.citadel-hero-sprite');
  if(!hero||$('citadel-interior').hidden||!stage.clientWidth)return;
@@ -3738,8 +3747,8 @@ function citadelWalkTo(x,y,animate){
  var from={left:getComputedStyle(hero).left,bottom:getComputedStyle(hero).bottom};
  citadelStopWalk();citadelWalkPositions[citadelSelected]={x:x,y:y};
  var left=Math.round(w*x-hero.offsetWidth/2),bottom=Math.round(stage.clientHeight*y);
- stage.dataset.facing=x<old.x?'left':'right';hero.style.left=left+'px';hero.style.bottom=bottom+'px';
- var marker=$('citadel-walk-target');marker.style.left=(x*100)+'%';marker.style.bottom=(y*100)+'%';marker.hidden=animate===false;
+ stage.dataset.facing=left<parseFloat(from.left)?'left':'right';hero.style.left=left+'px';hero.style.bottom=bottom+'px';
+ var marker=$('citadel-walk-target');marker.style.left=(x*100)+'%';marker.style.bottom=(y*100)+'%';marker.hidden=animate===false||window.matchMedia('(prefers-reduced-motion:reduce)').matches;
  if(animate!==false&&!document.hidden&&!window.matchMedia('(prefers-reduced-motion:reduce)').matches){
   stage.dataset.moving='true';var movement=hero.animate([from,{left:left+'px',bottom:bottom+'px'}],{duration:Math.min(800,Math.max(200,Math.abs(parseFloat(from.left)-left)*3)),easing:'linear'});
   citadelWalkAnimation=movement;movement.onfinish=function(){if(citadelWalkAnimation===movement){stage.dataset.moving='false';citadelWalkAnimation=null;marker.hidden=true;citadelFaceResidents();}};
@@ -3755,6 +3764,8 @@ function citadelRoomActions(){
  host.querySelectorAll('[data-room-talk]').forEach(function(b){if(!present.some(function(p){return p.key===b.dataset.roomTalk;})){var focused=document.activeElement===b;b.remove();if(focused)$('citadel-interior-stage').focus({preventScroll:true});}});
  present.forEach(function(p){var b=host.querySelector('[data-room-talk="'+p.key+'"]');if(!b){b=document.createElement('button');b.type='button';b.dataset.roomTalk=p.key;b.textContent='Поговорить: '+p.name;b.onclick=function(){citadelNpcSpeak(p.key);};host.appendChild(b);}});
 }
+// One shared light layer per existing scene; no timers, input or save writes.
+document.querySelectorAll('[data-croom],#citadel-interior-stage').forEach(function(scene){var light=document.createElement('span');light.className='citadel-room-light';light.setAttribute('aria-hidden','true');var source=document.createElement('i');source.className='citadel-light-source';light.appendChild(source);scene.appendChild(light);});
 var citadelWalkStage=$('citadel-interior-stage');citadelWalkStage.tabIndex=0;citadelWalkStage.setAttribute('role','group');citadelWalkStage.setAttribute('aria-label','Комната. Нажми на пол или используй стрелки, чтобы пройти.');
 citadelWalkStage.addEventListener('click',function(e){if(e.target.closest('button,[role="button"]'))return;var r=this.getBoundingClientRect(),y=(r.bottom-e.clientY)/r.height;if(y>.34)return;citadelWalkTo((e.clientX-r.left)/r.width,y);});
 citadelWalkStage.addEventListener('keydown',function(e){if(e.target!==this)return;var p=citadelWalkPositions[citadelSelected]||{x:.5,y:.08},keys={ArrowLeft:[-.1,0],ArrowRight:[.1,0],ArrowUp:[0,.04],ArrowDown:[0,-.04]},d=keys[e.key];if(!d)return;e.preventDefault();citadelWalkTo(p.x+d[0],p.y+d[1]);});
