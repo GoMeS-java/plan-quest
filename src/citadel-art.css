@@ -384,3 +384,6 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 .citadel-interior-stage[data-room="cloister"]{--object-x:66%;--object-y:20%;--object-w:22%;--object-h:55%}
 .citadel-interior-stage[data-room="vault"]{--object-x:59%;--object-y:56%;--object-w:24%;--object-h:26%}
 .citadel-interior-stage .citadel-interior-object{left:var(--object-x);top:var(--object-y);right:auto;bottom:auto;width:var(--object-w);height:var(--object-h);min-width:44px;min-height:44px}
+/* Hidden source canvases only generate the shared sprite sheet; they must not
+   intercept taps on furniture underneath their old, fixed coordinates. */
+.citadel-avatar canvas,.citadel-interior-stage #citadel-interior-hero{pointer-events:none}
