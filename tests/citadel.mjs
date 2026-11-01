@@ -37,10 +37,10 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));try{await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');}catch(e){console.log('Initial profile diagnostic',await page.evaluate(()=>({title:document.title,rank:document.querySelector('#citadel-live-rank')?.textContent,readiness:window.__qa?.readiness?.()})).catch(()=>({pageUnavailable:true})),errors);throw e;}
  if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await page.evaluate(()=>__qa.idle());}
- if(!shell)await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(page));
+ if(!shell)await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first(),()=>dismiss(page));
  await dismiss(page);return {page,context,session};
 }
-async function dismiss(p){await p.evaluate(()=>{for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});}
+async function dismiss(p){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});}
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));}
 async function shellMenu(p){if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
 async function shellNav(p,label){if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();}
@@ -54,6 +54,57 @@ function advancedSeed(){
  return seed;
 }
 try {
+
+ await check('0.78 earned collection, replay, cosmetic selection and reload are read-only for economy',async()=>{
+  const seed=structuredClone(initial);seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
+  const {page:p,context}=await open({shell:true,seed});const before=await docs(p);
+  await p.evaluate(()=>document.querySelector('#trophy-btn').click());assert.equal(await p.locator('.legend-entry').count(),1);
+  await p.locator('.legend-entry').getByRole('button',{name:'ВСПОМНИТЬ',exact:true}).click();assert(await p.locator('#legend-scene').isVisible());
+  assert.equal(await p.locator('#legend-scene').getAttribute('data-motion'),'reduce');
+  await p.goBack();assert(await p.locator('#legend-scene').isHidden());assert(await p.locator('#trophy').isVisible());
+  assert.deepEqual(await docs(p),before);
+  await p.locator('.legend-entry').getByRole('button',{name:'УБРАТЬ ОФОРМЛЕНИЕ'}).click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(50);
+  assert.equal((await docs(p))['cfg/legends'].d.active,'');
+  await p.locator('.legend-entry').getByRole('button',{name:'ПРИМЕНИТЬ ОФОРМЛЕНИЕ'}).click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(50);
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);
+  assert.equal((await docs(p))['cfg/legends'].d.active,'echo01');assert(await p.locator('#citadel-avatar-canvas').evaluate(n=>n.classList.contains('legend-hero')));
+  for(const [path,record]of Object.entries(before))if(path!=='cfg/legends')assert.deepEqual((await docs(p))[path].d,record.d);
+  await context.close();
+ });
+ await check('0.78 scene timeout, skip, Escape and animation failure always release input',async()=>{
+  const seed=structuredClone(initial);seed['cfg/legends']={version:1,unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
+  const {page:p,context}=await open({shell:true,seed});await p.evaluate(()=>document.querySelector('#trophy-btn').click());
+  for(const method of ['skip','escape','timeout','failed-animation']){
+   if(method==='failed-animation')await p.evaluate(()=>{Element.prototype.animate=function(){throw Error('Synthetic animation failure');};});
+   await p.locator('.legend-entry').getByRole('button',{name:'ВСПОМНИТЬ',exact:true}).click();assert(await p.locator('#legend-scene').isVisible());
+   if(method==='escape')await p.keyboard.press('Escape');else if(method==='timeout')await p.clock.runFor(7300);else await p.locator('#legend-scene button').click();
+   await p.waitForTimeout(80);assert(await p.locator('#legend-scene').isHidden());assert(await p.locator('#trophy').isVisible());
+  }
+  await context.close();
+ });
+ await check('0.78 narrow collection and sealed rooms keep earned atmosphere outside unknown interiors',async()=>{
+  const seed=structuredClone(initial);seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
+  const {page:p,context}=await open({shell:true,seed,width:320});
+  await p.evaluate(()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();});assert(await p.locator('#legend-room-object').isVisible());
+  await p.evaluate(()=>{__qa.move('study');document.querySelector('#citadel-enter').click();});assert(await p.locator('#legend-room-object').isHidden());
+  assert(await p.locator('.is-locked').evaluateAll(ns=>ns.every(n=>!n.classList.contains('has-legend-echo')&&getComputedStyle(n).backgroundColor==='rgb(0, 0, 0)'&&getComputedStyle(n,'::after').display==='none')));
+  await p.evaluate(()=>document.querySelector('#trophy-btn').click());
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   await p.setViewportSize({width,height});assert(await p.locator('#trophy').evaluate(n=>n.scrollWidth<=n.clientWidth));
+   await p.locator('.legend-entry').getByRole('button',{name:'ВСПОМНИТЬ',exact:true}).click();assert(await p.locator('#legend-scene').evaluate(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().height<=innerHeight));await p.locator('#legend-scene button').click();await p.waitForTimeout(40);
+  }
+  await context.close();
+ });
+ await check('0.78 no unopened definitions, counts or target progress enter collection',async()=>{
+  const {page:p,context}=await open({shell:true});await p.evaluate(()=>document.querySelector('#trophy-btn').click());
+  const safe=await p.evaluate(()=>{const text=document.querySelector('#alist').textContent;return !VkachLegends.earned({unlocked:{echo01:{version:1,at:1},echo02:{version:1,at:1},echo03:{version:1,at:1}}}).some(d=>text.includes(d.name)||text.includes(d.object)||text.includes(d.aura));});assert(safe);assert.equal(await p.locator('.legend-entry').count(),0);assert(!/Суперредкая цель|осталось|\d+ из \d+/.test(await p.locator('#alist').innerText()));await context.close();
+ });
+ await check('0.78 persisted unlocks survive offline restart and backup restore without replay grants',async()=>{
+  const seed=structuredClone(initial);seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
+  const {page:p,context}=await open({shell:true,seed});const before=await docs(p),ev=p.waitForEvent('download');await p.evaluate(()=>PlanSync.exportBackup());const download=await ev,copy=JSON.parse(await readFile(await download.path(),'utf8'));assert.deepEqual(copy.docs,before);
+  await write(p,'cfg/legends',{version:1,unlocked:{}});await p.evaluate(copy=>PlanSync.importObj(copy,true),copy);await p.waitForTimeout(70);await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);assert.deepEqual((await docs(p))['cfg/legends'].d,before['cfg/legends'].d);
+  await context.setOffline(true);await p.reload();await p.waitForFunction(()=>window.__qa?.loading());assert.deepEqual((await docs(p))['cfg/legends'].d,before['cfg/legends'].d);await context.close();
+ });
 
  await check('0.77 quiet actions in every room are responsive, repeatable and strictly read-only',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});
@@ -1620,7 +1671,7 @@ try {
   const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(20000);
   await context.addInitScript(seed=>{localStorage.setItem('plan.shell.classic.v1','1');if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2027-04-12');localStorage.setItem('msum','2027-04');localStorage.setItem('trialSeen','2027-04-16');},advancedSeed());
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
-  await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(p));
+  await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first(),()=>dismiss(p));
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);assert.equal(await p.evaluate(()=>APP_VERSION),'0.57');
   await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);
   const before=await docs(p);servedOverrides.clear();await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
@@ -1632,7 +1683,7 @@ try {
   const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(15000);
   await context.addInitScript(seed=>{localStorage.setItem('plan.shell.classic.v1','1');if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2027-04-12');localStorage.setItem('msum','2027-04');localStorage.setItem('trialSeen','2027-04-16');},advancedSeed());
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
-  await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(p));
+  await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first(),()=>dismiss(p));
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);
   await context.setOffline(true);await p.reload();await castle(p);assert(await p.evaluate(()=>!!window.CitadelWorld));const artCache=await p.evaluate(async()=>Promise.all(['rpg-ui.css','assets/citadel/rest-ruins.svg','citadel-art.css','assets/citadel/rest.webp','assets/citadel/sky.webp','assets/citadel/roof.svg','assets/citadel/abandoned.svg','assets/citadel/guardian.svg','assets/citadel/rest-upgrade3.svg'].map(path=>caches.match(new URL(path,location.href)).then(Boolean))));assert(artCache.every(Boolean),'offline shell must include textures, roof, room states, sprites and renovation art');await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
