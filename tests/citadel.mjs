@@ -27,13 +27,13 @@ async function check(name,fn){if(process.env.TEST_FILTER&&!new RegExp(process.en
 const date='2026-10-30';
 const initial={'cfg/opening':{cash:1200.5,card:3400},'weights/test':{kg:143.7,date,ts:1},['days/'+date]:{q:[false,false,false,false,false,false,false,false,false,false],steps:1200,kcal:2100},'spont/old':{name:'Synthetic task',date,done:false,heavy:true,ts:1},'cfg/outfit':{outer:'none'}};
 // Computed keys are assigned separately to remain compatible with plain JavaScript.
-async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={},base=false,day=date,sw=false,failUpgrade=false,shell=false,slowCPU=false}={}){
+async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={},base=false,day=date,sw=false,failUpgrade=false,shell=false,slowCPU=false,fresh=false}={}){
  const context=await browser.newContext({viewport:{width,height},isMobile:mobile,hasTouch:mobile,timezoneId:'Europe/Moscow',reducedMotion:'reduce',serviceWorkers:sw?'allow':'block'});
  context.setDefaultTimeout(15000);
  const page=await context.newPage();const session=slowCPU?await context.newCDPSession(page):null;if(session)await session.send('Emulation.setCPUThrottlingRate',{rate:4});page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('Failed to load resource'))errors.push(m.text());});
  if(slowCPU)await page.clock.setFixedTime(new Date(day+'T14:00:00+03:00'));else await page.clock.install({time:new Date(day+'T14:00:00+03:00')});
- await context.addInitScript(({seed,legacy,day,failUpgrade,shell})=>{if(!shell)localStorage.setItem('plan.shell.classic.v1','1');if(!localStorage.getItem('qa-init')){const docs=Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]));localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs}));for(const [k,v]of Object.entries(legacy))localStorage.setItem(k,v);localStorage.setItem('qa-init','1');}localStorage.setItem('wsum',day.slice(0,7)+'-26');localStorage.setItem('msum',day.slice(0,7));localStorage.setItem('trialSeen',day);if(failUpgrade&&!localStorage.getItem('qa-upgrade-failed')){localStorage.setItem('qa-upgrade-failed','1');window.__originalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.pre-update.v1')throw new DOMException('Synthetic full','QuotaExceededError');return window.__originalSetItem.call(this,k,v);};}},{seed,legacy,day,failUpgrade,shell});
+ await context.addInitScript(({seed,legacy,day,failUpgrade,shell,fresh})=>{if(!shell)localStorage.setItem('plan.shell.classic.v1','1');if(!localStorage.getItem('qa-init')){const docs=Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]));if(!fresh)localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs}));for(const [k,v]of Object.entries(legacy))localStorage.setItem(k,v);localStorage.setItem('qa-init','1');}localStorage.setItem('wsum',day.slice(0,7)+'-26');localStorage.setItem('msum',day.slice(0,7));localStorage.setItem('trialSeen',day);if(failUpgrade&&!localStorage.getItem('qa-upgrade-failed')){localStorage.setItem('qa-upgrade-failed','1');window.__originalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.pre-update.v1')throw new DOMException('Synthetic full','QuotaExceededError');return window.__originalSetItem.call(this,k,v);};}},{seed,legacy,day,failUpgrade,shell,fresh});
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));try{await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');}catch(e){console.log('Initial profile diagnostic',await page.evaluate(()=>({title:document.title,rank:document.querySelector('#citadel-live-rank')?.textContent,readiness:window.__qa?.readiness?.()})).catch(()=>({pageUnavailable:true})),errors);throw e;}
  if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await page.evaluate(()=>__qa.idle());await page.waitForFunction(()=>__qa.cosmeticsIdle());}
@@ -54,6 +54,83 @@ function advancedSeed(){
  return seed;
 }
 try {
+
+ await check('1.0 Awakening stays voluntary for existing profiles and navigates real sections without game writes',async()=>{
+  const {page:p,context}=await open({shell:true});
+  assert(await p.locator('#awakening-coach').isHidden());
+  const before=await docs(p);
+  await shellNav(p,'Настройки');await p.locator('#awakening-start').click();
+  for(let step=0;step<10;step++){
+   assert.match(await p.locator('.awakening-count').innerText(),new RegExp((step+1)+' / 10$'));
+   assert(await p.locator('#awakening-coach').isVisible());
+   assert(await p.locator('.awakening-target').count()>0,'real visible interface target at step '+step);
+   if(step===1)assert(await p.locator('#wardrobe').isVisible());
+   if(step===2)assert(await p.locator('#qlist').isVisible());
+   if(step===3){await p.locator('[data-finance="wheel"]').click();assert(await p.locator('#spend').isVisible());assert(await p.locator('#awakening-coach').isVisible());}
+   if(step===4)assert(await p.locator('#diet').isVisible());
+   if(step===7){assert(await p.locator('#trophy').isVisible());assert(!await p.locator('.awakening-copy').innerText().then(t=>/условие:|награда:|echo\d|f0\d/.test(t)));}
+   if(step===8)assert(await p.locator('#data-management').isVisible());
+   if(step===7||step===8)assert(await p.locator(step===7?'#trophy-x':'#setup-x').evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'coach must leave the window close button exposed');
+   if([0,2,3,7,8].includes(step))await p.screenshot({path:resolve(out,'awakening-step-'+step+'.png')});
+   await p.locator('[data-coach="next"]').click();
+  }
+  assert(await p.locator('#awakening-coach').isHidden());
+  await p.evaluate(()=>__qa.idle());assert.deepEqual(await docs(p),before,'tour must not write game records or award progress');
+  await p.reload();await p.waitForFunction(()=>__qa.loading());assert(await p.locator('#awakening-coach').isHidden());await context.close();
+ });
+ await check('1.0 Awakening pause, reload, resume, Back, skip and replay preserve the checkpoint and economy',async()=>{
+  const {page:p,context}=await open({shell:true,seed:{...initial,'cfg/citadel':{selectedRoom:'rest',decor:{}}}});await shellNav(p,'Настройки');await p.locator('#awakening-start').click();
+  await p.locator('[data-coach="next"]').click();await p.locator('[data-coach="next"]').click();
+  const before=await docs(p);await p.reload();await p.waitForFunction(()=>__qa.loading());
+  await p.waitForFunction(()=>!document.getElementById('awakening-coach').hidden);assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 10$/);
+  await p.locator('[data-coach="pause"]').click();await p.reload();await p.waitForFunction(()=>__qa.loading());assert(await p.locator('#awakening-coach').isHidden());
+  if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog>header button').click();await shellNav(p,'Настройки');assert.match(await p.locator('#awakening-start').innerText(),/ПРОДОЛЖИТЬ/);await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 10$/);
+  await p.locator('.citadel-system-dialog>header button').click();await p.waitForFunction(()=>document.getElementById('awakening-coach').hidden);
+  await shellNav(p,'Настройки');await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 10$/);
+  await p.goBack();assert(await p.locator('#awakening-coach').isHidden());
+  await shellNav(p,'Настройки');await p.locator('#awakening-start').click();await p.locator('[data-coach="skip"]').click();
+  if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog>header button').click();await shellNav(p,'Настройки');await p.locator('#awakening-restart').click();assert.match(await p.locator('.awakening-count').innerText(),/1 \/ 10$/);
+  await p.locator('[data-coach="skip"]').click();assert.deepEqual(await docs(p),before);await context.close();
+ });
+ await check('1.0 new profiles receive Awakening once and failed preference writes remain visible',async()=>{
+  const {page:p,context}=await open({shell:true,fresh:true,seed:{}});
+  await p.waitForFunction(()=>!document.getElementById('awakening-coach').hidden);assert.match(await p.locator('.awakening-count').innerText(),/1 \/ 10$/);
+  await p.locator('[data-coach="skip"]').click();await p.reload();await p.waitForFunction(()=>__qa.loading());assert(await p.locator('#awakening-coach').isHidden());
+  await shellNav(p,'Настройки');await p.evaluate(()=>{window.__realPrefWrite=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.awakening.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __realPrefWrite.call(this,k,v);};});
+  await p.locator('#awakening-restart').click();assert(await p.locator('.awakening-warning').isVisible());
+  await p.evaluate(()=>{Storage.prototype.setItem=window.__realPrefWrite;});await p.locator('[data-coach="next"]').click();assert(await p.locator('.awakening-warning').isHidden());await p.locator('[data-coach="pause"]').click();await context.close();
+ });
+ await check('1.0 Awakening fits narrow, keyboard-sized and landscape viewports with accessible controls',async()=>{
+  const {page:p,context}=await open({shell:true});await shellNav(p,'Настройки');await p.locator('#awakening-start').click();
+  for(let step=0;step<10;step++){
+   for(const [width,height]of [[320,480],[390,360],[844,390],[390,844]]){
+    await p.setViewportSize({width,height});await p.waitForTimeout(25);
+    assert(await p.locator('#awakening-coach').evaluate(n=>n.scrollWidth<=n.clientWidth),'coach must wrap at step '+step);
+    await p.locator('[data-coach="next"]').scrollIntoViewIfNeeded();
+    assert(await p.locator('[data-coach="next"]').evaluate(n=>{const r=n.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1&&r.height>=44;}),'next remains reachable at step '+step);
+   }
+   await p.locator('[data-coach="next"]').click();
+  }
+  await context.close();
+ });
+
+ await check('1.0 Awakening resumes offline and backup restore leaves tutorial separate from game records',async()=>{
+  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
+  context.setDefaultTimeout(20000);
+  await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));
+  await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2026-10-26');localStorage.setItem('msum','2026-10');localStorage.setItem('trialSeen','2026-10-30');},{...initial,'cfg/citadel':{selectedRoom:'rest',decor:{}}});
+  const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2026-10-30T14:00:00+03:00')});
+  await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&PlanSync._docs()['cfg/abyss-economy']?.d?.rank>=1);await dismiss(p);await p.evaluate(()=>PlanSync.beforeUpdate());
+  const before=await docs(p);await shellNav(p,'Настройки');await p.locator('#awakening-start').click();
+  for(let n=0;n<3;n++)await p.locator('[data-coach="next"]').click();
+  await context.setOffline(true);await p.reload();await p.waitForFunction(()=>!document.getElementById('awakening-coach').hidden);
+  assert.match(await p.locator('.awakening-count').innerText(),/4 \/ 10$/);assert(await p.evaluate(async()=>!!await caches.match(new URL('awakening.js',location.href))));
+  await p.locator('[data-coach="pause"]').click();
+  assert.deepEqual(await docs(p),before);const content=records=>Object.fromEntries(Object.entries(records).map(([k,v])=>[k,v.d]));
+  const roundtrip=await p.evaluate(async()=>{const copy=await PlanSync.backupFor(PlanSync._docs());await PlanSync.validateBackup(copy);await PlanSync.importObj(copy,true);return true;});assert(roundtrip);
+  assert.deepEqual(content(await docs(p)),content(before));await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');assert(await p.locator('#awakening-coach').isHidden());
+  await shellNav(p,'Настройки');await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/4 \/ 10$/);assert.deepEqual(content(await docs(p)),content(before));await context.close();
+ });
 
  await check('0.90 identical newer discovery snapshots advance the preference clock against stale devices',async()=>{
   const seed=structuredClone(initial);
@@ -1786,12 +1863,12 @@ try {
   await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
  });
- await check('0.73 through 0.79 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
-  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe']]){
-  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(oldVersion==='0.79'?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
+ await check('0.73 through 0.90 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
+  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778']]){
+  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
-  context.setDefaultTimeout(15000);const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}},'cfg/future-synthetic':{nested:{keep:42}}};if(oldVersion==='0.79'){seed['cfg/legends']={version:1,active:'',unlocked:{echo01:{version:1,at:1,presented:true}}};seed['cfg/fate']={version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}};}
+  context.setDefaultTimeout(15000);const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}},'cfg/future-synthetic':{nested:{keep:42}}};if(['0.79','0.90'].includes(oldVersion)){seed['cfg/legends']={version:1,active:'',unlocked:{echo01:{version:1,at:1,presented:true}}};seed['cfg/fate']={version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}};}
   await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2026-10-26');localStorage.setItem('msum','2026-10');localStorage.setItem('trialSeen','2026-10-30');},seed);
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2026-10-30T14:00:00+03:00')});
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&PlanSync._docs()['cfg/abyss-economy']?.d?.rank>=1);await dismiss(p);

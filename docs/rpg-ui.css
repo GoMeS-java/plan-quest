@@ -285,3 +285,20 @@ body.citadel-shell-active .citadel-interior-stage[data-moving="true"] .citadel-h
  .legend-scene-inner>p:not(.legend-scene-kicker){grid-column:2;grid-row:3;margin:4px 0;font-size:13px}
  .legend-scene button{grid-column:1/-1;margin-top:8px}
 }
+
+/* Awakening is an in-world coach; the underlying controls stay usable. */
+#awakening-coach{box-sizing:border-box;flex:none;position:relative;margin:10px 8px;padding:12px;border:2px solid #b99a58;border-radius:2px;background:linear-gradient(135deg,#2b2137,#15101e);color:#f2e6d4;box-shadow:inset 3px 0 #795194,0 5px 20px #0009;font:14px/1.45 var(--font-body,system-ui);max-width:540px;z-index:10001;overflow-wrap:anywhere}
+#awakening-coach[hidden]{display:none!important}
+#awakening-coach.awakening-floating{position:fixed;left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right));bottom:calc(62px + env(safe-area-inset-bottom));margin:0 auto;max-height:46dvh;overflow:auto}
+#awakening-coach h2{font:600 18px/1.3 Georgia,serif!important;margin:5px 0!important;color:#f3d28c!important;outline:none}
+#awakening-coach p{margin:6px 0;font:14px/1.45 var(--font-body,system-ui);color:#e4d8ec}
+#awakening-coach .awakening-count{font:10px/1.4 var(--font-body,system-ui);letter-spacing:.07em;color:#bea1ca}
+#awakening-coach nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+#awakening-coach button{min-height:44px;flex:1 1 100px;border:1px solid #887194;border-radius:2px;padding:8px;background:#33243f;color:#f5e8db;font:600 12px/1.2 var(--font-body,system-ui);cursor:pointer}
+#awakening-coach button[data-coach="next"]{border-color:#d9b773;background:#5b412d}
+#awakening-coach button:disabled{opacity:.45;cursor:default}
+#awakening-coach button:focus-visible{outline:2px solid #ffe7a9;outline-offset:2px}
+.awakening-target{outline:3px solid #efcf83!important;outline-offset:3px;box-shadow:0 0 14px #edbd6b88!important}
+@media(max-height:450px){#awakening-coach.awakening-floating{max-height:52dvh;bottom:calc(50px + env(safe-area-inset-bottom))}#awakening-coach{padding:8px}#awakening-coach p{font-size:12px}#awakening-coach button{flex-basis:64px}}
+/* Leave the sticky window header and its close button above the coach. */
+.setup #awakening-coach{scroll-margin-block-start:64px}

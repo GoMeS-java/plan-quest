@@ -945,8 +945,9 @@ html,body{overflow-anchor:none}
 <div class="setup" id="setup" hidden role="dialog" aria-modal="true" aria-label="Настройки">
   <div class="sbox">
     <div class="shead"><b>НАСТРОЙКИ</b><button class="gear" id="setup-x" type="button" aria-label="Закрыть">&#10005;</button></div>
-    <h2>ЭФФЕКТЫ</h2>
+    <h2>ПРОБУЖДЕНИЕ</h2><p class="hint">Заклятие проведёт тебя по настоящим разделам. Можно остановиться в любой момент.</p><div class="row"><button class="btn" id="awakening-start" type="button">НАЧАТЬ ОБУЧЕНИЕ</button><button class="btn alt" id="awakening-restart" type="button" hidden>ПРОЙТИ ЗАНОВО</button></div>
     <button class="btn" id="data-management" type="button">ДАННЫЕ И РЕЗЕРВНЫЕ КОПИИ</button>
+    <h2>ЭФФЕКТЫ</h2>
     <div class="goal settings-effects">
       <div class="row">
         <label class="hint" style="flex:1 1 140px">Тряска<br><select id="fx-shake"><option value="off">выкл</option><option value="weak">слабая</option><option value="strong">сильная</option></select></label>
@@ -959,7 +960,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <div class="release-stamp"><b>Версия __VER__</b><span>Сборка __BUILD__</span></div>
-    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
+    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
@@ -4775,7 +4776,7 @@ function renderAllInner() {
     if (seen[name]) return;
     seen[name] = true;
     pending--;
-    if (pending === 0) { loaded = true; setTimeout(timeCheck, 0); setTimeout(abyssReconcile, 0); }
+    if (pending === 0) { loaded = true; if(window.VkachAwakening)window.VkachAwakening.ready(); setTimeout(timeCheck, 0); setTimeout(abyssReconcile, 0); }
   }
   var profileRenderPending=false;
   function requestProfileRender(){
@@ -5052,9 +5053,10 @@ function renderAllInner() {
     new MutationObserver(updateShellStatus).observe(dialog,{attributes:true,attributeFilter:['open']});
     new MutationObserver(updateShellStatus).observe($('qlist'),{childList:true,subtree:true,attributes:true,attributeFilter:['aria-pressed']});
     updateShellStatus();
-    window.__citadelShell={refresh:refreshDrawer,openSystem:showSystem,viewport:viewport};
+    window.__citadelShell={tutorialNavigate:function(id,label){closeMenu(true);closeDrawer(true);$('setup').hidden=true;$('trophy').hidden=true;closeSystem(true);if(id==='overview'){citadelSetArtView('overview');}else showSystem(id,label);},refresh:refreshDrawer,openSystem:showSystem,viewport:viewport};
   }
   citadelShellInit();
+  if(window.VkachAwakening)window.VkachAwakening.init(function(id,label){if(window.__citadelShell){window.__citadelShell.tutorialNavigate(id,label);return;}$('setup').hidden=true;$('trophy').hidden=true;if(id==='settings')$('gear').click();else if(id==='achievements')$('trophy-btn').click();else if(id==='overview'){$('citadel-home').open=true;$('citadel-home').scrollIntoView();}else citadelNavigate(id);});
 
 if(window.PlanSync)window.PlanSync.beforeUpdate=function(){return chain.then(function(){if(pendingSaveError){var e=pendingSaveError;pendingSaveError=null;throw e;}});};
 })();
