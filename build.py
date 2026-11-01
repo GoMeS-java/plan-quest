@@ -21,7 +21,6 @@ build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').r
 g = g.replace('__BUILD__', build_id)
 i = g.index('<link rel="stylesheet" href="rpg-ui.css">') + len('<link rel="stylesheet" href="rpg-ui.css">')
 head_part, body_part = g[:i], g[i:]
-head_part = head_part.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '')
 html = ('<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
         '<meta name="theme-color" content="#17121f">'

@@ -1,5 +1,4 @@
 <title>Вкач</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
 /* Layout: one phone-width column. Night room scene with the avatar on top, points, then tabs (Сегодня, Неделя, Магазин, Деньги, Цели). Deliberately single dark theme. All data lives in the page database. */
@@ -673,7 +672,7 @@ html,body{overflow-anchor:none}
     <button type="button" id="pg-btn-a" role="tab" aria-selected="true" aria-pressed="true">СНОВИДЕНИЕ</button>
     <button type="button" id="pg-btn-b" role="tab" aria-selected="false" aria-pressed="false">ДОБЫЧА</button>
   </div>
-  <div class="offline" id="offline" hidden>[ЗАКЛЯТИЕ] Сохранение недоступно. Спящий, открой страницу из своего аккаунта Claude, и данные появятся.</div>
+  <div class="offline" id="offline" hidden>[ВКАЧ] Хранилище не загрузилось. Проверь доступность файлов приложения и перезагрузи страницу. Не очищай данные сайта.</div>
 
   <div class="page" id="pg-a">
   <div class="stage" aria-label="Твой персонаж в убежище">
@@ -968,7 +967,7 @@ html,body{overflow-anchor:none}
       <div class="hint"><b>0.51</b> · 28.10 · Все названия в духе Заклятия: осколки души, ранги, ядра души, Воспоминания, Аспекты, отметины, убежище, оболочка. Монетка стала осколком души</div>
       <div class="hint"><b>0.50</b> · 28.10 · Испытания Заклятия: случайные физические задания с красным таймером, награда и штраф; пять судьбоносных отметин с титулами, оформлением и предметами; оформление «Заклятие» как награда</div>
       <div class="hint"><b>0.46</b> · 27.10 · Одна задача гигиены вместо двух; очки за ступени Аспектов убраны</div>
-      <div class="hint"><b>0.41</b> · 27.10 · Первого числа Система показывает сводку расходов за прошлый месяц, её можно скопировать и прислать Claude</div>
+      <div class="hint"><b>0.41</b> · 27.10 · Первого числа Система показывает сводку расходов за прошлый месяц, её можно скопировать для личного отчёта</div>
       <div class="hint"><b>0.40</b> · 27.10 · Выплата долга не считается личной тратой в отчётах</div>
       <div class="hint"><b>0.39</b> · 27.10 · Усиленные нормы английского и еды вынесены вниз, в необязательные: основной квест один, как с приседаниями</div>
       <div class="hint"><b>0.38</b> · 27.10 · Еда на два или три дня сама закрывает квест еды на следующие дни</div>
@@ -1028,7 +1027,7 @@ html,body{overflow-anchor:none}
     <div class="lbig" id="ac-kind"></div>
     <div class="lbig" id="ac-big" style="font-size:14px"></div>
     <div id="ac-text"></div>
-    <button class="btn alt" type="button" id="ac-copy" hidden>СКОПИРОВАТЬ ДЛЯ CLAUDE</button>
+    <button class="btn alt" type="button" id="ac-copy" hidden>СКОПИРОВАТЬ СВОДКУ</button>
     <button class="btn" type="button" id="ac-ok">ОК</button>
   </div>
 </div>
@@ -3427,7 +3426,7 @@ html,body{overflow-anchor:none}
     $('ac-text').textContent = e.text;
     acCopyText = e.copy || '';
     $('ac-copy').hidden = !acCopyText;
-    $('ac-copy').textContent = 'СКОПИРОВАТЬ ДЛЯ CLAUDE';
+    $('ac-copy').textContent = 'СКОПИРОВАТЬ СВОДКУ';
     $('achup').classList.toggle('red', !!e.red);
     $('achup').hidden = false;
     $('ac-ok').focus();
@@ -4532,15 +4531,11 @@ function renderAllInner() {
     }, function (e) { dbErr(e); });
   }
   renderAll();
-  var cl = window.claude;
-  if (!cl || !cl.use) {
+  if (!window.PlanDB) {
     $('offline').hidden = false;
   } else {
-    cl.use('db').then(function (d) {
-      if (!d) { $('offline').hidden = false; return; }
-      db = d;
-      subscribe();
-    }).catch(function () { $('offline').hidden = false; });
+    db = window.PlanDB;
+    subscribe();
   }
   setInterval(function () {
     if (!S.cart) return;

@@ -13,7 +13,8 @@ await mkdir(out, {recursive:true});
 const expose = `window.__qa={loading:function(){return loaded;},readiness:function(){return {loaded,pending,seen:Object.keys(seen)};},sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { html=html.replace('function renderAllInner() {','function renderAllInner() { window.__qaRenderCount=(window.__qaRenderCount||0)+1;');const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
-const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
+// Normalize only the historical fixture's storage bootstrap to the current local adapter.
+const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'}).replace(/var cl = window\.\w+;/, 'var cl = {use: function(){return Promise.resolve(window.PlanDB);}};');
 const baseline = '<!doctype html><html><head><meta charset="utf-8"><script src="/config.js"></script><script src="/localdb.js"></script></head><body>'+baselineSrc+'</body></html>';
 const servedOverrides=new Map();
 const server=createServer(async(req,res)=>{try { const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname); const file=resolve(root,'.'+(path==='/'?'/index.html':path)); if(!file.startsWith(root+'/'))throw Error(); const body=servedOverrides.has(file)?servedOverrides.get(file):await readFile(file); if(file.endsWith('/sw.js'))res.setHeader('Cache-Control','no-cache'); res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp'})[extname(file)]||'text/plain');res.end(body); }catch{res.writeHead(404);res.end();}});
@@ -45,7 +46,7 @@ async function shellMenu(p){if(await p.locator('.citadel-shell-menu-toggle').isV
 async function shellNav(p,label){if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();}
 async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await b.isVisible()))await shellMenu(p);await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
-async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=await claude.use('db');await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
+async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=window.PlanDB;await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
 function advancedSeed(){
  const seed=structuredClone(initial);
  seed['cfg/abyss-economy']={version:1,rank:1,earned:1000,claims:{}};
@@ -61,7 +62,7 @@ try {
   await write(p,'weights/outside-range',{kg:500,date,ts:1000,futureField:'keep'});await write(p,'weights/impossible',{kg:80,date:'2026-02-31',ts:1001});
   assert.equal(await p.locator('#citadel-live-body').textContent(),'ВЕС 145 КГ');assert.equal(await p.locator('#cur-weight').textContent(),'145');assert.equal(await p.evaluate(()=>__qa.shape()),shape);
   await p.locator('#citadel-activity-actions').getByRole('button',{name:'Осмотреть облик'}).click();assert.match(await p.locator('#citadel-activity-feedback').innerText(),/145 кг/);
-  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('weights/test').delete();await db.doc('weights/backdated').delete();});await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='test'||w.id==='backdated'));
+  await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('weights/test').delete();await db.doc('weights/backdated').delete();});await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='test'||w.id==='backdated'));
   assert.equal(await p.locator('#citadel-live-body').textContent(),'ВЕС 160 КГ');assert.equal(await p.locator('#cur-weight').textContent(),'160');
   const before=await docs(p);assert.equal(before['weights/outside-range'].d.kg,500);assert.equal(before['weights/impossible'].d.date,'2026-02-31');
   await p.reload();await castle(p);assert.equal(await p.locator('#citadel-live-body').textContent(),'ВЕС 160 КГ');assert.equal(await p.locator('#cur-weight').textContent(),'160');
@@ -134,7 +135,7 @@ try {
   assert.deepEqual(await docs(p),before);assert.equal(await p.locator('#amt').inputValue(),'12,34');assert.match(await p.locator('#tx-status').innerText(),/Не сохранено/);
   await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.length===1);const id=(await p.evaluate(()=>__qa.S.tx))[0].id;
   await p.locator('#log button[aria-label="Изменить операцию"]').click();await p.locator('#amt').fill('20,25');
-  await p.evaluate(async id=>{const db=await claude.use('db');await db.doc('tx/'+id).update({amt:99.99,futureField:'preserved'});},id);await p.waitForFunction(()=>__qa.S.tx[0].amt===99.99);
+  await p.evaluate(async id=>{const db=window.PlanDB;await db.doc('tx/'+id).update({amt:99.99,futureField:'preserved'});},id);await p.waitForFunction(()=>__qa.S.tx[0].amt===99.99);
   await p.locator('#add').click();await p.evaluate(()=>__qa.idle());assert.equal((await docs(p))['tx/'+id].d.amt,99.99);assert.equal(await p.locator('#amt').inputValue(),'20,25');assert.match(await p.locator('#tx-status').innerText(),/изменилась/);
   await p.locator('#tx-cancel').click();await p.locator('#log button[aria-label="Изменить операцию"]').click();await p.locator('#amt').fill('15,25');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx[0].amt===15.25);assert.equal((await docs(p))['tx/'+id].d.futureField,'preserved');
   await context.close();
@@ -146,7 +147,7 @@ try {
   await p.locator('.citadel-finance-nav [data-finance="avito"]').click();const value=p.locator('#av-value-one');await value.fill('25,55');
   await write(p,'days/'+date,{q:Array(10).fill(false),steps:1234});assert.equal(await value.inputValue(),'25,55');
   await p.locator('#av-name').focus();await p.waitForFunction(()=>__qa.S.avito[0].amt===25.55);assert.match(await p.locator('#av-total').innerText(),/25,55/);
-  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('avito/one').update({amt:30.25});});await p.waitForFunction(()=>__qa.S.avito[0].amt===30.25);assert.equal(await value.inputValue(),'30.25');
+  await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('avito/one').update({amt:30.25});});await p.waitForFunction(()=>__qa.S.avito[0].amt===30.25);assert.equal(await value.inputValue(),'30.25');
   await p.locator('#av-name').fill('Synthetic new');await p.locator('#av-amt').fill('4,75');await p.evaluate(()=>{document.querySelector('#av-add').click();document.querySelector('#av-add').click();});await p.waitForFunction(()=>__qa.S.avito.length===2);assert.match(await p.locator('#av-total').innerText(),/35/);
   await p.reload();await p.waitForFunction(()=>__qa.S.avito.length===2);assert.equal((await p.evaluate(()=>__qa.S.avito)).reduce((n,r)=>n+r.amt,0),35);await context.close();
  });
@@ -172,7 +173,7 @@ try {
  await check('0.73 conflicting task detail updates reject stale values and retain independent detail keys',async()=>{
   const {page:p,context}=await open();const key='days/'+date;
   await write(p,key,{...structuredClone(initial[key]),ex:{eng:1,futureDetail:{nested:['keep',42]}}});const old=await p.evaluate(()=>structuredClone(__qa.S.days['2026-10-30']));
-  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('days/2026-10-30').update({ex:{eng:2,futureDetail:{nested:['keep',42]}}});});await p.waitForFunction(()=>__qa.S.days['2026-10-30'].ex.eng===2);
+  await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('days/2026-10-30').update({ex:{eng:2,futureDetail:{nested:['keep',42]}}});});await p.waitForFunction(()=>__qa.S.days['2026-10-30'].ex.eng===2);
   assert.equal(await p.evaluate(old=>__qa.writeDay('2026-10-30',old,{ex:{...old.ex,eng:3}}),old),false,'a stale detail must not overwrite a newer value');
   assert.equal((await docs(p))[key].d.ex.eng,2);assert.match(await p.locator('#toast').innerText(),/Запись уже изменена/);
   assert.equal(await p.evaluate(old=>__qa.writeDay('2026-10-30',old,{ex:{...old.ex,cook:2}}),old),true);
@@ -275,7 +276,7 @@ try {
  });
  await check('0.72 repeated completion and date changes keep durable history without duplicate resources',async()=>{
   const {page:p,context}=await open();
-  async function completion(done){await p.evaluate(async done=>{const db=await claude.use('db');await db.doc('days/2026-10-30').update({q:Array(10).fill(done),steps:12000,kcal:2100});},done);await p.clock.runFor(900);await p.evaluate(()=>__qa.idle());}
+  async function completion(done){await p.evaluate(async done=>{const db=window.PlanDB;await db.doc('days/2026-10-30').update({q:Array(10).fill(done),steps:12000,kcal:2100});},done);await p.clock.runFor(900);await p.evaluate(()=>__qa.idle());}
   await completion(true);const earned=await p.evaluate(()=>__qa.S.abyss.earned);await completion(false);await completion(true);assert.equal(await p.evaluate(()=>__qa.S.abyss.earned),earned);
   await p.clock.setSystemTime(new Date('2026-10-31T00:01:00+03:00'));await p.clock.runFor(1100);assert.equal(await p.locator('#tx-date').inputValue(),'2026-10-31');
   await p.locator('#amt').evaluate(n=>n.value='9,99');await p.locator('#what').evaluate(n=>n.value='Synthetic unfinished draft');
@@ -300,11 +301,11 @@ try {
   const {page:p,context}=await open({shell:true,seed});const middle=await p.evaluate(()=>__qa.shape());
   await write(p,'weights/test',{kg:130,date,ts:2});assert((await p.evaluate(()=>__qa.shape()))<middle);
   await write(p,'weights/invalid',{kg:80,date:'2026-02-31',ts:99});
-  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('weights/test').delete();});
+  await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('weights/test').delete();});
   await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='test'));await p.evaluate(()=>__qa.render());
   const restored=await p.evaluate(()=>__qa.shape());assert(restored>middle,'deletion must restore the last valid entry, ignoring an impossible calendar date');
   const source=(await docs(p))['weights/start'];assert.deepEqual(source.d,seed['weights/start']);
-  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('weights/start').delete();});await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='start'));assert.equal(await p.evaluate(()=>__qa.shape()),1);
+  await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('weights/start').delete();});await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='start'));assert.equal(await p.evaluate(()=>__qa.shape()),1);
   await context.close();
  });
  await check('body geometry follows latest weight reversibly across shared sprites and every outfit',async()=>{
@@ -776,7 +777,7 @@ try {
   await p.evaluate(()=>{window.google={accounts:{oauth2:{initTokenClient:options=>({requestAccessToken:()=>options.callback({access_token:'synthetic-token',expires_in:3600})})}}};});
   await p.evaluate(()=>PlanSync.sync(true));await p.waitForTimeout(60);await dismiss(p);await castle(p);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-decoration').getAttribute('data-decor'),'banner');assert(rows.some(r=>r[0]==='weights/test'));
   await p.locator('#citadel-decor-options button').filter({hasText:'Без украшения'}).click();await p.waitForTimeout(60);await p.evaluate(()=>PlanSync.sync(false));assert.equal(JSON.parse(rows.find(r=>r[0]==='cfg/citadel')[1]).decor.study,'none');
-  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('spont/old').delete();});await p.evaluate(()=>PlanSync.sync(false));assert.equal(rows.find(r=>r[0]==='spont/old')[1],'');await context.close();
+  await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('spont/old').delete();});await p.evaluate(()=>PlanSync.sync(false));assert.equal(rows.find(r=>r[0]==='spont/old')[1],'');await context.close();
  });
  await check('room construction spends essence, preserves shop cores and rejects replay',async()=>{
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
@@ -1074,7 +1075,7 @@ try {
   const {page:p,context}=await open();const before=await docs(p);
   const result=await p.evaluate(async()=>{
    const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};
-   try{const db=await claude.use('db');try{await db.doc('weights/retry').set({kg:115,date:'2026-10-30',ts:2});return false;}catch(e){return e.code==='quota_exceeded';}}finally{Storage.prototype.setItem=original;}
+   try{const db=window.PlanDB;try{await db.doc('weights/retry').set({kg:115,date:'2026-10-30',ts:2});return false;}catch(e){return e.code==='quota_exceeded';}}finally{Storage.prototype.setItem=original;}
   });assert(result);assert.deepEqual(await docs(p),before);
   await p.locator('.pl-chip').click();assert.match(await p.locator('.pl-menu').innerText(),/не сохранено/);
   await write(p,'weights/retry',{kg:115,date,ts:2});await write(p,'weights/retry',{kg:115,date,ts:2});
@@ -1099,7 +1100,7 @@ try {
   assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),raw);
   assert.deepEqual((await docs(p))['weights/test'],before['weights/test']);assert.equal((await docs(p))['weights/bad'],undefined);
   await p.locator('.pl-chip').click();assert.match(await p.locator('.pl-menu').innerText(),/повреждение/);
-  assert(await p.evaluate(async()=>{try{const db=await claude.use('db');await db.doc('weights/blocked').set({kg:100});return false;}catch{return true;}}));
+  assert(await p.evaluate(async()=>{try{const db=window.PlanDB;await db.doc('weights/blocked').set({kg:100});return false;}catch{return true;}}));
   await p.evaluate(copy=>PlanSync.importObj(copy,true),copy);await p.waitForTimeout(40);
   for(const [key,value]of Object.entries(before))assert.deepEqual((await docs(p))[key].d,value.d);
   assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.recovery.v1')).originalDamagedStore),raw);await context.close();
@@ -1117,7 +1118,7 @@ try {
   await write(p,'weights/checkpoint',{kg:100,date,ts:2});
   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.checkpoint.v1')).docs),before);
   const durable=await docs(p);
-  assert(await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.checkpoint.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{try{const db=await claude.use('db');await db.doc('weights/checkpoint').set({kg:110});return false;}catch{return true;}}finally{Storage.prototype.setItem=original;}}));
+  assert(await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.checkpoint.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{try{const db=window.PlanDB;await db.doc('weights/checkpoint').set({kg:110});return false;}catch{return true;}}finally{Storage.prototype.setItem=original;}}));
   assert.deepEqual(await docs(p),durable);await context.close();
  });
  await check('0.71 commission payout is atomic and repeated activation cannot duplicate cash',async()=>{
@@ -1216,7 +1217,7 @@ try {
  });
  await check('failed pre-update copy keeps old save read-only until storage recovers',async()=>{
   const {page:p,context}=await open({failUpgrade:true});const before=await docs(p);
-  const rejected=await p.evaluate(async()=>{try{const db=await claude.use('db');await db.doc('cfg/blocked').set({value:true});return false;}catch{return true;}});assert(rejected);assert.deepEqual(await docs(p),before);
+  const rejected=await p.evaluate(async()=>{try{const db=window.PlanDB;await db.doc('cfg/blocked').set({value:true});return false;}catch{return true;}});assert(rejected);assert.deepEqual(await docs(p),before);
   await p.locator('.pl-chip').click();assert.match(await p.locator('.pl-menu').innerText(),/только для чтения/);
   const downloaded=p.waitForEvent('download');await p.locator('.pl-menu').getByRole('button',{name:'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ',exact:true}).click();const file=await downloaded;assert.deepEqual(JSON.parse(await readFile(await file.path(),'utf8')).docs,before);
   await p.reload();await castle(p);await write(p,'cfg/recovered',{value:true});assert((await docs(p))['cfg/recovered']);assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);await context.close();
@@ -1226,7 +1227,7 @@ try {
   for(let d=1;d<=30;d++){const k='2027-03-'+String(d).padStart(2,'0');for(const col of ['days','per']){restore[col+'/'+k]=seed[col+'/'+k];delete seed[col+'/'+k];}}
   const {page:p,context}=await open({seed,day:'2027-04-16'});await castle(p);const before=await p.evaluate(()=>__qa.points().L);assert(before>=5);
   await p.locator('#citadel-residents button').filter({hasText:'Страж'}).click();
-  await p.evaluate(async restore=>{const db=await claude.use('db');await db.runTransaction(tx=>{for(const [path,value]of Object.entries(restore))tx.set(path,value);});},restore);
+  await p.evaluate(async restore=>{const db=window.PlanDB;await db.runTransaction(tx=>{for(const [path,value]of Object.entries(restore))tx.set(path,value);});},restore);
   await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
  });
@@ -1287,7 +1288,7 @@ try {
   assert.equal(Object.keys(await docs(p)).filter(k=>k==='buys/citadel-study-2').length,1);assert.equal(Number(await p.locator('#upg').innerText()),Number(before));await context.close();
  });
  await check('production PWA offline reload and offline writes persist',async()=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'allow'});await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.goto(url);await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await context.setOffline(true);await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('cfg/citadel').set({selectedRoom:'study',decor:{study:'banner'}});});await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.waitForFunction(()=>!!window.__citadelShell&&!!document.querySelector('[data-croom="study"][aria-pressed="true"]'));await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-decoration').getAttribute('data-decor'),'banner');await context.close();
+  const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'allow'});await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.goto(url);await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await context.setOffline(true);await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('cfg/citadel').set({selectedRoom:'study',decor:{study:'banner'}});});await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.waitForFunction(()=>!!window.__citadelShell&&!!document.querySelector('[data-croom="study"][aria-pressed="true"]'));await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-decoration').getAttribute('data-decor'),'banner');await context.close();
  });
  assert.deepEqual(errors,[],'browser runtime errors');console.log(`PASS ${passed} scenario groups; no runtime errors`);
 } catch(error) {console.error('FAIL',currentCheck,error.name,String(error.message).slice(0,2800),String(error.stack).split('\n').find(line=>/citadel\.mjs:\d/.test(line))||'');process.exitCode=1;} finally {await browser.close();await new Promise(r=>server.close(r));}

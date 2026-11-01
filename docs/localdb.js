@@ -1,4 +1,4 @@
-/* localdb.js: локальная база с тем же интерфейсом, что давал claude.use('db'),
+/* localdb.js: локальная документная база приложения «Вкач»,
    плюс синхронизация с файлом на Google Диске.
 
    Формат хранилища (и файла на Диске):
@@ -140,8 +140,7 @@
       };
     }
   };
-  window.claude = window.claude || {};
-  if (!window.claude.use) window.claude.use = function (n) { return Promise.resolve(n === 'db' ? db : null); };
+  window.PlanDB = Object.freeze(db);
 
   // ---- atomic merge / recovery ----------------------------------------
   function storageError() { var e = new Error('Storage unavailable'); e.code = 'quota_exceeded'; return e; }

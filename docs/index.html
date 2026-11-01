@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.73";window.APP_BUILD="7995565a04c1";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.73";window.APP_BUILD="66772533f0f9";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -674,7 +674,7 @@ html,body{overflow-anchor:none}
     <button type="button" id="pg-btn-a" role="tab" aria-selected="true" aria-pressed="true">СНОВИДЕНИЕ</button>
     <button type="button" id="pg-btn-b" role="tab" aria-selected="false" aria-pressed="false">ДОБЫЧА</button>
   </div>
-  <div class="offline" id="offline" hidden>[ЗАКЛЯТИЕ] Сохранение недоступно. Спящий, открой страницу из своего аккаунта Claude, и данные появятся.</div>
+  <div class="offline" id="offline" hidden>[ВКАЧ] Хранилище не загрузилось. Проверь доступность файлов приложения и перезагрузи страницу. Не очищай данные сайта.</div>
 
   <div class="page" id="pg-a">
   <div class="stage" aria-label="Твой персонаж в убежище">
@@ -960,7 +960,7 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.73</b><span>Сборка 7995565a04c1</span></div>
+    <div class="release-stamp"><b>Версия 0.73</b><span>Сборка 66772533f0f9</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -969,7 +969,7 @@ html,body{overflow-anchor:none}
       <div class="hint"><b>0.51</b> · 28.10 · Все названия в духе Заклятия: осколки души, ранги, ядра души, Воспоминания, Аспекты, отметины, убежище, оболочка. Монетка стала осколком души</div>
       <div class="hint"><b>0.50</b> · 28.10 · Испытания Заклятия: случайные физические задания с красным таймером, награда и штраф; пять судьбоносных отметин с титулами, оформлением и предметами; оформление «Заклятие» как награда</div>
       <div class="hint"><b>0.46</b> · 27.10 · Одна задача гигиены вместо двух; очки за ступени Аспектов убраны</div>
-      <div class="hint"><b>0.41</b> · 27.10 · Первого числа Система показывает сводку расходов за прошлый месяц, её можно скопировать и прислать Claude</div>
+      <div class="hint"><b>0.41</b> · 27.10 · Первого числа Система показывает сводку расходов за прошлый месяц, её можно скопировать для личного отчёта</div>
       <div class="hint"><b>0.40</b> · 27.10 · Выплата долга не считается личной тратой в отчётах</div>
       <div class="hint"><b>0.39</b> · 27.10 · Усиленные нормы английского и еды вынесены вниз, в необязательные: основной квест один, как с приседаниями</div>
       <div class="hint"><b>0.38</b> · 27.10 · Еда на два или три дня сама закрывает квест еды на следующие дни</div>
@@ -1029,7 +1029,7 @@ html,body{overflow-anchor:none}
     <div class="lbig" id="ac-kind"></div>
     <div class="lbig" id="ac-big" style="font-size:14px"></div>
     <div id="ac-text"></div>
-    <button class="btn alt" type="button" id="ac-copy" hidden>СКОПИРОВАТЬ ДЛЯ CLAUDE</button>
+    <button class="btn alt" type="button" id="ac-copy" hidden>СКОПИРОВАТЬ СВОДКУ</button>
     <button class="btn" type="button" id="ac-ok">ОК</button>
   </div>
 </div>
@@ -3428,7 +3428,7 @@ html,body{overflow-anchor:none}
     $('ac-text').textContent = e.text;
     acCopyText = e.copy || '';
     $('ac-copy').hidden = !acCopyText;
-    $('ac-copy').textContent = 'СКОПИРОВАТЬ ДЛЯ CLAUDE';
+    $('ac-copy').textContent = 'СКОПИРОВАТЬ СВОДКУ';
     $('achup').classList.toggle('red', !!e.red);
     $('achup').hidden = false;
     $('ac-ok').focus();
@@ -4533,15 +4533,11 @@ function renderAllInner() {
     }, function (e) { dbErr(e); });
   }
   renderAll();
-  var cl = window.claude;
-  if (!cl || !cl.use) {
+  if (!window.PlanDB) {
     $('offline').hidden = false;
   } else {
-    cl.use('db').then(function (d) {
-      if (!d) { $('offline').hidden = false; return; }
-      db = d;
-      subscribe();
-    }).catch(function () { $('offline').hidden = false; });
+    db = window.PlanDB;
+    subscribe();
   }
   setInterval(function () {
     if (!S.cart) return;
