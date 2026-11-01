@@ -415,3 +415,24 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 .citadel-room.is-locked .citadel-room-name{color:#a5a1ae;text-shadow:none;background:#000}
 #citadel-mystery{max-width:min(420px,calc(100vw - 32px));box-sizing:border-box;max-height:calc(100dvh - 32px);overflow:auto;background:#100f18;color:#ded6e7;border:1px solid #655470;padding:20px;border-radius:5px;font:14px/1.6 system-ui,sans-serif}
 #citadel-mystery h2{font-size:18px}#citadel-mystery::backdrop{background:#000b}#citadel-mystery button{min-height:44px;padding:8px 18px}
+
+/* 0.77: quiet details on the original art, with no extra animation loop. */
+.citadel-person.is-travelling[data-smooth="false"]{transition:none!important}
+.citadel-occupation-prop{display:none;position:absolute;right:-5px;bottom:9px;width:8px;height:7px;pointer-events:none;background:repeating-linear-gradient(0deg,#d2ba8d 0 1px,#685467 1px 3px);border:1px solid #32283d;box-shadow:1px 1px #100c1a}
+.citadel-person[data-occupation="planning"]:not([data-mode="interaction"]) .citadel-occupation-prop,
+.citadel-person[data-occupation="craft"]:not([data-mode="interaction"]) .citadel-occupation-prop,
+.citadel-person[data-occupation="meal"]:not([data-mode="interaction"]) .citadel-occupation-prop{display:block}
+.citadel-person[data-occupation="meal"] .citadel-occupation-prop{height:5px;border-radius:0 0 3px 3px;background:#b69570;border-top:2px solid #dfc796}
+.citadel-person[data-person="smith"][data-occupation="craft"] .citadel-occupation-prop{width:8px;height:4px;background:#9294a7;box-shadow:3px 4px #705345;rotate:-25deg}
+.citadel-person[data-person="guardian"][data-occupation="craft"] .citadel-occupation-prop{width:5px;height:8px;background:#d4ac70;border:1px solid #846c6d;box-shadow:0 0 3px #c79263}
+.citadel-finish-detail{display:none;position:absolute;inset:8% 8% auto;height:14px;z-index:3;pointer-events:none;border-top:2px solid #b58f7044;background:linear-gradient(90deg,#b58f70 0 3px,transparent 3px calc(100% - 3px),#b58f70 calc(100% - 3px));opacity:.65}
+.citadel-interior-stage[data-level="2"] .citadel-finish-detail{display:block}
+.citadel-interior-stage[data-level="3"] .citadel-finish-detail{display:block;height:24px;opacity:1;border-top:3px double #dbbb89;background:linear-gradient(90deg,#98728a 0 4px,transparent 4px calc(100% - 4px),#98728a calc(100% - 4px));box-shadow:0 -3px #65516c66}
+.citadel-interior-stage[data-room="observatory"] .citadel-finish-detail{border-color:#aaa1d0}
+.citadel-interior-stage[data-room="cloister"] .citadel-finish-detail{border-color:#88b3a1}
+.citadel-interior-stage[data-room="forge"] .citadel-finish-detail{border-color:#c78f69}
+.citadel-progress-sources{margin-top:7px;border-top:1px solid #65516d}
+.citadel-progress-sources>summary{font:12px/1.5 system-ui,sans-serif;min-height:44px;padding:10px 2px;background:transparent;letter-spacing:0;cursor:pointer;box-sizing:border-box}
+.citadel-progress-sources nav{display:flex;flex-wrap:wrap;gap:5px}
+.citadel-progress-sources button{flex:1 1 100px;min-width:0;min-height:44px;padding:7px;border:1px solid #786185;background:#2c2138;color:#efdcdf;font:12px/1.4 system-ui,sans-serif;white-space:normal}
+.wardrobe-worn{display:block;color:#f4d49c;font:11px/1.4 system-ui,sans-serif}

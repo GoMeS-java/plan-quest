@@ -54,6 +54,8 @@
   }else if(elapsed>=duration){path=[state.room];elapsed=0;}
   var pos=position(path,Math.max(0,elapsed),4000)||position([state.room],0,4000);
   state.destination=target;state.room=pos.node;
+  // A small, derived occupation cue; never persisted or simulated per frame.
+  state.occupation=pos.moving?'travel':state.mode==='rest'?'rest':state.mode==='social'?'meal':state.room==='study'?'planning':state.room===person.home?'craft':'errand';
   state.node=pos.node;state.next=pos.next;state.fraction=pos.fraction;state.moving=pos.moving;state.path=path;
   if(pos.moving){state.activity='В пути: '+names[target];state.mode='moving';state.line='Иду через '+names[pos.node].toLowerCase()+'. Скоро буду на месте.';}
   return state;

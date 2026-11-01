@@ -54,6 +54,77 @@ function advancedSeed(){
  return seed;
 }
 try {
+
+ await check('0.77 quiet actions in every room are responsive, repeatable and strictly read-only',async()=>{
+  const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  const rooms=await p.evaluate(()=>Object.keys(CitadelWorld.ranks));
+  for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   await p.setViewportSize({width,height});
+   for(const room of rooms){
+    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);await p.evaluate(()=>__qa.idle());
+    const before=await docs(p),action=p.locator('[data-room-moment]');
+    assert(await action.isVisible());assert(await action.evaluate(n=>n.getBoundingClientRect().height>=44));
+    await action.click();const text=await p.locator('#citadel-object-status').innerText();assert(text.length>40);
+    for(let i=0;i<5;i++)await action.click();assert.equal(await p.locator('#citadel-object-status').innerText(),text);
+    assert.deepEqual(await docs(p),before,'quiet action must not mutate any save document');
+    assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth));
+    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   }
+  }
+  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'077-room-action-844.png')});await context.close();
+ });
+ await check('0.77 room actions do not expose locked rooms and new cues do not weaken black masks',async()=>{
+  const {page:p,context}=await open({shell:true,width:320});
+  await p.locator('[data-croom="study"]').click();await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
+  assert(!/Обсерватория|Мастерская|Казначейство|летопис/i.test(text));assert.deepEqual(await docs(p),before);
+  await p.evaluate(()=>__qa.move('vault'));assert(await p.locator('#citadel-mystery').isVisible());
+  assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'study');
+  assert(await p.locator('.is-locked').evaluateAll(ns=>ns.every(n=>getComputedStyle(n).backgroundColor==='rgb(0, 0, 0)'&&getComputedStyle(n,'::after').display==='none')));
+  assert.deepEqual(await docs(p),before);await context.close();
+ });
+ await check('0.77 occupations, nearby responses and treasury dialogue follow real public state',async()=>{
+  const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  await p.evaluate(()=>{__qa.move('forge');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  const smith=p.locator('#citadel-interior-stage [data-person="smith"]');assert.equal(await smith.getAttribute('data-occupation'),'craft');
+  assert(await smith.locator('.citadel-occupation-prop').isVisible());await p.locator('[data-room-moment]').click();
+  assert.match(await p.locator('#citadel-object-status').innerText(),/Кузнец/);
+  await smith.click();assert.equal(await smith.getAttribute('data-mode'),'interaction');assert(await smith.locator('.citadel-occupation-prop').isHidden());
+  assert.deepEqual(await docs(p),before);
+  await p.evaluate(()=>{document.querySelector('#citadel-room-npc-close').click();__qa.move('vault');document.querySelector('#citadel-enter').click();});
+  await p.locator('#citadel-interior-stage [data-person="treasurer"]').click();assert.match(await p.locator('#citadel-room-speech').innerText(),/Для обустройства:.*Эссенции Бездны/);
+  assert(!/одну казну/.test(await p.locator('#citadel-room-speech').innerText()));
+  await p.clock.setFixedTime(new Date('2027-04-16T18:02:00+03:00'));await p.evaluate(()=>__qa.render());await dismiss(p);
+  await p.evaluate(()=>{__qa.move('refectory');document.querySelector('#citadel-enter').click();});
+  assert.equal(await p.locator('#citadel-interior-stage [data-occupation="meal"]').count(),4);
+  await p.locator('[data-room-moment]').click();assert.match(await p.locator('#citadel-object-status').innerText(),/Страж/);await context.close();
+ });
+ await check('0.77 clock jumps and resize recover NPC routes without interpolating across rooms',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);await p.emulateMedia({reducedMotion:'no-preference'});
+  await p.clock.setFixedTime(new Date('2027-04-16T10:00:07+03:00'));await p.evaluate(()=>__qa.render());
+  const smith=p.locator('#citadel-castle > [data-person="smith"]');assert.equal(await smith.getAttribute('data-smooth'),'false');
+  await p.clock.setFixedTime(new Date('2027-04-16T10:00:08+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await smith.getAttribute('data-smooth'),'true');
+  await p.clock.setFixedTime(new Date('2027-04-16T18:00:07+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await smith.getAttribute('data-smooth'),'false');
+  assert.equal(await smith.evaluate(n=>getComputedStyle(n).transitionDuration),'0s');
+  const state=await p.evaluate(()=>__qa.npcState('smith'));assert(state.path.length>1);assert(state.path.includes('hall-2'));
+  await context.close();
+ });
+ await check('0.77 progress source links and equipped badges navigate existing panels without awards',async()=>{
+  for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,shell:true});await shellDrawer(p,'left');
+   await p.locator('.citadel-progress-sources summary').click();await p.evaluate(()=>__qa.idle());const before=await docs(p);
+   assert(await p.locator('.citadel-progress-sources').evaluate(n=>n.scrollWidth<=n.clientWidth));
+   for(const tab of ['today','week','diet','money']){
+    if(tab!=='today')await shellDrawer(p,'left');
+    await p.locator('.citadel-progress-sources [data-citadel-tab="'+tab+'"]').click();assert(await p.locator('.citadel-system-dialog').isVisible());
+    assert(await p.locator('#'+tab).isVisible());await p.locator('.citadel-system-dialog>header button').click();
+   }
+   assert.deepEqual(await docs(p),before);
+   await shellNav(p,'Профиль');assert.equal(await p.locator('.wardrobe-worn').count(),3);
+   assert.equal(await p.locator('.witem[aria-pressed="false"] .wardrobe-worn').count(),0);
+   await context.close();
+  }
+ });
  await check('0.76 locked rooms have neutral DOM, accessibility labels and black scenery',async()=>{
   const {page:p,context}=await open({shell:true});
   const result=await p.locator('[data-croom].is-locked').evaluateAll(nodes=>nodes.map(n=>({
@@ -118,8 +189,8 @@ try {
   const failed=await p.evaluate(async full=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{await PlanDB.runTransaction(tx=>{for(const [key,value]of Object.entries(full))if(key.startsWith('days/')||key.startsWith('per/'))tx.set(key,value);});return false;}catch{return true;}finally{Storage.prototype.setItem=original;}},advancedSeed());assert(failed);
   assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.deepEqual(await docs(p),before);await context.close();
  });
- await check('0.76 old 0.74 and 0.75 save envelopes restore exactly with unlocked rooms and reduced motion',async()=>{
-  for(const version of ['0.74','0.75']){
+ await check('0.77 old 0.74, 0.75 and 0.76 save envelopes restore exactly with unlocked rooms and reduced motion',async()=>{
+  for(const version of ['0.74','0.75','0.76']){
    const {page:p,context}=await open({day:'2027-04-16',shell:true});const docsToRestore=Object.fromEntries(Object.entries(advancedSeed()).map(([k,d])=>[k,{d,u:1}]));
    docsToRestore['cfg/citadel']={d:{selectedRoom:'archive',decor:{archive:'banner'},future:{keep:version}},u:1};
    await p.evaluate(async({docs,version})=>{await PlanSync.importObj({v:1,appVersion:version,docs},true);},{docs:docsToRestore,version});
@@ -213,7 +284,7 @@ try {
    for(let i=0;i<8;i++)await p.locator('#citadel-interior-object').evaluate(n=>n.click());assert.deepEqual(await docs(p),before);
    assert.equal(await p.locator('#citadel-interior-stage').evaluate(n=>n.querySelector('.citadel-interior-furniture').getAnimations().length),0,'reduced motion has no object effect');
    await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('#citadel-interior-object').evaluate(n=>{for(let i=0;i<10;i++)n.click();});
-   assert.equal(await p.locator('#citadel-interior-stage .citadel-interior-furniture').evaluate(n=>n.getAnimations().filter(a=>!a.animationName).length),1,'repeated taps replace the finite response');
+   assert.equal(await p.locator('#citadel-interior-stage .citadel-room-light').evaluate(n=>getComputedStyle(n).display!=='none'&&n.getAnimations().filter(a=>!a.animationName).length),1,'repeated taps replace the visible finite response');
    assert.deepEqual(await docs(p),before);await context.close();
   }
  });
@@ -1497,8 +1568,8 @@ try {
   await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
  });
- await check('0.73, 0.74 and 0.75 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
-  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504']]){
+ await check('0.73, 0.74, 0.75 and 0.76 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
+  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7']]){
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
