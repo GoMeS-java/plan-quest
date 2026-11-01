@@ -42,7 +42,14 @@
     // Keep the coach within the native modal's top layer and focus boundary.
     if (card.parentNode !== host) {
       if(host === document.body || host === modal)host.appendChild(card);
-      else host.insertBefore(card,host.querySelector('.shead').nextSibling);
+      else {
+        // Trophy and settings panels do not always share the same header markup.
+        // Keep the coach usable even when a panel has no .shead element.
+        var heading = host.querySelector('.shead');
+        // insertBefore requires a *direct* child, not a nested heading's sibling.
+        var anchor = heading && heading.parentNode === host ? heading.nextSibling : host.firstChild;
+        host.insertBefore(card, anchor);
+      }
     }
     card.classList.toggle('awakening-floating', host === document.body);
   }
