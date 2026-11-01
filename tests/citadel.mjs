@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
+const expose = `window.__qa={shape:bodyShape,outfitCheck:function(){var old=bodyShapeNow;try{return [.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
@@ -53,6 +53,39 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('optional body goal and new weight input synchronize the existing journal without parallel progress',async()=>{
+  const seed=structuredClone(initial);seed['weights/start']={kg:165,date:'2026-10-19',ts:0};seed['weights/test']={kg:150,date,ts:1};
+  const {page:p,context}=await open({shell:true,seed});await shellNav(p,'Тело');
+  await p.locator('#body-goal').evaluate(n=>n.closest('details').open=true);
+  await p.locator('#body-goal').fill('130');await p.locator('#body-goal-save').click();await p.waitForFunction(()=>__qa.S.bodyAppearance?.goal===130);
+  const before=await p.evaluate(()=>__qa.shape());await p.locator('#in-weight').fill('145');await p.locator('#w-add').click();await p.waitForFunction(()=>__qa.S.weights.some(w=>w.kg===145));await p.evaluate(()=>__qa.idle());
+  assert((await p.evaluate(()=>__qa.shape()))<before);
+  const saved=await docs(p);assert.deepEqual(saved['weights/test'].d,seed['weights/test']);assert.deepEqual(saved['weights/start'].d,seed['weights/start']);
+  const shape=await p.evaluate(()=>__qa.shape());await p.reload();await p.waitForFunction(()=>window.__qa?.S.bodyAppearance?.goal===130&&__qa.S.weights.some(w=>w.kg===145));await dismiss(p);assert.equal(await p.evaluate(()=>__qa.shape()),shape);
+  await write(p,'weights/future',{kg:80,date:'2099-01-01',ts:999});assert.equal(await p.evaluate(()=>__qa.shape()),shape);
+  await context.close();
+ });
+ await check('body geometry follows latest weight reversibly across shared sprites and every outfit',async()=>{
+  const {page:p,context}=await open({seed:{...initial,'weights/test':{kg:165,date,ts:1}}});
+  const original=await docs(p),samples=[];
+  for(const kg of [165,158,150,140,128,150,165]){
+   await write(p,'weights/test',{kg,date,ts:2});await p.waitForFunction(k=>__qa.S.weights.some(w=>w.kg===k),kg);await p.evaluate(()=>__qa.render());
+   const sample=await p.evaluate(()=>{const ids=['hero','citadel-avatar-canvas','citadel-interior-hero'];return {f:__qa.shape(),pixels:ids.map(id=>Array.from(document.getElementById(id).getContext('2d').getImageData(0,0,32,52).data))};});
+   assert.deepEqual(sample.pixels[0],sample.pixels[1]);assert.deepEqual(sample.pixels[1],sample.pixels[2]);
+   const opaque=sample.pixels[0].filter((_,i)=>i%4===3&&sample.pixels[0][i]>0).length;
+   const hair=sample.pixels[0].slice(0,12*32*4);if(samples.length)assert.deepEqual(hair,samples[0].hair);
+   samples.push({kg,f:sample.f,opaque,hair,pixels:sample.pixels[0]});
+   if([165,150,128].includes(kg))await p.locator('.stage').screenshot({path:resolve(out,'body-'+kg+'-synthetic.png')});
+  }
+  for(let i=1;i<5;i++){assert(samples[i].f<samples[i-1].f);assert(samples[i].opaque<=samples[i-1].opaque);}
+  assert.deepEqual(samples[5].pixels,samples[2].pixels);assert.deepEqual(samples[6].pixels,samples[0].pixels);
+  // Render every built-in outfit at both endpoints without persisting changes.
+  assert(await p.evaluate(()=>__qa.outfitCheck()),'all garments retain skin pixels and fixed height at both shapes');
+  await write(p,'weights/test',{kg:140,date,ts:3});await p.evaluate(()=>__qa.render());const pixels=await p.locator('#hero').evaluate(c=>c.toDataURL());
+  await p.reload();await p.waitForFunction(()=>window.__qa?.S.weights.some(w=>w.kg===140));await dismiss(p);await p.evaluate(()=>__qa.render());assert.equal(await p.locator('#hero').evaluate(c=>c.toDataURL()),pixels);
+  const after=await docs(p);for(const[k,v]of Object.entries(original))if(k==='cfg/opening'||k==='cfg/outfit'||k.startsWith('tx/')||k.startsWith('buys/')||k.startsWith('days/'))assert.deepEqual(after[k],v);
+  await context.close();
+ });
  await check('0.70 original ginger silhouette is shared by profile and both Citadel sprites',async()=>{
   const {page:p,context}=await open({shell:true,seed:initial});
   await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
