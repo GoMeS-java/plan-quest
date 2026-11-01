@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.71";window.APP_BUILD="60cc09d4ca96";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.72";window.APP_BUILD="7f718b469c27";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -960,8 +960,8 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.71</b><span>Сборка 60cc09d4ca96</span></div>
-    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
+    <div class="release-stamp"><b>Версия 0.72</b><span>Сборка 7f718b469c27</span></div>
+    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
@@ -1035,7 +1035,7 @@ html,body{overflow-anchor:none}
 </div>
 
 <script src="citadel-world.js"></script>
-<script>window.APP_VERSION = "0.71";
+<script>window.APP_VERSION = "0.72";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -2973,7 +2973,7 @@ html,body{overflow-anchor:none}
       }));
     });
     restoreDrafts(drafts);
-    if(!S.opening){['b-cash','b-card','b-all','b-free'].forEach(function(id){$(id).textContent='нет данных';});$('f2-free').textContent='Баланс не задан';$('f2-acc').textContent='Начальные суммы ещё не записаны.';}
+    if(!S.opening){['b-cash','b-card','b-all','b-free'].forEach(function(id){$(id).textContent='нет данных';});$('f2-free').textContent='Баланс не задан';$('f2-acc').textContent='Начальные суммы ещё не записаны.';$('b-free3').textContent='Начальные остатки не заданы: итоговый баланс пока неизвестен.';$('b-free').style.color='';$('f2-free').style.color='';}
   }
   function niceStep(range) {
     var list = [1, 2, 3, 5, 10, 20, 25];
@@ -4225,7 +4225,7 @@ function renderAllInner() {
     if (!db) return;
     var mk = mondayKey(dkey(new Date()));
     var cur = !!(S.weeks[mk] && S.weeks[mk].meet);
-    enqueue(function () { return db.doc('weeks/' + mk).set({ meet: !cur }); });
+    enqueue(function () { return db.doc('weeks/' + mk).update({ meet: !cur }); });
   }
   $('kcal').addEventListener('change', function () {
     if (!db) return;
@@ -4506,34 +4506,42 @@ function renderAllInner() {
     }
   }, 1000);
   function recordRare(id) {
-    if (!db || !loaded || (S.rare && S.rare[id])) return;
-    var nx = Object.assign({}, S.rare || {});
-    nx[id] = dkey(new Date());
-    S.rare = nx;
-    enqueue(function () { return db.doc('cfg/rare').set(nx); });
+    if (!db) return Promise.resolve(false);
+    var at = dkey(new Date());
+    // First observation wins for this monotonic flag. Read under the same
+    // lock as the write; stale UI state must never replace a sibling flag.
+    return enqueue(function () {
+      return db.runTransaction(function (tx) {
+        var current = tx.get('cfg/rare') || {};
+        if (current[id]) return false;
+        current[id] = at;
+        tx.set('cfg/rare', current);
+        return true;
+      });
+    });
   }
   function timeCheck() {
     var d = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
-    if (hm === '11:11' || hm === '12:34' || hm === '22:22') recordRare('z01');
-    if (hm === '03:33' || hm === '05:55') recordRare('z17');
-    if (hm === '07:07' || hm === '17:17') recordRare('z21');
-    if (hm === '16:16' || hm === '23:23') recordRare('z23');
-    if (hm === '19:19') recordRare('z26');
-    if (hm === '10:01' || hm === '15:51' || hm === '20:02' || hm === '21:12') recordRare('z18');
+    if (hm === '11:11' || hm === '12:34' || hm === '22:22') recordRare('z01').catch(function () {});
+    if (hm === '03:33' || hm === '05:55') recordRare('z17').catch(function () {});
+    if (hm === '07:07' || hm === '17:17') recordRare('z21').catch(function () {});
+    if (hm === '16:16' || hm === '23:23') recordRare('z23').catch(function () {});
+    if (hm === '19:19') recordRare('z26').catch(function () {});
+    if (hm === '10:01' || hm === '15:51' || hm === '20:02' || hm === '21:12') recordRare('z18').catch(function () {});
   }
   var heroTaps = [];
   document.querySelector('.hero').addEventListener('click', function () {
     var n = Date.now();
     heroTaps.push(n);
     heroTaps = heroTaps.filter(function (t) { return n - t < 8000; });
-    if (heroTaps.length >= 15) { heroTaps = []; recordRare('z02'); }
+    if (heroTaps.length >= 15) { heroTaps = []; recordRare('z02').catch(function () {}); }
   });
   var summonTaps = [];
   function summonAbyss() {
     var now = Date.now();
     summonTaps.push(now);
     summonTaps = summonTaps.filter(function (t) { return now - t < 8000; });
-    if (summonTaps.length >= 7) { summonTaps = []; recordRare('z33'); }
+    if (summonTaps.length >= 7) { summonTaps = []; recordRare('z33').catch(function () {}); }
   }
   $('summon-name').addEventListener('click', summonAbyss);
   $('summon-name').addEventListener('keydown', function (e) {

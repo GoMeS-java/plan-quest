@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
+const expose = `window.__qa={loading:function(){return loaded;},sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
@@ -143,9 +143,43 @@ try {
  await check('0.72 independent progress flags and weekly marks preserve sibling fields across tabs',async()=>{
   const seed=structuredClone(initial);seed['weeks/2026-10-26']={meet:false,futureField:'keep'};seed['cfg/rare']={syntheticExisting:'2026-10-29'};
   const {page:p,context}=await open({seed});const other=await context.newPage();await other.goto(url);await other.waitForFunction(()=>__qa.markProgress&&__qa.S.rare.syntheticExisting&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
-  await Promise.all([p.evaluate(()=>{__qa.toggleMeet();__qa.markProgress('syntheticFirst');return __qa.idle();}),other.evaluate(()=>{__qa.markProgress('syntheticSecond');return __qa.idle();})]);
+  await Promise.all([p,other].map(tab=>tab.waitForFunction(()=>__qa.loading())));
+  await Promise.all([p.evaluate(()=>{__qa.toggleMeet();return __qa.markProgress('syntheticFirst');}),other.evaluate(()=>__qa.markProgress('syntheticSecond'))]);
+  await Promise.all([p,other].map(tab=>tab.waitForFunction(()=>{const d=JSON.parse(localStorage.getItem('plan.store.v1')).docs['cfg/rare'].d;return d.syntheticFirst&&d.syntheticSecond&&d.syntheticExisting;})));
   const records=await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.store.v1')).docs);assert.equal(records['weeks/2026-10-26'].d.futureField,'keep');assert.equal(records['weeks/2026-10-26'].d.meet,true);
   assert(records['cfg/rare'].d.syntheticFirst&&records['cfg/rare'].d.syntheticSecond&&records['cfg/rare'].d.syntheticExisting);await context.close();
+ });
+ await check('0.72 progress commits survive twelve cross-tab orders, replay, offline and reload',async()=>{
+  for(let attempt=0;attempt<12;attempt++){
+   const seed=structuredClone(initial);seed['cfg/rare']={syntheticExisting:'2026-10-29',future:{nested:'keep'}};seed['weeks/2026-10-26']={meet:false,futureField:'keep'};
+   const {page:p,context}=await open({seed});const other=await context.newPage();await other.goto(url);
+   await Promise.all([p,other].map(tab=>tab.waitForFunction(()=>__qa.loading())));
+   await context.setOffline(true);
+   // Hold the real Web Lock, enqueue in either order, then release it. No
+   // timer or sleep decides when the operation is considered complete.
+   const holder=attempt%2?p:other;
+   await holder.evaluate(()=>{window.__held=false;window.__hold=navigator.locks.request('plan.store.v1',()=>new Promise(resolve=>{window.__release=resolve;window.__held=true;}));});
+   await holder.waitForFunction(()=>window.__held);
+   const order=attempt%3?[p,other]:[other,p];
+   for(const tab of order)await tab.evaluate(first=>{window.__operation=__qa.markProgress(first?'syntheticFirst':'syntheticSecond');window.__operation.catch(()=>{});},tab===p);
+   await holder.evaluate(()=>window.__release());
+   assert.deepEqual(await Promise.all([p,other].map(tab=>tab.evaluate(()=>window.__operation))),[true,true]);
+   await p.evaluate(()=>{__qa.toggleMeet();const day=__qa.S.days['2026-10-30'];return __qa.writeDay('2026-10-30',day,{steps:4321});});await p.evaluate(()=>__qa.idle());
+   await Promise.all([p,other].map(tab=>tab.waitForFunction(()=>{const d=JSON.parse(localStorage.getItem('plan.store.v1')).docs;return d['cfg/rare'].d.syntheticFirst&&d['cfg/rare'].d.syntheticSecond&&d['weeks/2026-10-26'].d.meet&&d['days/2026-10-30'].d.steps===4321;})));
+   const before=(await docs(p))['cfg/rare'];
+   assert.deepEqual(await Promise.all([p,other].map(tab=>tab.evaluate(()=>__qa.markProgress('syntheticFirst')))),[false,false]);
+   assert.deepEqual((await docs(p))['cfg/rare'],before,'replay must not rewrite first observation or its revision');
+   assert.deepEqual(before.d.future,{nested:'keep'});assert.equal((await docs(p))['weeks/2026-10-26'].d.futureField,'keep');
+   await context.setOffline(false);await p.reload();await p.waitForFunction(()=>__qa.loading());
+   assert.deepEqual((await docs(p))['cfg/rare'],before);assert.equal((await docs(p))['days/2026-10-30'].d.steps,4321);
+   await context.close();
+  }
+ });
+ await check('0.72 failed progress persistence rejects without optimistic success and can be retried',async()=>{
+  const {page:p,context}=await open();const before=await docs(p);
+  assert(await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{try{await __qa.markProgress('syntheticFailed');return false;}catch(e){return e.code==='quota_exceeded'&&!__qa.S.rare.syntheticFailed;}}finally{Storage.prototype.setItem=original;}}));
+  assert.deepEqual(await docs(p),before);assert.equal(await p.evaluate(()=>__qa.markProgress('syntheticFailed')),true);
+  await p.waitForFunction(()=>__qa.S.rare.syntheticFailed);await p.reload();await p.waitForFunction(()=>__qa.loading());assert((await docs(p))['cfg/rare'].d.syntheticFailed);await context.close();
  });
  await check('0.72 repeated completion and date changes keep durable history without duplicate resources',async()=>{
   const {page:p,context}=await open();

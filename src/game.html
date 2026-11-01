@@ -4505,34 +4505,42 @@ function renderAllInner() {
     }
   }, 1000);
   function recordRare(id) {
-    if (!db || !loaded || (S.rare && S.rare[id])) return;
-    var nx = Object.assign({}, S.rare || {});
-    nx[id] = dkey(new Date());
-    S.rare = nx;
-    var patch={};patch[id]=nx[id];enqueue(function () { return db.doc('cfg/rare').update(patch); });
+    if (!db) return Promise.resolve(false);
+    var at = dkey(new Date());
+    // First observation wins for this monotonic flag. Read under the same
+    // lock as the write; stale UI state must never replace a sibling flag.
+    return enqueue(function () {
+      return db.runTransaction(function (tx) {
+        var current = tx.get('cfg/rare') || {};
+        if (current[id]) return false;
+        current[id] = at;
+        tx.set('cfg/rare', current);
+        return true;
+      });
+    });
   }
   function timeCheck() {
     var d = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
-    if (hm === '11:11' || hm === '12:34' || hm === '22:22') recordRare('z01');
-    if (hm === '03:33' || hm === '05:55') recordRare('z17');
-    if (hm === '07:07' || hm === '17:17') recordRare('z21');
-    if (hm === '16:16' || hm === '23:23') recordRare('z23');
-    if (hm === '19:19') recordRare('z26');
-    if (hm === '10:01' || hm === '15:51' || hm === '20:02' || hm === '21:12') recordRare('z18');
+    if (hm === '11:11' || hm === '12:34' || hm === '22:22') recordRare('z01').catch(function () {});
+    if (hm === '03:33' || hm === '05:55') recordRare('z17').catch(function () {});
+    if (hm === '07:07' || hm === '17:17') recordRare('z21').catch(function () {});
+    if (hm === '16:16' || hm === '23:23') recordRare('z23').catch(function () {});
+    if (hm === '19:19') recordRare('z26').catch(function () {});
+    if (hm === '10:01' || hm === '15:51' || hm === '20:02' || hm === '21:12') recordRare('z18').catch(function () {});
   }
   var heroTaps = [];
   document.querySelector('.hero').addEventListener('click', function () {
     var n = Date.now();
     heroTaps.push(n);
     heroTaps = heroTaps.filter(function (t) { return n - t < 8000; });
-    if (heroTaps.length >= 15) { heroTaps = []; recordRare('z02'); }
+    if (heroTaps.length >= 15) { heroTaps = []; recordRare('z02').catch(function () {}); }
   });
   var summonTaps = [];
   function summonAbyss() {
     var now = Date.now();
     summonTaps.push(now);
     summonTaps = summonTaps.filter(function (t) { return now - t < 8000; });
-    if (summonTaps.length >= 7) { summonTaps = []; recordRare('z33'); }
+    if (summonTaps.length >= 7) { summonTaps = []; recordRare('z33').catch(function () {}); }
   }
   $('summon-name').addEventListener('click', summonAbyss);
   $('summon-name').addEventListener('keydown', function (e) {
