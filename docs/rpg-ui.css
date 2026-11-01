@@ -265,3 +265,23 @@ body.citadel-shell-active .citadel-interior-stage[data-moving="true"] .citadel-h
 .legend-scene[data-motion="reduce"] *, .legend-scene[data-motion="reduce"]::backdrop{animation:none!important}
 .legend-scene[data-flash="off"] canvas{filter:none}
 @media(prefers-reduced-motion:reduce){.legend-scene *,.legend-scene::backdrop{animation:none!important}}
+/* 0.79: acquired pixels assemble into a persistent object, without hidden slots. */
+.fate-assembly{position:relative;width:160px;height:160px;margin:12px auto}
+.legend-scene .fate-assembly>canvas{position:absolute;inset:8px;width:144px;height:144px}
+.legend-scene[data-fate="true"] .fate-assembly>canvas:first-child{animation:fateMemory .8s steps(5,end) both}
+.legend-scene[data-fate="true"] .fate-assembly>.fate-shard{animation:fateArrival 1.65s steps(12,end) both}
+.legend-scene[data-assembled="true"] .fate-assembly>canvas:first-child{animation:none}
+.legend-entry.fate-entry canvas{width:100px;height:100px;background:#08070d;border:1px solid #483d56;float:none;display:block;margin:4px auto 14px}
+.fate-entry{text-align:center}.fate-entry h3{line-height:1.6}.fate-empty{padding:16px;border-left:2px solid #8b739f;background:#191421}
+@keyframes fateMemory{from{opacity:0}to{opacity:.65}}
+@keyframes fateArrival{0%{opacity:0;transform:translate(34px,-48px) scale(1.3) rotate(12deg)}30%{opacity:1}100%{opacity:1;transform:none}}
+@media(max-width:360px){.fate-entry button{display:block;width:100%;margin:6px 0}}
+@media(max-height:500px) and (min-width:500px){
+ .legend-scene-inner{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 14px;padding:12px}
+ .legend-scene-kicker{grid-column:1/-1;margin:0 0 4px}
+ .legend-scene .fate-assembly{grid-column:1;grid-row:2/4;width:110px;height:110px;margin:auto}
+ .legend-scene .fate-assembly>canvas{inset:5px;width:100px;height:100px}
+ .legend-scene h2{grid-column:2;grid-row:2;font-size:18px;margin:4px 0;line-height:1.4}
+ .legend-scene-inner>p:not(.legend-scene-kicker){grid-column:2;grid-row:3;margin:4px 0;font-size:13px}
+ .legend-scene button{grid-column:1/-1;margin-top:8px}
+}

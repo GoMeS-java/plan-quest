@@ -64,9 +64,12 @@ try{
  await p.evaluate(()=>PlanDB.doc('cfg/legends').set({version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}}));
  await p.waitForFunction(()=>document.querySelector('#hero').classList.contains('legend-hero'));
  const offlineHero=await p.locator('#hero').evaluate(c=>c.toDataURL());
+ await p.evaluate(()=>PlanDB.doc('cfg/fate').set({version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}}));
+ await p.waitForFunction(()=>!!window.VkachFate&&VkachFate.discovered(PlanSync._docs()['cfg/fate']?.d).length>0);
  const saved=await p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));await ctx.setOffline(true);await p.reload();await dismiss();await p.waitForFunction(()=>!!window.PlanSync);
  await p.waitForFunction(expected=>document.querySelector('#hero').toDataURL()===expected,offlineHero);
  assert.deepEqual(await p.evaluate(()=>PlanSync._docs()),saved);
+ assert(await p.evaluate(async()=>!!window.VkachFate&&!!(await caches.match(new URL('fate.js',location.href)))&&VkachFate.pending(PlanSync._docs()['cfg/fate'].d).length===0));
  assert(await p.evaluate(async()=>!!window.VkachLegends&&!!(await caches.match(new URL('legends.js',location.href)))&&document.querySelector('#hero').classList.contains('legend-hero')));
  await p.evaluate(async()=>{const db=window.PlanDB,day=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Moscow'});await db.doc('tx/offline-072').set({amt:21.45,kind:'out',acc:'cash',date:day,ts:3,counted:true});await db.doc('days/'+day).update({steps:5000});});
  await p.reload();await dismiss();await p.waitForFunction(()=>PlanSync._docs()['tx/offline-072']?.d?.amt===21.45);assert(await p.evaluate(()=>Object.entries(PlanSync._docs()).some(([k,r])=>k.startsWith('days/')&&r.d?.steps===5000)));
@@ -78,6 +81,7 @@ try{
  for(const [k,v]of Object.entries(original))assert.deepEqual((await p.evaluate(()=>PlanSync._docs()))[k].d,v.d);
  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),production);await ctx.setOffline(false);await p.evaluate(()=>PlanSync.sync(true));
  assert(!requests.some(u=>u.includes('accounts.google.com')||u.includes('sheets.googleapis.com')||u.includes('/drive/')));
+ assert(await p.evaluate(()=>VkachFate.discovered(PlanSync._docs()['cfg/fate']?.d).length>0&&VkachFate.pending(PlanSync._docs()['cfg/fate'].d).length===0));
  console.log('PASS isolated PWA offline write, reload, JSON restore and reconnect preserve production sentinel');passed++;
  const manifest=JSON.parse(await readFile('android-test/manifest.json','utf8'));assert.equal(manifest.short_name,'Вкач ТЕСТ');assert.equal(manifest.id,'./android-test');
  // Activate another scoped worker; it must not remove the first app shell cache.

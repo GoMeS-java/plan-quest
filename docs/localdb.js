@@ -165,6 +165,12 @@
     if (!jset(RECOVERY, { v: 1, docs: local, remote: remote || {}, savedAt: Date.now(), originalDamagedStore: corruptRaw })) throw storageError();
   }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  // Discovery receipts are monotonic; preference follows the selected snapshot.
+  function retainFate(local, incoming) {
+    if(!local && !incoming)return null;
+    if(!window.VkachFate)throw new Error('Discovery engine unavailable');
+    return window.VkachFate.merge(local,incoming);
+  }
   function merge(remote, options) {
     options = options || {};
     var rd = clone(validDocs(remote && remote.docs));
@@ -173,6 +179,12 @@
       var local = persistedDocs(), next = clone(local), changedLocal = false, changedRemote = false, conflicts = [];
       Object.keys(rd).forEach(function (p) {
         var l = local[p], r = rd[p];
+        if(p==='cfg/fate'&&(l&&l.d||r.d)){
+          var fate=retainFate(l&&l.d,r.d);
+          if(!l||!same(l.d,fate)){next[p]={d:fate,u:Math.max(Date.now(),(l&&l.u||0)+1,r.u+1)};changedLocal=true;}
+          if(!same(r.d,fate))changedRemote=true;
+          return;
+        }
         // This is detection, not a distributed transaction. Device clock skew
         // and concurrent full-sheet uploads still require manual verification.
         if (options.detect && l && !same(l.d, r.d) &&
@@ -252,7 +264,7 @@
       var local = corruptRaw !== null ? clone(docs) : persistedDocs(), next = {}, now = Date.now();
       recovery(local, incoming);
       Object.keys(Object.assign({}, local, incoming)).forEach(function (p) {
-        next[p] = { d: incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
+        next[p] = { d: p==='cfg/fate'&&((local[p]&&local[p].d)||(incoming[p]&&incoming[p].d)) ? retainFate(local[p]&&local[p].d,incoming[p]&&incoming[p].d) : incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
       });
       // Persist the cloud pause before replacing data, even if later storage fails.
       meta.signed = false; meta.syncPaused = true;
@@ -276,6 +288,10 @@
         if (conflict) { next[p] = { d: choice === 'remote' ? r.d : l ? l.d : null, u: Math.max(Date.now(), (l && l.u || 0) + 1, r.u + 1) }; accepted[p] = JSON.stringify(r); }
         else if (!l || r.u > l.u) next[p] = clone(r);
       });
+      if((local['cfg/fate']&&local['cfg/fate'].d)||(remote['cfg/fate']&&remote['cfg/fate'].d)){
+        var prior=local['cfg/fate'],chosen=next['cfg/fate'];
+        next['cfg/fate']={d:retainFate(prior&&prior.d,chosen&&chosen.d),u:Math.max(Date.now(),(prior&&prior.u||0)+1,(chosen&&chosen.u||0)+1)};
+      }
       meta.accepted = accepted; meta.syncPaused = true;
       if (!jset(META, meta)) throw storageError();
       if (!jset(KEY, { v: 1, docs: next })) throw storageError();

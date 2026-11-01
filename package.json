@@ -4,10 +4,11 @@
   "scripts": {
     "test": "node tests/citadel.mjs",
     "test:isolation": "node tests/android-isolation.mjs",
-    "test:all": "npm run test:legends && npm run test:world && npm run test:economy && npm test && npm run test:isolation",
+    "test:all": "npm run test:fate && npm run test:legends && npm run test:world && npm run test:economy && npm test && npm run test:isolation",
     "test:economy": "node tests/abyss-economy.mjs",
     "test:world": "node tests/citadel-world.mjs",
-    "test:legends": "node tests/legends.mjs"
+    "test:legends": "node tests/legends.mjs",
+    "test:fate": "node tests/fate.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
