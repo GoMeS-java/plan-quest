@@ -103,6 +103,7 @@ try {
   await Promise.all([p.evaluate(()=>{const d=__qa.S.days['2026-10-30'];const q=d.q.slice();q[0]=true;return __qa.writeDay('2026-10-30',d,{q,steps:5432});}),other.evaluate(()=>{const d=__qa.S.days['2026-10-30'];const q=d.q.slice();q[2]=true;return __qa.writeDay('2026-10-30',d,{q,kcal:2000});})]);
   await p.waitForFunction(()=>__qa.S.days['2026-10-30']?.q?.[0]&&__qa.S.days['2026-10-30']?.q?.[2]);await other.waitForFunction(()=>__qa.S.days['2026-10-30']?.q?.[0]&&__qa.S.days['2026-10-30']?.q?.[2]);const day=await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.store.v1')).docs['days/2026-10-30'].d);assert(day.q[0]&&day.q[2]);assert.equal(day.steps,5432);assert.equal(day.kcal,2000);assert.equal(day.futureField,'keep');
   await Promise.all([p.evaluate(()=>{__qa.trialAdd('2026-10-30','sq',10);__qa.trialAdd('2026-10-30','sq',25);return __qa.idle();}),other.evaluate(()=>{__qa.trialAdd('2026-10-30','pu',10);return __qa.idle();})]);
+  await Promise.all([p,other].map(tab=>tab.waitForFunction(()=>{const d=JSON.parse(localStorage.getItem('plan.store.v1')).docs['trial/2026-10-30']?.d;return d?.sq===35&&d?.pu===10;})));
   const trial=await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.store.v1')).docs['trial/2026-10-30'].d);assert.equal(trial.sq,35);assert.equal(trial.pu,10);await context.close();
  });
  await check('0.72 exercise repeats respect the existing gap while separate types survive rapid input',async()=>{
