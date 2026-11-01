@@ -1,3 +1,4 @@
+// Fixtures use Moscow calendar dates; every simulated device uses that same timezone.
 // Only synthetic data; localhost here is a secure-context browser test, not a physical Android test.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -18,7 +19,7 @@ const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXEC
 const shotDir=resolve(process.env.TEST_OUTPUT||'test-results');await mkdir(shotDir,{recursive:true});
 let passed=0;
 try{
- const ctx=await browser.newContext({viewport:{width:320,height:640},isMobile:true,hasTouch:true,reducedMotion:'reduce',serviceWorkers:'allow'});
+ const ctx=await browser.newContext({timezoneId:'Europe/Moscow',viewport:{width:320,height:640},isMobile:true,hasTouch:true,reducedMotion:'reduce',serviceWorkers:'allow'});
  await ctx.route('https://**/*',route=>{requests.push(route.request().url());return route.fulfill({body:'',contentType:'text/css'});});
  // Simulate unrelated production data, authentication and cache on the same origin.
  const production=JSON.stringify({v:1,docs:{'cfg/production-sentinel':{d:{value:'unchanged'},u:1}}});
@@ -92,7 +93,7 @@ try{
  await ctx.close();
  // Exercise the exact isolated release bundle, not an instrumented production page.
  for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]])for(const populated of [false,true]){
-  const mobile=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,reducedMotion:'reduce',serviceWorkers:'block'});
+  const mobile=await browser.newContext({timezoneId:'Europe/Moscow',viewport:{width,height},isMobile:true,hasTouch:true,reducedMotion:'reduce',serviceWorkers:'block'});
   const day=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Moscow'}),seed={};
   if(populated){seed['cfg/opening']={cash:5000,card:10000};seed['tx/test-wheel']={amt:125.5,kind:'out',acc:'cash',cat:'Продукты',what:'Тестовая операция',date:day,ts:1,counted:true};}
   await mobile.addInitScript(seed=>{localStorage.setItem('plan.android-test.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));},seed);
@@ -155,7 +156,7 @@ try{
   {cloudEnabled:false,clientId:'TEST',productionClientId:'PROD',allowedOrigin:fakeOrigin},
   {cloudEnabled:true,clientId:'TEST',productionClientId:'PROD',allowedOrigin:fakeOrigin,fileName:'plan-data'}
  ]){
-  const c=await browser.newContext({serviceWorkers:'block'});let external=0;
+  const c=await browser.newContext({timezoneId:'Europe/Moscow',serviceWorkers:'block'});let external=0;
   await c.route('**/*',async route=>{const u=route.request().url();if(u===fakeOrigin+'/config.js')return route.fulfill({contentType:'text/javascript',body:'window.PLAN_CONFIG='+JSON.stringify({testMode:true,fileName:'plan-data-android-test',...cfg})});if(!u.startsWith(fakeOrigin+'/')){if(/accounts.google.com|sheets.googleapis.com|\/drive\//.test(u))external++;return route.fulfill({body:'',contentType:'text/css'});}const path=new URL(u).pathname;return route.fulfill({path:resolve('android-test','.'+(path==='/'?'/index.html':path))});});
   const t=await c.newPage();await t.goto(fakeOrigin+'/');await t.waitForFunction(()=>!!PlanSync);await t.evaluate(()=>PlanSync.sync(true));assert.equal(external,0);await c.close();
  }
