@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.70";window.APP_BUILD="9702e31983df";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.71";window.APP_BUILD="32a2d3484de9";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -944,6 +944,7 @@ html,body{overflow-anchor:none}
   <div class="sbox">
     <div class="shead"><b>НАСТРОЙКИ</b><button class="gear" id="setup-x" type="button" aria-label="Закрыть">&#10005;</button></div>
     <h2>ЭФФЕКТЫ</h2>
+    <button class="btn" id="data-management" type="button">ДАННЫЕ И РЕЗЕРВНЫЕ КОПИИ</button>
     <div class="goal settings-effects">
       <div class="row">
         <label class="hint" style="flex:1 1 140px">Тряска<br><select id="fx-shake"><option value="off">выкл</option><option value="weak">слабая</option><option value="strong">сильная</option></select></label>
@@ -951,12 +952,12 @@ html,body{overflow-anchor:none}
         <label class="hint" style="flex:1 1 140px">Звук<br><select id="fx-sound"><option value="on">включён</option><option value="off">выкл</option></select></label>
       </div>
       <button class="btn alt" type="button" id="fx-test" style="cursor:pointer">ПОКАЗАТЬ НОВЫЙ РАНГ</button>
-      <div class="hint">Настройки эффектов хранятся на этом устройстве.</div>
+      <div class="hint">Настройки эффектов входят в резервную копию.</div>
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.70</b><span>Сборка 9702e31983df</span></div>
-    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
+    <div class="release-stamp"><b>Версия 0.71</b><span>Сборка 32a2d3484de9</span></div>
+    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
@@ -1030,7 +1031,7 @@ html,body{overflow-anchor:none}
 </div>
 
 <script src="citadel-world.js"></script>
-<script>window.APP_VERSION = "0.70";
+<script>window.APP_VERSION = "0.71";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -1280,7 +1281,7 @@ html,body{overflow-anchor:none}
   }
   function dbErr(e) {
     var code = e && e.code;
-    if (code === 'quota_exceeded') toast('База заполнена. Удали старые записи.');
+    if (code === 'quota_exceeded') toast('Изменение не сохранено. Скачай резервную копию и освободи место на устройстве.');
     else if (code === 'revoked') toast('Доступ к сохранению закрыт. Перезагрузи страницу.');
     else toast('Не удалось сохранить. Попробуй ещё раз.');
   }
@@ -1288,10 +1289,11 @@ html,body{overflow-anchor:none}
   // ---- state --------------------------------------------------------
   var S = { rare: {}, look: null, opening: null, wardrobe: [], outfit: null, tx: [], items: [], avito: [], jar: [], days: {}, per: {}, weeks: {}, weights: [], buys: [], cart: null, spont: [], trial: {}, citadel: null, abyss: null };
   var db = null, loaded = false, pending = 20;
-  var chain = Promise.resolve();
+  var chain = Promise.resolve(), pendingSaveError = null;
   function enqueue(fn) {
-    chain = chain.then(fn).catch(dbErr);
-    return chain;
+    var task=chain.then(fn);
+    chain=task.catch(function(e){pendingSaveError=e;dbErr(e);});
+    return task;
   }
   var START = new Date(2026, 9, 19), TOTAL_DAYS = 182;
   var QDEF = [
@@ -2326,11 +2328,11 @@ html,body{overflow-anchor:none}
   var fx = null, lastL = null, lastP = null, lvlSeen = null;
   var FX = { shake: 'weak', flash: 'weak', sound: 'on' };
   try {
-    var fs = JSON.parse(localStorage.getItem('fxset') || 'null');
+    var fs = JSON.parse(localStorage.getItem(window.PLAN_CONFIG&&PLAN_CONFIG.testMode?'plan.android-test.fxset':'fxset') || 'null');
     if (fs) { FX.shake = fs.shake || FX.shake; FX.flash = fs.flash || FX.flash; FX.sound = fs.sound || FX.sound; }
     else if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { FX.shake = 'off'; FX.flash = 'off'; }
   } catch (e) {}
-  function saveFx() { try { localStorage.setItem('fxset', JSON.stringify(FX)); } catch (e) {} }
+  function saveFx() { var copy=Object.assign({},FX); enqueue(function(){return db.doc('cfg/effects').set(copy);}); }
   function fresh(f) { return f && Date.now() - f.t < 4000; }
   function plural(n, a, b, c) {
     var m = n % 100, d = n % 10;
@@ -3639,7 +3641,7 @@ function abyssReconcile(){
   if(p.L>Number(old.rank||1)){gain+=5*(p.L-Number(old.rank||1));next.rank=p.L;}
   Object.keys(events).forEach(function(id){if(!Object.prototype.hasOwnProperty.call(claims,id)){claims[id]=events[id];gain+=events[id];}});
   if(gain){next.claims=claims;next.earned=(Number(old.earned)||0)+gain;tx.set('cfg/abyss-economy',next);}
- });}).finally(function(){abyssReconciling=false;});
+ });}).finally(function(){abyssReconciling=false;}).catch(function(){});
 }
 // Существующий расчёт читает актуальный снимок той же базы, включая ещё
 // не доставленные подпискам записи. Формулы начисления и штрафов не меняются.
@@ -3662,7 +3664,7 @@ function citadelUpgrade(room,expectedLevel) {
   if(abyssBalance(tx.get('cfg/abyss-economy'),purchases)<offer.cost)return 'Не хватает Эссенции Бездны.';
   tx.set('buys/citadel-'+room+'-'+offer.level,{kind:'citadel-room',currency:'abyss',room:room,level:offer.level,item:'citadel-'+room+'-'+offer.level,name:'Цитадель: '+offer.name,cost:offer.cost,ts:Date.now()});
   return 'Построено: '+offer.name+'. Потрачено эссенций: '+offer.cost+'.';
- }).then(function(message){$('citadel-building-feedback').textContent=message;});}).finally(function(){citadelBuilding=false;citadelRenderBuilding();});
+ }).then(function(message){$('citadel-building-feedback').textContent=message;});}).finally(function(){citadelBuilding=false;citadelRenderBuilding();}).catch(function(){});
 }
 function citadelRenderBuilding() {
  if(!loaded)return;
@@ -4160,6 +4162,7 @@ function renderAllInner() {
   function undoPushup() { undoExercise('pushup'); }
   $('d-today').addEventListener('click', function () { viewBack = 0; renderToday(); renderTrial(); });
   $('d-yest').addEventListener('click', function () { viewBack = 1; renderToday(); renderTrial(); });
+  $('data-management').onclick=function(){if(window.PlanSync)window.PlanSync.openData();};
   $('fx-shake').value = FX.shake;
   $('fx-flash').value = FX.flash;
   $('fx-shake').addEventListener('change', function () { FX.shake = $('fx-shake').value; saveFx(); });
@@ -4235,8 +4238,8 @@ function renderAllInner() {
       ts: Date.now(), date: dkey(new Date()), kind: $('kind').value, acc: $('acc').value, amt: amt,
       cat: cat, what: $('what').value, work: cat.indexOf('Работа') === 0, counted: true, pending: false
     };
-    enqueue(function () { return db.collection('tx').add(rec); });
-    $('amt').value = ''; $('what').value = '';
+    var enteredAmount=$('amt').value,enteredText=$('what').value;$('add').disabled=true;
+    enqueue(function () { return db.collection('tx').add(rec); }).then(function(){if($('amt').value===enteredAmount)$('amt').value='';if($('what').value===enteredText)$('what').value='';},function(){}).finally(function(){$('add').disabled=false;});
   });
   var payoutArmed = null;
   $('payout').addEventListener('click', function () {
@@ -4253,15 +4256,16 @@ function renderAllInner() {
     clearTimeout(payoutArmed);
     payoutArmed = null;
     btn.textContent = 'ВЫПЛАТИТЬ КОМИССИЮ И ПОДПИСНЫЕ В НАЛИЧНЫЕ';
-    var total = listSum('comm') + listSum('subs');
-    if (total <= 0) return;
-    var ids = S.items.filter(function (x) { return x.list === 'comm' || x.list === 'subs'; }).map(function (x) { return x.id; });
     enqueue(function () {
-      return db.collection('tx').add({
-        ts: Date.now(), date: dkey(new Date()), kind: 'in', acc: 'cash', amt: total,
-        cat: '', what: 'Выплата комиссии и подписных', work: false, counted: true, pending: false
-      }).then(function () {
-        return ids.reduce(function (p, id) { return p.then(function () { return db.doc('items/' + id).delete(); }); }, Promise.resolve());
+      return db.runTransaction(function(tx){
+        var items=tx.list('items').filter(function(x){return x.list==='comm'||x.list==='subs';});
+        var total=items.reduce(function(sum,x){return sum+x.amt;},0);
+        if(total<=0)return;
+        tx.set('tx/payout-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),{
+          ts:Date.now(),date:dkey(new Date()),kind:'in',acc:'cash',amt:total,
+          cat:'',what:'Выплата комиссии и подписных',work:false,counted:true,pending:false
+        });
+        items.forEach(function(x){tx.delete('items/'+x.id);});
       });
     });
   });
@@ -4287,13 +4291,13 @@ function renderAllInner() {
   });
   $('jar-in').addEventListener('click', function () { jarMove(1); });
   $('jar-out').addEventListener('click', function () { jarMove(-1); });
-  $('body-goal-save').addEventListener('click',function(){if(!db)return;var raw=$('body-goal').value.trim(),goal=Number(raw),records=bodyMeasurements();if(raw&&(!(goal>30&&goal<400)||records.length&&goal>=Number(records[0].kg))){$('body-goal-status').textContent='Укажи цель ниже начальной записи или оставь поле пустым.';return;}enqueue(function(){return db.doc('cfg/body-appearance').set({goal:raw?goal:null});});$('body-goal-status').textContent='Внешность синхронизирована. На награды и прогресс это не влияет.';});
+  $('body-goal-save').addEventListener('click',function(){if(!db)return;var raw=$('body-goal').value.trim(),goal=Number(raw),records=bodyMeasurements();if(raw&&(!(goal>30&&goal<400)||records.length&&goal>=Number(records[0].kg))){$('body-goal-status').textContent='Укажи цель ниже начальной записи или оставь поле пустым.';return;}enqueue(function(){return db.doc('cfg/body-appearance').set({goal:raw?goal:null});}).then(function(){$('body-goal-status').textContent='Внешность синхронизирована. На награды и прогресс это не влияет.';}).catch(function(){$('body-goal-status').textContent='Цель не сохранена. Проверь свободное место и повтори.';});});
   $('w-add').addEventListener('click', function () {
     if (!db) return;
     var v = Number($('in-weight').value);
     if (!(v > 30 && v < 400)) return;
-    enqueue(function () { return db.collection('weights').add({ date: dkey(new Date()), kg: Math.round(v * 10) / 10, ts: Date.now() }); });
-    $('in-weight').value = '';
+    var input=$('in-weight'),entered=input.value,button=$('w-add');button.disabled=true;
+    enqueue(function () { return db.collection('weights').add({ date: dkey(new Date()), kg: Math.round(v * 10) / 10, ts: Date.now() }); }).then(function(){if(input.value===entered)input.value='';},function(){}).finally(function(){button.disabled=false;});
   });
 
   // ---- tabs ---------------------------------------------------------
@@ -4414,6 +4418,12 @@ function renderAllInner() {
       S.outfit = sn.exists ? sn.data() : null;
       firstDone('outfit'); renderAll();
     }, function (e) { dbErr(e); });
+    db.doc('cfg/effects').onSnapshot(function(sn){
+      if(sn.exists){var value=sn.data();['shake','flash','sound'].forEach(function(k){if((k==='sound'?['on','off']:['off','weak','strong']).indexOf(value[k])>=0)FX[k]=value[k];});
+        ['shake','flash','sound'].forEach(function(k){$('fx-'+k).value=FX[k];});
+      } else if(!seen.effects){try{var old=JSON.parse(localStorage.getItem(window.PLAN_CONFIG&&PLAN_CONFIG.testMode?'plan.android-test.fxset':'fxset')||'null');if(old)enqueue(function(){return db.doc('cfg/effects').set(Object.assign({},FX));});}catch(e){}}
+      seen.effects=true;
+    },dbErr);
     db.doc('cfg/body-appearance').onSnapshot(function(sn){S.bodyAppearance=sn.exists?sn.data():null;renderAll();},dbErr);
     watchCollection('weights', function (r) { S.weights = r.sort(function (a, c) { return a.ts - c.ts; }); });
     watchCollection('buys', function (r) { S.buys = r; });
@@ -4625,7 +4635,7 @@ function renderAllInner() {
   }
   citadelShellInit();
 
-if(window.PlanSync)window.PlanSync.beforeUpdate=function(){return chain;};
+if(window.PlanSync)window.PlanSync.beforeUpdate=function(){return chain.then(function(){if(pendingSaveError){var e=pendingSaveError;pendingSaveError=null;throw e;}});};
 })();
 </script>
 
