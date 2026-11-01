@@ -17,7 +17,8 @@ g = open(f'{SRC}/game.html', encoding='utf-8').read()
 g = g.replace('__VER__', open(f'{SRC}/version.txt', encoding='utf-8').read().strip())
 art_assets = sorted(Path(SRC).glob('assets/citadel/*'))
 art_hash = hashlib.sha256(b''.join(p.read_bytes() for p in art_assets)).hexdigest()
-build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'awakening.js', 'citadel-world.js', 'legends.js', 'fate.js', 'sw.template.js', 'manifest.json', config_source]) + art_hash + open(f'{SRC}/citadel-art.css', encoding='utf-8').read() + open(f'{SRC}/rpg-ui.css', encoding='utf-8').read() + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
+icon_hash = hashlib.sha256(Path(SRC, 'assets/icon-shadow-v1.png').read_bytes()).hexdigest()
+build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'awakening.js', 'citadel-world.js', 'legends.js', 'fate.js', 'sw.template.js', 'manifest.json', config_source]) + art_hash + icon_hash + open(f'{SRC}/citadel-art.css', encoding='utf-8').read() + open(f'{SRC}/rpg-ui.css', encoding='utf-8').read() + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
 g = g.replace('__BUILD__', build_id)
 i = g.index('<link rel="stylesheet" href="rpg-ui.css">') + len('<link rel="stylesheet" href="rpg-ui.css">')
 head_part, body_part = g[:i], g[i:]
@@ -40,11 +41,8 @@ if TEST:
     open(f'{DIST}/index.html', 'w', encoding='utf-8').write(page)
 
 # --- pixel-иконка
-# Chosen icon #1: gold pixel star above the purple Citadel. The embedded
-# compact source keeps the standalone build deterministic and self-contained.
-import base64, io
-ICON_ART = base64.b64decode("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")
-icon_art = Image.open(io.BytesIO(ICON_ART)).convert('RGB')
+# Approved dark-violet pixel hero icon; source is kept with the application.
+icon_art = Image.open(Path(SRC, 'assets/icon-shadow-v1.png')).convert('RGB')
 def icon(size, safe):
     if safe >= .8:
         return icon_art.resize((size, size), Image.Resampling.LANCZOS)
