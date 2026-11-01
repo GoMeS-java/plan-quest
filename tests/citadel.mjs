@@ -797,7 +797,18 @@ try {
   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.recovery.v1')).docs),before);await context.close();
  });
  await check('0.71 complete backup v2 integrity, legacy migration and repeated restores preserve all records',async()=>{
-  const {page:p,context}=await open({legacy:{fxset:JSON.stringify({shake:'off',flash:'weak',sound:'off'})}});
+  const seed=advancedSeed();
+  Object.assign(seed,{
+   'cfg/outfit':{top:'knit_beige',bottom:'pants_brown',outer:'none'},
+   'cfg/citadel':{selectedRoom:'study',decor:{study:'banner'},futureState:{preserved:true}},
+   'tx/profile':{amt:125.45,kind:'out',acc:'cash',date,ts:1,cat:'Продукты',what:'Synthetic',counted:true},
+   'items/profile':{list:'debts',dir:'owe',amt:321.09,hold:true,ts:1},
+   'avito/profile':{name:'Synthetic',amt:456.78,ts:1},'jar/profile':{a:12.34,date,ts:1},
+   'goals/profile':{name:'Synthetic',done:true,ts:1},'weeks/profile':{meet:true},
+   'wardrobe/profile':{name:'Synthetic stored item',slot:'top',id:'profile',futureField:'keep'}
+  });
+  for(const room of ['throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'])for(const level of [2,3])seed['buys/citadel-'+room+'-'+level]={kind:'citadel-room',currency:'abyss',room,level,item:'citadel-'+room+'-'+level,cost:level===2?5:12,ts:1};
+  const {page:p,context}=await open({seed,day:'2027-04-16',legacy:{fxset:JSON.stringify({shake:'off',flash:'weak',sound:'off'})}});
   await write(p,'cfg/body-appearance',{goal:100});await write(p,'cfg/future-compatible',{unknown:{nested:['retained',42]}});
   await p.evaluate(()=>__qa.idle());const before=await docs(p),shape=await p.evaluate(()=>__qa.shape());
   const copy=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
@@ -1033,4 +1044,4 @@ try {
   const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'allow'});await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.goto(url);await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await context.setOffline(true);await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('cfg/citadel').set({selectedRoom:'study',decor:{study:'banner'}});});await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.waitForFunction(()=>!!window.__citadelShell&&!!document.querySelector('[data-croom="study"][aria-pressed="true"]'));await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-decoration').getAttribute('data-decor'),'banner');await context.close();
  });
  assert.deepEqual(errors,[],'browser runtime errors');console.log(`PASS ${passed} scenario groups; no runtime errors`);
-} catch(error) {console.error('FAIL',currentCheck,error.name,String(error.message).split('Call log:')[0].split('\n')[0],String(error.stack).split('\n').find(line=>/citadel\.mjs:\d/.test(line))||'');process.exitCode=1;} finally {await browser.close();await new Promise(r=>server.close(r));}
+} catch(error) {console.error('FAIL',currentCheck,error.name,String(error.message).slice(0,2800),String(error.stack).split('\n').find(line=>/citadel\.mjs:\d/.test(line))||'');process.exitCode=1;} finally {await browser.close();await new Promise(r=>server.close(r));}
