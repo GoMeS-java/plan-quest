@@ -2603,7 +2603,7 @@ html,body{overflow-anchor:none}
       if (x.heavy && L >= 1) sub += ', тяжёлое';
       row.appendChild(questButton(x.name, sub, x.done && !counted ? '0' : '+' + val, !!x.done, function () {
         if (!db) return;
-        enqueue(function () { return db.doc('spont/' + x.id).update({ done: !x.done }); }).then(function(){if(!x.done)heroProgressSaved('Задание сохранено','daily');},function(){});
+        enqueue(function () { return db.doc('spont/' + x.id).update({ done: !x.done }); }).then(function(){if(!x.done)heroProgressSaved('Задание сохранено','daily');},function(){heroProgressFailed('Задание не сохранено. Повтори после устранения ошибки.');});
       }));
       var ctr = el('div', 'hint');
       var rename=el('button','linkbtn','изменить');rename.type='button';rename.onclick=function(){var name=window.prompt('Название задания',x.name);if(name&&name.trim())enqueue(function(){return db.doc('spont/'+x.id).update({name:name.trim()});});};ctr.appendChild(rename);
@@ -3218,6 +3218,10 @@ html,body{overflow-anchor:none}
     // that coherent snapshot before reading rank/points (not optimistic data).
     clearTimeout(heroFeedbackTimer);heroFeedbackTimer=setTimeout(function(){heroFeedbackTimer=0;heroProgressShow(message,kind);},0);
   }
+  function heroProgressFailed(message){
+    clearTimeout(heroFeedbackTimer);heroFeedbackTimer=0;
+    ['daily-progress-feedback','citadel-progress-feedback'].forEach(function(id){$(id).textContent=message;});
+  }
   function heroProgressShow(message,kind){
     if(!loaded)return;
     var p=pointsInfo();heroProgressMessage=message+' · Ранг '+p.L+' · Осколки '+p.P+' / '+p.need;
@@ -3257,7 +3261,7 @@ html,body{overflow-anchor:none}
     });}).then(function(){
       $('wardrobe-status').textContent='Надето: '+(id==='none'?'Без верхней одежды':(itemById(allItems(),id)||{name:'Предмет'}).name)+'. Сохранено.';
       heroProgressSaved('Экипировка сохранена','gear');
-    },function(){$('wardrobe-status').textContent='Экипировка не сохранена. Повтори после устранения ошибки.';}).finally(function(){wardrobeSaving=false;document.querySelectorAll('.witem').forEach(function(b){b.disabled=false;});});
+    },function(){var message='Экипировка не сохранена. Повтори после устранения ошибки.';$('wardrobe-status').textContent=message;heroProgressFailed(message);}).finally(function(){wardrobeSaving=false;document.querySelectorAll('.witem').forEach(function(b){b.disabled=false;});});
   }
   function renderWardrobe() {
     bodyStageNow = bodyStage();bodyShapeNow=bodyShape();
@@ -4288,7 +4292,7 @@ function renderAllInner() {
       var added=changes.q&&changes.q.some(function(v,i){return v&&!(previous.q||[])[i];});
       if(k===dkey(new Date()))heroProgressSaved(added?'Дело дня сохранено':'Запись дня сохранена','daily');
       return result;
-    }).catch(function(){var r=savedRecord('days/'+k);S.days[k]=r||{};renderAll();return false;});
+    }).catch(function(){var r=savedRecord('days/'+k);S.days[k]=r||{};heroProgressFailed('Запись дня не сохранена. Повтори после устранения ошибки.');renderAll();return false;});
   }
   function setTier(i, key, m) {
     if (!db) return;
@@ -4338,7 +4342,7 @@ function renderAllInner() {
   }
   function saveExercise(k, q, key, arr, rArr) {
     var optimistic=Object.assign({},S.per[k]||{});optimistic[key]=arr;optimistic[key+'R']=rArr;S.per[k]=optimistic;
-    enqueue(function(){return db.runTransaction(function(tx){var doc=tx.get('per/'+k)||{};if(JSON.stringify(doc[key]||[])!==JSON.stringify(q[key]||[]))throw recordChanged();doc[key]=arr;doc[key+'R']=rArr;tx.set('per/'+k,doc);});}).then(function(){if(arr.length>(q[key]||[]).length)heroProgressSaved('Тренировка сохранена','exercise');}).catch(function(){S.per[k]=savedRecord('per/'+k)||{};renderAll();});
+    enqueue(function(){return db.runTransaction(function(tx){var doc=tx.get('per/'+k)||{};if(JSON.stringify(doc[key]||[])!==JSON.stringify(q[key]||[]))throw recordChanged();doc[key]=arr;doc[key+'R']=rArr;tx.set('per/'+k,doc);});}).then(function(){if(arr.length>(q[key]||[]).length)heroProgressSaved('Тренировка сохранена','exercise');}).catch(function(){S.per[k]=savedRecord('per/'+k)||{};heroProgressFailed('Тренировка не сохранена. Повтори после устранения ошибки.');renderAll();});
   }
   function doSquat(n) { doExercise('squat', n); }
   function undoSquat() { undoExercise('squat'); }
@@ -4483,7 +4487,7 @@ function renderAllInner() {
     var v = Number($('in-weight').value);
     if (!(v > 30 && v < 400)) return;
     var input=$('in-weight'),entered=input.value,button=$('w-add');button.disabled=true;
-    enqueue(function () { return db.collection('weights').add({ date: dkey(new Date()), kg: Math.round(v * 10) / 10, ts: Date.now() }); }).then(function(){if(input.value===entered)input.value='';heroProgressSaved('Измерение сохранено','body');},function(){}).finally(function(){button.disabled=false;});
+    enqueue(function () { return db.collection('weights').add({ date: dkey(new Date()), kg: Math.round(v * 10) / 10, ts: Date.now() }); }).then(function(){if(input.value===entered)input.value='';heroProgressSaved('Измерение сохранено','body');},function(){heroProgressFailed('Измерение не сохранено. Повтори после устранения ошибки.');}).finally(function(){button.disabled=false;});
   });
 
   // ---- tabs ---------------------------------------------------------

@@ -74,6 +74,15 @@ try {
   assert.equal(await p.evaluate(()=>__qa.progressSequence()),0);assert.match(await p.locator('#wardrobe-status').innerText(),/не сохранена/);
   const after=await docs(p);assert.deepEqual(after['days/'+date],before['days/'+date]);assert.deepEqual(after['cfg/outfit'],before['cfg/outfit']);await context.close();
  });
+ await check('0.75 a failed action replaces the preceding success and retry confirms only durable progress',async()=>{
+  const {page:p,context}=await open();
+  await p.evaluate(async()=>{const cur=__qa.S.days['2026-10-30'],q=cur.q.slice();q[0]=true;await __qa.writeDay('2026-10-30',cur,{q});});
+  await p.waitForFunction(()=>document.querySelector('#daily-progress-feedback').textContent.includes('Дело дня сохранено'));const before=await docs(p);
+  await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{const cur=__qa.S.days['2026-10-30'],q=cur.q.slice();q[1]=true;await __qa.writeDay('2026-10-30',cur,{q});}finally{Storage.prototype.setItem=original;}});
+  assert.match(await p.locator('#daily-progress-feedback').innerText(),/не сохранена/);assert.match(await p.locator('#citadel-progress-feedback').textContent(),/не сохранена/);assert.equal(await p.evaluate(()=>__qa.progressSequence()),1);assert.deepEqual((await docs(p))['days/'+date],before['days/'+date]);
+  await p.evaluate(async()=>{const cur=__qa.S.days['2026-10-30'],q=cur.q.slice();q[1]=true;await __qa.writeDay('2026-10-30',cur,{q});});
+  await p.waitForFunction(()=>document.querySelector('#daily-progress-feedback').textContent.includes('Дело дня сохранено'));assert.equal(await p.evaluate(()=>__qa.progressSequence()),2);assert((await docs(p))['days/'+date].d.q[1]);await context.close();
+ });
  await check('0.75 equipment preserves concurrent sibling slots and unknown save fields',async()=>{
   const seed=structuredClone(initial);seed['cfg/outfit']={top:'knit_beige',bottom:'pants_brown',outer:'none',future:{keep:true}};
   const {page:p,context}=await open({seed});
