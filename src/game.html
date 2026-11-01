@@ -4244,6 +4244,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
       if(FX.sound!=='off')try{[130.81,196,261.63,392].forEach(function(f,i){tone(f,i*.19,.65,'triangle',.045);});}catch(e){}
     }catch(e){if(legendDialog.open)legendDialog.close();var cb=legendFinish;legendFinish=null;if(cb)cb();}
   }
+  window.addEventListener('keydown',function(e){if(e.key==='Escape'&&legendDialog&&legendDialog.open){e.preventDefault();e.stopImmediatePropagation();legendClose(false);}},true);
   window.addEventListener('popstate',function(e){
     if(legendDialog&&legendDialog.open){legendClose(true);e.stopImmediatePropagation();return;}
     if(legendReturning){legendReturning=false;e.stopImmediatePropagation();}
