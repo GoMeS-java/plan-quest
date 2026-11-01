@@ -1859,6 +1859,9 @@ html,body{overflow-anchor:none}
     root.setAttribute('data-coin', ok(look.coin, 'coin') ? COS[look.coin].key : '');
     root.setAttribute('data-bar', ok(look.bar, 'bar') ? COS[look.bar].key : '');
     var st = document.querySelector('.stage');
+    // Earned sanctuary environments now dress the entire Citadel as well.
+    // Keep the same saved look ID, so old backups and unlocks need no migration.
+    root.setAttribute('data-citadel-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
     if (st) {
       st.setAttribute('data-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
       st.setAttribute('data-frame', ok(look.frame, 'frame') ? COS[look.frame].key : '');
