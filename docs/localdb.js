@@ -181,6 +181,7 @@
         var l = local[p], r = rd[p];
         if(p==='cfg/fate'&&(l&&l.d||r.d)){
           var fate=retainFate(l&&l.d,r.d);
+          if(l&&l.d&&l.u>r.u&&Object.prototype.hasOwnProperty.call(l.d,'active'))fate.active=l.d.active;
           if(!l||!same(l.d,fate)){next[p]={d:fate,u:Math.max(Date.now(),(l&&l.u||0)+1,r.u+1)};changedLocal=true;}
           if(!same(r.d,fate))changedRemote=true;
           return;

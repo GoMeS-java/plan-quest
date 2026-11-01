@@ -77,6 +77,7 @@ try {
   const before=(await docs(p))['cfg/fate'].d;await p.evaluate(copy=>PlanSync.importObj(copy,true),old);await p.waitForTimeout(60);assert.deepEqual((await docs(p))['cfg/fate'].d,before);
   const divergent=structuredClone((await docs(p))['cfg/fate']);for(const r of Object.values(divergent.d.entries))for(const piece of Object.values(r.pieces))piece.presented=false;divergent.u+=1000;
   await p.evaluate(record=>PlanSync.importObj({v:1,docs:{'cfg/fate':record}}),divergent);await p.waitForTimeout(60);assert.deepEqual((await docs(p))['cfg/fate'].d,before);
+  const older=structuredClone(divergent);older.u=0;older.d.active='';await p.evaluate(record=>PlanSync.importObj({v:1,docs:{'cfg/fate':record}}),older);await p.waitForTimeout(40);assert.equal((await docs(p))['cfg/fate'].d.active,before.active);
   for(const [path,record]of Object.entries(old.docs))assert.deepEqual((await docs(p))[path].d,record.d);await context.close();
  });
  await check('0.79 conflict choices retain discoveries from both devices even with an older remote ledger',async()=>{
