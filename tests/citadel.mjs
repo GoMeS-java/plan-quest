@@ -53,6 +53,42 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.73 interior walking, inspection and stable doors work at Android widths without progress writes',async()=>{
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,mobile:true,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.evaluate(()=>__qa.idle());
+   const before=await docs(p),stage=p.locator('#citadel-interior-stage'),hero=stage.locator('.citadel-hero-sprite');const box=await stage.boundingBox(),first=await hero.boundingBox();
+   await stage.click({position:{x:box.width*.8,y:box.height*.93}});const walked=await hero.boundingBox();assert(walked.x>first.x,'a floor tap must move the actual sprite');
+   await stage.focus();await p.keyboard.press('ArrowLeft');assert((await hero.boundingBox()).x<walked.x);
+   await p.locator('[data-room-inspect]').click();assert.match(await p.locator('#citadel-object-status').innerText(),/Старая кровать/);assert.equal(await p.locator('[data-room-talk]').count(),0,'no residents before their rank');
+   const door=stage.locator('.citadel-scene-door').first(),handle=await door.elementHandle();assert((await door.locator('small').innerText()).length>3);await door.focus();await p.evaluate(()=>__qa.render());
+   assert(await door.evaluate((n,previous)=>n===previous&&document.activeElement===n,handle),'refresh must retain the focused door');
+   const a=await hero.boundingBox(),b=await stage.boundingBox();assert(a.x>=b.x&&a.x+a.width<=b.x+b.width&&a.y+a.height<=b.y+b.height);
+   assert(await p.locator('#citadel-room-actions').evaluate(n=>n.scrollWidth<=n.clientWidth));assert.deepEqual(await docs(p),before);
+   if(width===390)await p.screenshot({path:resolve(out,'android-073-interior-390.png')});
+   await context.close();
+  }
+ });
+ await check('0.73 nearby resident actions follow schedules and Android Back closes conversation before room',async()=>{
+  const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16',shell:true});
+  await p.clock.setSystemTime(new Date('2027-04-16T18:02:00+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="refectory"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  assert.equal(await p.locator('[data-room-talk]').count(),4);await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.locator('[data-room-talk="smith"]').click();assert(await p.locator('#citadel-room-conversation').isVisible());assert.match(await p.locator('#citadel-room-speech').innerText(),/Кузнец/);
+  const hero=await p.locator('#citadel-interior-stage .citadel-hero-sprite').boundingBox();
+  for(const npc of await p.locator('#citadel-interior-stage .citadel-person').all()){const b=await npc.boundingBox();assert(hero.x+hero.width<=b.x||hero.x>=b.x+b.width,'hero must stop beside residents');}
+  await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-room-conversation').hidden);assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
+  await p.locator('[data-room-talk="smith"]').click();await p.keyboard.press('Escape');assert(await p.locator('#citadel-room-conversation').isHidden());assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
+  await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');
+  await p.locator('[data-croom="refectory"]').click();await p.locator('[data-room-talk="smith"]').click();
+  await p.clock.setSystemTime(new Date('2027-04-16T23:00:10+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await p.locator('[data-room-talk]').count(),0);assert(await p.locator('#citadel-room-conversation').isHidden());
+  assert.deepEqual(await docs(p),before);await context.close();
+ });
+ await check('0.73 walking animation stops for reduced motion and keeps the shared hero on resize',async()=>{
+  const {page:p,context}=await open({shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});
+  const stage=p.locator('#citadel-interior-stage'),b=await stage.boundingBox();await stage.click({position:{x:b.width*.8,y:b.height*.93}});assert.equal(await stage.getAttribute('data-moving'),'true');
+  await p.emulateMedia({reducedMotion:'reduce'});await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.moving==='false');assert.equal(await stage.locator('.citadel-hero-sprite').evaluate(n=>n.getAnimations().length),0);
+  await p.setViewportSize({width:320,height:700});await p.evaluate(()=>window.dispatchEvent(new Event('resize')));const hero=await stage.locator('.citadel-hero-sprite').boundingBox(),box=await stage.boundingBox();assert(hero.x>=box.x&&hero.x+hero.width<=box.x+box.width);
+  const pixels=await p.evaluate(()=>['hero','citadel-interior-hero'].map(id=>Array.from(document.getElementById(id).getContext('2d').getImageData(0,0,32,52).data)));assert.deepEqual(pixels[0],pixels[1]);await context.close();
+ });
  await check('0.72 Android finance create edit delete date and comma decimals keep one durable operation',async()=>{
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    const {page:p,context}=await open({width,height,mobile:true,shell:true});await shellNav(p,'Финансы');
