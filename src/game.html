@@ -3159,16 +3159,12 @@ html,body{overflow-anchor:none}
   }
   var BODY_TH = [158.3, 151.6, 144.2, 136.9, 128.4];
   function bodyStage() {
-    if (!S.weights || !S.weights.length) return 0;
-    var today = dkey(new Date()), from = addDays(today, -14), t = null, last = null;
-    S.weights.forEach(function (w) {
-      if (w.date > today) return;
-      if (!last || w.date >= last.date) last = w;
-      if (w.date >= from && (t === null || w.kg < t)) t = w.kg;
-    });
-    if (t === null) t = last ? last.kg : 165;
-    var n = 0;
-    BODY_TH.forEach(function (x) { if (t <= x) n++; });
+    // Use the same latest valid measurement as bodyShape(), not the
+    // minimum from the last 14 days, so the displayed stage and sprite agree.
+    var records=bodyMeasurements();
+    if(!records.length)return 0;
+    var weight=Number(records[records.length-1].kg),n=0;
+    BODY_TH.forEach(function(threshold){if(weight<=threshold)n++;});
     return n;
   }
   function bodyMeasurements(){
