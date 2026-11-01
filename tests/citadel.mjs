@@ -80,7 +80,8 @@ try {
   }
  });
  await check('0.76 reload during mystery dialog clears history marker and keeps keyboard and Back usable',async()=>{
-  const {page:p,context}=await open({shell:true});await p.clock.runFor(64);await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}}};
+  const {page:p,context}=await open({shell:true,seed});await p.clock.runFor(64);await p.evaluate(()=>__qa.idle());const before=await docs(p);
   await p.locator('[data-croom="archive"]').focus();await p.keyboard.press('Enter');await p.locator('#citadel-mystery').waitFor({state:'visible'});
   assert.equal(await p.evaluate(()=>history.state.citadelMystery),true);
   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);await p.clock.runFor(64);
