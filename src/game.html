@@ -4276,15 +4276,16 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
     if(visible){stage.style.setProperty('--legend-color',visible.color);decor.setAttribute('role','img');decor.setAttribute('aria-label',visible.object);legendGlyph(decor,visible);}else{stage.style.removeProperty('--legend-color');decor.removeAttribute('aria-label');}
     document.querySelectorAll('#hero,#citadel-avatar-canvas,#citadel-interior-hero').forEach(function(hero){hero.classList.toggle('legend-hero',!!active);if(active)hero.style.setProperty('--legend-color',active.color);else hero.style.removeProperty('--legend-color');});
   }
+  function legendInputSignature(){return JSON.stringify([dkey(new Date()),S.days,S.spont,Object.keys(S.legends&&S.legends.unlocked||{})]);}
   function legendSync(){
     if(!loaded||!window.VkachLegends)return;
     legendDecorate();
     legendOwned().forEach(function(d){if(!d.presented&&!legendQueued[d.id]){legendQueued[d.id]=true;
       legendEdit(function(old){var unlocked=Object.assign({},old.unlocked||{});if(!unlocked[d.id]||unlocked[d.id].presented)return null;unlocked[d.id]=Object.assign({},unlocked[d.id],{presented:true});return Object.assign({},old,{unlocked:unlocked});}).then(function(){achQueue.push({legend:d.id});showNextAch();},function(){delete legendQueued[d.id];});
     }});
-    var signature=JSON.stringify([S.days,S.spont]);if(legendBusy||signature===legendSignature)return;
+    var signature=legendInputSignature();if(legendBusy||signature===legendSignature)return;
     legendBusy=true;
-    enqueue(function(){return db.runTransaction(function(tx){return VkachLegends.reconcile(tx,dkey(new Date()),Date.now());});}).then(function(){legendSignature=signature;},function(){}).finally(function(){legendBusy=false;});
+    enqueue(function(){return db.runTransaction(function(tx){return VkachLegends.reconcile(tx,dkey(new Date()),Date.now());});}).then(function(){legendSignature=signature;},function(){}).finally(function(){legendBusy=false;if(legendSignature===signature&&legendInputSignature()!==signature)requestProfileRender();});
   }
 
 function renderAllInner() {
