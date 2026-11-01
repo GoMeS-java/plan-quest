@@ -4767,7 +4767,7 @@ function renderAllInner() {
     [['spend','Траты'],['money','Деньги'],['avito','Авито'],['wheel','Колесо']].forEach(function(item){var b=document.createElement('button');b.type='button';b.role='tab';b.dataset.finance=item[0];b.textContent=item[1];b.onclick=function(){showSystem(item[0],item[1]);};financeNav.appendChild(b);});
     dialog.insertBefore(financeNav,dialog.querySelector('.citadel-system-content'));
     financeNav.addEventListener('keydown',function(e){var buttons=Array.from(financeNav.children),index=buttons.indexOf(document.activeElement);if(index<0)return;var next=e.key==='ArrowRight'?(index+1)%4:e.key==='ArrowLeft'?(index+3)%4:e.key==='Home'?0:e.key==='End'?3:-1;if(next<0)return;e.preventDefault();buttons[next].click();buttons[next].focus();});
-    dialog.addEventListener('close',function(){if(!dialog.open)restore();});dialog.querySelector('header button').onclick=closeSystem;
+    dialog.addEventListener('close',function(){if(!dialog.open)restore();});dialog.querySelector('header button').onclick=function(){closeSystem();};
     function showSystem(id,label){
       var financeId=id,isFinance=['spend','money','avito','wheel'].indexOf(id)>=0;
       closeDrawer(true);if(dialog.open&&isFinance)restore();else closeSystem(true);
