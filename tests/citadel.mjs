@@ -11,7 +11,7 @@ const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-res
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
 const expose = `window.__qa={loading:function(){return loaded;},sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
-function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
+function instrument(html) { html=html.replace('function renderAllInner() {','function renderAllInner() { window.__qaRenderCount=(window.__qaRenderCount||0)+1;');const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
 const baseline = '<!doctype html><html><head><meta charset="utf-8"><script src="/config.js"></script><script src="/localdb.js"></script></head><body>'+baselineSrc+'</body></html>';
@@ -26,18 +26,18 @@ async function check(name,fn){if(process.env.TEST_FILTER&&!new RegExp(process.en
 const date='2026-10-30';
 const initial={'cfg/opening':{cash:1200.5,card:3400},'weights/test':{kg:143.7,date,ts:1},['days/'+date]:{q:[false,false,false,false,false,false,false,false,false,false],steps:1200,kcal:2100},'spont/old':{name:'Synthetic task',date,done:false,heavy:true,ts:1},'cfg/outfit':{outer:'none'}};
 // Computed keys are assigned separately to remain compatible with plain JavaScript.
-async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={},base=false,day=date,sw=false,failUpgrade=false,shell=false}={}){
+async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={},base=false,day=date,sw=false,failUpgrade=false,shell=false,slowCPU=false}={}){
  const context=await browser.newContext({viewport:{width,height},isMobile:mobile,hasTouch:mobile,timezoneId:'Europe/Moscow',reducedMotion:'reduce',serviceWorkers:sw?'allow':'block'});
  context.setDefaultTimeout(15000);
- const page=await context.newPage();page.on('pageerror',e=>errors.push(String(e)));
+ const page=await context.newPage();const session=slowCPU?await context.newCDPSession(page):null;if(session)await session.send('Emulation.setCPUThrottlingRate',{rate:4});page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('Failed to load resource'))errors.push(m.text());});
- await page.clock.install({time:new Date(day+'T14:00:00+03:00')});
+ if(slowCPU)await page.clock.setFixedTime(new Date(day+'T14:00:00+03:00'));else await page.clock.install({time:new Date(day+'T14:00:00+03:00')});
  await context.addInitScript(({seed,legacy,day,failUpgrade,shell})=>{if(!shell)localStorage.setItem('plan.shell.classic.v1','1');if(!localStorage.getItem('qa-init')){const docs=Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]));localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs}));for(const [k,v]of Object.entries(legacy))localStorage.setItem(k,v);localStorage.setItem('qa-init','1');}localStorage.setItem('wsum',day.slice(0,7)+'-26');localStorage.setItem('msum',day.slice(0,7));localStorage.setItem('trialSeen',day);if(failUpgrade&&!localStorage.getItem('qa-upgrade-failed')){localStorage.setItem('qa-upgrade-failed','1');window.__originalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.pre-update.v1')throw new DOMException('Synthetic full','QuotaExceededError');return window.__originalSetItem.call(this,k,v);};}},{seed,legacy,day,failUpgrade,shell});
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
- if(!base&&!failUpgrade){await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);await page.evaluate(()=>__qa.idle());}
+ if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await page.evaluate(()=>__qa.idle());}
  if(!shell)await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden])').first(),()=>dismiss(page));
- await dismiss(page);return {page,context};
+ await dismiss(page);return {page,context,session};
 }
 async function dismiss(p){await p.evaluate(()=>{for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});}
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));}
@@ -53,6 +53,22 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.73 weight mirrors use the same valid dated measurement as the shared hero',async()=>{
+  const seed=structuredClone(initial);seed['weights/start']={kg:160,date:'2026-01-01',ts:0};seed['weights/test']={kg:145,date,ts:1};
+  const {page:p,context}=await open({seed});await castle(p);const shape=await p.evaluate(()=>__qa.shape());
+  await write(p,'weights/backdated',{kg:130,date:'2026-10-29',ts:999,futureField:'keep'});
+  assert.equal(await p.locator('#cur-weight').textContent(),'145','later entry time must not replace the latest calendar measurement');
+  await write(p,'weights/outside-range',{kg:500,date,ts:1000,futureField:'keep'});await write(p,'weights/impossible',{kg:80,date:'2026-02-31',ts:1001});
+  assert.equal(await p.locator('#citadel-live-body').textContent(),'ВЕС 145 КГ');assert.equal(await p.locator('#cur-weight').textContent(),'145');assert.equal(await p.evaluate(()=>__qa.shape()),shape);
+  await p.locator('#citadel-activity-actions').getByRole('button',{name:'Осмотреть облик'}).click();assert.match(await p.locator('#citadel-activity-feedback').innerText(),/145 кг/);
+  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('weights/test').delete();await db.doc('weights/backdated').delete();});await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='test'||w.id==='backdated'));
+  assert.equal(await p.locator('#citadel-live-body').textContent(),'ВЕС 160 КГ');assert.equal(await p.locator('#cur-weight').textContent(),'160');
+  const before=await docs(p);assert.equal(before['weights/outside-range'].d.kg,500);assert.equal(before['weights/impossible'].d.date,'2026-02-31');
+  await p.reload();await castle(p);assert.equal(await p.locator('#citadel-live-body').textContent(),'ВЕС 160 КГ');assert.equal(await p.locator('#cur-weight').textContent(),'160');
+  const copy=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));await p.evaluate(copy=>PlanSync.importObj(copy,true),copy);await p.waitForFunction(()=>__qa.S.weights.some(w=>w.id==='start'));
+  const after=await docs(p);for(const key of ['weights/start','weights/outside-range','weights/impossible'])assert.deepEqual(after[key].d,before[key].d,'invalid source records must remain recoverable');
+  await context.close();
+ });
  await check('0.73 interior walking, inspection and stable doors work at Android widths without progress writes',async()=>{
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    const {page:p,context}=await open({width,height,mobile:true,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.evaluate(()=>__qa.idle());
@@ -153,6 +169,15 @@ try {
   assert.equal(await p.evaluate(()=>__qa.writeDay('2026-10-30',__qa.S.days['2026-10-30'],{steps:7000})),true);
   await p.reload();await p.waitForFunction(()=>__qa.loading());assert.equal((await docs(p))['days/'+date].d.steps,7000);await context.close();
  });
+ await check('0.73 conflicting task detail updates reject stale values and retain independent detail keys',async()=>{
+  const {page:p,context}=await open();const key='days/'+date;
+  await write(p,key,{...structuredClone(initial[key]),ex:{eng:1,futureDetail:'keep'}});const old=await p.evaluate(()=>structuredClone(__qa.S.days['2026-10-30']));
+  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('days/2026-10-30').update({ex:{eng:2,futureDetail:'keep'}});});await p.waitForFunction(()=>__qa.S.days['2026-10-30'].ex.eng===2);
+  assert.equal(await p.evaluate(old=>__qa.writeDay('2026-10-30',old,{ex:{...old.ex,eng:3}}),old),false,'a stale detail must not overwrite a newer value');
+  assert.equal((await docs(p))[key].d.ex.eng,2);assert.match(await p.locator('#toast').innerText(),/Запись уже изменена/);
+  assert.equal(await p.evaluate(old=>__qa.writeDay('2026-10-30',old,{ex:{...old.ex,cook:2}}),old),true);
+  assert.deepEqual((await docs(p))[key].d.ex,{eng:2,cook:2,futureDetail:'keep'});await p.reload();await p.waitForFunction(()=>__qa.loading());assert.deepEqual((await docs(p))[key].d.ex,{eng:2,cook:2,futureDetail:'keep'});await context.close();
+ });
  await check('0.72 exercise repeats respect the existing gap while separate types survive rapid input',async()=>{
   const {page:p,context}=await open();await p.evaluate(()=>{__qa.exercise('squat',10);__qa.exercise('pushup',10);__qa.exercise('squat',10);return __qa.idle();});
   let record=(await docs(p))['per/'+date].d;assert.equal(record.squat.length,1);assert.equal(record.pushup.length,1);
@@ -175,6 +200,25 @@ try {
   const duration=await p.evaluate(()=>{const start=performance.now();for(let i=0;i<5;i++)__qa.render();return Math.round(performance.now()-start);});
   assert(await p.locator('#log li').first().evaluate((n,old)=>n===old,row));assert(await p.locator('#spark svg').evaluate((n,old)=>n===old,chart));assert.deepEqual(await p.evaluate(()=>__qa.balance()),{cash:575.5,card:3400});
   console.log('Large synthetic profile, five refreshes ms:',duration);await context.close();
+ });
+ await check('0.73 large profile remains usable with CPU slowdown and bounded room DOM',async()=>{
+  const seed=advancedSeed(),day='2027-04-16';
+  for(let n=0;n<1000;n++)seed['tx/load-'+n]={amt:1.25,kind:'out',acc:'cash',date:day,ts:n+1,cat:'Продукты',what:'Synthetic load '+n,counted:true};
+  for(let n=0;n<500;n++)seed['weights/load-'+n]={kg:160-n/20,date:'2026-10-30',ts:n+2};
+  for(let n=0;n<300;n++)seed['spont/load-'+n]={name:'Synthetic task '+n,date:day,done:n%2===0,heavy:false,ts:n+1};
+  const started=performance.now();const {page:p,context,session}=await open({seed,day,shell:true,slowCPU:true});const startupWallMs=Math.round(performance.now()-started);const startupRenders=await p.evaluate(()=>window.__qaRenderCount);await session.send('Performance.enable');
+  await shellNav(p,'Финансы');assert.equal(await p.locator('#log li').count(),40);await p.locator('#tx-more').click();assert.equal(await p.locator('#log li').count(),80);
+  await p.locator('.citadel-finance-nav [data-finance="wheel"]').click();assert(await p.locator('#spend').isVisible());await p.locator('.citadel-system-dialog header button').click();
+  await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  await session.send('HeapProfiler.collectGarbage');const initialMetrics=await session.send('Performance.getMetrics');
+  const baseline=await p.evaluate(()=>document.querySelectorAll('*').length);
+  for(let n=0;n<8;n++){await p.locator('#citadel-exits [data-travel="study"]').click();await p.locator('#citadel-exits [data-travel="rest"]').click();}
+  await p.evaluate(()=>__qa.idle());assert.equal((await p.evaluate(()=>__qa.S.tx)).length,1000);assert.equal((await p.evaluate(()=>__qa.S.weights)).length,501);assert.equal((await p.evaluate(()=>__qa.S.spont)).length,301);
+  const nodes=await p.evaluate(()=>document.querySelectorAll('*').length);assert(nodes<=baseline+8,'round trips must not accumulate room controls or sprites');
+  await session.send('HeapProfiler.collectGarbage');const finalMetrics=await session.send('Performance.getMetrics');
+  function metric(m,key){return m.metrics.find(x=>x.name===key)?.value;}
+  console.log('Synthetic CPU4x profile:',JSON.stringify({transactions:1000,weights:501,tasks:301,startupWallMs,startupRenders,nodesBefore:baseline,nodesAfter:nodes,heapBefore:metric(initialMetrics,'JSHeapUsedSize'),heapAfter:metric(finalMetrics,'JSHeapUsedSize'),taskSeconds:metric(finalMetrics,'TaskDuration')-metric(initialMetrics,'TaskDuration')}));
+  await context.close();
  });
  await check('0.72 unknown opening balances do not hide a new account operation history',async()=>{
   const {page:p,context}=await open({seed:{},shell:true});await shellNav(p,'Финансы');await p.locator('#amt').fill('10,50');await p.locator('#what').fill('Synthetic first expense');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.length===1);

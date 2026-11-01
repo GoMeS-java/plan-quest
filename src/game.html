@@ -2289,7 +2289,7 @@ html,body{overflow-anchor:none}
     });
     return s;
   }
-  function currentWeight() { return S.weights.length ? S.weights[S.weights.length - 1].kg : 165; }
+  function currentWeight() { var records=bodyMeasurements();return records.length?Number(records[records.length-1].kg):165; }
   function stepInfo() {
     var goals = {}, done = {}, goal = 5000;
     var k = mondayKey('2026-10-19'), cur = mondayKey(dkey(new Date()));
@@ -3589,6 +3589,9 @@ html,body{overflow-anchor:none}
   setInterval(function(){var day=dkey(new Date());if(loaded&&day!==renderedDay){if(!txEditing&&$('tx-date').value===renderedDay&&!$('amt').value&&!$('what').value)$('tx-date').value=day;renderedDay=day;renderAll();}tickTrial();},1000);
 
   function renderAll() {
+    // Initial subscriptions are one coherent profile. Rendering every partial
+    // snapshot repeats all histories and charts before the player can act.
+    if(db&&!loaded)return;
     if(loaded)abyssSchedule();
     var sy = window.pageYOffset || 0;
     renderAllInner();
@@ -3789,7 +3792,7 @@ study:{intro:'Кабинет помогает вспомнить о целях �
 observatory:{intro:'Линза ждёт того, кто достигнет пятого ранга.',actions:[['stars','Осмотреть небо']]},
 archive:{intro:'Пока страницы архива запечатаны.',actions:[['memories','Посмотреть записи']]},
 forge:{intro:'Горн не выдаёт предметы без настоящих игровых оснований.',actions:[['gear','Осмотреть экипировку']]}};
-function citadelActivityMessage(type){var p=pointsInfo(),last=(S.weights||[]).filter(function(w){return w&&w.date<=dkey(new Date());}).sort(function(a,b){return a.date.localeCompare(b.date);}).pop();switch(type){
+function citadelActivityMessage(type){var p=pointsInfo(),last=bodyMeasurements().pop();switch(type){
 case 'status':return 'Твой текущий ранг: '+p.L+'. Осколки души: '+p.P+'. Это реальные показатели Заклятия.';
 case 'residents':return 'Цитадель постепенно заселяется. Первые жители появляются с 5-го ранга.';
 case 'appearance':return 'Внешность героя, одежда и изменения тела берутся из существующей игры.'+(last?' Последний записанный вес: '+last.kg+' кг.':' Записей веса пока нет.');
@@ -4009,7 +4012,7 @@ function citadelSyncTrial(){var panel=$('citadel-trial');if(!panel||!loaded)retu
 $('citadel-trial-open').addEventListener('click',function(){citadelNavigate('today','trialbox');});
 function citadelSyncDaily(){if(!loaded)return;var k=dkey(new Date()),day=S.days[k]||{},idx=activeIdx(k),q=day.q||[],done=idx.filter(function(i){return !!q[i];}).length,host=$('citadel-daily-list');if(!host)return;host.textContent='';var count=document.createElement('div');count.className='citadel-weekly-row';count.textContent='Основные задания: '+done+' / '+idx.length;host.appendChild(count);var steps=document.createElement('div');steps.className='citadel-weekly-row';var target=stepInfo().goals[mondayKey(k)]||5000;steps.textContent='Шаги: '+fmt(+day.steps||0)+' / '+fmt(target);host.appendChild(steps);var details=$('citadel-daily-details');if(details){details.textContent='';idx.forEach(function(i){var item=document.createElement('div'),name=document.createElement('span'),state=document.createElement('span');item.className='citadel-daily-quest'+(q[i]?' is-done':'');name.textContent=qTitle(i,k);state.textContent=q[i]?'✓':'○';state.setAttribute('aria-label',q[i]?'Выполнено':'Не выполнено');item.appendChild(name);item.appendChild(state);details.appendChild(item);});}$('citadel-daily-count').textContent=done+' / '+idx.length;}
 function citadelSyncWeekly(){if(!loaded)return;var mk=mondayKey(dkey(new Date())),si=stepInfo(),goal=si.goals[mk]||5000,days=0,day=parseKey(mk);for(var i=0;i<7;i++){var record=S.days[dkey(day)];if(record&&record.steps>=goal)days++;day.setDate(day.getDate()+1);}var weighed=S.weights.some(function(w){return mondayKey(w.date)===mk;}),eng=engWeek(mk),kcal=kcalWeek(mk),rows=[['Взвешивание',weighed?'Выполнено':'Не записано',weighed],['Шаги каждый день',days+' / 7 · цель '+fmt(goal),!!si.done[mk]],['Английский',eng+' / 7',eng===7],['Питание',kcal+' / 7',kcal===7]],host=$('citadel-weekly-list');if(!host)return;host.textContent='';rows.forEach(function(r){var line=document.createElement('div'),label=document.createElement('span'),state=document.createElement('span');line.className='citadel-weekly-row'+(r[2]?' is-done':'');label.textContent=r[0];state.textContent=r[1];line.appendChild(label);line.appendChild(state);host.appendChild(line);});$('citadel-weekly-count').textContent=rows.filter(function(r){return r[2];}).length+' / '+rows.length;}
-function syncCitadel(){if(!loaded)return;citadelNpcObserve();var p=pointsInfo();$('citadel-summary').textContent='РАНГ '+p.L+' · '+p.P+' ◇ · '+p.avail+' ✧';var weights=(S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&w.date<=dkey(new Date());}).sort(function(a,b){return a.date.localeCompare(b.date);});var last=weights.length?Number(weights[weights.length-1].kg):null;$('citadel-live-rank').textContent='РАНГ '+p.L;$('citadel-live-body').textContent=last===null?'ТЕЛО: НЕТ ЗАПИСЕЙ':'ВЕС '+last+' КГ';$('citadel-live-points').textContent='ОСКОЛКИ '+p.P;var b=S.opening?balances():null;$('citadel-live-cash').textContent=b?'БАЛАНС '+fmtM(b.cash+b.card)+' ₽':'ФИНАНСЫ: НЕТ ДАННЫХ';var equipped=outfitIds();$('citadel-live-gear').textContent='ОБОЛОЧКА: '+(equipped.outer==='none'?'БЕЗ ПЛАЩА':'ЭКИПИРОВАНА');syncCitadelAvatar();syncCitadelResidents(p.L);citadelRenderActivities();citadelRenderBuilding();citadelRoomJournal();if(!$('citadel-interior').hidden){citadelRenderDecor();citadelRenderExits();}syncCitadelTime();citadelSyncTrial();citadelSyncWeekly();citadelSyncDaily();if($('citadel-home').open){var current=document.querySelector('[data-croom="'+citadelSelected+'"]');if(current&&p.L<Number(current.getAttribute('data-min-rank')||1))citadelMove('rest');else if(current&&current.getAttribute('aria-pressed')!=='true')citadelMove(citadelSelected);}document.querySelectorAll('[data-min-rank]').forEach(function(btn){var locked=p.L<Number(btn.getAttribute('data-min-rank'));btn.classList.toggle('is-locked',locked);btn.setAttribute('aria-disabled',locked?'true':'false');var badge=btn.querySelector('.citadel-lock');if(badge)badge.textContent=locked?'ЗАКРЫТО':'ДОСТУПНО';});if(window.__citadelShell)window.__citadelShell.refresh();}
+function syncCitadel(){if(!loaded)return;citadelNpcObserve();var p=pointsInfo();$('citadel-summary').textContent='РАНГ '+p.L+' · '+p.P+' ◇ · '+p.avail+' ✧';var weights=bodyMeasurements();var last=weights.length?Number(weights[weights.length-1].kg):null;$('citadel-live-rank').textContent='РАНГ '+p.L;$('citadel-live-body').textContent=last===null?'ТЕЛО: НЕТ ЗАПИСЕЙ':'ВЕС '+last+' КГ';$('citadel-live-points').textContent='ОСКОЛКИ '+p.P;var b=S.opening?balances():null;$('citadel-live-cash').textContent=b?'БАЛАНС '+fmtM(b.cash+b.card)+' ₽':'ФИНАНСЫ: НЕТ ДАННЫХ';var equipped=outfitIds();$('citadel-live-gear').textContent='ОБОЛОЧКА: '+(equipped.outer==='none'?'БЕЗ ПЛАЩА':'ЭКИПИРОВАНА');syncCitadelAvatar();syncCitadelResidents(p.L);citadelRenderActivities();citadelRenderBuilding();citadelRoomJournal();if(!$('citadel-interior').hidden){citadelRenderDecor();citadelRenderExits();}syncCitadelTime();citadelSyncTrial();citadelSyncWeekly();citadelSyncDaily();if($('citadel-home').open){var current=document.querySelector('[data-croom="'+citadelSelected+'"]');if(current&&p.L<Number(current.getAttribute('data-min-rank')||1))citadelMove('rest');else if(current&&current.getAttribute('aria-pressed')!=='true')citadelMove(citadelSelected);}document.querySelectorAll('[data-min-rank]').forEach(function(btn){var locked=p.L<Number(btn.getAttribute('data-min-rank'));btn.classList.toggle('is-locked',locked);btn.setAttribute('aria-disabled',locked?'true':'false');var badge=btn.querySelector('.citadel-lock');if(badge)badge.textContent=locked?'ЗАКРЫТО':'ДОСТУПНО';});if(window.__citadelShell)window.__citadelShell.refresh();}
 function renderAllInner() {
     renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderAvito(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel();
   }
@@ -4173,7 +4176,7 @@ function renderAllInner() {
       var next=tx.get('days/'+k)||{};
       Object.keys(changes).forEach(function(field){
         if(field==='q'){var q=(next.q||[]).slice();changes.q.forEach(function(value,i){if(!!value!==!!(previous.q||[])[i])q[i]=!!value;});next.q=q;}
-        else if(field==='ex'){var ex=Object.assign({},next.ex||{}),before=previous.ex||{};Object.keys(Object.assign({},before,changes.ex)).forEach(function(key){if(before[key]!==changes.ex[key]){if(Object.prototype.hasOwnProperty.call(changes.ex,key))ex[key]=changes.ex[key];else delete ex[key];}});if(Object.keys(ex).length)next.ex=ex;else delete next.ex;}
+        else if(field==='ex'){var ex=Object.assign({},next.ex||{}),before=previous.ex||{};Object.keys(Object.assign({},before,changes.ex)).forEach(function(key){if(before[key]!==changes.ex[key]){if(ex[key]!==before[key]&&ex[key]!==changes.ex[key]){var conflict=new Error('Progress changed');conflict.code='record_changed';throw conflict;}if(Object.prototype.hasOwnProperty.call(changes.ex,key))ex[key]=changes.ex[key];else delete ex[key];}});if(Object.keys(ex).length)next.ex=ex;else delete next.ex;}
         else {
           if(next[field]!==previous[field]&&next[field]!==changes[field]){var conflict=new Error('Progress changed');conflict.code='record_changed';throw conflict;}
           next[field]=changes[field];
@@ -4447,11 +4450,19 @@ function renderAllInner() {
     pending--;
     if (pending === 0) { loaded = true; setTimeout(timeCheck, 0); setTimeout(abyssReconcile, 0); }
   }
+  var profileRenderPending=false;
+  function requestProfileRender(){
+    if(profileRenderPending)return;
+    profileRenderPending=true;
+    // localdb delivers every subscriber in one task. Apply the whole snapshot
+    // before one render, rather than rebuilding all histories per subscriber.
+    Promise.resolve().then(function(){profileRenderPending=false;renderAll();});
+  }
   function watchCollection(name, apply) {
     db.collection(name).onSnapshot(function (snap) {
       apply(rows(snap));
       firstDone(name);
-      renderAll();
+      requestProfileRender();
     }, function (e) { dbErr(e); });
   }
   function subscribe() {
@@ -4480,20 +4491,20 @@ function renderAllInner() {
         citadelSelected = room; citadelActivityRenderedRoom = '';
         if (loaded && citadelOpened.open) citadelMove(room);
       }
-      firstDone('citadel'); renderAll();
+      firstDone('citadel'); requestProfileRender();
     }, function (e) { dbErr(e); });
     db.doc('cfg/look').onSnapshot(function (sn) {
       S.look = sn.exists ? sn.data() : null;
       if (S.look) { try { localStorage.setItem('look', JSON.stringify(S.look)); } catch (e) {} }
-      firstDone('look'); renderAll();
+      firstDone('look'); requestProfileRender();
     }, function (e) { dbErr(e); });
     db.doc('cfg/rare').onSnapshot(function (sn) {
       S.rare = sn.exists ? (sn.data() || {}) : {};
-      firstDone('rare'); renderAll();
+      firstDone('rare'); requestProfileRender();
     }, function (e) { dbErr(e); });
     db.doc('cfg/outfit').onSnapshot(function (sn) {
       S.outfit = sn.exists ? sn.data() : null;
-      firstDone('outfit'); renderAll();
+      firstDone('outfit'); requestProfileRender();
     }, function (e) { dbErr(e); });
     db.doc('cfg/effects').onSnapshot(function(sn){
       if(sn.exists){var value=sn.data();['shake','flash','sound'].forEach(function(k){if((k==='sound'?['on','off']:['off','weak','strong']).indexOf(value[k])>=0)FX[k]=value[k];});
@@ -4501,10 +4512,10 @@ function renderAllInner() {
       } else if(!seen.effects){try{var old=JSON.parse(localStorage.getItem(window.PLAN_CONFIG&&PLAN_CONFIG.testMode?'plan.android-test.fxset':'fxset')||'null');if(old)enqueue(function(){return db.doc('cfg/effects').set(Object.assign({},FX));});}catch(e){}}
       seen.effects=true;
     },dbErr);
-    db.doc('cfg/body-appearance').onSnapshot(function(sn){S.bodyAppearance=sn.exists?sn.data():null;renderAll();},dbErr);
+    db.doc('cfg/body-appearance').onSnapshot(function(sn){S.bodyAppearance=sn.exists?sn.data():null;requestProfileRender();},dbErr);
     watchCollection('weights', function (r) { S.weights = r.sort(function (a, c) { return a.ts - c.ts; }); });
     watchCollection('buys', function (r) { S.buys = r; });
-    db.doc('cfg/abyss-economy').onSnapshot(function(sn){S.abyss=sn.exists?sn.data():null;firstDone('abyss');renderAll();},dbErr);
+    db.doc('cfg/abyss-economy').onSnapshot(function(sn){S.abyss=sn.exists?sn.data():null;firstDone('abyss');requestProfileRender();},dbErr);
     watchCollection('days', function (r) { S.days = {}; r.forEach(function (d) { S.days[d.id] = d; }); });
     watchCollection('weeks', function (r) { S.weeks = {}; r.forEach(function (d) { S.weeks[d.id] = d; }); });
     watchCollection('goals', function (r) { S.gg = r; });
@@ -4513,11 +4524,11 @@ function renderAllInner() {
     watchCollection('per', function (r) { S.per = {}; r.forEach(function (d) { S.per[d.id] = d; }); });
     db.doc('cfg/opening').onSnapshot(function (s) {
       S.opening = s.exists ? s.data() : null;
-      firstDone('opening'); renderAll();
+      firstDone('opening'); requestProfileRender();
     }, function (e) { dbErr(e); });
     db.doc('cfg/cart').onSnapshot(function (s) {
       S.cart = s.exists ? s.data() : null;
-      firstDone('cart'); renderAll();
+      firstDone('cart'); requestProfileRender();
     }, function (e) { dbErr(e); });
   }
   renderAll();
