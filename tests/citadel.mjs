@@ -79,6 +79,16 @@ try {
    if(width===390)await p.screenshot({path:resolve(out,'android-076-mystery-390.png')});await context.close();
   }
  });
+ await check('0.76 reload during mystery dialog clears history marker and keeps keyboard and Back usable',async()=>{
+  const {page:p,context}=await open({shell:true});await p.clock.runFor(64);await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.locator('[data-croom="archive"]').focus();await p.keyboard.press('Enter');await p.locator('#citadel-mystery').waitFor({state:'visible'});
+  assert.equal(await p.evaluate(()=>history.state.citadelMystery),true);
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);await p.clock.runFor(64);
+  assert(await p.locator('#citadel-mystery').isHidden());assert.equal(await p.evaluate(()=>!!history.state?.citadelMystery),false);assert.deepEqual(await docs(p),before);
+  await shellNav(p,'Задания');assert.equal(await p.evaluate(()=>!!history.state?.citadelMystery),false);await p.locator('.citadel-system-dialog header button').click();await p.waitForFunction(()=>history.state?.citadelOverlay!=='system');
+  await p.locator('[data-croom="archive"]').focus();await p.keyboard.press('Enter');await p.locator('#citadel-mystery').waitFor({state:'visible'});await p.goBack();await p.locator('#citadel-mystery').waitFor({state:'hidden'});assert(await p.locator('#citadel-castle').isVisible());
+  await p.locator('[data-croom="archive"]').focus();await p.keyboard.press('Enter');await p.locator('#citadel-mystery').waitFor({state:'visible'});await p.keyboard.press('Escape');await p.locator('#citadel-mystery').waitFor({state:'hidden'});assert(await p.locator('#citadel-castle').isVisible());await context.close();
+ });
  await check('0.76 travel, drawers, activities, building and purchase history do not disclose locked content',async()=>{
   const seed=structuredClone(initial);seed['buys/citadel-archive-2']={kind:'citadel-room',currency:'abyss',room:'archive',level:2,name:'Цитадель: Новые стеллажи',cost:5};
   const {page:p,context}=await open({seed,shell:true});await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});

@@ -3683,6 +3683,8 @@ function citadelShowMystery(id){
  $('citadel-mystery-text').textContent='Помещение ещё не открыто. Требуется ранг '+CitadelWorld.ranks[id]+'. Оно откроется автоматически при достижении ранга. Сейчас '+(loaded?pointsInfo().L:'идёт загрузка')+'.';
  if(!dialog.open){history.pushState(Object.assign({},history.state,{citadelMystery:true}),'');dialog.showModal();}
 }
+// A native modal is closed after reload; discard its stale history marker.
+if(history.state&&history.state.citadelMystery){var citadelCleanHistory=Object.assign({},history.state);delete citadelCleanHistory.citadelMystery;history.replaceState(citadelCleanHistory,'');}
 window.addEventListener('popstate',function(e){if($('citadel-mystery').open){$('citadel-mystery').close();e.stopImmediatePropagation();}});
 $('citadel-mystery').addEventListener('close',function(){if(history.state&&history.state.citadelMystery)history.back();});
 var citadelHeroAnimation=null;
