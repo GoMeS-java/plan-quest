@@ -126,7 +126,7 @@ try {
    assert(await p.locator('.citadel-progress-sources').evaluate(n=>n.scrollWidth<=n.clientWidth));
    for(const tab of ['today','week','diet','money']){
     if(tab!=='today')await shellDrawer(p,'left');
-    await p.locator('.citadel-progress-sources [data-citadel-tab="'+tab+'"]').click();assert(await p.locator('.citadel-system-dialog').isVisible());
+    await p.locator('.citadel-progress-sources [data-progress-tab="'+tab+'"]').click();assert(await p.locator('.citadel-system-dialog').isVisible());
     assert(await p.locator('#'+tab).isVisible());await p.locator('.citadel-system-dialog>header button').click();
    }
    assert.deepEqual(await docs(p),before);
