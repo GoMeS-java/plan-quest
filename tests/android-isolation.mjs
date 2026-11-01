@@ -61,10 +61,13 @@ try{
  await p.evaluate(async()=>{const db=window.PlanDB,date=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Moscow'});await db.doc('weights/body-first').set({kg:160,date:'2026-01-01',ts:1});await db.doc('weights/body-latest').set({kg:100,date,ts:2});});
  await p.waitForFunction(old=>document.querySelector('#hero').toDataURL()!==old,originalHero);await p.evaluate(()=>PlanSync.beforeUpdate());
  await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('cfg/effects').set({shake:'off',flash:'off',sound:'off'});await db.doc('tx/offline-test').set({amt:12.34,kind:'out',acc:'cash',date:new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Moscow'}),ts:2});});
+ await p.evaluate(()=>PlanDB.doc('cfg/legends').set({version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}}));
+ await p.waitForFunction(()=>document.querySelector('#hero').classList.contains('legend-hero'));
  const offlineHero=await p.locator('#hero').evaluate(c=>c.toDataURL());
  const saved=await p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));await ctx.setOffline(true);await p.reload();await dismiss();await p.waitForFunction(()=>!!window.PlanSync);
  await p.waitForFunction(expected=>document.querySelector('#hero').toDataURL()===expected,offlineHero);
  assert.deepEqual(await p.evaluate(()=>PlanSync._docs()),saved);
+ assert(await p.evaluate(async()=>!!window.VkachLegends&&!!(await caches.match(new URL('legends.js',location.href)))&&document.querySelector('#hero').classList.contains('legend-hero')));
  await p.evaluate(async()=>{const db=window.PlanDB,day=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Moscow'});await db.doc('tx/offline-072').set({amt:21.45,kind:'out',acc:'cash',date:day,ts:3,counted:true});await db.doc('days/'+day).update({steps:5000});});
  await p.reload();await dismiss();await p.waitForFunction(()=>PlanSync._docs()['tx/offline-072']?.d?.amt===21.45);assert(await p.evaluate(()=>Object.entries(PlanSync._docs()).some(([k,r])=>k.startsWith('days/')&&r.d?.steps===5000)));
  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),production);

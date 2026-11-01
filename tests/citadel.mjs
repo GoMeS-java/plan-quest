@@ -55,6 +55,19 @@ function advancedSeed(){
 }
 try {
 
+ await check('0.78 atomic cosmetic delivery is one-time across retries, reload and storage failure',async()=>{
+  const {page:p,context}=await open({shell:true});const before=await docs(p);
+  const result=await p.evaluate(async()=>{
+   function deliver(){return PlanDB.runTransaction(tx=>{const proxy={get:tx.get,set:tx.set,list:function(c){const out=[];for(let n=0;n<240;n++){const id=new Date(Date.UTC(2026,9,19+n)).toISOString().slice(0,10);out.push(c==='days'?{id,q:Array(10).fill(true)}:{id:'synthetic'+n,date:id,done:true});}return out;}};return VkachLegends.reconcile(proxy,'2027-07-01',Date.now());});}
+   const original=Storage.prototype.setItem;let failed=false;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic failure','QuotaExceededError');return original.call(this,k,v);};
+   try{await deliver();}catch{failed=true;}finally{Storage.prototype.setItem=original;}
+   const untouched=!PlanSync._docs()['cfg/legends'];const awarded=await deliver(),again=await deliver();return {failed,untouched,hasAward:awarded.length>0,repeated:again.length};
+  });assert.deepEqual(result,{failed:true,untouched:true,hasAward:true,repeated:0});
+  await p.waitForTimeout(80);await p.evaluate(()=>__qa.idle());await dismiss(p);const earned=(await docs(p))['cfg/legends'].d;
+  for(const [path,record]of Object.entries(before))assert.deepEqual((await docs(p))[path].d,record.d);
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);assert.deepEqual((await docs(p))['cfg/legends'].d,earned);await context.close();
+ });
+
  await check('0.78 earned collection, replay, cosmetic selection and reload are read-only for economy',async()=>{
   const seed=structuredClone(initial);seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
   const {page:p,context}=await open({shell:true,seed});const before=await docs(p);
@@ -99,11 +112,11 @@ try {
   const {page:p,context}=await open({shell:true});await p.evaluate(()=>document.querySelector('#trophy-btn').click());
   const safe=await p.evaluate(()=>{const text=document.querySelector('#alist').textContent;return !VkachLegends.earned({unlocked:{echo01:{version:1,at:1},echo02:{version:1,at:1},echo03:{version:1,at:1}}}).some(d=>text.includes(d.name)||text.includes(d.object)||text.includes(d.aura));});assert(safe);assert.equal(await p.locator('.legend-entry').count(),0);assert(!/Суперредкая цель|осталось|\d+ из \d+/.test(await p.locator('#alist').innerText()));await context.close();
  });
- await check('0.78 persisted unlocks survive offline restart and backup restore without replay grants',async()=>{
+ await check('0.78 persisted unlocks survive backup restore without replay grants',async()=>{
   const seed=structuredClone(initial);seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
   const {page:p,context}=await open({shell:true,seed});const before=await docs(p),ev=p.waitForEvent('download');await p.evaluate(()=>PlanSync.exportBackup());const download=await ev,copy=JSON.parse(await readFile(await download.path(),'utf8'));assert.deepEqual(copy.docs,before);
   await write(p,'cfg/legends',{version:1,unlocked:{}});await p.evaluate(copy=>PlanSync.importObj(copy,true),copy);await p.waitForTimeout(70);await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);assert.deepEqual((await docs(p))['cfg/legends'].d,before['cfg/legends'].d);
-  await context.setOffline(true);await p.reload();await p.waitForFunction(()=>window.__qa?.loading());assert.deepEqual((await docs(p))['cfg/legends'].d,before['cfg/legends'].d);await context.close();
+  await context.close();
  });
 
  await check('0.77 quiet actions in every room are responsive, repeatable and strictly read-only',async()=>{
