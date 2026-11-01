@@ -72,7 +72,7 @@ try {
   const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16',shell:true});
   await p.clock.setSystemTime(new Date('2027-04-16T18:02:00+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="refectory"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
   assert.equal(await p.locator('[data-room-talk]').count(),4);await p.evaluate(()=>__qa.idle());const before=await docs(p);
-  await p.locator('[data-room-talk="smith"]').click();assert(await p.locator('#citadel-room-conversation').isVisible());assert.match(await p.locator('#citadel-room-speech').innerText(),/Кузнец/);
+  await p.locator('[data-room-talk="smith"]').click();assert(await p.locator('#citadel-room-conversation').isVisible());assert.match(await p.locator('#citadel-room-speech').innerText(),/Кузнец/);assert(await p.locator('#citadel-room-npc-action').evaluate(n=>{var b=n.getBoundingClientRect(),hit=document.elementFromPoint(b.left+b.width/2,b.top+b.height/2);return hit===n||n.contains(hit);}),'conversation action must be reachable above the Android dock');
   const hero=await p.locator('#citadel-interior-stage .citadel-hero-sprite').boundingBox();
   for(const npc of await p.locator('#citadel-interior-stage .citadel-person,#citadel-interior-stage .citadel-scene-door,#citadel-interior-stage .citadel-scene-door small').all()){const b=await npc.boundingBox();assert(hero.x+hero.width<=b.x||hero.x>=b.x+b.width||hero.y+hero.height<=b.y||hero.y>=b.y+b.height,'hero must stop clear of residents, doors and labels');}
   await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-room-conversation').hidden);assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
