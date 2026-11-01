@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
+const expose = `window.__qa={sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
@@ -53,6 +53,93 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.72 Android finance create edit delete date and comma decimals keep one durable operation',async()=>{
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,mobile:true,shell:true});await shellNav(p,'Финансы');
+   const before=await p.evaluate(()=>__qa.balance());
+   await p.locator('#amt').fill('125,45');await p.locator('#what').fill('Synthetic long expense '.repeat(12));await p.locator('#tx-date').fill('2026-10-29');await p.locator('#cat').selectOption({label:'Продукты'});
+   await p.evaluate(()=>{document.querySelector('#add').click();document.querySelector('#add').click();});
+   await p.waitForFunction(()=>__qa.S.tx.length===1);await p.evaluate(()=>__qa.idle());
+   const record=(await p.evaluate(()=>__qa.S.tx))[0];assert.equal(record.amt,125.45);assert.equal(record.date,'2026-10-29');assert.equal(await p.locator('#amt').inputValue(),'');
+   assert.deepEqual(await p.evaluate(()=>__qa.balance()),{cash:1075.05,card:3400});
+   await p.locator('#log [data-txid="'+record.id+'"] button[aria-label="Изменить операцию"]').click();
+   await p.locator('#amt').fill('35.55');await p.locator('#what').fill('Synthetic edited');await p.locator('#kind').selectOption('in');await p.locator('#acc').selectOption('card');await p.locator('#tx-date').fill('2026-10-28');await p.locator('#add').click();
+   await p.waitForFunction(()=>__qa.S.tx.length===1&&__qa.S.tx[0].amt===35.55);assert.equal((await p.evaluate(()=>__qa.S.tx))[0].id,record.id);
+   assert.deepEqual(await p.evaluate(()=>__qa.balance()),{cash:1200.5,card:3435.55});
+   await p.locator('#amt').fill('12,34');await p.locator('#what').fill('Unsaved synthetic draft');await p.locator('.citadel-finance-nav [data-finance="wheel"]').click();await p.locator('.citadel-finance-nav [data-finance="money"]').click();
+   assert.equal(await p.locator('#amt').inputValue(),'12,34');assert.equal(await p.locator('#what').inputValue(),'Unsaved synthetic draft');assert.equal((await p.evaluate(()=>__qa.S.tx)).length,1);
+   assert(await p.locator('.citadel-system-dialog').evaluate(n=>n.scrollWidth<=n.clientWidth));
+   if(width===390)await p.screenshot({path:resolve(out,'android-072-finance-390.png')});
+   p.once('dialog',d=>d.dismiss());await p.locator('#log button[aria-label="Удалить запись"]').click();assert.equal((await p.evaluate(()=>__qa.S.tx)).length,1);
+   p.once('dialog',d=>d.accept());await p.locator('#log button[aria-label="Удалить запись"]').click();await p.waitForFunction(()=>__qa.S.tx.length===0);assert.deepEqual(await p.evaluate(()=>__qa.balance()),before);
+   await p.reload();await castle(p);assert.equal((await p.evaluate(()=>__qa.S.tx)).length,0);assert.deepEqual(await p.evaluate(()=>__qa.balance()),before);await context.close();
+  }
+ });
+ await check('0.72 finance failures and stale edits retain drafts and preserve newer data',async()=>{
+  const {page:p,context}=await open({shell:true});await shellNav(p,'Финансы');await p.locator('#amt').fill('12,34');await p.locator('#what').fill('Synthetic retained');
+  const before=await docs(p);
+  await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{document.querySelector('#add').click();await __qa.idle();}finally{Storage.prototype.setItem=original;}});
+  assert.deepEqual(await docs(p),before);assert.equal(await p.locator('#amt').inputValue(),'12,34');assert.match(await p.locator('#tx-status').innerText(),/Не сохранено/);
+  await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.length===1);const id=(await p.evaluate(()=>__qa.S.tx))[0].id;
+  await p.locator('#log button[aria-label="Изменить операцию"]').click();await p.locator('#amt').fill('20,25');
+  await p.evaluate(async id=>{const db=await claude.use('db');await db.doc('tx/'+id).update({amt:99.99,futureField:'preserved'});},id);await p.waitForFunction(()=>__qa.S.tx[0].amt===99.99);
+  await p.locator('#add').click();await p.evaluate(()=>__qa.idle());assert.equal((await docs(p))['tx/'+id].d.amt,99.99);assert.equal(await p.locator('#amt').inputValue(),'20,25');assert.match(await p.locator('#tx-status').innerText(),/изменилась/);
+  await p.locator('#tx-cancel').click();await p.locator('#log button[aria-label="Изменить операцию"]').click();await p.locator('#amt').fill('15,25');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx[0].amt===15.25);assert.equal((await docs(p))['tx/'+id].d.futureField,'preserved');
+  await context.close();
+ });
+ await check('0.72 finance and Avito drafts survive unrelated writes and actual totals update',async()=>{
+  const seed={...structuredClone(initial),'avito/one':{name:'Synthetic account',amt:10,ts:1}};const {page:p,context}=await open({seed,shell:true});await shellNav(p,'Финансы');
+  await p.locator('#n-comm').fill('Keep draft');await p.locator('#a-comm').fill('42,50');
+  await write(p,'weights/unrelated',{kg:130,date,ts:2});assert.equal(await p.locator('#n-comm').inputValue(),'Keep draft');assert.equal(await p.locator('#a-comm').inputValue(),'42,50');
+  await p.locator('.citadel-finance-nav [data-finance="avito"]').click();const value=p.locator('#av-value-one');await value.fill('25,55');
+  await write(p,'days/'+date,{q:Array(10).fill(false),steps:1234});assert.equal(await value.inputValue(),'25,55');
+  await p.locator('#av-name').focus();await p.waitForFunction(()=>__qa.S.avito[0].amt===25.55);assert.match(await p.locator('#av-total').innerText(),/25,55/);
+  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('avito/one').update({amt:30.25});});await p.waitForFunction(()=>__qa.S.avito[0].amt===30.25);assert.equal(await value.inputValue(),'30.25');
+  await p.locator('#av-name').fill('Synthetic new');await p.locator('#av-amt').fill('4,75');await p.evaluate(()=>{document.querySelector('#av-add').click();document.querySelector('#av-add').click();});await p.waitForFunction(()=>__qa.S.avito.length===2);assert.match(await p.locator('#av-total').innerText(),/35/);
+  await p.reload();await p.waitForFunction(()=>__qa.S.avito.length===2);assert.equal((await p.evaluate(()=>__qa.S.avito)).reduce((n,r)=>n+r.amt,0),35);await context.close();
+ });
+ await check('0.72 concurrent day patches and trial deltas preserve sibling history and unknown fields',async()=>{
+  const seed=structuredClone(initial);seed['days/'+date].futureField='keep';const {page:p,context}=await open({seed});const other=await context.newPage();await other.goto(url);await other.waitForFunction(()=>__qa.S.days['2026-10-30']);
+  await Promise.all([p.evaluate(()=>{const d=__qa.S.days['2026-10-30'];const q=d.q.slice();q[0]=true;return __qa.writeDay('2026-10-30',d,{q,steps:5432});}),other.evaluate(()=>{const d=__qa.S.days['2026-10-30'];const q=d.q.slice();q[2]=true;return __qa.writeDay('2026-10-30',d,{q,kcal:2000});})]);
+  await p.waitForFunction(()=>__qa.S.days['2026-10-30']?.q?.[0]&&__qa.S.days['2026-10-30']?.q?.[2]);await other.waitForFunction(()=>__qa.S.days['2026-10-30']?.q?.[0]&&__qa.S.days['2026-10-30']?.q?.[2]);const day=await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.store.v1')).docs['days/2026-10-30'].d);assert(day.q[0]&&day.q[2]);assert.equal(day.steps,5432);assert.equal(day.kcal,2000);assert.equal(day.futureField,'keep');
+  await Promise.all([p.evaluate(()=>{__qa.trialAdd('2026-10-30','sq',10);__qa.trialAdd('2026-10-30','sq',25);return __qa.idle();}),other.evaluate(()=>{__qa.trialAdd('2026-10-30','pu',10);return __qa.idle();})]);
+  const trial=await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.store.v1')).docs['trial/2026-10-30'].d);assert.equal(trial.sq,35);assert.equal(trial.pu,10);await context.close();
+ });
+ await check('0.72 exercise repeats respect the existing gap while separate types survive rapid input',async()=>{
+  const {page:p,context}=await open();await p.evaluate(()=>{__qa.exercise('squat',10);__qa.exercise('pushup',10);__qa.exercise('squat',10);return __qa.idle();});
+  let record=(await docs(p))['per/'+date].d;assert.equal(record.squat.length,1);assert.equal(record.pushup.length,1);
+  await p.evaluate(()=>{__qa.undoExercise('squat');return __qa.idle();});record=(await docs(p))['per/'+date].d;assert.equal(record.squat.length,0);assert.equal(record.pushup.length,1);
+  await p.reload();await p.waitForFunction(()=>__qa.S.per['2026-10-30']?.pushup?.length===1);await context.close();
+ });
+ await check('0.72 spontaneous tasks prevent pending duplicate adds, rename and survive failed saves',async()=>{
+  const {page:p,context}=await open({shell:true});await shellNav(p,'Задания');await p.locator('#sp-name').fill('Synthetic daily task');
+  await p.evaluate(()=>{document.querySelector('#sp-add').click();document.querySelector('#sp-add').click();});await p.waitForFunction(()=>__qa.S.spont.filter(r=>r.name==='Synthetic daily task').length===1);
+  const row=p.locator('#slist2>div').filter({hasText:'Synthetic daily task'});p.once('dialog',d=>d.accept('Synthetic renamed'));await row.getByRole('button',{name:'изменить',exact:true}).click();await p.waitForFunction(()=>__qa.S.spont.some(r=>r.name==='Synthetic renamed'));
+  await p.locator('#sp-name').fill('Keep failed task');await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{document.querySelector('#sp-add').click();await __qa.idle();}finally{Storage.prototype.setItem=original;}});
+  assert.equal(await p.locator('#sp-name').inputValue(),'Keep failed task');assert(!(await p.evaluate(()=>__qa.S.spont)).some(r=>r.name==='Keep failed task'));
+  await p.locator('#sp-add').click();await p.waitForFunction(()=>__qa.S.spont.some(r=>r.name==='Keep failed task'));await p.reload();await p.waitForFunction(()=>__qa.S.spont.some(r=>r.name==='Synthetic renamed'));await context.close();
+ });
+ await check('0.72 large profile retains history paging and reuses unchanged finance and weight DOM',async()=>{
+  const seed=structuredClone(initial);for(let n=0;n<500;n++)seed['tx/history-'+n]={amt:1.25,kind:'out',acc:'cash',date,ts:n+1,cat:'Продукты',what:'Synthetic history '+n,counted:true};
+  for(let n=0;n<300;n++)seed['weights/history-'+n]={kg:160-n/10,date,ts:n+2};
+  const {page:p,context}=await open({seed,shell:true});await shellNav(p,'Финансы');assert.equal(await p.locator('#log li').count(),40);await p.locator('#tx-more').click();assert.equal(await p.locator('#log li').count(),80);
+  const row=await p.locator('#log li').first().elementHandle(),chart=await p.locator('#spark svg').elementHandle();
+  const duration=await p.evaluate(()=>{const start=performance.now();for(let i=0;i<5;i++)__qa.render();return Math.round(performance.now()-start);});
+  assert(await p.locator('#log li').first().evaluate((n,old)=>n===old,row));assert(await p.locator('#spark svg').evaluate((n,old)=>n===old,chart));assert.deepEqual(await p.evaluate(()=>__qa.balance()),{cash:575.5,card:3400});
+  console.log('Large synthetic profile, five refreshes ms:',duration);await context.close();
+ });
+ await check('0.72 unknown opening balances do not hide a new account operation history',async()=>{
+  const {page:p,context}=await open({seed:{},shell:true});await shellNav(p,'Финансы');await p.locator('#amt').fill('10,50');await p.locator('#what').fill('Synthetic first expense');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.length===1);
+  assert.match(await p.locator('#log').innerText(),/Synthetic first expense/);assert.equal(await p.locator('#b-cash').innerText(),'нет данных');await context.close();
+ });
+ await check('0.72 restores an unchanged synthetic 0.71 backup with finance tasks and shared body state',async()=>{
+  const copy=JSON.parse(await readFile(resolve('tests/fixtures/backup-071-synthetic.json'),'utf8'));
+  const {page:p,context}=await open();await p.evaluate(copy=>PlanSync.importObj(copy,true),copy);await p.waitForFunction(()=>__qa.S.weights.length===2&&__qa.S.tx.length===1);
+  const after=await docs(p);for(const [key,record]of Object.entries(copy.docs))assert.deepEqual(after[key].d,record.d);
+  assert.deepEqual(await p.evaluate(()=>__qa.balance()),{cash:874.75,card:2000});const shape=await p.evaluate(()=>__qa.shape());
+  assert(shape<1);await p.reload();await castle(p);assert.equal(await p.evaluate(()=>__qa.shape()),shape);assert.equal((await p.evaluate(()=>__qa.S.spont))[0].done,true);
+  await context.close();
+ });
  await check('optional body goal and new weight input synchronize the existing journal without parallel progress',async()=>{
   const seed=structuredClone(initial);seed['weights/start']={kg:165,date:'2026-10-19',ts:0};seed['weights/test']={kg:150,date,ts:1};
   const {page:p,context}=await open({shell:true,seed});await shellNav(p,'Тело');
@@ -407,7 +494,7 @@ try {
     await p.locator('.citadel-system-dialog header button').click();await shellNav(p,'Финансы');
     assert(await p.locator('#money .accounts').evaluate(n=>n.getBoundingClientRect().height<100));
     assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
-    assert(await p.locator('.finance-form').evaluate(n=>Array.from(n.children).every(c=>c.getBoundingClientRect().height>=44&&c.scrollWidth<=c.clientWidth+1)));
+    assert(await p.locator('.finance-form').evaluate(n=>Array.from(n.children).filter(c=>!c.hidden).every(c=>c.getBoundingClientRect().height>=44&&c.scrollWidth<=c.clientWidth+1)));
     if(width===390)await p.screenshot({path:resolve(out,'android-068-money-'+(populated?'filled':'empty')+'-390.png')});
     if(populated){
      await p.locator('#amt').fill('37.25');await p.locator('#acc').selectOption('card');await p.locator('#kind').selectOption('out');await p.locator('#cat').selectOption({label:'Продукты'});await p.locator('#what').fill('Synthetic browser purchase');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await p.evaluate(()=>__qa.idle());await dismiss(p);
