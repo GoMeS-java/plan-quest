@@ -97,8 +97,12 @@ try{
    assert(await t.locator('.citadel-finance-nav button').evaluateAll(ns=>ns.every(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().height>=44)));
    assert(await t.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
   }
+  // The wheel view has its own presentation; verify spending chart on the spending tab.
+  await t.locator('[data-finance="spend"]').click();
   assert.equal(await t.locator('#donutwrap').isVisible(),populated);
   if(populated)assert.match(await t.locator('#dc-sum').innerText(),/126/);else assert(await t.locator('.finance-empty').isVisible());
+  await t.locator('[data-finance="wheel"]').click();
+  assert.equal(await t.locator('.citadel-finance-nav [aria-selected="true"]').getAttribute('data-finance'),'wheel');
   if(width===390)await t.screenshot({path:resolve(shotDir,'android-069-test-wheel-'+(populated?'filled':'empty')+'-390.png')});
   await t.locator('.citadel-system-dialog header button').click();
   const camera=t.locator('.citadel-shell-camera');await camera.getByRole('button',{name:'Общий вид',exact:true}).click();
