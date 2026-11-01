@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
+const expose = `window.__qa={sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
@@ -138,6 +138,23 @@ try {
   const after=await docs(p);for(const [key,record]of Object.entries(copy.docs))assert.deepEqual(after[key].d,record.d);
   assert.deepEqual(await p.evaluate(()=>__qa.balance()),{cash:874.75,card:2000});const shape=await p.evaluate(()=>__qa.shape());
   assert(shape<1);await p.reload();await castle(p);assert.equal(await p.evaluate(()=>__qa.shape()),shape);assert.equal((await p.evaluate(()=>__qa.S.spont))[0].done,true);
+  await context.close();
+ });
+ await check('0.72 independent progress flags and weekly marks preserve sibling fields across tabs',async()=>{
+  const seed=structuredClone(initial);seed['weeks/2026-10-26']={meet:false,futureField:'keep'};seed['cfg/rare']={syntheticExisting:'2026-10-29'};
+  const {page:p,context}=await open({seed});const other=await context.newPage();await other.goto(url);await other.waitForFunction(()=>__qa.markProgress&&__qa.S.rare.syntheticExisting&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
+  await Promise.all([p.evaluate(()=>{__qa.toggleMeet();__qa.markProgress('syntheticFirst');return __qa.idle();}),other.evaluate(()=>{__qa.markProgress('syntheticSecond');return __qa.idle();})]);
+  const records=await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.store.v1')).docs);assert.equal(records['weeks/2026-10-26'].d.futureField,'keep');assert.equal(records['weeks/2026-10-26'].d.meet,true);
+  assert(records['cfg/rare'].d.syntheticFirst&&records['cfg/rare'].d.syntheticSecond&&records['cfg/rare'].d.syntheticExisting);await context.close();
+ });
+ await check('0.72 repeated completion and date changes keep durable history without duplicate resources',async()=>{
+  const {page:p,context}=await open();
+  async function completion(done){await p.evaluate(async done=>{const db=await claude.use('db');await db.doc('days/2026-10-30').update({q:Array(10).fill(done),steps:12000,kcal:2100});},done);await p.clock.runFor(900);await p.evaluate(()=>__qa.idle());}
+  await completion(true);const earned=await p.evaluate(()=>__qa.S.abyss.earned);await completion(false);await completion(true);assert.equal(await p.evaluate(()=>__qa.S.abyss.earned),earned);
+  await p.clock.setSystemTime(new Date('2026-10-31T00:01:00+03:00'));await p.clock.runFor(1100);assert.equal(await p.locator('#tx-date').inputValue(),'2026-10-31');
+  await p.locator('#amt').evaluate(n=>n.value='9,99');await p.locator('#what').evaluate(n=>n.value='Synthetic unfinished draft');
+  await p.clock.setSystemTime(new Date('2026-11-01T00:01:00+03:00'));await p.clock.runFor(1100);assert.equal(await p.locator('#tx-date').inputValue(),'2026-10-31');assert.equal(await p.locator('#amt').inputValue(),'9,99');
+  await p.clock.setSystemTime(new Date('2026-10-30T15:00:00+03:00'));await p.clock.runFor(1100);assert((await docs(p))['days/2026-10-30'].d.q.every(Boolean));
   await context.close();
  });
  await check('optional body goal and new weight input synchronize the existing journal without parallel progress',async()=>{
