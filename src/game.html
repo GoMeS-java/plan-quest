@@ -3424,7 +3424,6 @@ html,body{overflow-anchor:none}
     if (changed || !had) writeAchSeen(seen);
     try {
       var bs = bodyStage(), bseen = localStorage.getItem('bodySeen');
-      if (bseen !== null && bs > +bseen) achQueue.push({ id: 'body:' + bs, date: today, kind: 'ФОРМА ИЗМЕНИЛАСЬ', big: 'Спящий стал стройнее', text: 'Заклятие зафиксировало изменения в весе. Модель твоего персонажа обновлена.' });
       if (bseen === null || bs !== +bseen) localStorage.setItem('bodySeen', String(bs));
     } catch (e) {}
     showNextAch();

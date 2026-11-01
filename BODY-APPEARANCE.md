@@ -1,6 +1,6 @@
 # Shared weight-driven pixel geometry
 
-Visual appearance reads the existing `weights` collection. It never updates weight records or grants rewards. Existing achievement/economy `bodyStage()` remains unchanged; it is not the visual parameter anymore.
+Visual appearance reads the existing `weights` collection. It never updates weight records or grants rewards. Legacy `bodyStage()` bookkeeping remains compatible; it is not the visual parameter anymore. Its cosmetic pop-up is no longer queued, keeping visual updates quiet and neutral. Existing achievements and economy rules are unchanged.
 
 `bodyMeasurements()` accepts finite kg in the existing input range (30,400), ISO date strings up to today, orders by date, numeric timestamp, then ID. The latest entry wins, not the minimum of a fortnight. No smoothing or history minimum is applied, so gaining and losing are reversible and deterministic. Small fluctuations are naturally limited by pixel quantization.
 
