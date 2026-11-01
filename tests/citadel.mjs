@@ -796,6 +796,111 @@ try {
   await p.evaluate(remote=>PlanSync.importObj({v:1,docs:remote}),remote);await p.waitForTimeout(60);assert((await docs(p))['cfg/citadel']);
   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.recovery.v1')).docs),before);await context.close();
  });
+ await check('0.71 complete backup v2 integrity, legacy migration and repeated restores preserve all records',async()=>{
+  const {page:p,context}=await open({legacy:{fxset:JSON.stringify({shake:'off',flash:'weak',sound:'off'})}});
+  await write(p,'cfg/body-appearance',{goal:100});await write(p,'cfg/future-compatible',{unknown:{nested:['retained',42]}});
+  await p.evaluate(()=>__qa.idle());const before=await docs(p),shape=await p.evaluate(()=>__qa.shape());
+  const copy=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
+  assert.equal(copy.v,2);assert.equal(copy.format,'vkach-backup');assert.match(copy.integrity.value,/^[a-f0-9]{64}$/);assert(Number.isFinite(Date.parse(copy.createdAt)));
+  assert.deepEqual(copy.docs,before);assert.deepEqual(copy.docs['cfg/effects'].d,{shake:'off',flash:'weak',sound:'off'});
+  for(const backup of [copy,{v:1,docs:copy.docs},copy]){
+   await write(p,'weights/test',{kg:160,date,ts:1});await write(p,'tx/after-copy',{amt:123.45,kind:'out',acc:'cash',date});
+   await p.evaluate(copy=>PlanSync.importObj(copy,true),backup);await p.waitForTimeout(50);
+   const after=await docs(p);for(const [key,value]of Object.entries(before))assert.deepEqual(after[key].d,value.d);
+   assert.equal(after['tx/after-copy'].d,null);assert.equal(await p.evaluate(()=>__qa.shape()),shape);
+  }
+  await p.reload();await castle(p);assert.equal(await p.evaluate(()=>__qa.shape()),shape);
+  assert.deepEqual((await docs(p))['cfg/effects'].d,before['cfg/effects'].d);
+  await p.locator('#gear').click();assert.equal(await p.locator('#fx-sound').inputValue(),'off');
+  await context.close();
+ });
+ await check('0.71 damaged, incomplete and future backup schemas never touch live data',async()=>{
+  const {page:p,context}=await open();const before=await docs(p),valid=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
+  const corrupt=structuredClone(valid);corrupt.docs['weights/test'].d.kg=160;
+  for(const bad of [corrupt,{...valid,v:999},{v:2,docs:before},{v:1},{v:1,docs:[]},{v:1,docs:{'weights/x':{d:[],u:1}}}]){
+   assert(await p.evaluate(async o=>{try{await PlanSync.importObj(o,true);return false;}catch{return true;}},bad));assert.deepEqual(await docs(p),before);
+  }
+  // File validation happens before confirmation. A valid file can be cancelled.
+  await p.locator('.pl-chip').click();const button=p.getByRole('button',{name:'ВОССТАНОВИТЬ КОПИЮ ИЗ ФАЙЛА',exact:true});
+  let dialogs=0;p.on('dialog',async d=>{dialogs++;await d.dismiss();});
+  async function upload(o){const chooserEvent=p.waitForEvent('filechooser');await button.click();const chooser=await chooserEvent;await chooser.setFiles({name:'synthetic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(o))});await p.waitForTimeout(80);}
+  await upload(corrupt);assert.equal(dialogs,0);assert.match(await p.locator('.pl-menu').innerText(),/целостности/);
+  await upload(valid);assert.equal(dialogs,1);assert.deepEqual(await docs(p),before);
+  await context.close();
+ });
+ await check('0.71 failed save is visible, export does not claim success and idempotent retry retains profile',async()=>{
+  const {page:p,context}=await open();const before=await docs(p);
+  const result=await p.evaluate(async()=>{
+   const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};
+   try{const db=await claude.use('db');try{await db.doc('weights/retry').set({kg:115,date:'2026-10-30',ts:2});return false;}catch(e){return e.code==='quota_exceeded';}}finally{Storage.prototype.setItem=original;}
+  });assert(result);assert.deepEqual(await docs(p),before);
+  await p.locator('.pl-chip').click();assert.match(await p.locator('.pl-menu').innerText(),/не сохранено/);
+  await write(p,'weights/retry',{kg:115,date,ts:2});await write(p,'weights/retry',{kg:115,date,ts:2});
+  assert.equal(Object.keys(await docs(p)).filter(k=>k==='weights/retry').length,1);
+  // The normal queued gameplay action reports its rejection to export/update.
+  assert(await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{document.querySelector('#qlist button').click();await __qa.idle();try{await PlanSync.exportBackup();return false;}catch{return true;}}finally{Storage.prototype.setItem=original;}}));
+  assert.match(await p.locator('#toast').innerText(),/не сохранено/);await context.close();
+ });
+ await check('0.71 failed restore preserves durable snapshot and recovery copy, retry completes atomically',async()=>{
+  const {page:p,context}=await open();const before=await docs(p),incoming={'weights/new':{d:{kg:100,date,ts:1},u:10}};
+  for(const failedKey of ['plan.recovery.v1','plan.meta.v1','plan.store.v1']){
+   assert(await p.evaluate(async({incoming,failedKey})=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k===failedKey)throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{try{await PlanSync.importObj({v:1,docs:incoming},true);return false;}catch{return true;}}finally{Storage.prototype.setItem=original;}},{incoming,failedKey}));
+   assert.deepEqual(await docs(p),before);assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.store.v1')).docs),before);
+  }
+  await p.evaluate(incoming=>PlanSync.importObj({v:1,docs:incoming},true),incoming);assert.deepEqual((await docs(p))['weights/new'].d,incoming['weights/new'].d);
+  assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.recovery.v1')).docs),before);await context.close();
+ });
+ await check('0.71 damaged startup keeps valid siblings read-only and original bytes recoverable',async()=>{
+  const {page:p,context}=await open();const before=await docs(p),copy=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
+  const damaged={v:1,docs:{...before,'weights/bad':{d:'broken',u:1}}},raw=JSON.stringify(damaged);
+  await p.evaluate(raw=>localStorage.setItem('plan.store.v1',raw),raw);await p.reload();await castle(p);
+  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),raw);
+  assert.deepEqual((await docs(p))['weights/test'],before['weights/test']);assert.equal((await docs(p))['weights/bad'],undefined);
+  await p.locator('.pl-chip').click();assert.match(await p.locator('.pl-menu').innerText(),/повреждение/);
+  assert(await p.evaluate(async()=>{try{const db=await claude.use('db');await db.doc('weights/blocked').set({kg:100});return false;}catch{return true;}}));
+  await p.evaluate(copy=>PlanSync.importObj(copy,true),copy);await p.waitForTimeout(40);
+  for(const [key,value]of Object.entries(before))assert.deepEqual((await docs(p))[key].d,value.d);
+  assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.recovery.v1')).originalDamagedStore),raw);await context.close();
+ });
+ await check('0.71 malformed and duplicate Sheets rows block uploads without changing local records',async()=>{
+  for(const rows of [[['path','json','u'],['weights/remote','{"kg":100}',2],['weights/remote','{"kg":160}',3]],[['path','json','u'],['weights/remote','{"kg":',2]]]){
+   const {page:p,context}=await open();const before=await docs(p);let puts=0;
+   await context.route('**/*googleapis.com/**',async route=>{const req=route.request(),u=req.url();if(u.includes('fonts.googleapis.com'))return route.fulfill({contentType:'text/css',body:''});let data={};if(u.includes('drive/v3/files?'))data={files:[{id:'QA_SHEET'}]};else if(u.includes('/about?'))data={user:{emailAddress:'qa@example.invalid'}};else if(u.includes('values/data!A:C'))data={values:rows};else if(req.method()==='PUT')puts++;await route.fulfill({contentType:'application/json',body:JSON.stringify(data)});});
+   await p.evaluate(()=>{window.google={accounts:{oauth2:{initTokenClient:opt=>({requestAccessToken:()=>opt.callback({access_token:'synthetic',expires_in:3600})})}}};});
+   await p.evaluate(()=>PlanSync.sync(true));assert.equal(puts,0);assert.deepEqual(await docs(p),before);await context.close();
+  }
+ });
+ await check('0.71 rolling checkpoint preserves the previous snapshot and fails closed when full',async()=>{
+  const {page:p,context}=await open();const before=await docs(p);
+  await write(p,'weights/checkpoint',{kg:100,date,ts:2});
+  assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.checkpoint.v1')).docs),before);
+  const durable=await docs(p);
+  assert(await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.checkpoint.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{try{const db=await claude.use('db');await db.doc('weights/checkpoint').set({kg:110});return false;}catch{return true;}}finally{Storage.prototype.setItem=original;}}));
+  assert.deepEqual(await docs(p),durable);await context.close();
+ });
+ await check('0.71 commission payout is atomic and repeated activation cannot duplicate cash',async()=>{
+  const seed={...structuredClone(initial),'items/comm':{list:'comm',amt:100.25,ts:1},'items/subs':{list:'subs',amt:200.5,ts:2}};
+  const {page:p,context}=await open({seed});const before=await docs(p);
+  await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{document.querySelector('#payout').click();document.querySelector('#payout').click();await __qa.idle();}finally{Storage.prototype.setItem=original;}});
+  assert.deepEqual(await docs(p),before);
+  await p.evaluate(async()=>{const b=document.querySelector('#payout');b.click();b.click();b.click();b.click();await __qa.idle();});await p.waitForTimeout(40);
+  const after=await docs(p),payments=Object.entries(after).filter(([k])=>k.startsWith('tx/payout-'));
+  assert.equal(payments.length,1);assert.equal(payments[0][1].d.amt,300.75);assert.equal(after['items/comm'].d,null);assert.equal(after['items/subs'].d,null);
+  await context.close();
+ });
+ await check('0.71 Android data controls fit narrow screens, export private records only and Back closes panel',async()=>{
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,mobile:true,shell:true});await shellNav(p,'Настройки');
+   await p.locator('#data-management').click();const menu=p.locator('.pl-menu');assert(await menu.isVisible());
+   assert(await menu.evaluate(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().right<=innerWidth));
+   assert(await menu.locator('button').evaluateAll(ns=>ns.every(n=>n.getBoundingClientRect().height>=44)));
+   const before=await docs(p);await p.evaluate(()=>{localStorage.setItem('plan.tok',JSON.stringify({t:'NEVER_EXPORT_SECRET',exp:Date.now()+3600000}));});
+   const event=p.waitForEvent('download');await menu.getByRole('button',{name:'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ',exact:true}).click();const file=await event;
+   const raw=await readFile(await file.path(),'utf8'),backup=JSON.parse(raw);assert(!raw.includes('NEVER_EXPORT_SECRET'));assert.deepEqual(backup.docs,before);assert.equal(backup.v,2);
+   if(width===390)await p.screenshot({path:resolve(out,'android-071-data-390.png')});
+   await p.goBack();await menu.waitFor({state:'hidden'});assert.deepEqual(await docs(p),before);await context.close();
+  }
+ });
  await check('backup download and explicit restore round trip preserve progress and disable automatic cloud writes',async()=>{
   const {page:p,context}=await open();const before=await docs(p);
   const downloadEvent=p.waitForEvent('download');await p.evaluate(()=>PlanSync.exportBackup());const download=await downloadEvent;

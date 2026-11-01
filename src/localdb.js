@@ -13,7 +13,7 @@
   var META = PREFIX + 'meta.v1';
   var UPGRADE = PREFIX + 'pre-update.v1';
   var RECOVERY = PREFIX + 'recovery.v1', CONFLICT = PREFIX + 'conflict.v1';
-  var TOKEN_KEY = PREFIX + 'tok';
+  var TOKEN_KEY = PREFIX + 'tok', CHECKPOINT = PREFIX + 'checkpoint.v1';
   // The isolated Android build has no cloud access until a separate OAuth
   // client and its exact HTTPS origin have been explicitly configured.
   var cloudAllowed = !CFG.testMode || (CFG.cloudEnabled === true &&
@@ -26,18 +26,26 @@
   var docs = {};      // path -> {d, u}
   var meta = {};      // fileId, lastSync, user
   var subs = [];      // {path|col, kind, cb}
-  var dirty = false, revision = 0;
+  var dirty = false, revision = 0, writeFailure = false, corruptRaw = null;
   var pendingConflict = jget(CONFLICT, null);
 
   function jget(k, def) { try { var s = localStorage.getItem(k); return s ? JSON.parse(s) : def; } catch (e) { return def; } }
   function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
 
-  docs = (jget(KEY, { docs: {} }) || {}).docs || {};
+  try { docs = persistedDocs(); } catch (e) {
+    // Keep the original bytes. Valid siblings remain readable; no automatic
+    // migration, merge or game write may turn corruption into an empty profile.
+    try { corruptRaw = localStorage.getItem(KEY); } catch (_) { corruptRaw = ''; }
+    var partial = jget(KEY, null);
+    if (partial && partial.docs && typeof partial.docs === 'object') Object.keys(partial.docs).forEach(function (p) {
+      try { var one = {}; one[p] = partial.docs[p]; validDocs(one); docs[p] = partial.docs[p]; } catch (_) {}
+    });
+  }
   meta = jget(META, {}) || {};
-  var upgradeBlocked = false;
+  var upgradeBlocked = corruptRaw !== null;
   // Runs before game subscriptions can write, including an update from older
   // clients which did not yet have a backup button.
-  if (window.APP_VERSION && meta.dataVersion !== window.APP_VERSION) {
+  if (!upgradeBlocked && window.APP_VERSION && meta.dataVersion !== window.APP_VERSION) {
     try {
       var beforeUpdate = persistedDocs();
       if (Object.keys(beforeUpdate).length && !jset(UPGRADE, { v: 1, docs: beforeUpdate })) throw storageError();
@@ -82,9 +90,7 @@
   function mutate(fn) {
     function commit() {
       if (upgradeBlocked) throw storageError();
-      var raw = localStorage.getItem(KEY), persisted = raw ? JSON.parse(raw) : { docs: {} };
-      if (!persisted || !persisted.docs || typeof persisted.docs !== 'object' || Array.isArray(persisted.docs)) throw new Error('Invalid saved database');
-      var next = clone(persisted.docs || {}), changed = false;
+      var previous=persistedDocs(), next = clone(previous), changed = false;
       var tx = {
         get: function (p) { return next[p] && clone(next[p].d); },
         list: function (c) { return Object.keys(next).filter(function (p) { return colOf(p) === c && next[p].d != null; }).map(function (p) { return Object.assign({}, clone(next[p].d), { id: idOf(p) }); }); },
@@ -94,8 +100,10 @@
       var result = fn(tx);
       if (result && typeof result.then === 'function') throw new Error('Transaction callback must be synchronous');
       if (changed) {
-        if (!jset(KEY, { v: 1, docs: next })) { var error = new Error('Storage unavailable'); error.code = 'quota_exceeded'; throw error; }
-        docs = next; dirty = true; revision++; notify(); scheduleSync();
+        validDocs(next);
+        if (Object.keys(previous).length && !jset(CHECKPOINT, {v:1,docs:previous,savedAt:Date.now()})) { writeFailure=true; renderChip(); throw storageError(); }
+        if (!jset(KEY, { v: 1, docs: next })) { writeFailure = true; renderChip(); var error = new Error('Storage unavailable'); error.code = 'quota_exceeded'; throw error; }
+        docs = next; writeFailure = false; dirty = true; revision++; notify(); renderChip(); scheduleSync();
       }
       return result;
     }
@@ -106,7 +114,7 @@
   window.addEventListener('storage', function (e) {
     if (e.key === CONFLICT) { pendingConflict = jget(CONFLICT, null); renderChip(); }
     if (e.key === META) { meta = jget(META, {}) || {}; renderChip(); }
-    if (e.key === KEY) { docs = (jget(KEY, { docs: {} }) || {}).docs || {}; dirty = true; revision++; notify(); scheduleSync(); }
+    if (e.key === KEY) { try { docs = persistedDocs(); dirty = true; revision++; notify(); scheduleSync(); } catch (_) { corruptRaw = e.newValue; upgradeBlocked = true; } renderChip(); }
   });
 
   var db = {
@@ -149,12 +157,13 @@
   }
   function persistedDocs() {
     var raw = localStorage.getItem(KEY), saved = raw ? JSON.parse(raw) : { docs: {} };
+    if (!saved || (saved.v !== undefined && saved.v !== 1)) throw new Error('unsupported schema');
     return validDocs(saved.docs);
   }
   function exclusive(fn) { return navigator.locks ? navigator.locks.request(KEY, fn) : Promise.resolve().then(fn); }
   function recovery(local, remote) {
     // Never replace progress if the pre-change copy cannot be written.
-    if (!jset(RECOVERY, { v: 1, docs: local, remote: remote || {}, savedAt: Date.now() })) throw storageError();
+    if (!jset(RECOVERY, { v: 1, docs: local, remote: remote || {}, savedAt: Date.now(), originalDamagedStore: corruptRaw })) throw storageError();
   }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
   function merge(remote, options) {
@@ -189,17 +198,48 @@
       return { local: changedLocal, remote: changedRemote };
     });
   }
+  // The store and Sheets keep v1. Portable backups have their own version;
+  // the digest covers metadata and all records, independent of object order.
+  function canonical(value) {
+    if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+    if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(function (k) { return JSON.stringify(k) + ':' + canonical(value[k]); }).join(',') + '}';
+    return JSON.stringify(value);
+  }
+  function digest(value) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical(value))).then(function (bytes) {
+      return Array.from(new Uint8Array(bytes)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    });
+  }
+  function backupFor(records) {
+    var copy = { v: 2, format: 'vkach-backup', createdAt: new Date().toISOString(), appVersion: window.APP_VERSION || 'legacy', docs: clone(validDocs(records)) };
+    return digest(copy).then(function (hash) { copy.integrity = { algorithm: 'SHA-256', value: hash }; return copy; });
+  }
+  function validateBackup(o, restore) {
+    return Promise.resolve().then(function () {
+      if (!o || typeof o !== 'object' || Array.isArray(o)) throw new Error('bad format');
+      if (o.v !== undefined && o.v !== 1 && o.v !== 2) throw new Error('unsupported schema');
+      if (o.v === 2) {
+        if (o.format !== 'vkach-backup' || !o.createdAt || !Number.isFinite(Date.parse(o.createdAt)) || typeof o.appVersion !== 'string' ||
+            !o.integrity || o.integrity.algorithm !== 'SHA-256' || !/^[a-f0-9]{64}$/.test(o.integrity.value)) throw new Error('bad format');
+        var unsigned = clone(o); delete unsigned.integrity;
+        return digest(unsigned).then(function (hash) { if (hash !== o.integrity.value) throw new Error('integrity'); return clone(validDocs(o.docs)); });
+      }
+      var incoming;
+      if (o.seed && !restore) {
+        incoming = {};
+        Object.keys(o.seed).forEach(function (p) { incoming[p] = { d: o.seed[p], u: 1 }; });
+      } else if (o.docs) incoming = o.docs;
+      else throw new Error('bad format');
+      return clone(validDocs(incoming));
+    });
+  }
   function importObj(o, restore) {
-    var incoming;
-    if (o && o.seed && !restore) {
-      incoming = {};
-      Object.keys(o.seed).forEach(function (p) { incoming[p] = { d: o.seed[p], u: 1 }; });
-    } else if (o && o.docs) incoming = o.docs;
-    else return Promise.reject(new Error('bad format'));
-    try { incoming = clone(validDocs(incoming)); } catch (e) { return Promise.reject(e); }
+    return validateBackup(o, restore).then(function (incoming) { return applyImport(incoming, restore); });
+  }
+  function applyImport(incoming, restore) {
     if (restore) return syncExclusive(function () { return exclusive(function () {
       meta = jget(META, {}) || {};
-      var local = persistedDocs(), next = {}, now = Date.now();
+      var local = corruptRaw !== null ? clone(docs) : persistedDocs(), next = {}, now = Date.now();
       recovery(local, incoming);
       Object.keys(Object.assign({}, local, incoming)).forEach(function (p) {
         next[p] = { d: incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
@@ -208,7 +248,7 @@
       meta.signed = false; meta.syncPaused = true;
       if (!jset(META, meta)) throw storageError();
       if (!jset(KEY, { v: 1, docs: next })) throw storageError();
-      docs = next; dirty = true; revision++; notify();
+      docs = next; corruptRaw = null; upgradeBlocked = false; writeFailure = false; dirty = true; revision++; notify();
       localStorage.removeItem(CONFLICT); pendingConflict = null; renderChip();
       return Object.keys(incoming).length;
     }); });
@@ -241,7 +281,7 @@
   }
   function exportBackup() {
     return Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () {
-      return exclusive(function () { downloadSnapshot({ v: 1, docs: persistedDocs() }, CFG.testMode ? 'plan-test-backup' : 'plan-backup'); });
+      return exclusive(function () { return backupFor(persistedDocs()).then(function (copy) { downloadSnapshot(copy, CFG.testMode ? 'vkach-test-backup' : 'vkach-backup'); setStatus('Файл копии подготовлен. Проверьте его в загрузках устройства.', 'ok'); }); });
     });
   }
 
@@ -321,14 +361,18 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         var out = {};
-        (j.values || []).forEach(function (row, i) {
+        if (!Array.isArray(j.values)) throw new Error('incomplete remote data');
+        j.values.forEach(function (row, i) {
           if (i === 0 && row[0] === 'path') return;
-          var path = row[0]; if (!path || typeof path !== 'string') return;
+          if (!Array.isArray(row)) throw new Error('bad remote row');
+          if (!row.length) return;
+          var path = row[0]; if (!path || typeof path !== 'string' || row.length < 3 || !Number.isFinite(Number(row[2])) || Number(row[2]) < 0) throw new Error('bad remote row');
+          if (Object.prototype.hasOwnProperty.call(out, path)) throw new Error('duplicate remote record');
           var d = null, js = row[1];
           if (js !== undefined && js !== '') { d = JSON.parse(String(js)); }
-          out[path] = { d: d, u: Number(row[2]) || 0 };
+          out[path] = { d: d, u: Number(row[2]) };
         });
-        return { docs: out };
+        return { docs: validDocs(out) };
       });
   }
   function rowsOut() {
@@ -423,7 +467,7 @@
   function renderChip() {
     if (!chip) return;
     var txt, cls;
-    if (upgradeBlocked || pendingConflict) { txt = '!'; cls = 'warn'; }
+    if (upgradeBlocked || writeFailure || pendingConflict) { txt = '!'; cls = 'warn'; }
     else if (updateReady) { txt = 'ОБНОВИТЬ'; cls = 'upd'; }
     else if (CFG.testMode && !cloudAllowed) { txt = 'ТЕСТ'; cls = 'warn'; }
     else if (!navigator.onLine) { txt = 'ОФЛАЙН'; cls = 'off'; }
@@ -435,15 +479,20 @@
     chip.textContent = txt; chip.className = 'pl-chip ' + cls;
     if (menu && !menu.hidden) renderMenu();
   }
+  var dataHistoryOpen=false;
+  function openData(){if(!menu.hidden)return;menu.hidden=false;renderMenu();dataHistoryOpen=true;history.pushState(Object.assign({},history.state,{planData:true}),'');}
+  function closeData(){menu.hidden=true;if(history.state&&history.state.planData)history.back();}
+  window.addEventListener('popstate',function(event){if(menu)menu.hidden=true;if(dataHistoryOpen){dataHistoryOpen=false;event.stopImmediatePropagation();}},true);
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function renderMenu() {
     menu.textContent = '';
-    menu.appendChild(el('div', 'pl-t', 'СИНХРОНИЗАЦИЯ'));
+    menu.appendChild(el('div', 'pl-t', 'ДАННЫЕ И РЕЗЕРВНЫЕ КОПИИ'));
     if (window.APP_VERSION) menu.appendChild(el('div', 'pl-s', 'Версия ' + window.APP_VERSION));
     if (CFG.testMode) menu.appendChild(el('div', 'pl-s', 'ТЕСТОВАЯ ВЕРСИЯ · отдельные сохранения. ' + (cloudAllowed ? 'Тестовая таблица Google.' : 'Google отключён. Основная таблица не используется.')));
-    var line = (upgradeBlocked ? 'Прогресс только для чтения. Скачайте копию, освободите место и перезагрузите приложение.' : pendingConflict ? 'Конфликт устройств. Синхронизация приостановлена. Сохраните обе копии перед выбором.' : status.text) || (!navigator.onLine ? 'Нет сети: всё сохранено на телефоне' : (meta.signed ? fmtAgo(meta.lastSync) : 'Данные только на этом телефоне'));
+    var line = (corruptRaw !== null ? 'Обнаружено повреждение сохранения. Доступ только для чтения. Скачайте исходный файл и восстановите проверенную копию.' : writeFailure ? 'Последнее изменение не сохранено: недостаточно места или хранилище недоступно. Скачайте копию сохранённых данных, освободите место и повторите действие.' : upgradeBlocked ? 'Прогресс только для чтения. Скачайте копию, освободите место и перезагрузите приложение.' : pendingConflict ? 'Конфликт устройств. Синхронизация приостановлена. Сохраните обе копии перед выбором.' : status.text) || (!navigator.onLine ? 'Нет сети: всё сохранено на телефоне' : (meta.signed ? fmtAgo(meta.lastSync) : 'Данные только на этом телефоне'));
     menu.appendChild(el('div', 'pl-s', line));
     var b;
+    if (corruptRaw !== null) { b = el('button', 'pl-b', 'СКАЧАТЬ ПОВРЕЖДЁННЫЙ ОРИГИНАЛ'); b.onclick = function () { downloadSnapshot({ format: 'vkach-damaged-store', raw: corruptRaw }, 'vkach-damaged'); }; menu.appendChild(b); }
     b = el('button', 'pl-b', 'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ'); b.onclick = function () { exportBackup().catch(function () { setStatus('Не удалось создать копию', 'warn'); }); }; menu.appendChild(b);
     if (pendingConflict) {
       b = el('button', 'pl-b', 'СОХРАНИТЬ ОБЛАЧНУЮ КОПИЮ'); b.onclick = function () { downloadSnapshot({ v: 1, docs: pendingConflict.docs }, 'plan-cloud'); }; menu.appendChild(b);
@@ -470,11 +519,14 @@
     if (jget(UPGRADE, null)) {
       b = el('button', 'pl-b', 'СКАЧАТЬ КОПИЮ ДО ОБНОВЛЕНИЯ'); b.onclick = function () { var copy = jget(UPGRADE, null); if (copy) downloadSnapshot(copy, 'plan-before-update'); }; menu.appendChild(b);
     }
+    if (jget(CHECKPOINT, null)) {
+      b = el('button', 'pl-b', 'СКАЧАТЬ ПРЕДЫДУЩЕЕ СОХРАНЕНИЕ'); b.onclick = function () { var copy=jget(CHECKPOINT,null); if(copy)backupFor(copy.docs).then(function(value){downloadSnapshot(value,'vkach-previous');}).catch(function(){setStatus('Не удалось прочитать предыдущую копию.','warn');}); }; menu.appendChild(b);
+    }
     if (jget(RECOVERY, null)) {
       b = el('button', 'pl-b', 'СКАЧАТЬ КОПИЮ ДО ПОСЛЕДНЕЙ ЗАМЕНЫ'); b.onclick = function () { var copy = jget(RECOVERY, null); if (copy) downloadSnapshot({ v: 1, docs: copy.docs }, 'plan-recovery'); }; menu.appendChild(b);
     }
     menu.appendChild(el('div', 'pl-s', 'Перед сменой устройства завершите синхронизацию. Не расходуйте общий запас одновременно офлайн на двух устройствах. Восстановление из файла отключает автосинхронизацию до входа.'));
-    b = el('button', 'pl-b', 'ЗАКРЫТЬ'); b.onclick = function () { menu.hidden = true; }; menu.appendChild(b);
+    b = el('button', 'pl-b', 'ЗАКРЫТЬ'); b.onclick = closeData; menu.appendChild(b);
   }
   var fileIn, restoreFile = false;
   function ui() {
@@ -483,12 +535,12 @@
       '.pl-bar{position:static;display:flex;gap:6px;align-items:stretch}.pl-chip{position:static;font:9px/1 var(--font-display,monospace);padding:7px 8px;border:2px solid var(--line,#4a3d2f);background:var(--panel,#261f18);color:var(--muted,#a99a83);cursor:pointer;opacity:.9}' +
       '.pl-chip.ok{color:var(--good,#86c05e)}.pl-chip.warn{color:var(--gold,#e8b13c)}.pl-chip.off{color:var(--muted,#a99a83)}.pl-chip.upd{color:#111;background:var(--gold,#e8b13c)}.pl-chip.work{color:var(--fg,#f0e6d3)}' +
       '.pl-menu{position:fixed;top:44px;left:6px;z-index:9999;width:min(300px,calc(100vw - 12px));background:var(--panel,#261f18);border:3px solid var(--line,#4a3d2f);padding:12px;max-height:calc(100dvh - 56px);overflow:auto;display:flex;flex-direction:column;gap:8px}' +
-      '.pl-menu[hidden]{display:none}.pl-t{font:10px/1.4 var(--font-display,monospace);color:var(--gold,#e8b13c)}.pl-s{font:18px/1.2 var(--font-body,monospace);color:var(--fg,#f0e6d3)}' +
+      '.pl-menu{box-sizing:border-box;overflow-wrap:anywhere}.pl-b{min-height:44px}.pl-menu[hidden]{display:none}.pl-t{font:10px/1.4 var(--font-display,monospace);color:var(--gold,#e8b13c)}.pl-s{font:18px/1.2 var(--font-body,monospace);color:var(--fg,#f0e6d3)}' +
       '.pl-b{font:9px/1.3 var(--font-display,monospace);padding:10px;border:3px solid var(--line,#4a3d2f);background:var(--bg,#1a1511);color:var(--fg,#f0e6d3);cursor:pointer;text-align:center}.pl-b.go{border-color:var(--gold,#e8b13c);color:var(--gold,#e8b13c)}';
     document.head.appendChild(st);
     chip = el('button', 'pl-chip', '');
     chip.type = 'button';
-    menu = el('div', 'pl-menu'); menu.hidden = true;
+    menu = el('div', 'pl-menu'); menu.hidden = true; menu.setAttribute('role','dialog'); menu.setAttribute('aria-label','Данные и резервные копии');
     fileIn = document.createElement('input'); fileIn.type = 'file'; fileIn.accept = '.json,application/json'; fileIn.hidden = true;
     fileIn.onchange = function () {
       var f = fileIn.files && fileIn.files[0], restoring = restoreFile; if (!f) return;
@@ -496,16 +548,25 @@
       rd.onload = function () {
         var value;
         try { value = JSON.parse(rd.result); } catch (e) { setStatus('Не удалось прочитать файл', 'warn'); fileIn.value = ''; return; }
-        if (restoring && !window.confirm('Восстановить весь прогресс из копии? Текущий прогресс будет сохранён отдельно; автосинхронизация отключится.')) { fileIn.value = ''; return; }
-        if (restoring) setStatus('Восстановление: ожидаем завершения текущей синхронизации. Не закрывайте приложение.', 'work');
-        importObj(value, restoring).then(function (n) { setStatus('Сохранено записей: ' + n + (restoring ? '. Для облака войдите заново после проверки.' : ''), 'ok'); })
-          .catch(function () { setStatus('Импорт не сохранён. Проверьте файл и свободное место.', 'warn'); });
+        validateBackup(value, restoring).then(function (incoming) {
+          var count = Object.keys(incoming).filter(function (p) { return incoming[p].d !== null; }).length;
+          if (!window.confirm((restoring ? 'Восстановить весь прогресс? Записи, которых нет в копии, будут удалены. ' : 'Объединить записи с файлом? Более новые записи могут заменить текущие. ') +
+              'В файле: ' + count + ' записей. Текущая копия будет сохранена отдельно. Можно отменить.')) return;
+          setStatus('Проверенный файл: сохраняем данные. Не закрывайте приложение.', 'work');
+          return Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () { return applyImport(incoming, restoring); }).then(function (n) {
+            setStatus('Сохранено записей: ' + n + (restoring ? '. Проверьте прогресс перед включением облака.' : ''), 'ok');
+          });
+        }).catch(function (e) {
+          setStatus(e.message === 'integrity' ? 'Копия повреждена: проверка целостности не пройдена. Данные не заменены.' : e.message === 'unsupported schema' ?
+            'Эта версия копии пока не поддерживается. Данные не заменены.' : 'Импорт не сохранён. Проверьте файл и свободное место.', 'warn');
+        });
         fileIn.value = '';
       };
+      rd.onerror = function () { fileIn.value = ''; setStatus('Не удалось открыть файл. Данные не заменены.', 'warn'); };
       rd.readAsText(f);
     };
     chip.onclick = function () {
-      menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu();
+      if(menu.hidden)openData();else closeData();
     };
     var bar = el('div', 'pl-bar'); bar.appendChild(chip);
     var tbtn = document.getElementById('trophy-btn'); if (tbtn) bar.appendChild(tbtn);
@@ -562,5 +623,5 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
-  window.PlanSync = { sync: sync, importObj: importObj, exportBackup: exportBackup, resolveConflict: resolveConflict, _docs: function () { return docs; }, _merge: merge };
+  window.PlanSync = { sync: sync, importObj: importObj, exportBackup: exportBackup, backupFor: backupFor, validateBackup: validateBackup, openData: openData, resolveConflict: resolveConflict, _docs: function () { return docs; }, _merge: merge };
 })();
