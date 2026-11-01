@@ -244,3 +244,24 @@ body.citadel-shell-active #log .del{font:600 11px/1.3 var(--font-body);padding:6
 /* The walking state wins over the shared idle/breathing rule. */
 body.citadel-shell-active .citadel-interior-stage[data-moving="true"] .citadel-hero-sprite{animation:citadelHeroStride .48s steps(2,end) infinite}
 @media(prefers-reduced-motion:reduce){body.citadel-shell-active .citadel-interior-stage[data-moving="true"] .citadel-hero-sprite{animation:none!important}}
+
+/* 0.78: finite, skippable pixel-seal presentation and earned cosmetics only. */
+.legend-scene{padding:0;border:1px solid var(--legend-color,#c5a6e6);background:#0c0913;color:#eee5dd;width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;box-shadow:0 0 50px #000,0 0 26px color-mix(in srgb,var(--legend-color) 25%,transparent)}
+.legend-scene::backdrop{background:#030208e8;animation:legendVeil .45s ease-out}
+.legend-scene-inner{padding:clamp(16px,5vw,30px);text-align:center;background:radial-gradient(ellipse at 50% 38%,#30223f88,transparent 65%)}
+.legend-scene-kicker{font:10px var(--font-display,monospace);letter-spacing:3px;color:var(--legend-color)}
+.legend-scene canvas{width:144px;height:144px;image-rendering:pixelated;filter:drop-shadow(0 0 14px var(--legend-color));animation:legendSeal 1.8s steps(9,end) both}
+.legend-scene h2{font:clamp(18px,5vw,25px) var(--font-display,monospace);color:var(--legend-color);line-height:1.6;overflow-wrap:anywhere}
+.legend-scene p{line-height:1.6}.legend-scene button,.legend-entry button,.legend-replay{min-height:46px;white-space:normal;max-width:100%;padding:10px;font-size:12px;touch-action:manipulation}
+.legend-scene button{width:100%;margin-top:14px;border:1px solid var(--legend-color);background:#20192d;color:#fff4dd}
+.legend-entry{padding:16px 12px;border:1px solid var(--legend-color);background:linear-gradient(135deg,#211a30,#100e18);margin:12px 0;overflow-wrap:anywhere;box-sizing:border-box}
+.legend-entry canvas{width:60px;height:60px;float:left;margin:0 12px 8px 0;image-rendering:pixelated}.legend-entry h3{color:var(--legend-color);font-size:18px}.legend-entry p{clear:both}.legend-entry button{margin:4px 4px 4px 0}.legend-replay{display:block;margin:6px 0}
+.legend-hero{filter:drop-shadow(0 0 5px var(--legend-color))!important}
+[data-croom].has-legend-echo:not(.is-locked){box-shadow:inset 0 0 22px color-mix(in srgb,var(--legend-color) 34%,transparent)}
+.citadel-interior-stage.has-legend-echo{box-shadow:inset 0 0 65px color-mix(in srgb,var(--legend-color) 23%,transparent)}
+.legend-room-object{position:absolute;width:36px;height:36px;left:16%;top:24%;image-rendering:pixelated;z-index:4;pointer-events:none;filter:drop-shadow(0 0 6px var(--legend-color))}
+@keyframes legendSeal{0%{opacity:0;transform:translateY(10px) scale(.65);filter:none}35%{opacity:.5}100%{opacity:1;transform:none}}
+@keyframes legendVeil{from{background:#03020888}to{background:#030208e8}}
+.legend-scene[data-motion="reduce"] *, .legend-scene[data-motion="reduce"]::backdrop{animation:none!important}
+.legend-scene[data-flash="off"] canvas{filter:none}
+@media(prefers-reduced-motion:reduce){.legend-scene *,.legend-scene::backdrop{animation:none!important}}
