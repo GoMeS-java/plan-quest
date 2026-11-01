@@ -62,6 +62,16 @@ try {
   await p.locator('#citadel-interior-object').click();assert.equal(await p.locator('.citadel-interior-stage .citadel-hero-sprite').evaluate(n=>n.getAnimations().length),0,'reduced motion keeps sprite still');
   await p.screenshot({path:resolve(out,'hero-070-room-390.png')});await context.close();
  });
+ await check('0.70 idle and interaction animation use pixel steps without changing synthetic progress',async()=>{
+  const {page:p,context}=await open({shell:true});await p.emulateMedia({reducedMotion:'no-preference'});
+  await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  const before=await docs(p);const sprite=p.locator('.citadel-interior-stage .citadel-hero-sprite');
+  assert(await sprite.evaluate(n=>getComputedStyle(n).imageRendering==='pixelated'));
+  assert(await sprite.evaluate(n=>n.getAnimations().some(a=>a.animationName==='citadelHeroBlink')));
+  await p.locator('#citadel-interior-object').click();assert(await sprite.evaluate(n=>n._reaction?.effect.getTiming().duration===320));
+  await p.clock.runFor(400);assert.deepEqual(await docs(p),before,'animation must not write game progress');
+  await shellNav(p,'Профиль');await p.screenshot({path:resolve(out,'hero-070-wardrobe-390.png')});await context.close();
+ });
  await check('Android 0.69 finance wheel uses the existing chart and persistent four-tab navigation',async()=>{
   for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]])for(const populated of [false,true]){
    const seed=populated?structuredClone(initial):{};
