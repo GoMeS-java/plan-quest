@@ -171,7 +171,13 @@ try {
     await shellDrawer(p,'left');await p.goBack();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
     await shellNav(p,'Задания');await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));
     await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.goBack();assert(await p.locator('#citadel-castle').isVisible());
-    await p.locator('.citadel-viewport').evaluate(n=>{n.scrollLeft=150;n.scrollTop=95;});await p.clock.runFor(450);await p.waitForFunction(()=>{const c=JSON.parse(localStorage.getItem('plan.citadel.camera.v1')||'null');return c&&c.left>=100&&c.top>=75;});await p.reload();await p.waitForFunction(()=>!!window.__citadelShell);await p.waitForFunction(()=>document.querySelector('.citadel-viewport').scrollLeft>=100&&document.querySelector('.citadel-viewport').scrollTop>=75);
+    // Camera offsets are clamped by the real viewport dimensions; compare with the actual scroll position.
+    const cameraBefore=await p.locator('.citadel-viewport').evaluate(n=>{n.scrollLeft=150;n.scrollTop=95;return {left:n.scrollLeft,top:n.scrollTop};});
+    assert(cameraBefore.left>0||cameraBefore.top>0,'camera viewport must allow panning after pinch zoom');
+    await p.clock.runFor(450);
+    await p.waitForFunction(expected=>{const c=JSON.parse(localStorage.getItem('plan.citadel.camera.v1')||'null');return c&&Math.abs(c.left-expected.left)<=2&&Math.abs(c.top-expected.top)<=2;},cameraBefore);
+    await p.reload();await p.waitForFunction(()=>!!window.__citadelShell);
+    await p.waitForFunction(expected=>{const n=document.querySelector('.citadel-viewport');return n&&Math.abs(n.scrollLeft-expected.left)<=2&&Math.abs(n.scrollTop-expected.top)<=2;},cameraBefore);
    }
    await context.close();
   }
