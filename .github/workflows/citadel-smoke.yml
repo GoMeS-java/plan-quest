@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'src/citadel*.js'
+      - 'src/legends.js'
       - 'src/citadel*.css'
       - 'src/rpg-ui.css'
       - 'src/assets/citadel/**'
