@@ -90,12 +90,14 @@ try {
    const {page:p,context}=await open();
    const variants=await p.locator('#wd-top .witem').evaluateAll(ns=>ns.map(n=>n.dataset.item));assert(variants.length>=3);
    const result=await p.evaluate(async({variants,conflict})=>{
-    const original=PlanDB.runTransaction;let intercepted=false;
-    PlanDB.runTransaction=function(fn){
-     if(intercepted)return original.call(this,fn);intercepted=true;
-     return original.call(this,function(tx){const current=tx.get('cfg/outfit')||{};current.future={preserved:true};if(conflict)current.top=variants[2];else current.bottom='pants_black';tx.set('cfg/outfit',current);}).then(()=>original.call(PlanDB,fn));
-    };
-    try{await __qa.equip('top',variants[1]);await __qa.idle();return PlanSync._docs()['cfg/outfit'].d;}finally{PlanDB.runTransaction=original;}
+    // Hold the real storage lock while both operations queue, so selection
+    // captures the old UI and the sibling transaction commits first.
+    let concurrent,selection;
+    await navigator.locks.request('plan.store.v1',function(){
+     concurrent=PlanDB.runTransaction(function(tx){const current=tx.get('cfg/outfit')||{};current.future={preserved:true};if(conflict)current.top=variants[2];else current.bottom='pants_black';tx.set('cfg/outfit',current);});
+     selection=__qa.equip('top',variants[1]);
+    });
+    await concurrent;await selection;await __qa.idle();return PlanSync._docs()['cfg/outfit'].d;
    },{variants,conflict});
    assert.deepEqual(result.future,{preserved:true});assert.equal(result.top,conflict?variants[2]:variants[1]);
    if(conflict)assert.match(await p.locator('#wardrobe-status').innerText(),/не сохранена/);else assert.equal(result.bottom,'pants_black');await context.close();
