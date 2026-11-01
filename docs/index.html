@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.71";window.APP_BUILD="32a2d3484de9";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.71";window.APP_BUILD="60cc09d4ca96";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -885,17 +885,21 @@ html,body{overflow-anchor:none}
       <span class="res" id="b-free3"></span>
     </div>
 
-    <h2>ЗАПИСАТЬ ОПЕРАЦИЮ</h2>
+    <h2 id="tx-form-title">ЗАПИСАТЬ ОПЕРАЦИЮ</h2>
     <div class="row finance-form" role="group" aria-label="Новая финансовая операция">
-      <input id="amt" aria-label="Сумма операции в рублях" type="number" step="0.01" inputmode="decimal" placeholder="Сумма, ₽">
+      <input id="amt" aria-label="Сумма операции в рублях" type="text" inputmode="decimal" placeholder="Сумма, ₽">
       <select id="acc" aria-label="Счёт"><option value="cash">Наличные</option><option value="card">Карта</option></select>
       <select id="kind" aria-label="Тип"><option value="out">Расход</option><option value="in">Доход</option><option value="xfer">Перевод на другой счёт</option></select>
       <select id="cat" aria-label="Категория"><option value="">Автокатегория</option><option>Продукты</option><option>Доставка еды</option><option>Подписки</option><option>Покупки</option><option>Такси</option><option>Подарки</option><option>Жильё и коммуналка</option><option>Работа: такси</option><option>Работа: суточные</option><option>Работа: другое</option></select>
+      <label class="finance-date">Дата<input id="tx-date" type="date" aria-label="Дата операции"></label>
       <input id="what" aria-label="Описание операции" type="text" placeholder="Что это">
       <button class="btn go" id="add" type="button">ЗАПИСАТЬ</button>
+      <button class="btn alt" id="tx-cancel" type="button" hidden>ОТМЕНИТЬ РЕДАКТИРОВАНИЕ</button>
     </div>
     <div class="hint">При переводе деньги идут с выбранного счёта на другой.</div>
+    <p class="hint finance-status" id="tx-status" role="status" aria-live="polite"></p>
     <ul class="log" id="log"></ul>
+    <button class="btn alt" id="tx-more" type="button" hidden>ЕЩЁ ОПЕРАЦИИ</button>
 
     <div class="goal">
       <div class="goal-head"><b id="rep-title">Отчёт за месяц</b></div>
@@ -911,7 +915,7 @@ html,body{overflow-anchor:none}
       <div class="goal-head"><b>Крид копилка</b><span class="pct" id="t-jar">…</span></div>
       <div class="hint">Мелочь: десятки, 50 и 100 рублей. В баланс не входит.</div>
       <ul class="log" id="l-jar"></ul>
-      <div class="row"><input id="a-jar" type="number" inputmode="numeric" placeholder="Сумма, ₽"><button class="btn go" type="button" id="jar-in">КИНУЛ</button><button class="btn alt" type="button" id="jar-out">ДОСТАЛ</button></div>
+      <div class="row"><input id="a-jar" type="text" inputmode="decimal" placeholder="Сумма, ₽"><button class="btn go" type="button" id="jar-in">КИНУЛ</button><button class="btn alt" type="button" id="jar-out">ДОСТАЛ</button></div>
     </div>
   </section>
 
@@ -920,7 +924,7 @@ html,body{overflow-anchor:none}
     <div class="goal">
       <div class="goal-head"><b>Всего на Авито</b><span class="pct" id="av-total">…</span></div>
       <ul class="log" id="av-list"></ul>
-      <div class="row"><input id="av-name" type="text" placeholder="Аккаунт"><input id="av-amt" type="number" step="0.01" inputmode="decimal" placeholder="Сумма, ₽"><button class="btn go" id="av-add" type="button">ДОБАВИТЬ</button></div>
+      <div class="row"><input id="av-name" type="text" placeholder="Аккаунт"><input id="av-amt" type="text" inputmode="decimal" placeholder="Сумма, ₽"><button class="btn go" id="av-add" type="button">ДОБАВИТЬ</button></div>
       <div class="hint">Сумму у аккаунта можно менять прямо в строке. Эти деньги ведутся отдельно от личного бюджета.</div>
     </div>
   </section>
@@ -956,7 +960,7 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.71</b><span>Сборка 32a2d3484de9</span></div>
+    <div class="release-stamp"><b>Версия 0.71</b><span>Сборка 60cc09d4ca96</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -1256,6 +1260,19 @@ html,body{overflow-anchor:none}
   function fmtM(n) {
     return Math.round(n * 100) % 100 === 0 ? fmt(n) : n.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+  function moneyInput(value, allowZero) {
+    var text=String(value).trim().replace(/\s/g,'').replace(',','.');
+    if(!/^\d+(?:\.\d{1,2})?$/.test(text))return null;
+    var n=Number(text);return Number.isFinite(n)&&Number.isSafeInteger(Math.round(n*100))&&(allowZero?n>=0:n>0)?n:null;
+  }
+  function recordChanged(){var e=new Error('Record changed');e.code='record_changed';return e;}
+  function savedRecord(path){var r=window.PlanSync&&PlanSync._docs()[path];return r&&r.d?JSON.parse(JSON.stringify(r.d)):null;}
+  function guardRecord(tx,path,expected){var current=tx.get(path);if(JSON.stringify(current)!==JSON.stringify(expected))throw recordChanged();return current;}
+  function deleteRecord(path){var expected=savedRecord(path);if(!expected||!window.confirm('Удалить запись? Балансы и прогресс пересчитаются. Предыдущая копия доступна в управлении данными.'))return;
+    enqueue(function(){return db.runTransaction(function(tx){if(!tx.get(path))return;guardRecord(tx,path,expected);tx.delete(path);});}).then(function(){toast('Запись удалена.');},function(){});
+  }
+  function inputDrafts(root){var out={};root.querySelectorAll('input[id],select[id]').forEach(function(n){if(n.dataset.savedValue!==undefined&&n.value===n.dataset.savedValue&&document.activeElement!==n)return;out[n.id]={value:n.value,focused:document.activeElement===n,start:n.selectionStart,end:n.selectionEnd,expected:n._expectedRecord};});return out;}
+  function restoreDrafts(values){Object.keys(values).forEach(function(id){var n=$(id),v=values[id];if(!n)return;n.value=v.value;if(v.expected)n._expectedRecord=v.expected;if(v.focused){n.focus({preventScroll:true});try{n.setSelectionRange(v.start,v.end);}catch(e){}}});}
   function pad(n) { return ('0' + n).slice(-2); }
   function dkey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function dshort(k) { return k.slice(8, 10) + '.' + k.slice(5, 7); }
@@ -1282,6 +1299,7 @@ html,body{overflow-anchor:none}
   function dbErr(e) {
     var code = e && e.code;
     if (code === 'quota_exceeded') toast('Изменение не сохранено. Скачай резервную копию и освободи место на устройстве.');
+    else if (code === 'record_changed') toast('Запись уже изменена. Открой её заново: твой ввод не сохранён поверх новой версии.');
     else if (code === 'revoked') toast('Доступ к сохранению закрыт. Перезагрузи страницу.');
     else toast('Не удалось сохранить. Попробуй ещё раз.');
   }
@@ -2590,6 +2608,7 @@ html,body{overflow-anchor:none}
         enqueue(function () { return db.doc('spont/' + x.id).update({ done: !x.done }); });
       }));
       var ctr = el('div', 'hint');
+      var rename=el('button','linkbtn','изменить');rename.type='button';rename.onclick=function(){var name=window.prompt('Название задания',x.name);if(name&&name.trim())enqueue(function(){return db.doc('spont/'+x.id).update({name:name.trim()});});};ctr.appendChild(rename);
       if (L >= 1) {
         var hb = el('button', 'linkbtn', x.heavy ? 'сделать обычным' : 'сделать тяжёлым');
         hb.type = 'button';
@@ -2599,7 +2618,7 @@ html,body{overflow-anchor:none}
       if (!x.done) {
         var rm = el('button', 'linkbtn', 'убрать');
         rm.type = 'button';
-        rm.addEventListener('click', function () { enqueue(function () { return db.doc('spont/' + x.id).delete(); }); });
+        rm.addEventListener('click', function () { deleteRecord('spont/'+x.id); });
         ctr.appendChild(rm);
       }
       if (ctr.childNodes.length) row.appendChild(ctr);
@@ -2616,19 +2635,20 @@ html,body{overflow-anchor:none}
       if (mine.some(function (x) { return x.name === n; })) return;
       var b = el('button', 'linkbtn', n);
       b.type = 'button';
-      b.addEventListener('click', function () { addSpont(n, false); });
+      b.addEventListener('click', function () { addSpont(n, false).catch(function(){}); });
       pr.appendChild(b); pr.appendChild(document.createTextNode(' '));
     });
   }
+  var addingSpont=Object.create(null);
   function addSpont(name, heavy) {
-    if (!db) return;
+    if (!db) return Promise.resolve(false);
     var v = (name || '').trim();
-    if (!v) return;
+    if (!v||addingSpont[v]) return Promise.resolve(false);addingSpont[v]=true;
     var o = { name: v, date: dkey(new Date()), done: false, ts: Date.now() };
     if (heavy) o.heavy = true;
-    enqueue(function () { return db.collection('spont').add(o); });
+    return enqueue(function () { return db.collection('spont').add(o); }).then(function(){return true;}).finally(function(){delete addingSpont[v];});
   }
-  $('sp-add').addEventListener('click', function () { addSpont($('sp-name').value, $('sp-heavy').checked); $('sp-name').value = ''; $('sp-heavy').checked = false; });
+  $('sp-add').addEventListener('click',function(){var v=$('sp-name').value;if(!v.trim()||$('sp-add').disabled)return;$('sp-add').disabled=true;addSpont(v,$('sp-heavy').checked).then(function(saved){if(saved&&$('sp-name').value===v){$('sp-name').value='';$('sp-heavy').checked=false;}},function(){}).finally(function(){$('sp-add').disabled=false;});});
   function renderPeriodic() {
     var box = $('plist');
     clear(box);
@@ -2807,13 +2827,16 @@ html,body{overflow-anchor:none}
     return li;
   }
   var ACC = { cash: 'наличные', card: 'карта' };
+  var moneyRenderKey='',txLimit=40,addingLists={};
   function renderMoney() {
+    var key=JSON.stringify([loaded,S.opening,S.tx,S.items,S.jar,dkey(new Date()),txLimit]);if(key===moneyRenderKey)return;moneyRenderKey=key;
+    var drafts=inputDrafts($('lists'));
     if (!loaded || !S.opening) {
       $('money').dataset.empty='true';$('f2-free').textContent=loaded?'Баланс не задан':'…';$('f2-acc').textContent=loaded?'Начальные суммы ещё не записаны.':'';
       ['b-cash', 'b-card', 'b-all', 'b-free'].forEach(function (id) { $(id).textContent = loaded ? 'нет данных' : '…'; });
-      return;
+      if(!loaded)return;
     }
-    $('money').dataset.empty='false';
+    $('money').dataset.empty=S.opening?'false':'true';
     var b = balances();
     var comm = listSum('comm') + listSum('subs');
     var free = b.cash + b.card - oweActive();
@@ -2832,7 +2855,7 @@ html,body{overflow-anchor:none}
     // journal
     var log = $('log');
     clear(log);
-    var txs = S.tx.slice().sort(function (a, c) { return c.ts - a.ts; }).slice(0, 40);
+    var txs = S.tx.slice().sort(function (a, c) { return (c.date||'').localeCompare(a.date||'')||(c.ts||0)-(a.ts||0); }).slice(0, txLimit);
     if (!txs.length) log.appendChild(el('li', null, 'Пока нет записей'));
     txs.forEach(function (t) {
       var title = dshort(t.date) + ' ' + (t.what || (t.kind === 'in' ? 'Доход' : t.kind === 'out' ? 'Расход' : 'Перевод'));
@@ -2842,11 +2865,11 @@ html,body{overflow-anchor:none}
       if (t.kind === 'xfer') { right = fmtM(t.amt); cls = 'out'; tag = ACC[t.acc] + ' → ' + ACC[t.acc === 'cash' ? 'card' : 'cash']; }
       else if (t.kind === 'in') { right = '+' + fmtM(t.amt); cls = 'in'; }
       else { right = '−' + fmtM(t.amt); cls = 'out'; }
-      log.appendChild(logLine(title, tag, right, cls, function () {
-        enqueue(function () { return db.doc('tx/' + t.id).delete(); });
-      }));
+      var line=logLine(title, tag, right, cls, function () {deleteRecord('tx/'+t.id);});
+      line.dataset.txid=t.id;var edit=el('button','del','Изменить');edit.type='button';edit.setAttribute('aria-label','Изменить операцию');edit.onclick=function(){editTransaction(t.id);};line.lastChild.prepend(edit);log.appendChild(line);
     });
 
+    $('tx-more').hidden=S.tx.length<=txLimit;
     // report
     var mk = dkey(new Date()).slice(0, 7);
     var inc = 0, exp = 0, work = 0, cats = {};
@@ -2898,7 +2921,7 @@ html,body{overflow-anchor:none}
         var label = L.key === 'debts' ? (x.dir === 'owe' ? 'Я должен: ' : 'Мне должны: ') + x.name : x.name;
         var good = L.key === 'comm' || L.key === 'subs' || (L.key === 'debts' && x.dir === 'owed');
         var line = logLine(label, x.hold ? 'не вычитается' : '', fmt(x.amt) + ' ₽', good ? 'in' : 'out', function () {
-          enqueue(function () { return db.doc('items/' + x.id).delete(); });
+          deleteRecord('items/'+x.id);
         });
         if (L.key === 'debts' && x.dir === 'owe') {
           var hb = el('button', 'del', x.hold ? '[вычитать]' : '[не вычитать]');
@@ -2919,18 +2942,18 @@ html,body{overflow-anchor:none}
         var o1 = el('option', null, 'Я должен'); o1.value = 'owe';
         var o2 = el('option', null, 'Мне должны'); o2.value = 'owed';
         dir.appendChild(o1); dir.appendChild(o2);
-        dir.setAttribute('aria-label', 'Кто кому должен');
+        dir.setAttribute('aria-label', 'Кто кому должен'); dir.id='dir-debts';
         row.appendChild(dir);
       }
       var nm = el('input'); nm.type = 'text'; nm.placeholder = L.ph; nm.id = 'n-' + L.key;
-      var am = el('input'); am.type = 'number'; am.inputMode = 'numeric'; am.placeholder = 'Сумма, ₽'; am.id = 'a-' + L.key;
-      var bt = el('button', 'btn go', 'ДОБАВИТЬ'); bt.type = 'button';
+      var am = el('input'); am.type = 'text'; am.inputMode = 'decimal'; am.placeholder = 'Сумма, ₽'; am.id = 'a-' + L.key;
+      var bt = el('button', 'btn go', 'ДОБАВИТЬ'); bt.type = 'button';bt.id='add-'+L.key;bt.disabled=!!addingLists[L.key];
       bt.addEventListener('click', function () {
-        var v = Number(am.value);
-        if (!v || v < 0) return;
+        var v=moneyInput(am.value);
+        if(v===null){toast('Укажи сумму больше нуля, до двух знаков после запятой.');return;}if(addingLists[L.key])return;addingLists[L.key]=true;bt.disabled=true;
         var rec = { list: L.key, name: nm.value || L.ph, amt: v, ts: Date.now() };
         if (dir) rec.dir = dir.value;
-        enqueue(function () { return db.collection('items').add(rec); });
+        enqueue(function () { return db.collection('items').add(rec); }).then(function(){nm.value='';am.value='';},function(){}).finally(function(){delete addingLists[L.key];var button=$('add-'+L.key);if(button)button.disabled=false;});
       });
       row.appendChild(nm); row.appendChild(am); row.appendChild(bt);
       card.appendChild(row);
@@ -2946,9 +2969,11 @@ html,body{overflow-anchor:none}
     clear(jl);
     S.jar.slice().sort(function (a, c) { return c.ts - a.ts; }).slice(0, 15).forEach(function (j) {
       jl.appendChild(logLine(dshort(j.date) + ' ' + j.t, '', (j.a >= 0 ? '+' : '−') + fmt(Math.abs(j.a)), j.a >= 0 ? 'in' : 'out', function () {
-        enqueue(function () { return db.doc('jar/' + j.id).delete(); });
+        deleteRecord('jar/'+j.id);
       }));
     });
+    restoreDrafts(drafts);
+    if(!S.opening){['b-cash','b-card','b-all','b-free'].forEach(function(id){$(id).textContent='нет данных';});$('f2-free').textContent='Баланс не задан';$('f2-acc').textContent='Начальные суммы ещё не записаны.';}
   }
   function niceStep(range) {
     var list = [1, 2, 3, 5, 10, 20, 25];
@@ -2956,8 +2981,9 @@ html,body{overflow-anchor:none}
     return 50;
   }
   function k1(v) { return v.toFixed(1).replace('.', ','); }
+  var weightChartKey='';
   function drawWeight(ws) {
-    var box = $('spark');
+    var box = $('spark'),key=JSON.stringify(ws);if(key===weightChartKey&&box.childNodes.length)return;weightChartKey=key;
     clear(box);
     if (!ws.length) {
       box.appendChild(el('div', 'hint', 'Запиши первый вес, и здесь появится график.'));
@@ -3110,7 +3136,9 @@ html,body{overflow-anchor:none}
       sp.appendChild(el('div', 'hint', 'График появится после второй записи веса.'));
     }
   }
+  var avitoRenderKey='';
   function renderAvito() {
+    var key=JSON.stringify([loaded,S.avito]);if(key===avitoRenderKey)return;avitoRenderKey=key;var drafts=inputDrafts($('av-list'));
     var total = 0;
     S.avito.forEach(function (a) { total += a.amt; });
     $('av-total').textContent = loaded ? fmtM(total) + ' ₽' : '…';
@@ -3122,22 +3150,23 @@ html,body{overflow-anchor:none}
       var left = el('span', null, a.name);
       var right = el('span');
       var inp = el('input');
-      inp.type = 'number'; inp.step = '0.01'; inp.inputMode = 'decimal'; inp.value = a.amt;
+      inp.type = 'text'; inp.inputMode = 'decimal'; inp.value = a.amt; inp.id='av-value-'+a.id;inp.dataset.savedValue=String(a.amt);inp._expectedRecord=savedRecord('avito/'+a.id);
       inp.setAttribute('aria-label', 'Сумма на аккаунте ' + a.name);
       inp.style.width = '9em'; inp.style.flex = 'none';
       inp.addEventListener('change', function () {
-        var v = Number(inp.value);
-        if (!(v >= 0) || inp.value === '') { inp.value = a.amt; return; }
-        enqueue(function () { return db.doc('avito/' + a.id).update({ amt: v }); });
+        var v=moneyInput(inp.value,true),expected=inp._expectedRecord,entered=inp.value;
+        if(v===null){toast('Сумма Авито не сохранена. Укажи число, до двух знаков после запятой.');return;}
+        enqueue(function(){return db.runTransaction(function(tx){var cur=guardRecord(tx,'avito/'+a.id,expected);cur.amt=v;tx.set('avito/'+a.id,cur);return cur;});}).then(function(committed){var control=$('av-value-'+a.id)||inp;control._expectedRecord=committed;control.dataset.savedValue=String(v);if(control.value===entered)control.value=String(v);toast('Сумма Авито сохранена.');},function(e){if(e.code==='record_changed'&&window.confirm('Сумма изменилась на другом экране. Загрузить сохранённое значение вместо текущего ввода?')){var actual=savedRecord('avito/'+a.id);if(actual){inp.value=actual.amt;inp.dataset.savedValue=String(actual.amt);inp._expectedRecord=actual;}}});
       });
       var d = el('button', 'del', '×');
       d.type = 'button';
       d.setAttribute('aria-label', 'Удалить аккаунт');
-      d.addEventListener('click', function () { enqueue(function () { return db.doc('avito/' + a.id).delete(); }); });
+      d.addEventListener('click', function () {deleteRecord('avito/'+a.id);});
       right.appendChild(inp); right.appendChild(d);
       li.appendChild(left); li.appendChild(right);
       ul.appendChild(li);
     });
+    restoreDrafts(drafts);
   }
   var wardKey = '';
   function allItems() {
@@ -3503,7 +3532,7 @@ html,body{overflow-anchor:none}
     var o = { sq: +cur.sq || 0, pu: +cur.pu || 0 };
     o[key] = Math.max(0, o[key] + d);
     S.trial[k] = Object.assign({}, cur, o);
-    enqueue(function () { return db.doc('trial/' + k).set(o); });
+    enqueue(function(){return db.runTransaction(function(tx){var current=tx.get('trial/'+k)||{};current[key]=Math.max(0,(+current[key]||0)+d);tx.set('trial/'+k,current);});}).catch(function(){S.trial[k]=savedRecord('trial/'+k)||{};renderAll();});
   }
   function trialRow(parent, label, cur, goal, k, key) {
     var r = el('div', 'trow');
@@ -3558,7 +3587,7 @@ html,body{overflow-anchor:none}
     }
   }
   var renderedDay=dkey(new Date());
-  setInterval(function(){var day=dkey(new Date());if(loaded&&day!==renderedDay){renderedDay=day;renderAll();}tickTrial();},1000);
+  setInterval(function(){var day=dkey(new Date());if(loaded&&day!==renderedDay){if(!txEditing&&$('tx-date').value===renderedDay&&!$('amt').value&&!$('what').value)$('tx-date').value=day;renderedDay=day;renderAll();}tickTrial();},1000);
 
   function renderAll() {
     if(loaded)abyssSchedule();
@@ -4080,8 +4109,7 @@ function renderAllInner() {
     if (!db) return;
     var v = $('gg-name').value.trim();
     if (!v) return;
-    enqueue(function () { return db.collection('goals').add({ name: v, done: false, ts: Date.now() }); });
-    $('gg-name').value = '';
+    if($('gg-add').disabled)return;$('gg-add').disabled=true;enqueue(function () { return db.collection('goals').add({ name: v, done: false, ts: Date.now() }); }).then(function(){if($('gg-name').value.trim()===v)$('gg-name').value='';},function(){}).finally(function(){$('gg-add').disabled=false;});
   });
 
   // ---- actions ------------------------------------------------------
@@ -4096,13 +4124,16 @@ function renderAllInner() {
     dayWrite(k, cur, { q: q });
   }
   function dayWrite(k, cur, over) {
-    var o = { q: cur.q || [false, false, false, false], kcal: cur.kcal == null ? null : cur.kcal, steps: cur.steps == null ? null : cur.steps };
-    if (cur.ex) o.ex = cur.ex;
-    Object.keys(over).forEach(function (n) { o[n] = over[n]; });
-    if (o.ex && !Object.keys(o.ex).length) delete o.ex;
-    S.days[k] = Object.assign({}, cur, o);
-    if (!o.ex) delete S.days[k].ex;
-    enqueue(function () { return db.doc('days/' + k).set(o); });
+    var changes=JSON.parse(JSON.stringify(over)),previous=JSON.parse(JSON.stringify(cur));
+    S.days[k]=Object.assign({},cur,changes);renderToday();
+    return enqueue(function(){return db.runTransaction(function(tx){
+      var next=tx.get('days/'+k)||{};
+      Object.keys(changes).forEach(function(field){
+        if(field==='q'){var q=(next.q||[]).slice();changes.q.forEach(function(value,i){if(!!value!==!!(previous.q||[])[i])q[i]=!!value;});next.q=q;}
+        else if(field==='ex'){var ex=Object.assign({},next.ex||{}),before=previous.ex||{};Object.keys(Object.assign({},before,changes.ex)).forEach(function(key){if(before[key]!==changes.ex[key]){if(Object.prototype.hasOwnProperty.call(changes.ex,key))ex[key]=changes.ex[key];else delete ex[key];}});if(Object.keys(ex).length)next.ex=ex;else delete next.ex;}
+        else next[field]=changes[field];
+      });tx.set('days/'+k,next);
+    });}).catch(function(){var r=savedRecord('days/'+k);S.days[k]=r||{};renderAll();});
   }
   function setTier(i, key, m) {
     if (!db) return;
@@ -4151,10 +4182,8 @@ function renderAllInner() {
     saveExercise(k, q, key, q[key].slice(0, -1), rArr.slice(0, -1));
   }
   function saveExercise(k, q, key, arr, rArr) {
-    var doc = { squat: q.squat, pushup: q.pushup, workout: q.workout };
-    SK_KEYS.forEach(function (kk) { doc[kk + 'R'] = q[kk].map(function (_, i) { return repsOf(q, kk, i); }); });
-    doc[key] = arr; doc[key + 'R'] = rArr;
-    enqueue(function () { return db.doc('per/' + k).set(doc); });
+    var optimistic=Object.assign({},S.per[k]||{});optimistic[key]=arr;optimistic[key+'R']=rArr;S.per[k]=optimistic;
+    enqueue(function(){return db.runTransaction(function(tx){var doc=tx.get('per/'+k)||{};if(JSON.stringify(doc[key]||[])!==JSON.stringify(q[key]||[]))throw recordChanged();doc[key]=arr;doc[key+'R']=rArr;tx.set('per/'+k,doc);});}).catch(function(){S.per[k]=savedRecord('per/'+k)||{};renderAll();});
   }
   function doSquat(n) { doExercise('squat', n); }
   function undoSquat() { undoExercise('squat'); }
@@ -4228,18 +4257,24 @@ function renderAllInner() {
       });
     });
   }
-  $('add').addEventListener('click', function () {
-    if (!db) return;
-    var amt = Number($('amt').value);
-    if (!amt || amt < 0) return;
-    var cat = $('cat').value;
-    if (!cat && $('kind').value === 'out') cat = autoCat($('what').value);
-    var rec = {
-      ts: Date.now(), date: dkey(new Date()), kind: $('kind').value, acc: $('acc').value, amt: amt,
-      cat: cat, what: $('what').value, work: cat.indexOf('Работа') === 0, counted: true, pending: false
-    };
-    var enteredAmount=$('amt').value,enteredText=$('what').value;$('add').disabled=true;
-    enqueue(function () { return db.collection('tx').add(rec); }).then(function(){if($('amt').value===enteredAmount)$('amt').value='';if($('what').value===enteredText)$('what').value='';},function(){}).finally(function(){$('add').disabled=false;});
+  var txEditing=null,txExpected=null;
+  $('tx-date').value=dkey(new Date());
+  function resetTransaction(){txEditing=null;txExpected=null;$('amt').value='';$('what').value='';$('tx-date').value=dkey(new Date());$('tx-cancel').hidden=true;$('add').textContent='ЗАПИСАТЬ';$('tx-form-title').textContent='ЗАПИСАТЬ ОПЕРАЦИЮ';}
+  function editTransaction(id){if($('add').disabled)return;var record=savedRecord('tx/'+id);if(!record)return;if(($('amt').value||$('what').value)&&!window.confirm('Заменить незаписанный ввод выбранной операцией?'))return;
+    txEditing=id;txExpected=record;$('amt').value=record.amt;$('what').value=record.what||'';$('kind').value=record.kind;$('acc').value=record.acc;
+    if(record.cat&&!Array.from($('cat').options).some(function(o){return o.value===record.cat;})){var option=el('option',null,record.cat);option.value=record.cat;$('cat').appendChild(option);}
+    $('cat').value=record.cat||'';$('tx-date').value=record.date;$('tx-cancel').hidden=false;$('add').textContent='СОХРАНИТЬ';$('tx-form-title').textContent='ИЗМЕНИТЬ ОПЕРАЦИЮ';$('tx-status').textContent='Изменения применятся к этой записи. Новая операция не создаётся.';$('amt').focus();$('amt').scrollIntoView({block:'center'});
+  }
+  $('tx-cancel').onclick=function(){resetTransaction();$('tx-status').textContent='Редактирование отменено.';};
+  $('tx-more').onclick=function(){txLimit+=40;renderMoney();};
+  $('add').addEventListener('click',function(){
+    if(!db||$('add').disabled)return;var amt=moneyInput($('amt').value),date=$('tx-date').value;
+    if(amt===null){$('tx-status').textContent='Укажи сумму больше нуля, до двух знаков после запятой.';return;}
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||dkey(parseKey(date))!==date){$('tx-status').textContent='Проверь дату операции.';return;}
+    var cat=$('cat').value;if(!cat&&$('kind').value==='out')cat=autoCat($('what').value);
+    var rec={date:date,kind:$('kind').value,acc:$('acc').value,amt:amt,cat:cat,what:$('what').value,work:cat.indexOf('Работа')===0};
+    var editing=txEditing,expected=txExpected,entered=$('amt').value,text=$('what').value;document.querySelectorAll('.finance-form input,.finance-form select,.finance-form button').forEach(function(n){n.disabled=true;});$('tx-status').textContent='Сохраняем…';
+    enqueue(function(){if(!editing)return db.collection('tx').add(Object.assign({ts:Date.now(),counted:true,pending:false},rec));return db.runTransaction(function(tx){var cur=guardRecord(tx,'tx/'+editing,expected);tx.set('tx/'+editing,Object.assign({},cur,rec));});}).then(function(){if($('amt').value===entered&&$('what').value===text)resetTransaction();$('tx-status').textContent=editing?'Изменения сохранены.':'Операция записана.';},function(e){$('tx-status').textContent=e.code==='record_changed'?'Запись изменилась на другом экране. Ввод сохранён в форме; открой актуальную запись перед изменением.':'Не сохранено. Ввод остался в форме — повтори после устранения ошибки.';}).finally(function(){document.querySelectorAll('.finance-form input,.finance-form select,.finance-form button').forEach(function(n){n.disabled=false;});});
   });
   var payoutArmed = null;
   $('payout').addEventListener('click', function () {
@@ -4271,23 +4306,19 @@ function renderAllInner() {
   });
   function jarMove(sign) {
     if (!db) return;
-    var v = Number($('a-jar').value);
-    if (!v || v < 0) return;
+    var v=moneyInput($('a-jar').value);if(v===null){toast('Укажи сумму больше нуля, до двух знаков после запятой.');return;}if($('jar-in').disabled)return;$('jar-in').disabled=$('jar-out').disabled=true;
     var jt = 0;
     S.jar.forEach(function (j) { jt += j.a; });
     if (sign < 0 && v > jt) v = jt;
-    if (!v) return;
+    if (!v){$('jar-in').disabled=$('jar-out').disabled=false;return;}
     var rec = { date: dkey(new Date()), t: sign > 0 ? 'Кинул в копилку' : 'Достал из копилки', a: sign * v, ts: Date.now() };
-    enqueue(function () { return db.collection('jar').add(rec); });
-    $('a-jar').value = '';
+    enqueue(function(){return db.runTransaction(function(tx){var value=rec.a;if(sign<0){var total=tx.list('jar').reduce(function(sum,r){return sum+r.a;},0);value=-Math.min(v,Math.max(0,total));if(!value)return;}tx.set('jar/n'+Date.now().toString(36)+Math.random().toString(36).slice(2,8),Object.assign({},rec,{a:value}));});}).then(function(){$('a-jar').value='';},function(){}).finally(function(){$('jar-in').disabled=$('jar-out').disabled=false;});
   }
   $('av-add').addEventListener('click', function () {
     if (!db) return;
-    var v = Number($('av-amt').value);
-    if (!(v >= 0) || $('av-amt').value === '') return;
+    var v=moneyInput($('av-amt').value,true);if(v===null){toast('Укажи сумму Авито, до двух знаков после запятой.');return;}if($('av-add').disabled)return;$('av-add').disabled=true;
     var rec = { name: $('av-name').value || 'Аккаунт', amt: v, ts: Date.now() };
-    enqueue(function () { return db.collection('avito').add(rec); });
-    $('av-name').value = ''; $('av-amt').value = '';
+    enqueue(function () { return db.collection('avito').add(rec); }).then(function(){$('av-name').value='';$('av-amt').value='';},function(){}).finally(function(){$('av-add').disabled=false;});
   });
   $('jar-in').addEventListener('click', function () { jarMove(1); });
   $('jar-out').addEventListener('click', function () { jarMove(-1); });

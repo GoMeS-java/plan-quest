@@ -221,3 +221,16 @@ body.citadel-shell-active .citadel-finance-nav button[aria-selected="true"]{bord
 /* 0.70: warm rim light against violet stone; original sprite proportions. */
 body.citadel-shell-active .citadel-hero-sprite{filter:drop-shadow(0 2px #090812) drop-shadow(-1px 0 #c9a47755) drop-shadow(1px 0 #70578166)}
 body.citadel-shell-active .citadel-interior-stage .citadel-hero-sprite{filter:drop-shadow(0 2px #090812) drop-shadow(-1px 0 #c9a47755) drop-shadow(1px 0 #70578166)}
+
+/* 0.72 daily finance controls use the existing RPG palette and panels. */
+.finance-status{min-height:1.5em;overflow-wrap:anywhere}
+.finance-date{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:11px}
+.finance-date input{box-sizing:border-box;min-width:0;max-width:100%}
+#tx-cancel[hidden],#tx-more[hidden]{display:none!important}
+#log .del,#av-list .del,#lists .del,#slist2 .linkbtn{min-height:44px;min-width:44px}
+#log li>span:last-child{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px}
+#av-list li>span{min-width:0;overflow-wrap:anywhere}
+#av-list li>span:last-child{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px}
+#av-list input{min-width:0;max-width:100%;box-sizing:border-box}
+body.citadel-shell-active .finance-form #tx-cancel{grid-column:1/-1}
+body.citadel-shell-active #log .del{font:600 11px/1.3 var(--font-body);padding:6px}
