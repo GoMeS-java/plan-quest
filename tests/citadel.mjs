@@ -103,7 +103,8 @@ try {
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);await p.emulateMedia({reducedMotion:'no-preference'});
   await p.clock.setFixedTime(new Date('2027-04-16T10:00:07+03:00'));await p.evaluate(()=>__qa.render());
   const smith=p.locator('#citadel-castle > [data-person="smith"]');assert.equal(await smith.getAttribute('data-smooth'),'false');
-  await p.clock.setFixedTime(new Date('2027-04-16T10:00:08+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await smith.getAttribute('data-smooth'),'true');
+  await p.clock.setFixedTime(new Date('2027-04-16T10:00:07.500+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await smith.getAttribute('data-smooth'),'true');
+  await p.setViewportSize({width:430,height:844});await p.evaluate(()=>window.dispatchEvent(new Event('resize')));await p.clock.runFor(32);assert.equal(await smith.getAttribute('data-smooth'),'false');
   await p.clock.setFixedTime(new Date('2027-04-16T18:00:07+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await smith.getAttribute('data-smooth'),'false');
   assert.equal(await smith.evaluate(n=>getComputedStyle(n).transitionDuration),'0s');
   const state=await p.evaluate(()=>__qa.npcState('smith'));assert(state.path.length>1);assert(state.path.includes('hall-2'));
