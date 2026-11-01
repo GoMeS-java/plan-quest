@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="12186a917ba2";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="44730a31d646";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -401,6 +401,11 @@ html[data-pat="diag"], html[data-pat="diag"] body { background-image: repeating-
 @keyframes inr { from { transform: translateX(28px); opacity: 0; } }
 @keyframes inl { from { transform: translateX(-28px); opacity: 0; } }
 .donutwrap { position: relative; width: 240px; height: 240px; margin: 4px auto; }
+.sp-history { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }
+.sp-history[hidden] { display: none; }
+.sp-history button { min-width: 48px; min-height: 44px; border: 2px solid var(--line); background: var(--panel-2); color: var(--fg); cursor: pointer; }
+.sp-history button:disabled { opacity: .35; cursor: default; }
+.sp-history span { flex: 1; text-align: center; font: 11px/1.5 var(--font-display); color: var(--gold); }
 .donutwrap canvas { width: 240px; height: 240px; image-rendering: pixelated; display: block; }
 .dcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; pointer-events: none; padding: 0 70px; }
 .dcenter b { font-family: var(--font-display); font-weight: 400; font-size: 11px; line-height: 1.4; }
@@ -862,6 +867,11 @@ html,body{overflow-anchor:none}
       <button type="button" id="p-week" aria-pressed="false">НЕДЕЛЯ</button>
       <button type="button" id="p-month" aria-pressed="false">МЕСЯЦ</button>
     </div>
+    <div class="sp-history" id="sp-history" hidden aria-label="История расходов по месяцам">
+      <button type="button" id="sp-prev" aria-label="Предыдущий месяц">◀</button>
+      <span id="sp-history-label" aria-live="polite"></span>
+      <button type="button" id="sp-next" aria-label="Следующий месяц">▶</button>
+    </div>
     <h2 id="sp-title">ТРАТЫ</h2>
     <div class="donutwrap" id="donutwrap">
       <canvas id="donut" width="56" height="56" role="img" aria-label="Круг трат по категориям"></canvas>
@@ -961,7 +971,7 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка 12186a917ba2</span></div>
+    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка 44730a31d646</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -3327,11 +3337,21 @@ html,body{overflow-anchor:none}
     return 'Прочее';
   }
   var spPeriod = 'day';
+  var spMonthOffset = 0;
   var MONTHS_NOM = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+  function spMonthDate(offset) { var now = new Date(); return new Date(now.getFullYear(), now.getMonth() + offset, 1); }
+  function spEarliestMonth() {
+    var earliest = null;
+    S.tx.forEach(function (t) { if (t.kind === 'out' && /^\d{4}-\d{2}-\d{2}$/.test(t.date || '') && (!earliest || t.date < earliest)) earliest = t.date; });
+    return earliest ? earliest.slice(0, 7) : dkey(new Date()).slice(0, 7);
+  }
   function spRange() {
     var today = dkey(new Date());
     if (spPeriod === 'week') return { a: mondayKey(today), b: today, label: 'Неделя с ' + dshort(mondayKey(today)) };
-    if (spPeriod === 'month') return { a: today.slice(0, 8) + '01', b: today, label: MONTHS_NOM[+today.slice(5, 7) - 1] };
+    if (spPeriod === 'month') {
+      var month = spMonthDate(spMonthOffset), start = dkey(month), end = dkey(new Date(month.getFullYear(), month.getMonth() + 1, 0));
+      return { a: start, b: spMonthOffset === 0 ? today : end, label: MONTHS_NOM[month.getMonth()] + ' ' + month.getFullYear() };
+    }
     var last = null;
     S.tx.forEach(function (t) {
       if (t.kind !== 'out' || t.cat === 'Долг' || t.date > today) return;
@@ -3346,6 +3366,12 @@ html,body{overflow-anchor:none}
       $(id).setAttribute('aria-pressed', id === 'p-' + spPeriod ? 'true' : 'false');
     });
     var r = spRange();
+    $('sp-history').hidden = spPeriod !== 'month';
+    if (spPeriod === 'month') {
+      $('sp-history-label').textContent = r.label;
+      $('sp-next').disabled = spMonthOffset >= 0;
+      $('sp-prev').disabled = r.a.slice(0, 7) <= spEarliestMonth();
+    }
     var bk = {}, work = 0, big = [], total = 0;
     S.tx.forEach(function (t) {
       if (t.kind !== 'out' || t.cat === 'Долг' || t.date < r.a || t.date > r.b) return;
@@ -3433,6 +3459,8 @@ html,body{overflow-anchor:none}
   ['day', 'week', 'month'].forEach(function (k) {
     $('p-' + k).addEventListener('click', function () { spPeriod = k; renderSpend(); });
   });
+  $('sp-prev').addEventListener('click', function () { if (!$('sp-prev').disabled) { spMonthOffset--; renderSpend(); } });
+  $('sp-next').addEventListener('click', function () { if (spMonthOffset < 0) { spMonthOffset++; renderSpend(); } });
 
   var achQueue = [], achShowing = false;
   function readAchSeen() { try { return JSON.parse(localStorage.getItem('achSeen') || 'null'); } catch (e) { return null; } }
