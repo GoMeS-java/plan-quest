@@ -387,3 +387,19 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 /* Hidden source canvases only generate the shared sprite sheet; they must not
    intercept taps on furniture underneath their old, fixed coordinates. */
 .citadel-avatar canvas,.citadel-interior-stage #citadel-interior-hero{pointer-events:none}
+
+/* 0.75: brief acknowledgements, existing sprites and occupations. */
+.hero-progress{padding:8px 10px;border:1px solid #685371;background:#20192b;color:#e3c99f;font:12px/1.5 system-ui,sans-serif;min-width:0}
+.hero-progress progress{display:block;width:100%;height:7px;margin-top:5px;accent-color:#d2ad78}
+.hero-progress p,.hero-feedback{font:12px/1.5 system-ui,sans-serif;color:#d9c5df;overflow-wrap:anywhere;margin:5px 0}
+.hero-feedback:empty{display:none}
+#citadel-live-gear{overflow-wrap:anywhere;min-width:0}
+.witem:disabled{opacity:.65;cursor:wait}
+.citadel-interior-stage .citadel-person[data-person="guardian"][data-mode="work"]{animation-duration:2.8s}
+.citadel-interior-stage .citadel-person[data-person="archivist"][data-mode="work"]{animation-duration:2.2s;animation-timing-function:steps(1,end)}
+.citadel-interior-stage .citadel-person[data-person="smith"][data-mode="work"]{animation-duration:.95s}
+.citadel-interior-stage .citadel-person[data-person="treasurer"][data-mode="work"]{animation-duration:3.2s;animation-timing-function:steps(1,end)}
+.citadel-interior-stage .citadel-person[data-near="true"]{filter:drop-shadow(0 0 2px #d8b98b)}
+@media(prefers-reduced-motion:reduce){.hero-progress progress{transition:none}}
+@media(min-width:700px){.citadel-inside>.hero-progress{grid-column:1/-1!important}}
+.citadel-shell-drawer .hero-progress{margin:8px 0;box-sizing:border-box;width:100%}

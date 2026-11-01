@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={loading:function(){return loaded;},readiness:function(){return {loaded,pending,seen:Object.keys(seen)};},sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
+const expose = `window.__qa={equip:typeof equipItem==='function'?equipItem:null,progressSequence:function(){return typeof heroProgressSequence==='undefined'?0:heroProgressSequence;},faceResidents:typeof citadelFaceResidents==='function'?citadelFaceResidents:null,loading:function(){return loaded;},readiness:function(){return {loaded,pending,seen:Object.keys(seen)};},sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { html=html.replace('function renderAllInner() {','function renderAllInner() { window.__qaRenderCount=(window.__qaRenderCount||0)+1;');const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 // Normalize only the historical fixture's storage bootstrap to the current local adapter.
@@ -54,6 +54,56 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.75 committed daily action updates hero feedback, survives reload without extra rewards',async()=>{
+  const {page:p,context}=await open({shell:true});
+  const initial=await p.evaluate(()=>({points:__qa.points(),seq:__qa.progressSequence()}));
+  assert.equal(initial.seq,0);await p.evaluate(async()=>{const day='2026-10-30',cur=__qa.S.days[day],q=cur.q.slice();q[0]=true;await __qa.writeDay(day,cur,{q});});
+  await p.waitForFunction(()=>document.querySelector('#daily-progress-feedback').textContent.includes('Дело дня сохранено'));
+  const committed=await docs(p);assert(committed['days/'+date].d.q[0]);
+  const after=await p.evaluate(()=>({points:__qa.points(),seq:__qa.progressSequence(),meter:document.querySelector('#citadel-rank-meter').value}));
+  assert.equal(after.seq,1);assert.equal(after.meter,after.points.P);
+  await p.evaluate(()=>__qa.render());assert.equal(await p.evaluate(()=>__qa.progressSequence()),1);
+  await p.reload();await p.waitForFunction(()=>__qa?.loading());await p.evaluate(()=>__qa.idle());await dismiss(p);
+  assert.equal(await p.evaluate(()=>__qa.progressSequence()),0);assert.equal(await p.locator('#daily-progress-feedback').innerText(),'');
+  assert.deepEqual(await p.evaluate(()=>__qa.points()),after.points);
+  assert.deepEqual((await docs(p))['days/'+date],committed['days/'+date]);await context.close();
+ });
+ await check('0.75 failed daily and equipment writes never acknowledge success or change inventory',async()=>{
+  const {page:p,context}=await open();await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{const cur=__qa.S.days['2026-10-30'],q=cur.q.slice();q[0]=true;await __qa.writeDay('2026-10-30',cur,{q});await __qa.equip('outer','coat_black');}finally{Storage.prototype.setItem=original;}});
+  assert.equal(await p.evaluate(()=>__qa.progressSequence()),0);assert.match(await p.locator('#wardrobe-status').innerText(),/не сохранена/);
+  const after=await docs(p);assert.deepEqual(after['days/'+date],before['days/'+date]);assert.deepEqual(after['cfg/outfit'],before['cfg/outfit']);await context.close();
+ });
+ await check('0.75 equipment preserves concurrent sibling slots and unknown save fields',async()=>{
+  const seed=structuredClone(initial);seed['cfg/outfit']={top:'knit_beige',bottom:'pants_brown',outer:'none',future:{keep:true}};
+  const {page:p,context}=await open({seed});
+  const ids=await p.locator('#wd-top .witem').evaluateAll(ns=>ns.map(n=>n.dataset.item));const chosen=ids.find(x=>x!=='knit_beige');assert(chosen);
+  await p.evaluate(async chosen=>{const task=__qa.equip('top',chosen);await __qa.idle();await task;},chosen);
+  await p.waitForFunction(()=>document.querySelector('#wardrobe-status').textContent.includes('Сохранено'));
+  const saved=(await docs(p))['cfg/outfit'].d;assert.equal(saved.top,chosen);assert.equal(saved.bottom,'pants_brown');assert.equal(saved.outer,'none');assert.deepEqual(saved.future,{keep:true});
+  const sheet=await p.evaluate(()=>__qa.sheet());await p.reload();await p.waitForFunction(()=>__qa?.loading());await dismiss(p);assert.equal(await p.evaluate(()=>__qa.sheet()),sheet);assert.equal((await docs(p))['cfg/outfit'].d.top,chosen);
+  const selected=p.locator('#wd-top .witem[data-item="'+chosen+'"]');assert.equal(await selected.getAttribute('aria-pressed'),'true');assert.match(await p.locator('#wardrobe-equipped').innerText(),/Надето:/);await context.close();
+ });
+ await check('0.75 responsive progress stays in the existing drawer and room inspection is read-only',async()=>{
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,shell:true});await shellDrawer(p,'left');
+   assert(await p.locator('#citadel-rank-meter').isVisible());const b=await p.locator('#citadel-hero-progress').boundingBox();assert(b.width>50&&b.x>=0&&b.x+b.width<=width);
+   await p.evaluate(()=>{__qa.move('study');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+   await p.locator('#citadel-interior-object').evaluate(n=>n.click());assert.match(await p.locator('#citadel-object-status').innerText(),/В книге дня:/);
+   for(let i=0;i<8;i++)await p.locator('#citadel-interior-object').evaluate(n=>n.click());assert.deepEqual(await docs(p),before);
+   assert.equal(await p.locator('#citadel-interior-stage').evaluate(n=>n.querySelector('.citadel-interior-furniture').getAnimations().length),0,'reduced motion has no object effect');
+   await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('#citadel-interior-object').evaluate(n=>{for(let i=0;i<10;i++)n.click();});
+   assert.equal(await p.locator('#citadel-interior-stage .citadel-interior-furniture').evaluate(n=>n.getAnimations().filter(a=>!a.animationName).length),1,'repeated taps replace the finite response');
+   assert.deepEqual(await docs(p),before);await context.close();
+  }
+ });
+ await check('0.75 resident proximity faces shared hero while professions retain distinct work cadence',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16',shell:true,width:390});await p.evaluate(()=>{__qa.move('forge');document.querySelector('#citadel-enter').click();});
+  const npc=p.locator('#citadel-interior-stage [data-person="smith"]');assert.equal(await npc.count(),1);
+  await p.evaluate(()=>{const stage=document.querySelector('#citadel-interior-stage'),npc=stage.querySelector('[data-person="smith"]'),hero=stage.querySelector('.citadel-hero-sprite');npc.style.left=hero.style.left;__qa.faceResidents();});assert.equal(await npc.getAttribute('data-near'),'true');assert.match(await npc.getAttribute('data-facing'),/left|right/);
+  await p.emulateMedia({reducedMotion:'no-preference'});const cadence=await p.evaluate(()=>{const stage=document.querySelector('#citadel-interior-stage'),durations=[];for(const person of ['guardian','archivist','smith','treasurer']){const n=document.createElement('span');n.className='citadel-person';n.dataset.person=person;n.dataset.mode='work';stage.appendChild(n);durations.push(getComputedStyle(n).animationDuration);n.remove();}return durations;});assert.equal(new Set(cadence).size,4);await context.close();
+ });
+
  await check('0.74 final desktop interiors expose both doors between permanent side panels',async()=>{
   for(const width of [1050,1280,1440]){
    const {page:p,context}=await open({width,height:900,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
