@@ -3723,10 +3723,14 @@ function citadelWalkTo(x,y,animate){
  var stage=$('citadel-interior-stage'),hero=stage.querySelector('.citadel-hero-sprite');
  if(!hero||$('citadel-interior').hidden||!stage.clientWidth)return;
  var old=citadelWalkPositions[citadelSelected]||{x:.5,y:.08},r=stage.getBoundingClientRect(),w=stage.clientWidth;
- x=Math.max(.12,Math.min(.88,x));y=Math.max(.05,Math.min(.18,y==null?old.y:y));
- var residents=Array.from(stage.querySelectorAll('.citadel-person[role="button"]')).map(function(n){var b=n.getBoundingClientRect();return {x:(b.left+b.width/2-r.left-stage.clientLeft)/w,gap:(b.width+hero.offsetWidth)/2/w+.025};});
- var candidates=[x,x-.13,x+.13,x-.26,x+.26,.12,.88];
- x=candidates.find(function(n){return n>=.12&&n<=.88&&residents.every(function(p){return Math.abs(p.x-n)>=p.gap;});})||x;
+ x=Math.max(.12,Math.min(.88,x));y=Math.max(.05,Math.min(.3,y==null?old.y:y));
+ var h=stage.clientHeight,hw=hero.offsetWidth,hh=hero.offsetHeight;
+ var blockers=Array.from(stage.querySelectorAll('.citadel-person[role="button"],.citadel-scene-door,.citadel-scene-door small')).map(function(n){var b=n.getBoundingClientRect();return {left:b.left-r.left-stage.clientLeft,right:b.right-r.left-stage.clientLeft,top:b.top-r.top-stage.clientTop,bottom:b.bottom-r.top-stage.clientTop};});
+ var spots=[],xs=[x,x-.13,x+.13,x-.26,x+.26,.12,.88,.5],ys=[y,.28,.22,.14,.05];
+ xs.forEach(function(cx){ys.forEach(function(cy){if(cx<.12||cx>.88)return;var left=cx*w-hw/2,top=h*(1-cy)-hh;
+  if(blockers.every(function(b){return left+hw+3<=b.left||left-3>=b.right||top+hh+3<=b.top||top-3>=b.bottom;}))spots.push({x:cx,y:cy,d:Math.pow((cx-x)*w,2)+Math.pow((cy-y)*h,2)});
+ });});
+ spots.sort(function(a,b){return a.d-b.d;});if(spots.length){x=spots[0].x;y=spots[0].y;}
  var from={left:getComputedStyle(hero).left,bottom:getComputedStyle(hero).bottom};
  citadelStopWalk();citadelWalkPositions[citadelSelected]={x:x,y:y};
  var left=Math.round(w*x-hero.offsetWidth/2),bottom=Math.round(stage.clientHeight*y);
