@@ -19,7 +19,15 @@
   definitions.forEach(function(d){if(!Object.prototype.hasOwnProperty.call(unlocked,d.id)&&d.test(s)){unlocked[d.id]={version:1,at:now,presented:false};added.push(d.id);}});
   if(added.length)tx.set('cfg/legends',Object.assign({},old,{version:1,unlocked:unlocked,active:old.active===undefined?added[0]:old.active}));return added;
  }
+ // Discovery and presentation receipts cannot be erased by an older snapshot.
+ // Preserve unknown fields so importing a newer backup stays lossless.
+ function merge(a,b){a=a||{};b=b||{};var unlocked=Object.assign({},a.unlocked||{},b.unlocked||{});
+  Object.keys(unlocked).forEach(function(id){var x=a.unlocked&&a.unlocked[id],y=b.unlocked&&b.unlocked[id];
+   function receipt(r){return r&&r.version===1&&Number.isFinite(r.at)&&r.at>0;}
+   if(receipt(x)&&receipt(y))unlocked[id]=Object.assign({},x,y,{at:Math.min(x.at,y.at),presented:!!(x.presented||y.presented)});else if(receipt(x))unlocked[id]=Object.assign({},x,{presented:!!x.presented});else if(receipt(y))unlocked[id]=Object.assign({},y,{presented:!!y.presented});
+  });return Object.assign({},a,b,{version:1,unlocked:unlocked});
+ }
  // Optional 1.0 teaching state. No install/update trigger in this release.
  var Awakening=Object.freeze({version:1,steps:Object.freeze(['welcome','hero','tasks','finance','citadel','backup','context']),initial:function(){return {version:1,status:'idle',step:0};},transition:function(state,action){var n=Object.assign({},state||this.initial());if(action==='start'||action==='replay'){n.status='active';n.step=0;}else if(action==='skip')n.status='skipped';else if(action==='next'&&n.status==='active'){n.step=Math.min(this.steps.length,n.step+1);if(n.step===this.steps.length)n.status='complete';}return n;}});
- root.VkachLegends=Object.freeze({earned:earned,reconcile:reconcile,Awakening:Awakening});
+ root.VkachLegends=Object.freeze({earned:earned,reconcile:reconcile,merge:merge,Awakening:Awakening});
 })(typeof window==='undefined'?globalThis:window);

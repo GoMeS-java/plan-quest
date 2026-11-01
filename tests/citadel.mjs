@@ -55,6 +55,83 @@ function advancedSeed(){
 }
 try {
 
+ await check('0.90 identical newer discovery snapshots advance the preference clock against stale devices',async()=>{
+  const seed=structuredClone(initial);
+  seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1,presented:true}}};
+  seed['cfg/fate']={version:1,active:'f01',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}};
+  const {page:p,context}=await open({shell:true,seed});
+  for(const path of ['cfg/legends','cfg/fate']){
+   const prior=(await docs(p))[path],newer=structuredClone(prior);newer.u=Date.now()+100000;
+   await p.evaluate(({path,record})=>PlanSync._merge({docs:{[path]:record}}),{path,record:newer});
+   assert.equal((await docs(p))[path].u,newer.u);
+   const stale=structuredClone(newer);stale.u--;stale.d.active='';
+   await p.evaluate(({path,record})=>PlanSync._merge({docs:{[path]:record}}),{path,record:stale});
+   assert.equal((await docs(p))[path].d.active,prior.d.active);
+  }
+  await context.close();
+ });
+ await check('0.90 cosmetic merges keep both histories, presentation receipts and the selected preference',async()=>{
+  for(const choice of ['local','remote']){
+   const seed=structuredClone(initial);seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
+   const {page:p,context}=await open({shell:true,seed});const prior=await docs(p);
+   const remote={...structuredClone(prior),'cfg/legends':{d:{version:1,active:'',unlocked:{echo01:{version:1,at:1793358001000,presented:false},echo02:{version:1,at:1793358002000,presented:true}}},u:1},'cfg/opening':{d:{cash:42,card:7},u:Date.now()+100000}};
+   const conflict=await p.evaluate(async remote=>{try{await PlanSync._merge({docs:remote},{detect:true});return false;}catch{return true;}},remote);assert(conflict);
+   await p.evaluate(choice=>PlanSync.resolveConflict(choice),choice);await p.waitForTimeout(60);
+   const data=await docs(p),ledger=data['cfg/legends'].d;
+   assert(Object.keys(ledger.unlocked).length===2&&Object.values(ledger.unlocked).every(r=>r.presented),'both histories and receipts must survive either choice');
+   assert.equal(ledger.active,'echo01');assert.equal(data['cfg/opening'].d.cash,choice==='local'?prior['cfg/opening'].d.cash:42);
+   const older={v:1,docs:{'cfg/legends':{d:{version:1,active:'',unlocked:{}},u:0}}};await p.evaluate(copy=>PlanSync.importObj(copy),older);
+   assert.equal((await docs(p))['cfg/legends'].d.active,'echo01');
+   older.docs['cfg/legends'].u=Date.now()+200000;await p.evaluate(copy=>PlanSync.importObj(copy),older);
+   assert.equal((await docs(p))['cfg/legends'].d.active,'');
+   assert(Object.keys((await docs(p))['cfg/legends'].d.unlocked).length===2);await context.close();
+  }
+ });
+ await check('0.90 unrelated saves preserve collection focus and avoid avatar rasterization, appearance changes invalidate cache',async()=>{
+  const seed=structuredClone(initial);seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
+  const {page:p,context}=await open({shell:true,seed});await p.evaluate(()=>document.querySelector('#trophy-btn').click());
+  await p.evaluate(()=>{window.__stableButton=document.querySelector('.legend-entry button');__stableButton.focus();window.__avatarPaints=0;for(const id of ['citadel-avatar-canvas','citadel-interior-hero']){const canvas=document.getElementById(id),ctx=canvas.getContext('2d'),original=ctx.clearRect.bind(ctx);ctx.clearRect=function(...args){window.__avatarPaints++;return original(...args);};}});
+  const before=await p.locator('#citadel-avatar-canvas').evaluate(n=>n.toDataURL());await write(p,'tx/cache-test',{date,amt:1,type:'out',what:'Synthetic expense',ts:2});
+  await p.waitForTimeout(60);
+  assert.equal(await p.evaluate(()=>__avatarPaints),0);assert(await p.evaluate(()=>__stableButton===document.querySelector('.legend-entry button')),'collection nodes must survive unrelated saves');
+  // write() dismisses overlays; reopen to check the retained node itself.
+  await p.evaluate(()=>document.querySelector('#trophy-btn').click());await p.waitForTimeout(20);
+  await p.evaluate(()=>__stableButton.focus());
+  assert(await p.evaluate(()=>document.activeElement===__stableButton),'focus must be acquired before the save');
+  await p.evaluate(()=>PlanDB.doc('tx/cache-test').update({amt:2}));await p.waitForTimeout(60);
+  assert(await p.evaluate(()=>document.activeElement===__stableButton),'unrelated subscriptions must retain focus');
+  await write(p,'weights/cache-test',{kg:110,date,ts:3});
+  assert(await p.evaluate(()=>__avatarPaints>0));assert.notEqual(await p.locator('#citadel-avatar-canvas').evaluate(n=>n.toDataURL()),before);
+  const slim=await p.locator('#citadel-avatar-canvas').evaluate(n=>n.toDataURL());
+  await write(p,'cfg/outfit',{top:'synthetic-unowned',bottom:'pants_brown',outer:'none'});
+  assert.equal(await p.locator('#citadel-avatar-canvas').evaluate(n=>n.toDataURL()),slim,'unknown equipment keeps the existing fallback');
+  await context.close();
+ });
+ await check('0.90 finance inputs, close button and scroll remain usable after keyboard-sized resize and orientation changes',async()=>{
+  const {page:p,context}=await open({shell:true});await shellNav(p,'Финансы');
+  await p.locator('#what').fill('Synthetic keyboard draft');await p.locator('#amt').fill('12');
+  for(const [width,height]of [[390,360],[320,480],[844,390],[390,844]]){
+   await p.setViewportSize({width,height});await p.locator('#what').focus();await p.waitForTimeout(40);
+   assert.equal(await p.locator('#what').inputValue(),'Synthetic keyboard draft');
+   assert(await p.locator('.citadel-system-dialog>header button').evaluate(n=>{const r=n.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&r.right<=innerWidth;}));
+   assert(await p.locator('.citadel-system-dialog').evaluate(n=>n.scrollWidth<=n.clientWidth));
+   await p.locator('#what').scrollIntoViewIfNeeded();assert(await p.locator('#what').isVisible());
+  }
+  await p.goBack();assert(await p.locator('.citadel-system-dialog').isHidden());await context.close();
+ });
+
+ await check('0.90 older restores retain prior cosmetic discoveries and presentation receipts',async()=>{
+  const seed=structuredClone(initial);seed['cfg/legends']={version:1,active:'echo01',unlocked:{echo01:{version:1,at:1793358000000,presented:true}}};
+  const {page:p,context}=await open({shell:true,seed});
+  const prior=(await docs(p))['cfg/legends'].d;
+  await p.evaluate(async()=>{const old={v:1,docs:{'cfg/opening':{d:{cash:42,card:7},u:1}}};await PlanSync.importObj(old,true);});
+  assert(JSON.stringify((await docs(p))['cfg/legends']?.d)===JSON.stringify(prior),'old copy must retain earned cosmetic ledger');
+  assert.equal((await docs(p))['cfg/opening'].d.cash,42);
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);
+  assert(JSON.stringify((await docs(p))['cfg/legends']?.d)===JSON.stringify(prior),'reload must retain earned cosmetic ledger');
+  assert(await p.locator('#legend-scene').isHidden());await context.close();
+ });
+
  await check('0.79 real achievement progress discovers partial pixels and survives reload without repeat delivery',async()=>{
   const seed=structuredClone(initial);for(let n=0;n<4;n++){const k='2026-10-'+(19+n);seed['days/'+k]={q:Array(10).fill(false),steps:12000};}
   const {page:p,context}=await open({shell:true,seed});
@@ -1709,12 +1786,12 @@ try {
   await p.waitForTimeout(100);await dismiss(p);assert(await p.evaluate(()=>__qa.points().L)>before);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Новый ранг/);const saved=await docs(p);await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),saved);await context.close();
  });
- await check('0.73 through 0.78 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
-  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538']]){
-  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
+ await check('0.73 through 0.79 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
+  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe']]){
+  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(oldVersion==='0.79'?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
-  context.setDefaultTimeout(15000);const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}},'cfg/future-synthetic':{nested:{keep:42}}};
+  context.setDefaultTimeout(15000);const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}},'cfg/future-synthetic':{nested:{keep:42}}};if(oldVersion==='0.79'){seed['cfg/legends']={version:1,active:'',unlocked:{echo01:{version:1,at:1,presented:true}}};seed['cfg/fate']={version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}};}
   await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2026-10-26');localStorage.setItem('msum','2026-10');localStorage.setItem('trialSeen','2026-10-30');},seed);
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2026-10-30T14:00:00+03:00')});
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&PlanSync._docs()['cfg/abyss-economy']?.d?.rank>=1);await dismiss(p);

@@ -166,10 +166,11 @@
   }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
   // Discovery receipts are monotonic; preference follows the selected snapshot.
-  function retainFate(local, incoming) {
+  function retainDiscovery(path, local, incoming) {
     if(!local && !incoming)return null;
-    if(!window.VkachFate)throw new Error('Discovery engine unavailable');
-    return window.VkachFate.merge(local,incoming);
+    var engine=path==='cfg/fate'?window.VkachFate:window.VkachLegends;
+    if(!engine||!engine.merge)throw new Error('Discovery engine unavailable');
+    return engine.merge(local,incoming);
   }
   function merge(remote, options) {
     options = options || {};
@@ -179,10 +180,11 @@
       var local = persistedDocs(), next = clone(local), changedLocal = false, changedRemote = false, conflicts = [];
       Object.keys(rd).forEach(function (p) {
         var l = local[p], r = rd[p];
-        if(p==='cfg/fate'&&(l&&l.d||r.d)){
-          var fate=retainFate(l&&l.d,r.d);
+        if((p==='cfg/fate'||p==='cfg/legends')&&(l&&l.d||r.d)){
+          var fate=retainDiscovery(p,l&&l.d,r.d);
           if(l&&l.d&&l.u>r.u&&Object.prototype.hasOwnProperty.call(l.d,'active'))fate.active=l.d.active;
           if(!l||!same(l.d,fate)){next[p]={d:fate,u:Math.max(Date.now(),(l&&l.u||0)+1,r.u+1)};changedLocal=true;}
+          else if(r.u>l.u){next[p]={d:fate,u:r.u};changedLocal=true;}
           if(!same(r.d,fate))changedRemote=true;
           return;
         }
@@ -265,7 +267,7 @@
       var local = corruptRaw !== null ? clone(docs) : persistedDocs(), next = {}, now = Date.now();
       recovery(local, incoming);
       Object.keys(Object.assign({}, local, incoming)).forEach(function (p) {
-        next[p] = { d: p==='cfg/fate'&&((local[p]&&local[p].d)||(incoming[p]&&incoming[p].d)) ? retainFate(local[p]&&local[p].d,incoming[p]&&incoming[p].d) : incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
+        next[p] = { d: (p==='cfg/fate'||p==='cfg/legends')&&((local[p]&&local[p].d)||(incoming[p]&&incoming[p].d)) ? retainDiscovery(p,local[p]&&local[p].d,incoming[p]&&incoming[p].d) : incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
       });
       // Persist the cloud pause before replacing data, even if later storage fails.
       meta.signed = false; meta.syncPaused = true;
@@ -289,11 +291,12 @@
         if (conflict) { next[p] = { d: choice === 'remote' ? r.d : l ? l.d : null, u: Math.max(Date.now(), (l && l.u || 0) + 1, r.u + 1) }; accepted[p] = JSON.stringify(r); }
         else if (!l || r.u > l.u) next[p] = clone(r);
       });
-      if((local['cfg/fate']&&local['cfg/fate'].d)||(remote['cfg/fate']&&remote['cfg/fate'].d)){
-        var prior=local['cfg/fate'],chosen=next['cfg/fate'];
-        var combined=retainFate(prior&&prior.d,remote['cfg/fate']&&remote['cfg/fate'].d);if(chosen&&chosen.d&&Object.prototype.hasOwnProperty.call(chosen.d,'active'))combined.active=chosen.d.active;
-        next['cfg/fate']={d:combined,u:Math.max(Date.now(),(prior&&prior.u||0)+1,(chosen&&chosen.u||0)+1)};
-      }
+      ['cfg/fate','cfg/legends'].forEach(function(path){
+        if(!((local[path]&&local[path].d)||(remote[path]&&remote[path].d)))return;
+        var prior=local[path],chosen=next[path];
+        var combined=retainDiscovery(path,prior&&prior.d,remote[path]&&remote[path].d);if(chosen&&chosen.d&&Object.prototype.hasOwnProperty.call(chosen.d,'active'))combined.active=chosen.d.active;
+        next[path]={d:combined,u:Math.max(Date.now(),(prior&&prior.u||0)+1,(chosen&&chosen.u||0)+1)};
+      });
       meta.accepted = accepted; meta.syncPaused = true;
       if (!jset(META, meta)) throw storageError();
       if (!jset(KEY, { v: 1, docs: next })) throw storageError();

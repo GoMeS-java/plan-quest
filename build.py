@@ -22,7 +22,7 @@ g = g.replace('__BUILD__', build_id)
 i = g.index('<link rel="stylesheet" href="rpg-ui.css">') + len('<link rel="stylesheet" href="rpg-ui.css">')
 head_part, body_part = g[:i], g[i:]
 html = ('<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">'
         '<meta name="theme-color" content="#17121f">'
         '<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">'
         '<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">'
