@@ -4176,7 +4176,7 @@ function renderAllInner() {
       var next=tx.get('days/'+k)||{};
       Object.keys(changes).forEach(function(field){
         if(field==='q'){var q=(next.q||[]).slice();changes.q.forEach(function(value,i){if(!!value!==!!(previous.q||[])[i])q[i]=!!value;});next.q=q;}
-        else if(field==='ex'){var ex=Object.assign({},next.ex||{}),before=previous.ex||{};Object.keys(Object.assign({},before,changes.ex)).forEach(function(key){if(before[key]!==changes.ex[key]){if(ex[key]!==before[key]&&ex[key]!==changes.ex[key]){var conflict=new Error('Progress changed');conflict.code='record_changed';throw conflict;}if(Object.prototype.hasOwnProperty.call(changes.ex,key))ex[key]=changes.ex[key];else delete ex[key];}});if(Object.keys(ex).length)next.ex=ex;else delete next.ex;}
+        else if(field==='ex'){var ex=Object.assign({},next.ex||{}),before=previous.ex||{};Object.keys(Object.assign({},before,changes.ex)).forEach(function(key){var was=JSON.stringify(before[key]),wanted=JSON.stringify(changes.ex[key]),actual=JSON.stringify(ex[key]);if(was!==wanted){if(actual!==was&&actual!==wanted){var conflict=new Error('Progress changed');conflict.code='record_changed';throw conflict;}if(Object.prototype.hasOwnProperty.call(changes.ex,key))ex[key]=changes.ex[key];else delete ex[key];}});if(Object.keys(ex).length)next.ex=ex;else delete next.ex;}
         else {
           if(next[field]!==previous[field]&&next[field]!==changes[field]){var conflict=new Error('Progress changed');conflict.code='record_changed';throw conflict;}
           next[field]=changes[field];
