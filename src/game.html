@@ -2110,6 +2110,15 @@ html,body{overflow-anchor:none}
         b.appendChild(document.createTextNode(label));
         b.addEventListener('click', function (ev) {
           setLook(c.k, id);
+          if (c.k === 'bg' && window.__citadelShell) {
+            // Show the result immediately rather than leaving the player
+            // buried in the settings and navigation overlays.
+            $('setup-x').click();
+            setTimeout(function () {
+              var castleButton = document.querySelector('#citadel-shell-nav [data-section="overview"]');
+              if (castleButton) castleButton.click();
+            }, 0);
+          }
           var rc = b.getBoundingClientRect();
           if (c.k === 'fx') fxBurst(id, rc.left + rc.width / 2, rc.top + rc.height / 2);
           else if (c.k === 'lv') lvFx(id);

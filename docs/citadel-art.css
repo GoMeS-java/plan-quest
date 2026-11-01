@@ -453,3 +453,15 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 @keyframes citadelRain{to{background-position:-55px 120px}}
 @keyframes citadelGlow{to{opacity:.1;transform:translateX(15px)}}
 @media(prefers-reduced-motion:reduce){.citadel-realm-particles,.citadel-realm-particles:before,.citadel-realm-particles:after,.citadel-realm-particles>i{animation:none!important}}
+
+/* Snow uses the exact 800x120 roof silhouette coordinates. Never draw bands
+   relative to text or the bottom of the sky viewport. */
+:root[data-citadel-bg="winter"] .citadel-realm-particles:before{background:url('assets/citadel/snow-roof.svg') center/100% 100% no-repeat;filter:none;image-rendering:pixelated}
+/* Every previously earned sky has a lightweight, distinct ambient treatment. */
+:root[data-citadel-bg="library"] .citadel-realm-particles,:root[data-citadel-bg="attic"] .citadel-realm-particles{opacity:.55;background-image:radial-gradient(2px 2px at 14% 26%,#f7bf65 99%,transparent),radial-gradient(2px 2px at 76% 45%,#cba774 99%,transparent);background-size:123px 87px,165px 91px;animation:citadelGlow 7s ease-in-out infinite alternate}
+:root[data-citadel-bg="abyss"] .citadel-realm-particles,:root[data-citadel-bg="cave"] .citadel-realm-particles{opacity:.55;background-image:radial-gradient(2px 2px at 32% 66%,#a873f1 99%,transparent),radial-gradient(1px 1px at 74% 24%,#c8a7ff 99%,transparent);background-size:111px 83px,91px 73px;animation:citadelGlow 10s ease-in-out infinite alternate}
+:root[data-citadel-bg="city"] .citadel-realm-particles,:root[data-citadel-bg="watch"] .citadel-realm-particles{opacity:.42;background:radial-gradient(2px 2px at 23% 77%,#ffc47b 99%,transparent),radial-gradient(2px 2px at 81% 61%,#fff1b1 99%,transparent);background-size:137px 77px;animation:citadelGlow 13s ease-in-out infinite alternate}
+:root[data-citadel-bg="forest"] .citadel-realm-particles,:root[data-citadel-bg="peaks"] .citadel-realm-particles{opacity:.48;background-image:radial-gradient(2px 2px at 33% 35%,#9ae9ae 99%,transparent),radial-gradient(1px 1px at 82% 61%,#6fcaad 99%,transparent);background-size:89px 67px,147px 73px;animation:citadelGlow 9s ease-in-out infinite alternate}
+:root[data-citadel-bg="dawn"] .citadel-realm-particles,:root[data-citadel-bg="sunrise"] .citadel-realm-particles,:root[data-citadel-bg="sunset"] .citadel-realm-particles,:root[data-citadel-bg="beach"] .citadel-realm-particles{opacity:.35;background:radial-gradient(ellipse at 75% 25%,#ffe0ac99,transparent 48%);animation:citadelGlow 9s ease-in-out infinite alternate}
+:root[data-citadel-bg="storm"] .citadel-realm-particles:before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 45%,#c8d9ffbb 49%,transparent 52%);opacity:0;animation:citadelLightning 11s steps(1,end) infinite}
+@keyframes citadelLightning{0%,88%,92%,100%{opacity:0}89%,91%{opacity:1}}

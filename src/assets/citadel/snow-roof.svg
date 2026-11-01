@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 120" shape-rendering="crispEdges">
+  <defs><pattern id="snow" width="28" height="120" patternUnits="userSpaceOnUse"><rect x="0" y="79" width="17" height="3" fill="#e8f4ff"/><rect x="2" y="82" width="12" height="1" fill="#a3bddb"/><rect x="7" y="77" width="6" height="2" fill="#ffffff"/></pattern></defs>
+  <rect width="800" height="120" fill="url(#snow)"/>
+  <path d="M0 99H800" stroke="#c9ddeb" stroke-width="2" stroke-dasharray="22 7 18 9"/>
+</svg>
