@@ -1,0 +1,79 @@
+{
+  "v": 2,
+  "format": "vkach-backup",
+  "createdAt": "2026-11-01T08:00:00.000Z",
+  "appVersion": "0.71",
+  "docs": {
+    "cfg/opening": {
+      "d": {
+        "cash": 1000,
+        "card": 2000
+      },
+      "u": 1
+    },
+    "cfg/body-appearance": {
+      "d": {
+        "goal": 100
+      },
+      "u": 1
+    },
+    "cfg/effects": {
+      "d": {
+        "shake": "off",
+        "flash": "off",
+        "sound": "off"
+      },
+      "u": 1
+    },
+    "cfg/outfit": {
+      "d": {
+        "top": "knit_beige",
+        "bottom": "pants_brown",
+        "outer": "none"
+      },
+      "u": 1
+    },
+    "weights/start": {
+      "d": {
+        "kg": 160,
+        "date": "2026-10-19",
+        "ts": 1
+      },
+      "u": 1
+    },
+    "weights/latest": {
+      "d": {
+        "kg": 130,
+        "date": "2026-10-30",
+        "ts": 2
+      },
+      "u": 1
+    },
+    "tx/old": {
+      "d": {
+        "amt": 125.25,
+        "kind": "out",
+        "acc": "cash",
+        "cat": "Продукты",
+        "what": "Synthetic 0.71 backup",
+        "date": "2026-10-30",
+        "ts": 1,
+        "counted": true
+      },
+      "u": 1
+    },
+    "spont/old": {
+      "d": {
+        "name": "Synthetic restored task",
+        "date": "2026-10-30",
+        "done": true,
+        "ts": 1
+      },
+      "u": 1
+    }
+  },
+  "integrity": {
+    "algorithm": "SHA-256",
+    "value": "ce45bf82739bf0453d9f08fd3cf3b46173d4d3e97b1cb347691b6f05c8ce67f2"
+  }
+}
