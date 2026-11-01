@@ -1195,7 +1195,7 @@ html,body{overflow-anchor:none}
     else if (it.shape === 'puffer') drawPuffer(it.c);
     else if (it.shape === 'plaid') drawPlaid(it.c);
   }
-  var BODY_F = [1, 0.95, 0.9, 0.85, 0.8, 0.76], bodyStageNow = 0;
+  var BODY_F = [1, 0.95, 0.9, 0.85, 0.8, 0.76, 0.72, 0.68, 0.64, 0.60], bodyStageNow = 0;
   var bodyShapeNow=1;
   function squeezeBody() {
     var f=bodyShapeNow,src=g.slice(),cx=15.5;
@@ -3169,13 +3169,15 @@ html,body{overflow-anchor:none}
   }
   function bodyMeasurements(){
     var today=dkey(new Date());
-    return (S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&Number(w.kg)>30&&Number(w.kg)<400&&/^\d{4}-\d{2}-\d{2}$/.test(w.date)&&w.date<=today;}).slice().sort(function(a,b){return a.date.localeCompare(b.date)||(Number(a.ts)||0)-(Number(b.ts)||0)||String(a.id||'').localeCompare(String(b.id||''));});
+    return (S.weights||[]).filter(function(w){return w&&Number.isFinite(Number(w.kg))&&Number(w.kg)>30&&Number(w.kg)<400&&/^\d{4}-\d{2}-\d{2}$/.test(w.date)&&w.date<=today&&Number.isFinite(Date.parse(w.date))&&new Date(w.date+'T12:00:00Z').toISOString().slice(0,10)===w.date;}).slice().sort(function(a,b){return a.date.localeCompare(b.date)||(Number(a.ts)||0)-(Number(b.ts)||0)||String(a.id||'').localeCompare(String(b.id||''));});
   }
   function bodyShape(){
     var records=bodyMeasurements();if(!records.length)return 1;
     var weight=Number(records[records.length-1].kg),start=Number(records[0].kg),goal=Number((S.bodyAppearance||{}).goal);
     if(goal>30&&goal<start)return Math.max(BODY_F[BODY_F.length-1],Math.min(1,1-(1-BODY_F[BODY_F.length-1])*(start-weight)/(start-goal)));
     var anchors=[BODY_TH[0]+BODY_TH[0]-BODY_TH[1]].concat(BODY_TH);
+    var interval=BODY_TH[BODY_TH.length-2]-BODY_TH[BODY_TH.length-1];
+    while(anchors.length<BODY_F.length)anchors.push(anchors[anchors.length-1]-interval);
     if(weight>=anchors[0])return BODY_F[0];
     for(var i=1;i<anchors.length;i++)if(weight>=anchors[i]){var t=(anchors[i-1]-weight)/(anchors[i-1]-anchors[i]);return BODY_F[i-1]+t*(BODY_F[i]-BODY_F[i-1]);}
     return BODY_F[BODY_F.length-1];
@@ -3899,12 +3901,13 @@ function syncCitadelTime(){var hour=new Date().getHours(),phase=hour>=6&&hour<12
 // Four visual frames derive from the equipped shared hero. No second movement loop.
 var citadelHeroSource='',citadelHeroSheet='';
 function citadelHeroFrames(copy){
- var source=copy.toDataURL();
+ var arm=Math.ceil(6+(1-bodyShapeNow)*12),right=32-arm;
+ var source=copy.toDataURL()+':'+arm;
  if(source!==citadelHeroSource){
   var sheet=document.createElement('canvas');sheet.width=128;sheet.height=52;var ctx=sheet.getContext('2d');ctx.imageSmoothingEnabled=false;
   for(var f=0;f<4;f++){ctx.save();ctx.translate(f*32,0);ctx.drawImage(copy,0,0);
    if(f===1){ctx.fillStyle=C.skin2;ctx.fillRect(13,10,2,1);ctx.fillRect(17,10,2,1);ctx.fillStyle=C.skin;ctx.fillRect(13,11,1,1);ctx.fillRect(18,11,1,1);}
-   if(f>1){var step=f===2?1:-1;ctx.clearRect(0,20,6,17);ctx.clearRect(26,20,6,17);ctx.drawImage(copy,0,20,6,17,0,20+step,6,17);ctx.drawImage(copy,26,20,6,17,26,20-step,6,17);ctx.clearRect(0,40,32,12);ctx.drawImage(copy,0,40,16,12,-step,40-step,16,12);ctx.drawImage(copy,16,40,16,12,16+step,40+step,16,12);}
+   if(f>1){var step=f===2?1:-1;ctx.clearRect(0,20,arm,17);ctx.clearRect(right,20,arm,17);ctx.drawImage(copy,0,20,arm,17,0,20+step,arm,17);ctx.drawImage(copy,right,20,arm,17,right,20-step,arm,17);ctx.clearRect(0,40,32,12);ctx.drawImage(copy,0,40,16,12,-step,40-step,16,12);ctx.drawImage(copy,16,40,16,12,16+step,40+step,16,12);}
    ctx.restore();
   }
   citadelHeroSource=source;citadelHeroSheet=sheet.toDataURL();

@@ -57,7 +57,12 @@ try{
  const backup=JSON.parse(await readFile(await download.path(),'utf8'));assert.deepEqual(backup.docs,original);assert(!JSON.stringify(backup).includes('synthetic-production-token'));
  await p.locator('.pl-menu').getByRole('button',{name:'ЗАКРЫТЬ',exact:true}).click();await dismiss();
  await p.locator('#qlist button.q').first().click();await p.waitForFunction(()=>Object.entries(PlanSync._docs()).some(([k,v])=>k.startsWith('days/')&&v.d?.q?.[0]));await dismiss();assert(await p.evaluate(()=>!!localStorage.getItem('plan.android-test.store.v1')));
+ const originalHero=await p.locator('#hero').evaluate(c=>c.toDataURL());
+ await p.evaluate(async()=>{const db=await claude.use('db'),date=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Moscow'});await db.doc('weights/body-first').set({kg:160,date:'2026-01-01',ts:1});await db.doc('weights/body-latest').set({kg:100,date,ts:2});});
+ await p.waitForFunction(old=>document.querySelector('#hero').toDataURL()!==old,originalHero);await p.evaluate(()=>PlanSync.beforeUpdate());
+ const offlineHero=await p.locator('#hero').evaluate(c=>c.toDataURL());
  const saved=await p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));await ctx.setOffline(true);await p.reload();await dismiss();await p.waitForFunction(()=>!!window.PlanSync);
+ await p.waitForFunction(expected=>document.querySelector('#hero').toDataURL()===expected,offlineHero);
  assert.deepEqual(await p.evaluate(()=>PlanSync._docs()),saved);
  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),production);
  assert(await p.evaluate(()=>caches.has('plan-unrelated-production-cache')));

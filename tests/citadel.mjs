@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
+const expose = `window.__qa={sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 function instrument(html) { const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'});
@@ -65,20 +65,37 @@ try {
   await write(p,'weights/future',{kg:80,date:'2099-01-01',ts:999});assert.equal(await p.evaluate(()=>__qa.shape()),shape);
   await context.close();
  });
+ await check('weight edits, deletion and invalid calendar records recover the correct shared silhouette',async()=>{
+  const seed=structuredClone(initial);seed['weights/start']={kg:160,date:'2026-01-01',ts:0};seed['weights/test']={kg:145,date,ts:1};
+  const {page:p,context}=await open({shell:true,seed});const middle=await p.evaluate(()=>__qa.shape());
+  await write(p,'weights/test',{kg:130,date,ts:2});assert((await p.evaluate(()=>__qa.shape()))<middle);
+  await write(p,'weights/invalid',{kg:80,date:'2026-02-31',ts:99});
+  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('weights/test').delete();});
+  await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='test'));await p.evaluate(()=>__qa.render());
+  const restored=await p.evaluate(()=>__qa.shape());assert(restored>middle,'deletion must restore the last valid entry, ignoring an impossible calendar date');
+  const source=(await docs(p))['weights/start'];assert.deepEqual(source.d,seed['weights/start']);
+  await p.evaluate(async()=>{const db=await claude.use('db');await db.doc('weights/start').delete();});await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='start'));assert.equal(await p.evaluate(()=>__qa.shape()),1);
+  await context.close();
+ });
  await check('body geometry follows latest weight reversibly across shared sprites and every outfit',async()=>{
   const {page:p,context}=await open({seed:{...initial,'weights/test':{kg:165,date,ts:1}}});
   const original=await docs(p),samples=[];
-  for(const kg of [165,158,150,140,128,150,165]){
+  for(const kg of [160,145,130,115,100,145,160]){
    await write(p,'weights/test',{kg,date,ts:2});await p.waitForFunction(k=>__qa.S.weights.some(w=>w.kg===k),kg);await p.evaluate(()=>__qa.render());
    const sample=await p.evaluate(()=>{const ids=['hero','citadel-avatar-canvas','citadel-interior-hero'];return {f:__qa.shape(),pixels:ids.map(id=>Array.from(document.getElementById(id).getContext('2d').getImageData(0,0,32,52).data))};});
    assert.deepEqual(sample.pixels[0],sample.pixels[1]);assert.deepEqual(sample.pixels[1],sample.pixels[2]);
+   const frames=await p.evaluate(async()=>{const im=new Image();im.src=__qa.sheet();await im.decode();const c=document.createElement('canvas');c.width=128;c.height=52;const ctx=c.getContext('2d');ctx.drawImage(im,0,0);return [0,1,2,3].map(f=>Array.from(ctx.getImageData(f*32,0,32,52).data));});
+   for(const frame of frames){assert.deepEqual(frame.slice(0,9*128),sample.pixels[0].slice(0,9*128),'hair and upper face stay fixed in all animation frames');assert(frame.some((v,i)=>i%4===3&&Math.floor(i/128)>=33&&Math.floor(i/128)<=37&&v),'walking must retain hands and sleeves');}
+   assert.notDeepEqual(frames[2],frames[0]);assert.notDeepEqual(frames[3],frames[0]);
    const opaque=sample.pixels[0].filter((_,i)=>i%4===3&&sample.pixels[0][i]>0).length;
+   const rows=Array.from({length:52},(_,y)=>sample.pixels[0].slice(y*128,(y+1)*128).some((v,i)=>i%4===3&&v));assert.equal(rows.findIndex(Boolean),0);assert.equal(rows.lastIndexOf(true),51);
+   const torso=Array.from({length:32},(_,x)=>sample.pixels[0][(25*32+x)*4+3]).map((a,x)=>a?x:-1).filter(x=>x>=0);const width=torso[torso.length-1]-torso[0]+1;
    const hair=sample.pixels[0].slice(0,12*32*4);if(samples.length)assert.deepEqual(hair,samples[0].hair);
-   samples.push({kg,f:sample.f,opaque,hair,pixels:sample.pixels[0]});
-   if([165,150,128].includes(kg))await p.locator('.stage').screenshot({path:resolve(out,'body-'+kg+'-synthetic.png')});
+   samples.push({kg,f:sample.f,opaque,width,hair,pixels:sample.pixels[0]});
+   if([160,145,130,115,100].includes(kg))await p.locator('.stage').screenshot({path:resolve(out,'body-'+kg+'-synthetic.png')});
   }
-  for(let i=1;i<5;i++){assert(samples[i].f<samples[i-1].f);assert(samples[i].opaque<=samples[i-1].opaque);}
-  assert.deepEqual(samples[5].pixels,samples[2].pixels);assert.deepEqual(samples[6].pixels,samples[0].pixels);
+  for(let i=1;i<5;i++){assert(samples[i].f<samples[i-1].f);assert(samples[i].opaque<samples[i-1].opaque);assert(samples[i].width<samples[i-1].width);}
+  assert.deepEqual(samples[5].pixels,samples[1].pixels);assert.deepEqual(samples[6].pixels,samples[0].pixels);
   // Render every built-in outfit at both endpoints without persisting changes.
   assert(await p.evaluate(()=>__qa.outfitCheck()),'all garments retain skin pixels and fixed height at both shapes');
   await write(p,'weights/test',{kg:140,date,ts:3});await p.evaluate(()=>__qa.render());const pixels=await p.locator('#hero').evaluate(c=>c.toDataURL());
