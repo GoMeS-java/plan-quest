@@ -3828,14 +3828,23 @@ function abyssReconcile(){
   var old=tx.get('cfg/abyss-economy'),p=purchasePoints(tx),events=abyssEvents();
   if(!old){
    tx.set('cfg/abyss-economy-backup',{version:1,legacyCitadelBuys:tx.list('buys').filter(function(b){return b.kind==='citadel-room';}),rank:p.L,ts:Date.now()});
-   tx.set('cfg/abyss-economy',{version:1,rank:p.L,claims:events,earned:0});
+   tx.set('cfg/abyss-economy',{version:1,rank:p.L,claims:events,earned:5*Math.max(0,p.L-1),rankSeeded:true});
    return;
   }
   if(old.version!==1)return;
   var next=Object.assign({},old),claims=Object.assign({},old.claims||{}),gain=0;
+  // Early v1 migrated at zero even for existing ranks. Compensate once using
+  // its immutable baseline, never today's rank (which could duplicate gains).
+  if(!old.rankSeeded){
+   var baseline=tx.get('cfg/abyss-economy-backup');
+   if(baseline&&baseline.version===1&&Number.isFinite(Number(baseline.rank))){
+    gain+=5*Math.max(0,Number(baseline.rank)-1);
+    next.rankSeeded=true;
+   }
+  }
   if(p.L>Number(old.rank||1)){gain+=5*(p.L-Number(old.rank||1));next.rank=p.L;}
   Object.keys(events).forEach(function(id){if(!Object.prototype.hasOwnProperty.call(claims,id)){claims[id]=events[id];gain+=events[id];}});
-  if(gain){next.claims=claims;next.earned=(Number(old.earned)||0)+gain;tx.set('cfg/abyss-economy',next);}
+  if(gain||next.rankSeeded!==old.rankSeeded){next.claims=claims;next.earned=(Number(old.earned)||0)+gain;tx.set('cfg/abyss-economy',next);}
  });}).finally(function(){abyssReconciling=false;}).catch(function(){});
 }
 // Существующий расчёт читает актуальный снимок той же базы, включая ещё
@@ -5060,8 +5069,9 @@ function renderAllInner() {
     }
     navGroup('ПУТЬ И ПРОГРЕСС',[['week','Хроника'],['diet','Тело'],['goals','Путь']]);
     navGroup('КАЗНА И ДЕЛА',[['money','Финансы'],['spend','Траты'],['avito','Авито']]);
-    navGroup('КОЛЛЕКЦИЯ',[['achievements','Достижения']]);
-    var systemLinks=navGroup('СИСТЕМА',[['settings','Настройки']]);
+    // Trophy and gear already live in the original three-icon system toolbar.
+    // Do not duplicate them as separate menu actions.
+    var systemLinks=navGroup('СИСТЕМА',[]);
     systemLinks.appendChild($('plslot'));
     var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Память']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];if(item[0]==='shop')b.setAttribute('aria-label','Воспоминания');b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});

@@ -27,12 +27,22 @@ Object.assign(context,{loaded:true,db:{runTransaction:async fn=>fn(tx)},abyssRec
   enqueue:fn=>fn(),purchasePoints:()=>({L:rank}),abyssEvents:()=>events,Date});
 vm.runInContext(functionText('function abyssReconcile(){','// Существующий расчёт читает актуальный снимок'),context);
 await context.abyssReconcile();
-assert.equal(docs.get('cfg/abyss-economy').earned,0,'completed events are baselined');
+assert.equal(docs.get('cfg/abyss-economy').earned,30,'previously earned ranks are granted once; completed events are baselined');
 assert.equal(docs.get('cfg/abyss-economy-backup').legacyCitadelBuys.length,2);
 rank=8;events={...events,'weekly-2026-11-02':2};
 await context.abyssReconcile();
-assert.equal(docs.get('cfg/abyss-economy').earned,7);
+assert.equal(docs.get('cfg/abyss-economy').earned,37);
 await context.abyssReconcile();
-assert.equal(docs.get('cfg/abyss-economy').earned,7,'reload is idempotent');
+assert.equal(docs.get('cfg/abyss-economy').earned,37,'reload is idempotent');
 assert.equal(docs.get('cfg/abyss-economy-backup').rank,7,'original recovery snapshot is preserved');
+// Existing 1.0 saves that were baselined at zero receive the missing ranks
+// once, without changing their previously claimed task/event rewards.
+const oldDocs=new Map([['cfg/abyss-economy-backup',{version:1,rank:3}],['cfg/abyss-economy',{version:1,rank:3,claims:{'daily-old':1},earned:2}]]);
+const oldTx={get:key=>oldDocs.get(key),set:(key,value)=>oldDocs.set(key,structuredClone(value)),list:()=>[]};
+context.db={runTransaction:async fn=>fn(oldTx)};
+rank=3;events={'daily-old':1};
+await context.abyssReconcile();
+assert.equal(oldDocs.get('cfg/abyss-economy').earned,12);
+await context.abyssReconcile();
+assert.equal(oldDocs.get('cfg/abyss-economy').earned,12,'prior-rank compensation is idempotent');
 console.log('Abyss economy: legacy migration, costs, independent balances and idempotent grants pass');
