@@ -403,19 +403,23 @@
           if (js !== undefined && js !== '') { d = JSON.parse(String(js)); }
           out[path] = { d: d, u: Number(row[2]) };
         });
-        return { docs: validDocs(out) };
+        return { docs: validDocs(out), rowCount: j.values.length };
       });
   }
-  function rowsOut() {
+  function rowsOut(previousRowCount) {
     var rows = [['path', 'json', 'u']];
     Object.keys(docs).sort().forEach(function (p) {
       var r = docs[p];
       rows.push([p, r.d == null ? '' : JSON.stringify(r.d), r.u || 0]);
     });
+    // Sheets values.update does not clear cells beyond its submitted range.
+    // Explicitly blank old trailing rows or a later download may resurrect
+    // records removed from the local snapshot.
+    while (rows.length < (previousRowCount || 0)) rows.push(['', '', '']);
     return rows;
   }
-  function writeAll(id) {
-    var rows = rowsOut(), sentRevision = revision;
+  function writeAll(id, previousRowCount) {
+    var rows = rowsOut(previousRowCount), sentRevision = revision;
     return api('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + TAB + '!A1:C' + rows.length + '?valueInputOption=RAW', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ range: TAB + '!A1:C' + rows.length, majorDimension: 'ROWS', values: rows })
@@ -460,7 +464,7 @@
       if (!id) return createFile().then(function () { return { created: true }; });
       return readRows(id).then(function (remote) {
         return merge(remote, { detect: true }).then(function (m) {
-          if (m.remote || dirty) return writeAll(id).then(function () { return m; });
+          if (m.remote || dirty) return writeAll(id, remote.rowCount).then(function () { return m; });
           return m;
         });
       });
