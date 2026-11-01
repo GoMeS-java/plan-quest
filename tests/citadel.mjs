@@ -725,7 +725,7 @@ try {
     const pinch=await p.locator('.citadel-viewport').evaluate(n=>{const castle=document.querySelector('#citadel-castle'),before=castle.clientWidth,t=(id,x)=>new Touch({identifier:id,target:n,clientX:x,clientY:400}),send=(type,a,b)=>n.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,touches:[t(1,a),t(2,b)],targetTouches:[t(1,a),t(2,b)]}));send('touchstart',120,220);send('touchmove',70,270);n.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[],targetTouches:[]}));return {before,after:castle.clientWidth};});assert(pinch.after>pinch.before,'two-finger gesture must enlarge the castle');await p.clock.runFor(500);
     await shellDrawer(p,'left');await p.goBack();assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
     await shellNav(p,'Задания');await p.goBack();assert(!(await p.locator('.citadel-system-dialog').isVisible()));
-    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.goBack();assert(await p.locator('#citadel-castle').isVisible());
+    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');assert(await p.locator('#citadel-castle').isVisible());
     // Finish the room-to-overview animation frame before issuing a new pan.
     await p.clock.runFor(64);
     // Camera offsets are clamped by the real viewport dimensions; compare with the actual scroll position.
