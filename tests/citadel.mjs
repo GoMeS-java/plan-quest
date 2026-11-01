@@ -70,7 +70,7 @@ try {
  });
  await check('0.75 failed daily and equipment writes never acknowledge success or change inventory',async()=>{
   const {page:p,context}=await open();await p.evaluate(()=>__qa.idle());const before=await docs(p);
-  await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{const cur=__qa.S.days['2026-10-30'],q=cur.q.slice();q[0]=true;await __qa.writeDay('2026-10-30',cur,{q});await __qa.equip('outer','coat_black');}finally{Storage.prototype.setItem=original;}});
+  await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{const cur=__qa.S.days['2026-10-30'],q=cur.q.slice();q[0]=true;await __qa.writeDay('2026-10-30',cur,{q});await __qa.equip('outer','coat');}finally{Storage.prototype.setItem=original;}});
   assert.equal(await p.evaluate(()=>__qa.progressSequence()),0);assert.match(await p.locator('#wardrobe-status').innerText(),/не сохранена/);
   const after=await docs(p);assert.deepEqual(after['days/'+date],before['days/'+date]);assert.deepEqual(after['cfg/outfit'],before['cfg/outfit']);await context.close();
  });
@@ -83,6 +83,23 @@ try {
   const saved=(await docs(p))['cfg/outfit'].d;assert.equal(saved.top,chosen);assert.equal(saved.bottom,'pants_brown');assert.equal(saved.outer,'none');assert.deepEqual(saved.future,{keep:true});
   const sheet=await p.evaluate(()=>__qa.sheet());await p.reload();await p.waitForFunction(()=>__qa?.loading());await dismiss(p);assert.equal(await p.evaluate(()=>__qa.sheet()),sheet);assert.equal((await docs(p))['cfg/outfit'].d.top,chosen);
   const selected=p.locator('#wd-top .witem[data-item="'+chosen+'"]');assert.equal(await selected.getAttribute('aria-pressed'),'true');assert.match(await p.locator('#wardrobe-equipped').innerText(),/Надето:/);await context.close();
+ });
+
+ await check('0.75 equipment transactions merge concurrent sibling slots and reject competing same-slot changes',async()=>{
+  for(const conflict of [false,true]){
+   const {page:p,context}=await open();
+   const variants=await p.locator('#wd-top .witem').evaluateAll(ns=>ns.map(n=>n.dataset.item));assert(variants.length>=3);
+   const result=await p.evaluate(async({variants,conflict})=>{
+    const original=PlanDB.runTransaction;let intercepted=false;
+    PlanDB.runTransaction=function(fn){
+     if(intercepted)return original.call(this,fn);intercepted=true;
+     return original.call(this,function(tx){const current=tx.get('cfg/outfit')||{};current.future={preserved:true};if(conflict)current.top=variants[2];else current.bottom='pants_black';tx.set('cfg/outfit',current);}).then(()=>original.call(PlanDB,fn));
+    };
+    try{await __qa.equip('top',variants[1]);await __qa.idle();return PlanSync._docs()['cfg/outfit'].d;}finally{PlanDB.runTransaction=original;}
+   },{variants,conflict});
+   assert.deepEqual(result.future,{preserved:true});assert.equal(result.top,conflict?variants[2]:variants[1]);
+   if(conflict)assert.match(await p.locator('#wardrobe-status').innerText(),/не сохранена/);else assert.equal(result.bottom,'pants_black');await context.close();
+  }
  });
  await check('0.75 responsive progress stays in the existing drawer and room inspection is read-only',async()=>{
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
