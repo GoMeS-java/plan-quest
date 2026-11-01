@@ -54,6 +54,15 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.74 resident arrival clears corridor coordinates and stays inside the destination room',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
+  await p.clock.setSystemTime(new Date('2027-04-16T14:15:05+03:00'));await p.evaluate(()=>__qa.render());
+  const traveller=p.locator('#citadel-castle .citadel-person[data-person="guardian"]');const original=await traveller.elementHandle();assert.equal(await traveller.getAttribute('class'),'citadel-person is-travelling');assert.notEqual(await traveller.evaluate(n=>n.style.top),'');
+  await p.clock.setSystemTime(new Date('2027-04-16T14:16:30+03:00'));await p.evaluate(()=>__qa.render());
+  assert(await traveller.evaluate((n,old)=>n===old,original));assert.equal(await traveller.evaluate(n=>n.style.top),'','a resident must not keep castle coordinates inside a room');assert.equal(await traveller.evaluate(n=>n.style.left),'');
+  assert(await traveller.evaluate(n=>{const a=n.getBoundingClientRect(),r=n.parentElement.getBoundingClientRect();return n.parentElement.dataset.croom==='observatory'&&a.left>=r.left&&a.right<=r.right&&a.top>=r.top&&a.bottom<=r.bottom;}),'arrived resident must be drawn in its destination');await context.close();
+ });
+
  await check('0.74 resident controls and sprites keep focus while other schedules change',async()=>{
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
   const card=p.locator('[data-resident="guardian"] button');await card.focus();const original=await card.elementHandle();

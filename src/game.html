@@ -3937,6 +3937,7 @@ function syncCitadelResidents(level) {
     var label=person.mark+' '+person.name+' · '+state.activity+' · '+CitadelWorld.names[state.node];if(b.textContent!==label)b.textContent=label;
     if(!sprite)sprite=citadelResidentSprite(person,i,false);
     sprite.dataset.mode=state.mode;sprite.title=person.name+' · '+state.activity;sprite.classList.toggle('is-travelling',state.moving);
+    if(!state.moving){sprite.style.removeProperty('left');sprite.style.removeProperty('top');delete sprite.dataset.facing;}
     var parent=state.moving?$('citadel-castle'):room;if(parent&&sprite.parentElement!==parent)parent.appendChild(sprite);
     if(!state.moving&&room&&state.room===citadelSelected){
      if(!inside){inside=citadelResidentSprite(person,i,true);$('citadel-interior-stage').appendChild(inside);}
