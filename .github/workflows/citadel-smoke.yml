@@ -113,8 +113,8 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
-          npm run test:economy
-          npm test
+          python build.py --test
+          npm run test:all
       - name: Isolated Android PWA safety tests
         run: |
           python build.py --test
