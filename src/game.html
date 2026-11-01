@@ -2972,7 +2972,7 @@ html,body{overflow-anchor:none}
       }));
     });
     restoreDrafts(drafts);
-    if(!S.opening){['b-cash','b-card','b-all','b-free'].forEach(function(id){$(id).textContent='нет данных';});$('f2-free').textContent='Баланс не задан';$('f2-acc').textContent='Начальные суммы ещё не записаны.';}
+    if(!S.opening){['b-cash','b-card','b-all','b-free'].forEach(function(id){$(id).textContent='нет данных';});$('f2-free').textContent='Баланс не задан';$('f2-acc').textContent='Начальные суммы ещё не записаны.';$('b-free3').textContent='Начальные остатки не заданы: итоговый баланс пока неизвестен.';$('b-free').style.color='';$('f2-free').style.color='';}
   }
   function niceStep(range) {
     var list = [1, 2, 3, 5, 10, 20, 25];
