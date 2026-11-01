@@ -403,3 +403,15 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 @media(prefers-reduced-motion:reduce){.hero-progress progress{transition:none}}
 @media(min-width:700px){.citadel-inside>.hero-progress{grid-column:1/-1!important}}
 .citadel-shell-drawer .hero-progress{margin:8px 0;box-sizing:border-box;width:100%}
+
+/* 0.76: fail closed before profile loading; only neutral text and wall outline. */
+.citadel-room.is-locked,
+.citadel-room[data-min-rank]:not([data-revealed="true"]){background:#000!important;border-color:#25232c!important;box-shadow:inset 0 0 0 1px #08080b!important;filter:none!important;opacity:1!important}
+.citadel-room.is-locked:before,.citadel-room.is-locked:after,
+.citadel-room[data-min-rank]:not([data-revealed="true"]):before,
+.citadel-room[data-min-rank]:not([data-revealed="true"]):after{display:none!important}
+.citadel-room.is-locked>:not(.citadel-room-name):not(.citadel-lock),
+.citadel-room[data-min-rank]:not([data-revealed="true"])>:not(.citadel-room-name):not(.citadel-lock){display:none!important}
+.citadel-room.is-locked .citadel-room-name{color:#a5a1ae;text-shadow:none;background:#000}
+#citadel-mystery{max-width:min(420px,calc(100vw - 32px));box-sizing:border-box;max-height:calc(100dvh - 32px);overflow:auto;background:#100f18;color:#ded6e7;border:1px solid #655470;padding:20px;border-radius:5px;font:14px/1.6 system-ui,sans-serif}
+#citadel-mystery h2{font-size:18px}#citadel-mystery::backdrop{background:#000b}#citadel-mystery button{min-height:44px;padding:8px 18px}

@@ -54,6 +54,87 @@ function advancedSeed(){
  return seed;
 }
 try {
+ await check('0.76 locked rooms have neutral DOM, accessibility labels and black scenery',async()=>{
+  const {page:p,context}=await open({shell:true});
+  const result=await p.locator('[data-croom].is-locked').evaluateAll(nodes=>nodes.map(n=>({
+   name:n.querySelector('.citadel-room-name').textContent,label:n.getAttribute('aria-label'),title:n.title,
+   bg:getComputedStyle(n).backgroundColor,before:getComputedStyle(n,'::before').display,after:getComputedStyle(n,'::after').display,
+   visibleDetails:Array.from(n.children).filter(c=>!c.matches('.citadel-room-name,.citadel-lock')&&getComputedStyle(c).display!=='none').length
+  })));
+  assert(result.length>=1);for(const r of result){assert.equal(r.name,'Неизведанная комната');assert.match(r.label,/Неизведанная комната, закрыто/);assert.equal(r.title,'');assert.equal(r.bg,'rgb(0, 0, 0)');assert.equal(r.before,'none');assert.equal(r.after,'none');assert.equal(r.visibleDetails,0);}
+  const tree=await p.locator('#citadel-castle').ariaSnapshot();assert(!/Обсерватория|Архив|Мастерская|Трапезная|Казначейство/i.test(tree));
+  assert.equal(await p.locator('.is-locked .citadel-person').count(),0);await context.close();
+ });
+ await check('0.76 mystery dialog preserves selection, charges nothing and supports Back on Android sizes',async()=>{
+  for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
+   const {page:p,context}=await open({width,height,shell:true});await p.clock.runFor(64);await p.evaluate(()=>__qa.idle());
+   const before=await docs(p),selected=await p.locator('[data-croom][aria-pressed="true"]').getAttribute('data-croom');
+   await p.locator('[data-croom="archive"]').dispatchEvent('click');assert(await p.locator('#citadel-mystery').isVisible());
+   assert.match(await p.locator('#citadel-mystery').innerText(),/Неизведанная комната/);assert(!/Архив|стеллаж|летопис/i.test(await p.locator('#citadel-mystery').innerText()));
+   const bounds=await p.locator('#citadel-mystery').boundingBox();assert(bounds.x>=0&&bounds.x+bounds.width<=width+.5&&bounds.y>=0&&bounds.y+bounds.height<=height+.5);
+   assert.equal(await p.locator('[data-croom][aria-pressed="true"]').getAttribute('data-croom'),selected);assert(await p.locator('#citadel-interior').isHidden());
+   await p.goBack();await p.locator('#citadel-mystery').waitFor({state:'hidden'});assert.deepEqual(await docs(p),before);
+   await p.locator('.citadel-shell-camera button').filter({hasText:'К комнате'}).click();await p.clock.runFor(64);
+   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(await p.locator('#citadel-home').evaluate(n=>n.scrollTop),0);
+   if(width===390)await p.screenshot({path:resolve(out,'android-076-mystery-390.png')});await context.close();
+  }
+ });
+ await check('0.76 travel, drawers, activities, building and purchase history do not disclose locked content',async()=>{
+  const seed=structuredClone(initial);seed['buys/citadel-archive-2']={kind:'citadel-room',currency:'abyss',room:'archive',level:2,name:'Цитадель: Новые стеллажи',cost:5};
+  const {page:p,context}=await open({seed,shell:true});await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  const exits=await p.locator('#citadel-exits').innerText();assert.match(exits,/Неизведанная комната/);assert(!/Архив|Мастерская|Обсерватория/i.test(exits));
+  const tree=await p.locator('#citadel-interior').ariaSnapshot();assert(!/Архив|стеллаж|Мастерская|Обсерватория/i.test(tree));
+  await shellDrawer(p,'right');const drawer=await p.locator('.citadel-shell-drawer.right').innerText();assert(!/Архив|стеллаж|Мастерская|Обсерватория/i.test(drawer));await p.goBack();
+  await shellNav(p,'Воспоминания');assert.match(await p.locator('#shop').innerText(),/Улучшение неизведанной комнаты/);assert(!/стеллаж/i.test(await p.locator('#shop').innerText()));await context.close();
+ });
+ await check('0.76 rank unlock uses durable shared progress, reveals old upgrades and never charges again',async()=>{
+  const seed=structuredClone(initial),full=advancedSeed();seed['buys/citadel-archive-2']={kind:'citadel-room',currency:'abyss',room:'archive',level:2,cost:5,name:'Цитадель: Новые стеллажи'};
+  const {page:p,context}=await open({seed,day:'2027-04-16',shell:true});await p.emulateMedia({reducedMotion:'no-preference'});
+  assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');const before=await docs(p);
+  await p.evaluate(async full=>{await PlanDB.runTransaction(tx=>{for(const [key,value]of Object.entries(full))if(key.startsWith('days/')||key.startsWith('per/'))tx.set(key,value);});},full);
+  await p.waitForFunction(()=>document.querySelector('[data-croom="archive"]').dataset.revealed==='true');await dismiss(p);
+  assert.match(await p.locator('[data-croom="archive"] .citadel-room-name').innerText(),/АРХИВ/);
+  assert.equal(await p.locator('[data-croom="archive"]').evaluate(n=>n._reveal?.effect?.getTiming().duration),650);
+  await p.clock.runFor(800);await p.locator('[data-croom="archive"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');
+  assert.equal(await p.locator('.is-locked').count(),0);await p.evaluate(()=>__qa.idle());
+  const after=await docs(p);assert.deepEqual(after['buys/citadel-archive-2'],before['buys/citadel-archive-2']);assert.equal(Object.keys(after).filter(k=>k.startsWith('buys/')).length,1);
+  await p.reload();await p.waitForFunction(()=>document.querySelector('[data-croom="archive"]').dataset.revealed==='true');await dismiss(p);
+  assert.equal(await p.locator('[data-croom="archive"]').evaluate(n=>!!n._reveal),false);await p.locator('[data-croom="archive"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
+ });
+ await check('0.76 failed progress write cannot reveal a room or spend resources',async()=>{
+  const {page:p,context}=await open({day:'2027-04-16',shell:true});const before=await docs(p);
+  const failed=await p.evaluate(async full=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{await PlanDB.runTransaction(tx=>{for(const [key,value]of Object.entries(full))if(key.startsWith('days/')||key.startsWith('per/'))tx.set(key,value);});return false;}catch{return true;}finally{Storage.prototype.setItem=original;}},advancedSeed());assert(failed);
+  assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.deepEqual(await docs(p),before);await context.close();
+ });
+ await check('0.76 old 0.74 and 0.75 save envelopes restore exactly with unlocked rooms and reduced motion',async()=>{
+  for(const version of ['0.74','0.75']){
+   const {page:p,context}=await open({day:'2027-04-16',shell:true});const docsToRestore=Object.fromEntries(Object.entries(advancedSeed()).map(([k,d])=>[k,{d,u:1}]));
+   docsToRestore['cfg/citadel']={d:{selectedRoom:'archive',decor:{archive:'banner'},future:{keep:version}},u:1};
+   await p.evaluate(async({docs,version})=>{await PlanSync.importObj({v:1,appVersion:version,docs},true);},{docs:docsToRestore,version});
+   await p.waitForFunction(()=>document.querySelector('[data-croom="archive"]').dataset.revealed==='true');await dismiss(p);
+   assert.equal(await p.locator('[data-croom="archive"]').evaluate(n=>!!n._reveal),false);
+   assert.deepEqual((await docs(p))['cfg/citadel'].d.future,{keep:version});await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);
+   assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'true');assert.equal(await p.locator('[data-croom="archive"]').evaluate(n=>!!n._reveal),false);await context.close();
+  }
+ });
+ await check('0.76 room visibility updates across two tabs using saved rank, without a separate unlock ledger',async()=>{
+  const {page:p,context}=await open({day:'2027-04-16',shell:true});
+  const other=await context.newPage();await other.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});await other.goto(url);await other.waitForFunction(()=>window.__qa?.loading());await dismiss(other);
+  assert.equal(await other.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');
+  await p.evaluate(async full=>{await PlanDB.runTransaction(tx=>{for(const [key,value]of Object.entries(full))if(key.startsWith('days/')||key.startsWith('per/'))tx.set(key,value);});},advancedSeed());
+  await other.waitForFunction(()=>document.querySelector('[data-croom="archive"]').dataset.revealed==='true');await dismiss(other);
+  assert.deepEqual((await docs(other))['buys/citadel-archive-2'],undefined);await context.close();
+ });
+ await check('0.76 partially unlocked castle matches existing rank gates and NPC routes at every hour',async()=>{
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2026-11-17',shell:true});
+  const rooms=await p.locator('[data-croom]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.croom,rank:CitadelWorld.ranks[n.dataset.croom],open:n.dataset.revealed==='true'})));const rank=await p.evaluate(()=>__qa.points().L);
+  assert(rooms.some(r=>r.open)&&rooms.some(r=>!r.open));for(const room of rooms)assert.equal(room.open,rank>=room.rank);
+  for(const hour of [0,7,10,14,18,21,23]){await p.clock.setSystemTime(new Date('2026-11-17T'+String(hour).padStart(2,'0')+':15:05+03:00'));await p.evaluate(()=>__qa.render());
+   assert.equal(await p.locator('.is-locked .citadel-person').count(),0);
+   assert(await p.evaluate(()=>['guardian','archivist','smith','treasurer'].every(key=>{const s=__qa.npcState(key),rank=__qa.points().L;return s.path.every(id=>CitadelWorld.available(id,rank));})));
+  }await context.close();
+ });
  await check('0.75 committed daily action updates hero feedback, survives reload without extra rewards',async()=>{
   const {page:p,context}=await open({shell:true});
   const initial=await p.evaluate(()=>({points:__qa.points(),seq:__qa.progressSequence()}));

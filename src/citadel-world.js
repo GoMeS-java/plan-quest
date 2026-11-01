@@ -6,7 +6,7 @@
  var names={throne:'Тронный зал',observatory:'Обсерватория',rest:'Личные покои',study:'Кабинет',archive:'Архив',forge:'Мастерская',gatehouse:'Караульная',refectory:'Трапезная',cloister:'Крытая галерея',vault:'Казначейство'};
  var graph={};
  function link(a,b){(graph[a]||(graph[a]=[])).push(b);(graph[b]||(graph[b]=[])).push(a);}
- floors.forEach(function(rooms,i){var hall='hall-'+i;names[hall]=['Верхняя галерея','Жилой коридор','Коридор ремёсел','Вестибюль','Подземный переход'][i];rooms.forEach(function(r){link(r,hall);});if(i)link('hall-'+(i-1),hall);});
+ floors.forEach(function(rooms,i){var hall='hall-'+i;names[hall]=['Верхняя галерея','Жилой коридор','Каменный коридор','Вестибюль','Подземный переход'][i];rooms.forEach(function(r){link(r,hall);});if(i)link('hall-'+(i-1),hall);});
  function available(id,rank){return !!graph[id]&&(!ranks[id]||rank>=ranks[id]);}
  function route(from,to,rank){
   if(!available(from,rank)||!available(to,rank))return [];
