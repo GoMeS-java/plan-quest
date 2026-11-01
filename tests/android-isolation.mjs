@@ -65,6 +65,8 @@ try{
  const saved=await p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));await ctx.setOffline(true);await p.reload();await dismiss();await p.waitForFunction(()=>!!window.PlanSync);
  await p.waitForFunction(expected=>document.querySelector('#hero').toDataURL()===expected,offlineHero);
  assert.deepEqual(await p.evaluate(()=>PlanSync._docs()),saved);
+ await p.evaluate(async()=>{const db=await claude.use('db'),day=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Moscow'});await db.doc('tx/offline-072').set({amt:21.45,kind:'out',acc:'cash',date:day,ts:3,counted:true});await db.doc('days/'+day).update({steps:5000});});
+ await p.reload();await dismiss();await p.waitForFunction(()=>PlanSync._docs()['tx/offline-072']?.d?.amt===21.45);assert(await p.evaluate(()=>Object.entries(PlanSync._docs()).some(([k,r])=>k.startsWith('days/')&&r.d?.steps===5000)));
  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),production);
  assert(await p.evaluate(()=>caches.has('plan-unrelated-production-cache')));
  assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
