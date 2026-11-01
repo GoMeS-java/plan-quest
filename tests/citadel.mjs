@@ -64,6 +64,16 @@ try {
    if(width===1280)await p.screenshot({path:resolve(out,'final-074-desktop-interior.png')});await context.close();
   }
  });
+ await check('0.74 final furniture regions remain touchable in every existing room',async()=>{
+  for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390],[1280,900]]){
+   const {page:p,context}=await open({width,height,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+   for(const room of await p.locator('[data-croom]').evaluateAll(nodes=>nodes.map(n=>n.dataset.croom))){
+    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);const object=p.locator('#citadel-interior-object'),box=await object.boundingBox(),stage=await p.locator('#citadel-interior-stage').boundingBox();assert(box.width>=44&&box.height>=44);assert(box.x>=stage.x&&box.x+box.width<=stage.x+stage.width&&box.y>=stage.y&&box.y+box.height<=stage.y+stage.height);
+    await object.click();assert.equal(await object.getAttribute('data-inspected'),'true');assert.match(await p.locator('#citadel-object-status').innerText(),/:/);
+   }
+   if(width===390)await p.screenshot({path:resolve(out,'final-074-interaction-390.png')});await context.close();
+  }
+ });
  await check('0.74 final interrupted walking freezes position and faces the actual next target',async()=>{
   const {page:p,context}=await open({shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});await p.evaluate(()=>__qa.idle());const before=await docs(p);
   // Freeze the finite WAAPI walk at a deterministic point, then redirect to a

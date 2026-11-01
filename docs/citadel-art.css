@@ -371,3 +371,16 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 @keyframes citadelSourceFlicker{0%,100%{opacity:.8;transform:scaleY(.9)}37%{opacity:1;transform:scaleY(1.08)}71%{opacity:.65;transform:scaleY(.95)}}
 @keyframes citadelSourceGlow{0%,100%{opacity:.65}50%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.citadel-interior-stage .citadel-light-source{animation:none!important}.citadel-interior-object{transition:none!important}}
+/* Object hit regions follow the existing furniture instead of an empty generic
+   rectangle on the right. Percentage geometry survives tier and viewport changes. */
+.citadel-interior-stage{--object-x:40%;--object-y:42%;--object-w:23%;--object-h:38%}
+.citadel-interior-stage[data-room="rest"]{--object-x:29%;--object-y:62%;--object-w:36%;--object-h:20%}
+.citadel-interior-stage[data-room="study"]{--object-x:41%;--object-y:53%;--object-w:28%;--object-h:29%}
+.citadel-interior-stage[data-room="observatory"]{--object-x:46%;--object-y:30%;--object-w:23%;--object-h:39%}
+.citadel-interior-stage[data-room="archive"]{--object-x:67%;--object-y:29%;--object-w:24%;--object-h:45%}
+.citadel-interior-stage[data-room="forge"]{--object-x:34%;--object-y:45%;--object-w:26%;--object-h:33%}
+.citadel-interior-stage[data-room="gatehouse"]{--object-x:35%;--object-y:30%;--object-w:29%;--object-h:45%}
+.citadel-interior-stage[data-room="refectory"]{--object-x:23%;--object-y:59%;--object-w:54%;--object-h:22%}
+.citadel-interior-stage[data-room="cloister"]{--object-x:66%;--object-y:20%;--object-w:22%;--object-h:55%}
+.citadel-interior-stage[data-room="vault"]{--object-x:59%;--object-y:56%;--object-w:24%;--object-h:26%}
+.citadel-interior-stage .citadel-interior-object{left:var(--object-x);top:var(--object-y);right:auto;bottom:auto;width:var(--object-w);height:var(--object-h);min-width:44px;min-height:44px}
