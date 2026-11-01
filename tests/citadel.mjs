@@ -130,7 +130,7 @@ try {
  });
  await check('0.72 unknown opening balances do not hide a new account operation history',async()=>{
   const {page:p,context}=await open({seed:{},shell:true});await shellNav(p,'Финансы');await p.locator('#amt').fill('10,50');await p.locator('#what').fill('Synthetic first expense');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.length===1);
-  assert.match(await p.locator('#log').innerText(),/Synthetic first expense/);assert.equal(await p.locator('#b-cash').innerText(),'нет данных');await context.close();
+  assert.match(await p.locator('#log').innerText(),/Synthetic first expense/);assert.equal(await p.locator('#b-cash').innerText(),'нет данных');assert.match(await p.locator('#b-free3').innerText(),/баланс пока неизвестен/);assert.equal(await p.locator('#b-free').evaluate(n=>n.style.color),'');await context.close();
  });
  await check('0.72 restores an unchanged synthetic 0.71 backup with finance tasks and shared body state',async()=>{
   const copy=JSON.parse(await readFile(resolve('tests/fixtures/backup-071-synthetic.json'),'utf8'));
