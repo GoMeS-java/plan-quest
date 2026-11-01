@@ -100,9 +100,9 @@ try {
   await p.locator('[data-room-moment]').click();assert.match(await p.locator('#citadel-object-status').innerText(),/Страж/);await context.close();
  });
  await check('0.77 treasury reactions acknowledge an existing essence conflict without optimistic reassurance',async()=>{
-  const seed=advancedSeed();seed['cfg/abyss-economy']={version:1,rank:100000,earned:-100000,claims:{}};
+  const seed=advancedSeed();seed['cfg/abyss-economy']={version:1,rank:100000,earned:-100000,claims:{}};seed['cfg/citadel']={selectedRoom:'vault',decor:{}};
   const {page:p,context}=await open({shell:true,seed,day:'2027-04-16'});
-  await p.evaluate(()=>{__qa.move('vault');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.clock.runFor(64);await p.evaluate(()=>{__qa.move('vault');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());const before=await docs(p);
   await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
   assert.match(text,/Расходы требуют сверки/);assert(!/Записи сходятся/.test(text));
   await p.locator('#citadel-interior-stage [data-person="treasurer"]').click();assert.match(await p.locator('#citadel-room-speech').innerText(),/несогласованные расходы/);
@@ -1643,4 +1643,4 @@ try {
   const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'allow'});await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.goto(url);await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await context.setOffline(true);await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('cfg/citadel').set({selectedRoom:'study',decor:{study:'banner'}});});await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.waitForFunction(()=>!!window.__citadelShell&&!!document.querySelector('[data-croom="study"][aria-pressed="true"]'));await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-decoration').getAttribute('data-decor'),'banner');await context.close();
  });
  assert.deepEqual(errors,[],'browser runtime errors');console.log(`PASS ${passed} scenario groups; no runtime errors`);
-} catch(error) {console.error('FAIL',currentCheck,error.name,String(error.message).slice(0,2800),String(error.stack).split('\n').find(line=>/citadel\.mjs:\d/.test(line))||'');process.exitCode=1;} finally {await browser.close();await new Promise(r=>server.close(r));}
+} catch(error) {console.error('Runtime errors',errors);console.error('FAIL',currentCheck,error.name,String(error.message).slice(0,2800),String(error.stack).split('\n').find(line=>/citadel\.mjs:\d/.test(line))||'');process.exitCode=1;} finally {await browser.close();await new Promise(r=>server.close(r));}
