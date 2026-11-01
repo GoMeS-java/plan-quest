@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.76";window.APP_BUILD="d082619a53b7";</script><script src="config.js"></script><script src="localdb.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="0.76";window.APP_BUILD="690b3a8fc098";</script><script src="config.js"></script><script src="localdb.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -960,7 +960,7 @@ html,body{overflow-anchor:none}
     </div>
     <h2 id="look-h" hidden>ОФОРМЛЕНИЕ</h2>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 0.76</b><span>Сборка d082619a53b7</span></div>
+    <div class="release-stamp"><b>Версия 0.76</b><span>Сборка 690b3a8fc098</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -4781,7 +4781,7 @@ function renderAllInner() {
       var panel=$(id);if(!panel)return;
       moved=panel;origin=panel.parentNode;anchor=panel.nextSibling;
       dialog.querySelector('.citadel-system-content').appendChild(panel);dialog.querySelector('#citadel-system-title').textContent=label;
-      if(!dialog.open){history.pushState(Object.assign({},history.state,{citadelMystery:true}),'');dialog.showModal();}dialog.querySelector('.citadel-system-content').scrollTop=0;pushOverlay('system');
+      if(!dialog.open)dialog.showModal();dialog.querySelector('.citadel-system-content').scrollTop=0;pushOverlay('system');
     }
     [['overview','Цитадель'],['wardrobe','Профиль'],['today','Задания'],['week','Хроника'],['money','Финансы'],['spend','Траты'],['avito','Авито'],['shop','Воспоминания'],['diet','Тело'],['goals','Путь'],['achievements','Достижения'],['settings','Настройки']].forEach(function(entry){
       var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};nav.appendChild(b);

@@ -4779,7 +4779,7 @@ function renderAllInner() {
       var panel=$(id);if(!panel)return;
       moved=panel;origin=panel.parentNode;anchor=panel.nextSibling;
       dialog.querySelector('.citadel-system-content').appendChild(panel);dialog.querySelector('#citadel-system-title').textContent=label;
-      if(!dialog.open){history.pushState(Object.assign({},history.state,{citadelMystery:true}),'');dialog.showModal();}dialog.querySelector('.citadel-system-content').scrollTop=0;pushOverlay('system');
+      if(!dialog.open)dialog.showModal();dialog.querySelector('.citadel-system-content').scrollTop=0;pushOverlay('system');
     }
     [['overview','Цитадель'],['wardrobe','Профиль'],['today','Задания'],['week','Хроника'],['money','Финансы'],['spend','Траты'],['avito','Авито'],['shop','Воспоминания'],['diet','Тело'],['goals','Путь'],['achievements','Достижения'],['settings','Настройки']].forEach(function(entry){
       var b=document.createElement('button');b.type='button';b.textContent=entry[1];b.dataset.section=entry[0];b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}if(entry[0]==='overview'){closeSystem();if(history.state?.citadelOverlay==='room')history.back();citadelSetArtView('overview');viewport.focus();}else showSystem(entry[0],entry[1]);};nav.appendChild(b);
