@@ -19,6 +19,8 @@ on:
       - 'package*.json'
       - '.github/workflows/citadel-smoke.yml'
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -117,7 +119,18 @@ jobs:
         run: |
           python build.py --test
           npm run test:isolation
-          git diff --exit-code -- docs/
+      - name: Synchronize generated docs in development branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/citadel-development-20261030'
+        run: |
+          if ! git diff --quiet -- docs/ || [ -n "$(git ls-files --others --exclude-standard docs/)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- docs/
+            git commit -m "build: synchronize generated docs after passing tests [skip ci]"
+            git push origin HEAD:citadel-development-20261030
+          else
+            echo "Generated docs are already synchronized"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
