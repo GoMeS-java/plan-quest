@@ -106,6 +106,17 @@ try {
   await Promise.all([p,other].map(tab=>tab.waitForFunction(()=>{const d=JSON.parse(localStorage.getItem('plan.store.v1')).docs['trial/2026-10-30']?.d;return d?.sq===35&&d?.pu===10;})));
   const trial=await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.store.v1')).docs['trial/2026-10-30'].d);assert.equal(trial.sq,35);assert.equal(trial.pu,10);await context.close();
  });
+ await check('0.72 stale same-field progress rejects visibly while sibling updates and retries succeed',async()=>{
+  const {page:p,context}=await open();const original=await p.evaluate(()=>structuredClone(__qa.S.days['2026-10-30']));
+  await write(p,'days/'+date,{...original,steps:6000,futureField:'keep'});
+  assert.equal(await p.evaluate(old=>__qa.writeDay('2026-10-30',old,{steps:3000}),original),false);
+  assert.equal((await docs(p))['days/'+date].d.steps,6000);assert.match(await p.locator('#toast').innerText(),/Запись уже изменена/);
+  assert.equal(await p.evaluate(old=>__qa.writeDay('2026-10-30',old,{kcal:1900}),original),true);
+  assert.equal((await docs(p))['days/'+date].d.steps,6000);assert.equal((await docs(p))['days/'+date].d.kcal,1900);assert.equal((await docs(p))['days/'+date].d.futureField,'keep');
+  await p.waitForFunction(()=>__qa.S.days['2026-10-30'].steps===6000);
+  assert.equal(await p.evaluate(()=>__qa.writeDay('2026-10-30',__qa.S.days['2026-10-30'],{steps:7000})),true);
+  await p.reload();await p.waitForFunction(()=>__qa.loading());assert.equal((await docs(p))['days/'+date].d.steps,7000);await context.close();
+ });
  await check('0.72 exercise repeats respect the existing gap while separate types survive rapid input',async()=>{
   const {page:p,context}=await open();await p.evaluate(()=>{__qa.exercise('squat',10);__qa.exercise('pushup',10);__qa.exercise('squat',10);return __qa.idle();});
   let record=(await docs(p))['per/'+date].d;assert.equal(record.squat.length,1);assert.equal(record.pushup.length,1);

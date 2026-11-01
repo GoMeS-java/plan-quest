@@ -4130,9 +4130,12 @@ function renderAllInner() {
       Object.keys(changes).forEach(function(field){
         if(field==='q'){var q=(next.q||[]).slice();changes.q.forEach(function(value,i){if(!!value!==!!(previous.q||[])[i])q[i]=!!value;});next.q=q;}
         else if(field==='ex'){var ex=Object.assign({},next.ex||{}),before=previous.ex||{};Object.keys(Object.assign({},before,changes.ex)).forEach(function(key){if(before[key]!==changes.ex[key]){if(Object.prototype.hasOwnProperty.call(changes.ex,key))ex[key]=changes.ex[key];else delete ex[key];}});if(Object.keys(ex).length)next.ex=ex;else delete next.ex;}
-        else next[field]=changes[field];
-      });tx.set('days/'+k,next);
-    });}).catch(function(){var r=savedRecord('days/'+k);S.days[k]=r||{};renderAll();});
+        else {
+          if(next[field]!==previous[field]&&next[field]!==changes[field]){var conflict=new Error('Progress changed');conflict.code='record_changed';throw conflict;}
+          next[field]=changes[field];
+        }
+      });tx.set('days/'+k,next);return true;
+    });}).catch(function(){var r=savedRecord('days/'+k);S.days[k]=r||{};renderAll();return false;});
   }
   function setTier(i, key, m) {
     if (!db) return;

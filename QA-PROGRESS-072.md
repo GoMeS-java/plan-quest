@@ -15,6 +15,7 @@ A separate real defect existed in recordRare: it marked the in-memory state befo
 - The UI observes committed snapshots rather than an optimistic flag. Failures reject to callers and retain the existing storage error reporting. Fire-and-forget event callers consume the already-reported rejection.
 - The existing regression awaits initial readiness, both operation promises and actual storage convergence in both tabs. It does not increase a timeout or add a sleep.
 - Twelve additional operation orders use an explicitly held/released real Web Lock. They verify both flags, nested unknown fields, weekly and daily progress, offline writes, replay and reload.
+- Scalar daily progress uses the observed field as a compare-and-set guard. A conflicting stale value is rejected through the existing record_changed message; sibling fields and retries remain supported.
 - A separate quota-error regression verifies rejection, unchanged durable/in-memory progress and successful retry/reload.
 
 ## Validation
