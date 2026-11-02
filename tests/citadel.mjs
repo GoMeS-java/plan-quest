@@ -72,6 +72,16 @@ function advancedSeed(){
 }
 try {
 
+ await check('1.1 actual personal quarters visuals at all three room levels',async()=>{
+  const {page:p,context}=await open({width:390,height:844,mobile:true,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  await p.locator('[data-croom="rest"]').click();
+  for(const level of [1,2,3]){
+   if(level>1){await p.evaluate(()=>__qa.upgrade('rest',1));await p.waitForFunction(level=>document.querySelector('#citadel-interior-stage').dataset.level===String(level),level);}
+   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'v11-real-rest-level-'+level+'.png')});
+  }
+  await context.close();
+ });
+
  await check('1.1 profile shows current progress, three achievement slots and a compact wardrobe',async()=>{
   const {page:p,context}=await open({shell:true});
   const before=await docs(p);
