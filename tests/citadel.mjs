@@ -72,6 +72,95 @@ function advancedSeed(){
 }
 try {
 
+ await check('1.1 lighting follows real apertures, phases and restored sources without game writes',async()=>{
+  const {page:p,context}=await open({width:960,height:1000,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  for(const room of ['rest','forge','vault','observatory','cloister']){
+   await p.evaluate(async room=>{__qa.move(room);document.querySelector('#citadel-enter').click();await __qa.upgrade(room,1);await __qa.idle();await __qa.upgrade(room,2);await __qa.idle();},room);
+  }
+  await p.waitForFunction(()=>__qa.cosmeticsIdle());await p.evaluate(()=>__qa.idle());
+  const before=await docs(p);
+  for(const hour of [14,1]){
+   await p.clock.setSystemTime(new Date('2027-04-16T'+String(hour).padStart(2,'0')+':00:00+03:00'));await p.evaluate(()=>__qa.render());await dismiss(p);
+   for(const room of ['rest','forge','vault','observatory','cloister']){
+    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);
+    const sample=await p.locator('#citadel-interior-stage').evaluate(n=>({phase:n.dataset.phase,ambient:parseFloat(getComputedStyle(n).getPropertyValue('--ambient')),filter:getComputedStyle(n,'::before').filter,layer:getComputedStyle(n.querySelector('.citadel-daylight')).display,mask:getComputedStyle(n.querySelector('.citadel-daylight'),'::before').maskImage,flame:getComputedStyle(n.querySelector('.citadel-room-light')).backgroundImage,animation:getComputedStyle(n.querySelector('.citadel-room-light')).animationName}));
+    assert.equal(sample.phase,hour===14?'ДЕНЬ':'НОЧЬ');assert.equal(sample.ambient,hour===14?1:.66);
+    assert.equal(sample.filter,hour===14?'brightness(1)':'brightness(0.66)','actual scene brightness follows time, not only the variable');
+    if(room==='vault')assert.equal(sample.layer,'none','closed vault never gains a false window');else assert(sample.mask.includes(room+'-daylight.svg'));
+    assert.equal(sample.animation,'none','reduced motion stops local light flicker');
+    if(room==='rest'||room==='forge')assert(sample.flame.includes('radial-gradient'),'real restored hearth illuminates nearby floor');
+    await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,`v11-light-${room}-${hour===14?'day':'night'}.png`)});
+   }
+  }
+  await p.evaluate(()=>__qa.idle());const after=await docs(p);
+  assert.deepEqual(after['cfg/citadel']?.d,before['cfg/citadel']?.d,'final selected room and decoration remain unchanged');
+  delete before['cfg/citadel'];delete after['cfg/citadel'];assert.deepEqual(after,before,'time and atmosphere do not change gameplay records');
+  await p.evaluate(()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();});
+  await p.evaluate(()=>document.documentElement.dataset.citadelBg='rain');
+  const rain=await p.locator('.citadel-interior-stage .citadel-daylight').evaluate(n=>{document.documentElement.dataset.citadelBg='rain';return {mask:getComputedStyle(n,'::after').maskImage,mode:getComputedStyle(n,'::after').maskMode,events:getComputedStyle(n).pointerEvents,opacity:getComputedStyle(n,'::after').opacity};});
+  assert(rain.mask.includes('rest-apertures.svg'));assert.equal(rain.mode,'luminance');assert.equal(rain.events,'none');assert(Number(rain.opacity)>0);
+  await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'v11-light-rest-rain.png')});
+  await context.close();
+ });
+
+ await check('1.1 profile journey shows actual records, shared equipment and earned collection categories',async()=>{
+  const seed=structuredClone(initial);seed['days/2026-10-29']={q:Array(10).fill(true),steps:6500};seed['weights/new']={kg:142.5,date:'2026-10-30',ts:2};
+  const {page:p,context}=await open({shell:true,seed});const before=await docs(p);
+  await shellNav(p,'Профиль');assert.equal(await p.locator('#profile-week .profile-day').count(),7);assert.equal(await p.locator('#profile-equipment .profile-equipped').count(),3);assert.equal(await p.locator('#profile-collections button').count(),4);
+  assert.match(await p.locator('#profile-body-history').innerText(),/142.5 кг/);assert.match(await p.locator('#profile-body-history').innerText(),/-1.2 кг/);
+  assert(await p.locator('.profile-day[data-date="2026-10-29"]').getAttribute('aria-label').then(t=>t.includes('6500')));
+  const meters=await p.locator('#profile-rank-meter').evaluate(n=>({value:n.value,max:n.max})),points=await p.evaluate(()=>__qa.points());assert.equal(meters.value,points.P);assert.equal(meters.max,points.need);
+  const sprites=await p.evaluate(()=>{const a=document.querySelector('#profile-hero'),b=document.querySelector('#citadel-interior-hero');return [a.toDataURL(),b.toDataURL()];});assert.equal(sprites[0],sprites[1],'profile uses current body geometry and exactly the equipped hero');
+  await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-profile-hero-mobile.png')});
+  await p.locator('.profile-journey').scrollIntoViewIfNeeded();await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-profile-journey-mobile.png')});
+  assert.deepEqual(await docs(p),before,'history and category navigation must not write progress');
+  const category=p.locator('#profile-collections button:not(:disabled)').first();if(await category.count()){await category.click();assert(await p.locator('#setup').isVisible());assert.equal(await p.locator('#looklist .look-group[open]').count(),1);await p.locator('#setup-x').click();}
+  await write(p,'days/2026-10-29',{q:Array(10).fill(false),steps:2200});
+  assert.match(await p.locator('.profile-day[data-date="2026-10-29"]').getAttribute('aria-label'),/задания 0 из .*шаги 2200/,'corrected existing day updates the profile');
+  await write(p,'weights/new',{kg:145,date:'2026-10-30',ts:3});assert.match(await p.locator('#profile-body-history').innerText(),/145 кг/);assert.match(await p.locator('#profile-body-history').innerText(),/\+1.3 кг/);
+  assert(await p.evaluate(()=>document.querySelector('#profile-hero').toDataURL()===document.querySelector('#citadel-interior-hero').toDataURL()),'corrected body record updates both shared sprites');
+  await p.locator('[data-profile-path="today"]').click();assert(await p.locator('#today').isVisible());
+  await context.close();
+ });
+
+ await check('1.1 interior residents stand on reachable floor and conversations approach beside them',async()=>{
+  const {page:p,context}=await open({width:390,height:844,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  const before=await docs(p);delete before['cfg/citadel'];
+  for(const key of ['guardian','archivist','smith','treasurer']){
+   const state=await p.evaluate(key=>__qa.npcState(key),key);assert(!state.moving);
+   await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},state.room);
+   const actor=p.locator('#citadel-interior-stage [data-person="'+key+'"]');await actor.waitFor({state:'visible'});
+   const floor=await actor.evaluate(n=>{const s=n.closest('.citadel-interior-stage'),point={x:Number(n.dataset.floorX),y:Number(n.dataset.floorY)},nearest=CitadelSpace.nearest(s.dataset.room,Number(s.dataset.level),point);return {point,nearest};});assert.deepEqual(floor.point,floor.nearest,'NPC feet stay outside furniture');assert(floor.point.y<=306&&floor.point.y>=228);
+   await actor.focus();await p.keyboard.press('Enter');assert(await p.locator('#citadel-room-conversation').isVisible());
+   const spacing=await p.locator('#citadel-interior-stage').evaluate((n,key)=>{const a=n.querySelector('[data-person="'+key+'"]'),h=n.querySelector('.citadel-hero-sprite'),ar=a.getBoundingClientRect(),hr=h.getBoundingClientRect();return Math.abs(ar.left+ar.width/2-hr.left-hr.width/2)/n.clientWidth;},key);assert(spacing>.04,'hero approaches beside the resident');
+   await p.locator('#citadel-room-npc-close').click();
+  }
+  await p.evaluate(()=>__qa.idle());const after=await docs(p);delete after['cfg/citadel'];assert.deepEqual(after,before,'resident geometry does not alter schedules or progress');await context.close();
+ });
+
+ await check('1.1 earned aura selection is shared by profile and Citadel and survives reload',async()=>{
+  const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});
+  await shellNav(p,'Настройки');const auras=p.locator('#looklist .looksec').filter({has:p.locator('b').filter({hasText:/^АУРА ПЕРСОНАЖА$/})});
+  await auras.locator('button.chip').nth(1).click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>!!document.documentElement.dataset.aura);
+  const choice=await p.evaluate(()=>document.documentElement.dataset.aura),before=await docs(p);await p.locator('#setup-x').click();await shellNav(p,'Профиль');
+  const filters=await p.evaluate(()=>[document.querySelector('#profile-hero'),document.querySelector('.citadel-interior-stage .citadel-hero-sprite')].map(n=>getComputedStyle(n).filter));assert.equal(filters[0],filters[1]);assert(!filters[0].includes('rgba(0, 0, 0, 0)'),'selected earned aura is visible in both views');
+  await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-profile-aura-mobile.png')});
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),choice);
+  const after=await docs(p);assert.equal(after['cfg/citadel']?.d.selectedRoom||'rest',before['cfg/citadel']?.d.selectedRoom||'rest');assert.deepEqual(after['cfg/citadel']?.d.decor||{},before['cfg/citadel']?.d.decor||{});delete before['cfg/citadel'];delete after['cfg/citadel'];assert.deepEqual(after,before,'appearance reload cannot grant or spend gameplay resources');await context.close();
+  const locked=await open({shell:true,seed:{...initial,'cfg/look':{aura:'au_warm'}}});assert.equal(await locked.page.evaluate(()=>document.documentElement.dataset.aura),'','unearned selection remains unavailable');await locked.context.close();
+ });
+
+ await check('1.1 restored room responses animate visible light once and respect reduced motion',async()=>{
+  const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.locator('[data-croom="rest"]').click();
+  for(const tier of [2,3]){
+   await p.evaluate(tier=>__qa.upgrade('rest',tier-1),tier);await p.waitForFunction(tier=>document.querySelector('#citadel-interior-stage').dataset.level===String(tier),tier);await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());const before=await docs(p);
+   await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('[data-room-inspect]').click();await p.locator('[data-room-inspect]').click();
+   const response=await p.locator('#citadel-interior-stage').evaluate(n=>{const light=n.querySelector('.citadel-room-light'),old=n.querySelector('.citadel-interior-renovation');return {visible:getComputedStyle(light).display!=='none',light:light.getAnimations().filter(a=>!a.animationName).length,hidden:old.getAnimations().filter(a=>!a.animationName).length};});assert(response.visible);assert.equal(response.light,1);assert.equal(response.hidden,0);
+   await p.emulateMedia({reducedMotion:'reduce'});await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-stage .citadel-room-light').evaluate(n=>n.getAnimations().filter(a=>!a.animationName).length),0);assert.deepEqual(await docs(p),before,'visual response cannot charge resources');
+  }
+  await context.close();
+ });
+
  await check('1.1 actual personal quarters visuals at all three room levels',async()=>{
   const {page:p,context}=await open({width:390,height:844,mobile:true,shell:true,seed:advancedSeed(),day:'2027-04-16'});
   await p.locator('[data-croom="rest"]').click();

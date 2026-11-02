@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="1277c293759e";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="7f6c3e1f9158";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -862,11 +862,15 @@ html,body{overflow-anchor:none}
       <div class="profile-heading"><h2>ПРОФИЛЬ СПЯЩЕГО</h2><span id="profile-rank">Ранг —</span></div>
       <div class="profile-stage"><div id="profile-title" class="profile-title">СПЯЩИЙ</div><div class="profile-hero-wrap"><canvas id="profile-hero" width="32" height="52" aria-label="Твой персонаж в выбранной экипировке"></canvas></div><div class="profile-name">СПЯЩИЙ</div></div>
       <div class="profile-stats" aria-label="Текущий прогресс"><div><small>Осколки</small><b id="profile-shards">—</b></div><div><small>Ядра души</small><b id="profile-cores">—</b></div><div><small>Эссенция</small><b id="profile-essence">—</b></div></div>
+      <div class="profile-rank-path"><label for="profile-rank-meter" id="profile-rank-next">Путь к следующему рангу</label><progress id="profile-rank-meter" value="0" max="1"></progress></div>
+      <div id="profile-equipment" class="profile-equipment" aria-label="Надетая экипировка"></div>
       <div class="profile-section-title">ИЗБРАННЫЕ ДОСТИЖЕНИЯ <small>3 места</small></div>
       <div id="profile-showcase" class="profile-showcase" aria-label="Три избранных достижения"></div>
       <div id="profile-picker" class="profile-picker" hidden><div class="profile-picker-head"><b>ВЫБРАТЬ ДОСТИЖЕНИЕ</b><button type="button" id="profile-picker-close">✕</button></div><div id="profile-achievements" class="profile-achievements"></div></div>
       <div class="profile-section-title">СТАТИСТИКА ПУТИ</div>
       <div class="profile-stats profile-history"><div><small>Дней с записями</small><b id="profile-days">—</b></div><div><small>Отметок заданий</small><b id="profile-checks">—</b></div><div><small>Получено достижений</small><b id="profile-ach-count">—</b></div></div>
+      <section class="profile-journey" aria-label="Последние семь дней"><div class="profile-section-title">ПОСЛЕДНИЕ СЕМЬ ДНЕЙ <small id="profile-week-summary"></small></div><div id="profile-week" class="profile-week"></div><p id="profile-body-history" class="hint"></p><div class="profile-actions"><button type="button" data-profile-path="today">К ЗАДАНИЯМ</button><button type="button" data-profile-path="week">К ХРОНИКЕ НЕДЕЛИ</button></div></section>
+      <div class="profile-section-title">ПОЛУЧЕННЫЕ ОФОРМЛЕНИЯ</div><div id="profile-collections" class="profile-collections"></div>
       <div class="profile-actions"><button type="button" id="profile-title-open">ВЫБРАТЬ ЗВАНИЕ</button><button type="button" id="profile-gear-open">ГАРДЕРОБ</button></div>
       <div id="profile-titles" class="profile-picker" hidden></div>
     </div>
@@ -1012,7 +1016,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка 1277c293759e</span></div>
+    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка 7f6c3e1f9158</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -2084,6 +2088,14 @@ html,body{overflow-anchor:none}
     if (!t && list.length) t = list[list.length - 1].title;
     nt.textContent = t || 'СПЯЩИЙ';
   }
+  function lookGroupDefinitions() {
+    return [
+      { name: 'ПЕРСОНАЖ', note: 'Титул и аура твоего единого героя.', cats: ['title', 'aura'] },
+      { name: 'ЦИТАДЕЛЬ И УБЕЖИЩЕ', note: 'Наследие убежища остаётся доступным в комнате героя. Оформление Цитадели развивается вместе с ней.', cats: ['bg', 'frame'] },
+      { name: 'ИНТЕРФЕЙС', note: 'Цвета, шкалы и другие детали экрана.', cats: ['theme', 'coin', 'bar', 'pat', 'font', 'chk', 'tab'] },
+      { name: 'ЗВУКИ И ЭФФЕКТЫ', note: 'Косметические эффекты касаний и новых рангов.', cats: ['fx', 'lv', 'snd'] }
+    ];
+  }
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
     if (!box) return;
@@ -2098,12 +2110,7 @@ html,body{overflow-anchor:none}
     if ($('look-none')) $('look-none').hidden = any;
     if (!any) return;
     var look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
-    var groups = [
-      { name: 'ПЕРСОНАЖ', note: 'Титул и аура твоего единого героя.', cats: ['title', 'aura'] },
-      { name: 'ЦИТАДЕЛЬ И УБЕЖИЩЕ', note: 'Наследие убежища остаётся доступным в комнате героя. Оформление Цитадели развивается вместе с ней.', cats: ['bg', 'frame'] },
-      { name: 'ИНТЕРФЕЙС', note: 'Цвета, шкалы и другие детали экрана.', cats: ['theme', 'coin', 'bar', 'pat', 'font', 'chk', 'tab'] },
-      { name: 'ЗВУКИ И ЭФФЕКТЫ', note: 'Косметические эффекты касаний и новых рангов.', cats: ['fx', 'lv', 'snd'] }
-    ];
+    var groups = lookGroupDefinitions();
     function groupFor(cat) { return groups.filter(function (g) { return g.cats.indexOf(cat) !== -1; })[0]; }
     groups.forEach(function (g, index) {
       var d = el('details', 'look-group'); d.open = openGroups.length ? !!openGroups[index] : index === 0;
@@ -3369,6 +3376,29 @@ html,body{overflow-anchor:none}
     S.look=look;try{localStorage.setItem('look',JSON.stringify(look));}catch(e){}
     renderProfile();enqueue(function(){return db.doc('cfg/look').set(look);});
   }
+  function renderProfileJourney(p){
+    var meter=$('profile-rank-meter');meter.max=Math.max(1,p.need);meter.value=Math.max(0,Math.min(p.P,p.need));
+    $('profile-rank-next').textContent='ДО РАНГА '+(p.L+1)+' · '+Math.max(0,p.need-p.P)+' ОСКОЛКОВ';
+    var ids=outfitIds(),items=allItems(),equipment=$('profile-equipment');clear(equipment);
+    [['outer','Плащ'],['top','Верх'],['bottom','Низ']].forEach(function(row){var item=items.find(function(it){return it.id===ids[row[0]];});var chip=el('div','profile-equipped');chip.appendChild(el('small',null,row[1]));chip.appendChild(el('span',null,item?item.name:'Без верхней одежды'));equipment.appendChild(chip);});
+    var week=$('profile-week'),today=dkey(new Date()),total=0;clear(week);
+    for(var i=6;i>=0;i--){var key=addDays(today,-i),record=S.days[key]||{},active=activeIdx(key),done=active.filter(function(n){return (record.q||[])[n]===true;}).length;total+=done;
+      var day=el('div','profile-day'+(key===today?' is-today':'')),label=parseKey(key).toLocaleDateString('ru-RU',{weekday:'short'}),count=el('span','profile-day-count',done+' / '+active.length),bar=el('i','profile-day-bar');
+      day.dataset.date=key;day.setAttribute('aria-label',key+': задания '+done+' из '+active.length+', шаги '+Math.max(0,Number(record.steps)||0));
+      day.title=key+' · '+done+' / '+active.length+' заданий · '+Math.max(0,Number(record.steps)||0)+' шагов';
+      bar.style.height=(8+Math.round(28*done/Math.max(1,active.length)))+'px';bar.setAttribute('aria-hidden','true');
+      day.appendChild(el('small',null,label));day.appendChild(bar);day.appendChild(count);week.appendChild(day);
+    }
+    $('profile-week-summary').textContent=total+' отметок';
+    var weights=bodyMeasurements(),history=$('profile-body-history');
+    if(!weights.length)history.textContent='История тела появится после первой записи веса.';
+    else {var first=weights[0],last=weights[weights.length-1],delta=Math.round((Number(last.kg)-Number(first.kg))*10)/10;history.textContent='Последняя запись веса: '+last.kg+' кг · '+last.date.split('-').reverse().join('.')+(weights.length>1?'. Изменение с '+first.date.split('-').reverse().join('.')+': '+(delta>0?'+':'')+delta+' кг.':'.');}
+    document.querySelectorAll('[data-profile-path]').forEach(function(b){b.onclick=function(){citadelNavigate(b.dataset.profilePath);};});
+    var collections=$('profile-collections'),unlocked=unlockedCos()||{};clear(collections);
+    lookGroupDefinitions().forEach(function(group,index){var count=Object.keys(unlocked).filter(function(id){return unlocked[id]&&COS[id]&&group.cats.indexOf(COS[id].cat)>=0;}).length+(index===0?titleList().length:0),button=el('button','profile-collection');
+      button.type='button';button.disabled=count===0;button.appendChild(el('span',null,group.name));button.appendChild(el('small',null,count+' получено'));button.onclick=function(){$('gear').click();renderLook();var groups=$('looklist').querySelectorAll('.look-group');groups.forEach(function(g,n){g.open=n===index;});var target=groups[index];if(target){target.scrollIntoView({block:'start'});target.querySelector('summary').focus({preventScroll:true});}};collections.appendChild(button);
+    });
+  }
   function renderProfile(){
     var box=$('profile-showcase');if(!box)return;
     var p=pointsInfo(),earned=profileEarned(),byId={};earned.forEach(function(a){byId[a.id]=a;});
@@ -3378,14 +3408,15 @@ html,body{overflow-anchor:none}
     $('profile-essence').textContent=String(abyssBalance(S.abyss));
     var days=0,checks=0;Object.keys(S.days).forEach(function(k){var d=S.days[k];if(!d)return;days++;if(Array.isArray(d.q))d.q.forEach(function(v){if(v===true)checks++;});});
     $('profile-days').textContent=String(days);$('profile-checks').textContent=String(checks);$('profile-ach-count').textContent=String(earned.length);
-    paintSprite($('profile-hero'),buildSprite(outfitFrom(allItems(),outfitIds())));
+    bodyShapeNow=bodyShape();paintSprite($('profile-hero'),buildSprite(outfitFrom(allItems(),outfitIds())));
+    renderProfileJourney(p);
     var titles=titleList(),look=(S.look&&typeof S.look==='object')?S.look:(cachedLook||{}),title='СПЯЩИЙ';
     if(titles.length){var selected=titles.filter(function(t){return t.id===look.title;})[0];title=(selected||titles[titles.length-1]).title;}
     $('profile-title').textContent=title;
     var selected=profileSelected();clear(box);
     selected.forEach(function(id,i){var item=byId[id],button=el('button','profile-award');button.type='button';button.setAttribute('aria-label','Выбрать достижение '+(i+1));button.appendChild(el('span','profile-award-icon',item?'✦':'＋'));button.appendChild(el('span',null,item?item.name:'ВЫБРАТЬ'));button.onclick=function(){profilePickSlot=i;renderProfilePicker();};box.appendChild(button);});
     $('profile-title-open').onclick=function(){$('profile-titles').hidden=!$('profile-titles').hidden;};
-    $('profile-gear-open').onclick=function(){$('profile-wardrobe').open=true;$('profile-wardrobe').scrollIntoView({block:'start',behavior:'smooth'});};
+    $('profile-gear-open').onclick=function(){$('profile-wardrobe').open=true;$('profile-wardrobe').scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});};
     var titleBox=$('profile-titles');clear(titleBox);
     var auto=el('button','profile-option','АВТО: ПОСЛЕДНИЙ ТИТУЛ');auto.type='button';auto.onclick=function(){setLook('title','');titleBox.hidden=true;};titleBox.appendChild(auto);
     titles.forEach(function(t){var b=el('button','profile-option',t.title);b.type='button';b.setAttribute('aria-pressed',look.title===t.id?'true':'false');b.onclick=function(){setLook('title',t.id);titleBox.hidden=true;};titleBox.appendChild(b);});
@@ -4035,7 +4066,7 @@ function citadelRoomActions(){
  present.forEach(function(p){var b=host.querySelector('[data-room-talk="'+p.key+'"]');if(!b){b=document.createElement('button');b.type='button';b.dataset.roomTalk=p.key;b.textContent='Поговорить: '+p.name;b.onclick=function(){citadelNpcSpeak(p.key);};host.appendChild(b);}});
 }
 // One shared light layer per existing scene; no timers, input or save writes.
-document.querySelectorAll('[data-croom],#citadel-interior-stage').forEach(function(scene){var light=document.createElement('span');light.className='citadel-room-light';light.setAttribute('aria-hidden','true');var source=document.createElement('i');source.className='citadel-light-source';light.appendChild(source);scene.appendChild(light);});
+document.querySelectorAll('[data-croom],#citadel-interior-stage').forEach(function(scene){var daylight=document.createElement('span');daylight.className='citadel-daylight';daylight.setAttribute('aria-hidden','true');scene.appendChild(daylight);var light=document.createElement('span');light.className='citadel-room-light';light.setAttribute('aria-hidden','true');var source=document.createElement('i');source.className='citadel-light-source';light.appendChild(source);scene.appendChild(light);});
 var citadelWalkStage=$('citadel-interior-stage');citadelWalkStage.tabIndex=0;citadelWalkStage.setAttribute('role','group');citadelWalkStage.setAttribute('aria-label','Комната. Нажми на пол или используй стрелки, чтобы пройти.');
 citadelWalkStage.addEventListener('click',function(e){if(e.target.closest('button,[role="button"]'))return;var r=this.getBoundingClientRect(),y=(r.bottom-e.clientY)/r.height;if(y>.34)return;citadelWalkTo((e.clientX-r.left)/r.width,y);});
 citadelWalkStage.addEventListener('keydown',function(e){if(e.target!==this)return;var p=citadelWalkPositions[citadelSelected]||{x:.5,y:.08},keys={ArrowLeft:[-.1,0],ArrowRight:[.1,0],ArrowUp:[0,.04],ArrowDown:[0,-.04]},d=keys[e.key];if(!d)return;e.preventDefault();citadelWalkTo(p.x+d[0],p.y+d[1]);});
@@ -4056,8 +4087,8 @@ function citadelObjectContext(){
 function citadelRoomResponse(){
  var stage=$('citadel-interior-stage'),room=citadelSelected;
  // The old furniture/window layers are hidden by the approved painted art.
- // Animate visible light/renovation instead of those invisible placeholders.
- var target=stage.querySelector(citadelRoomLevel(room)>1?'.citadel-interior-renovation':'.citadel-room-light');
+ // Every tier now uses the painted scene; its light stays visible after repair.
+ var target=stage.querySelector('.citadel-room-light');
  var frames=room==='rest'?[{translate:'0 0'},{translate:'0 1px'},{translate:'0 0'}]:[{filter:'brightness(1)'},{filter:'brightness(1.35)'},{filter:'brightness(1)'}];
  citadelFiniteEffect(target,frames,600);
 }
@@ -4177,7 +4208,7 @@ function citadelNpcSpeak(key,refresh) {
  if(!person||p.L<person.rank){citadelNpcClose();return;}
  var state=citadelNpcState(person);
  if(refresh&&citadelNpcOrigin&&(state.moving||state.room!==citadelNpcOrigin||citadelSelected!==citadelNpcOrigin)) {citadelNpcClose();return;}
- if(!refresh&&state.room===citadelSelected&&!state.moving&&!$('citadel-interior').hidden){var npc=$('citadel-interior-stage').querySelector('[data-person="'+key+'"]');if(npc){var nr=npc.getBoundingClientRect(),sr=$('citadel-interior-stage').getBoundingClientRect();citadelWalkTo((nr.left+nr.width/2-sr.left)/sr.width,.08);}}
+ if(!refresh&&state.room===citadelSelected&&!state.moving&&!$('citadel-interior').hidden){var npc=$('citadel-interior-stage').querySelector('[data-person="'+key+'"]');if(npc){var nr=npc.getBoundingClientRect(),sr=$('citadel-interior-stage').getBoundingClientRect(),hero=$('citadel-interior-stage').querySelector('.citadel-hero-sprite'),hx=hero?hero.getBoundingClientRect().left:sr.left;var side=hx<nr.left?-1:1;citadelWalkTo((nr.left+nr.width/2-sr.left)/sr.width+side*.085,Math.max(.045,(sr.bottom-nr.bottom)/sr.height));}}
  if(!refresh){citadelNpcVisits[key]=(citadelNpcVisits[key]||0)+1;citadelNpcOrigin=!state.moving&&state.room===citadelSelected&&!$('citadel-interior').hidden?state.room:null;}
  citadelNpcSelected=key;
  var current=citadelNpcPrevious||citadelNpcProgress(),day=current.day,line;
@@ -4295,9 +4326,12 @@ function citadelPositionInteriorResidents(){
  var stage=$('citadel-interior-stage');if($('citadel-interior').hidden||!stage.clientWidth)return;
  var r=stage.getBoundingClientRect(),occupied=Array.from(stage.querySelectorAll('.citadel-interior-object,.citadel-scene-door')).map(function(n){return n.getBoundingClientRect();});
  stage.querySelectorAll('.citadel-person').forEach(function(n){
-  var candidates=[.32,.68,.5,.22,.78,.4,.6],placed=false;
+  var work={forge:[.35,.105],archive:[.42,.105],gatehouse:[.61,.105],vault:[.49,.055]},anchor=n.dataset.mode==='work'&&work[stage.dataset.room];
+  var candidates=(anchor?[anchor]:[]).concat([[.32,.035],[.68,.035],[.22,.035],[.78,.035],[.4,.035],[.6,.035],[.5,.035]]),placed=false;
   for(var k=0;k<candidates.length;k++){
-   var x=candidates[k],y=.035;n.style.left='calc('+x*100+'% - '+n.offsetWidth/2+'px)';n.style.bottom=y*100+'%';
+   var point=CitadelSpace.nearest(stage.dataset.room,Number(stage.dataset.level),{x:candidates[k][0]*480,y:(1-candidates[k][1])*320}),x=point.x/480,y=1-point.y/320;
+   n.style.left='calc('+x*100+'% - '+n.offsetWidth/2+'px)';n.style.bottom=y*100+'%';
+   n.dataset.floorX=String(point.x);n.dataset.floorY=String(point.y);
    var b=n.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2,hit={left:cx-22,right:cx+22,top:cy-22,bottom:cy+22};
    if(hit.left<r.left||hit.right>r.right||hit.bottom>r.bottom)continue;
    if(occupied.every(function(o){return hit.right+2<=o.left||hit.left-2>=o.right||hit.bottom+2<=o.top||hit.top-2>=o.bottom;})){occupied.push(hit);placed=true;break;}

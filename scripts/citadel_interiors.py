@@ -260,8 +260,44 @@ def render(room, level):
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" shape-rendering="crispEdges">'+s+'</svg>\n'
 
 
+def light_masks(room):
+    """Only existing apertures admit daylight or exterior weather."""
+    windows, beams = '', ''
+    if room == 'vault':
+        return windows, beams
+    if room == 'observatory':
+        windows = arch(133, 214, 16, 155, '#fff', 'none')
+        windows += path('M240 20V156M140 148H340', 'none', '#000', 4)
+        beams = path('M135 143L345 143 387 290 77 290Z', '#fff', 'none', 0)
+    elif room == 'gatehouse':
+        windows = arch(173, 134, 44, 216, '#fff', 'none')
+        for x in range(177,310,14):
+            windows += path(f'M{x} 83V217', 'none', '#000', 5)
+        windows += path('M173 125H309M173 176H309', 'none', '#000', 6)
+        beams = path('M174 188H307L360 306H116Z', '#fff', 'none', 0)
+    elif room == 'forge':
+        windows = arch(344,54,54,160,'#fff','none')
+        windows += path('M371 54V163M344 118H398','none','#000',4)
+        beams = path('M344 119L398 119 297 278 190 278Z','#fff','none',0)
+    elif room == 'cloister':
+        for x in (65,185,305):
+            windows += arch(x+6,92,32,174,'#fff','none')
+            beams += path(f'M{x+6} 155H{x+98}L{x+120} 280H{x-35}Z','#fff','none',0)
+    else:
+        for x in (100,324):
+            windows += arch(x+9,38,39,137,'#fff','none')
+            windows += path(f'M{x+28} 40V139M{x+7} 103H{x+49}','none','#000',4)
+            beams += path(f'M{x+9} 104H{x+47}L{x+75} 278H{x-65}Z','#fff','none',0)
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">{}</svg>\n'
+    return svg.format(windows), svg.format(beams)
+
+
 if __name__ == '__main__':
     for room in ROOMS:
         for level in (1, 2, 3):
             (OUT / f'{room}-interior-{level}.svg').write_text(render(room, level), encoding='utf-8')
+        windows, beams = light_masks(room)
+        if windows:
+            (OUT / f'{room}-apertures.svg').write_text(windows, encoding='utf-8')
+            (OUT / f'{room}-daylight.svg').write_text(beams, encoding='utf-8')
     print('Generated 30 distinct room interiors')
