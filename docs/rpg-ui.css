@@ -134,6 +134,18 @@ body.citadel-shell-active .citadel-avatar[data-moving="true"] .citadel-hero-spri
 @keyframes citadelBreath{0%,100%{translate:0 0}50%{translate:0 -1px}}
 @media(prefers-reduced-motion:reduce){body.citadel-shell-active .citadel-hero-sprite{animation:none!important}}
 
+/* The approved room reference is a 4:3 spatial scene, not a stretched portrait
+   strip. Match the 480x320 art coordinate system without wall-mounted furniture. */
+body.citadel-shell-active .citadel-interior-stage{
+ aspect-ratio:4/3!important;
+ height:auto!important;
+ min-height:0!important;
+}
+body.citadel-shell-active .citadel-interior-stage canvas{
+ bottom:7%!important;
+ filter:drop-shadow(0 3px 2px #05060e)!important;
+}
+
 body.citadel-shell-active [data-croom="throne"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="throne"][data-level="1"]:before{background:url("assets/citadel/throne-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
 
 body.citadel-shell-active [data-croom="observatory"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="observatory"][data-level="1"]:before{background:url("assets/citadel/observatory-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
