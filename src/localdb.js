@@ -515,10 +515,23 @@
     chip.textContent = txt; chip.className = 'pl-chip ' + cls;
     if (menu && !menu.hidden) renderMenu();
   }
-  var dataHistoryOpen=false;
-  function openData(){if(!menu.hidden)return;menu.hidden=false;renderMenu();dataHistoryOpen=true;history.pushState(Object.assign({},history.state,{planData:true}),'');}
-  function closeData(){menu.hidden=true;if(history.state&&history.state.planData)history.back();}
-  window.addEventListener('popstate',function(event){if(menu)menu.hidden=true;if(dataHistoryOpen){dataHistoryOpen=false;event.stopImmediatePropagation();}},true);
+  var dataHistoryOpen=false,dataHost=null;
+  function restoreDataHost(){
+    if(!dataHost)return;var saved=dataHost;dataHost=null;
+    saved.blocked.forEach(function(row){row[0].inert=row[1];});
+    saved.parent.insertBefore(menu,saved.next);
+    if(saved.focus&&saved.focus.isConnected&&saved.focus.getClientRects().length)saved.focus.focus({preventScroll:true});
+  }
+  function openData(){
+    if(!menu.hidden)return;
+    var dialog=document.querySelector('.citadel-system-dialog[open]');
+    if(dialog){var host=dialog.querySelector('#setup:not([hidden])')||dialog;dataHost={parent:menu.parentNode,next:menu.nextSibling,focus:document.activeElement,blocked:[]};host.appendChild(menu);dataHost.blocked=Array.from(host.children).filter(function(n){return n!==menu;}).map(function(n){var old=n.inert;n.inert=true;return [n,old];});}
+    menu.hidden=false;renderMenu();dataHistoryOpen=true;history.pushState(Object.assign({},history.state,{planData:true}),'');
+    requestAnimationFrame(function(){if(!menu.hidden){var first=menu.querySelector('button');if(first)first.focus({preventScroll:true});}});
+  }
+  function closeData(){menu.hidden=true;restoreDataHost();if(history.state&&history.state.planData)history.back();}
+  window.addEventListener('popstate',function(event){if(menu)menu.hidden=true;restoreDataHost();if(dataHistoryOpen){dataHistoryOpen=false;event.stopImmediatePropagation();}},true);
+  window.addEventListener('keydown',function(event){if(event.key==='Escape'&&menu&&!menu.hidden){event.preventDefault();event.stopImmediatePropagation();closeData();}},true);
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function renderMenu() {
     menu.textContent = '';

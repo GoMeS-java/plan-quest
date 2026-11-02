@@ -522,3 +522,15 @@ body.citadel-shell-active #citadel-home :is([data-room="vault"],[data-croom="vau
 :root[data-aura="orbit"]{--shared-hero-aura:#b48cff99;--shared-hero-aura-size:7px}
 #profile-hero,
 body.citadel-shell-active #citadel-home .citadel-hero-sprite{filter:drop-shadow(1px 2px 1px #080910) drop-shadow(0 0 var(--shared-hero-aura-size) var(--shared-hero-aura))}
+
+/* The visible Android viewport can shrink without resizing the layout viewport. */
+body.citadel-shell-active #citadel-home.citadel-shell{top:var(--app-top,0px);bottom:auto;height:var(--app-height,100dvh)}
+body.citadel-shell-active #citadel-home.citadel-shell .citadel-inside,
+body.citadel-shell-active #citadel-home.citadel-shell:not([data-ui-view="overview"]) .citadel-inside{height:calc(var(--app-height,100dvh) - var(--shell-top,100px) - var(--shell-bottom,0px))!important}
+body.citadel-shell-active :is(.setup,.lvup){top:var(--app-top,0px);bottom:auto;height:var(--app-height,100dvh);max-height:var(--app-height,100dvh);box-sizing:border-box}
+body.citadel-shell-active .citadel-system-dialog{top:calc(var(--app-top,0px) + 8px);bottom:auto;margin:0 auto;height:min(820px,calc(var(--app-height,100dvh) - 16px));max-height:calc(var(--app-height,100dvh) - 16px)}
+body.citadel-shell-active .lvup .lbox{max-height:calc(var(--app-height,100dvh) - 28px)}
+.citadel-keyboard-open body.citadel-shell-active .citadel-shell-dock{display:none}
+.citadel-keyboard-open body.citadel-shell-active .setup{align-items:flex-start;padding-top:8px}
+.citadel-keyboard-open body.citadel-shell-active .citadel-system-content{scroll-padding:12px;padding-bottom:20px}
+@media(max-height:420px){body.citadel-shell-active .citadel-system-dialog>header{min-height:44px}body.citadel-shell-active .citadel-finance-nav button{min-height:40px}}

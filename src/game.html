@@ -3394,7 +3394,7 @@ html,body{overflow-anchor:none}
     document.querySelectorAll('[data-profile-path]').forEach(function(b){b.onclick=function(){citadelNavigate(b.dataset.profilePath);};});
     var collections=$('profile-collections'),unlocked=unlockedCos()||{};clear(collections);
     lookGroupDefinitions().forEach(function(group,index){var count=Object.keys(unlocked).filter(function(id){return unlocked[id]&&COS[id]&&group.cats.indexOf(COS[id].cat)>=0;}).length+(index===0?titleList().length:0),button=el('button','profile-collection');
-      button.type='button';button.disabled=count===0;button.appendChild(el('span',null,group.name));button.appendChild(el('small',null,count+' получено'));button.onclick=function(){$('gear').click();renderLook();var groups=$('looklist').querySelectorAll('.look-group');groups.forEach(function(g,n){g.open=n===index;});var target=groups[index];if(target){target.scrollIntoView({block:'start'});target.querySelector('summary').focus({preventScroll:true});}};collections.appendChild(button);
+      button.type='button';button.dataset.profileCollection=String(index);button.disabled=count===0;button.appendChild(el('span',null,group.name));button.appendChild(el('small',null,count+' получено'));button.onclick=function(){$('gear').click();renderLook();var groups=$('looklist').querySelectorAll('.look-group');groups.forEach(function(g,n){g.open=n===index;});var target=groups[index];if(target){target.scrollIntoView({block:'start'});target.querySelector('summary').focus({preventScroll:true});}};collections.appendChild(button);
     });
   }
   function renderProfile(){
@@ -3852,7 +3852,8 @@ html,body{overflow-anchor:none}
   var citadelRoomInfo={throne:'Тронный зал. Здесь начинается история твоей Цитадели.',observatory:'Обсерватория. Открывается с 5 ранга.',rest:'Личные покои. Твой облик и экипировка берутся из основной игры.',study:'Кабинет. Пространство для планирования и знаний.',archive:'Архив. Открывается с 10 ранга.',forge:'Мастерская. Открывается с 15 ранга.'};
 var citadelRooms=Object.keys(CitadelWorld.ranks);
 Object.assign(citadelRoomInfo,{gatehouse:'Караульная у ворот. Отсюда начинается путь по лестницам Цитадели.',refectory:'Трапезная. Вечером жители собираются у длинного стола.',cloister:'Крытая галерея под сводами. Здесь слышны дождь и шаги дозорного.',vault:'Казначейство. Здесь ведут учёт общего запаса ядер души.'});
-var citadelSelected='rest';var citadelTimeTimer=0;var citadelActivityRenderedRoom='';try{var savedCitadelRoom=localStorage.getItem('plan.citadel.selectedRoom.v1');if(citadelRooms.indexOf(savedCitadelRoom)>=0)citadelSelected=savedCitadelRoom;}catch(e){}
+var citadelSelectedKey=window.PLAN_CONFIG&&PLAN_CONFIG.testMode?'plan.android-test.citadel.selectedRoom.v1':'plan.citadel.selectedRoom.v1';
+var citadelSelected='rest';var citadelTimeTimer=0;var citadelActivityRenderedRoom='';try{var savedCitadelRoom=localStorage.getItem(citadelSelectedKey);if(citadelRooms.indexOf(savedCitadelRoom)>=0)citadelSelected=savedCitadelRoom;}catch(e){}
 // Presentation derives from the existing saved rank; no second unlock ledger.
 function citadelRoomOpen(id,rank){return !!loaded&&CitadelWorld.available(id,rank==null?pointsInfo().L:rank);}
 function citadelPublicName(id,rank){return citadelRoomOpen(id,rank)?CitadelWorld.names[id]:'Неизведанная комната';}
@@ -3890,7 +3891,7 @@ var citadelHeroAnimation=null;
 function citadelPosition(){if(citadelHeroAnimation){citadelHeroAnimation.cancel();citadelHeroAnimation=null;$('citadel-avatar').dataset.moving='false';}var btn=document.querySelector('[data-croom="'+citadelSelected+'"]'),castle=$('citadel-castle'),avatar=$('citadel-avatar');if(!btn||!castle||!avatar||!castle.getClientRects().length)return;var c=castle.getBoundingClientRect(),r=btn.getBoundingClientRect();avatar.style.left=(r.left-c.left-castle.clientLeft+r.width*.5-22)+'px';avatar.style.top=(r.bottom-c.top-castle.clientTop-65)+'px';}
 function citadelSave(patch){if(!loaded||!db)return;var next=Object.assign({},S.citadel||{},patch);if(patch.decor)next.decor=Object.assign({},S.citadel&&S.citadel.decor||{},patch.decor);S.citadel=next;enqueue(function(){return db.runTransaction(function(tx){var current=tx.get('cfg/citadel')||{},merged=Object.assign({},current,patch);if(patch.decor)merged.decor=Object.assign({},current.decor||{},patch.decor);tx.set('cfg/citadel',merged);});});}
 function citadelMove(id){var btn=document.querySelector('[data-croom="'+id+'"]');if(!btn)return;var required=Number(btn.getAttribute('data-min-rank')||1),p=loaded?pointsInfo():null,level=p?p.L:1;if(!citadelRoomOpen(id)){citadelShowMystery(id);return;}
-citadelStopWalk();var previous=citadelSelected,changed=previous!==id;citadelSelected=id;if(changed)citadelSave({selectedRoom:id});citadelActivityRenderedRoom='';if($('citadel-interior'))$('citadel-interior').hidden=true;try{localStorage.setItem('plan.citadel.selectedRoom.v1',id);}catch(e){}document.querySelectorAll('[data-croom]').forEach(function(b){b.classList.toggle('is-selected',b===btn);b.setAttribute('aria-pressed',b===btn?'true':'false');});
+citadelStopWalk();var previous=citadelSelected,changed=previous!==id;citadelSelected=id;if(changed)citadelSave({selectedRoom:id});citadelActivityRenderedRoom='';if($('citadel-interior'))$('citadel-interior').hidden=true;try{localStorage.setItem(citadelSelectedKey,id);}catch(e){}document.querySelectorAll('[data-croom]').forEach(function(b){b.classList.toggle('is-selected',b===btn);b.setAttribute('aria-pressed',b===btn?'true':'false');});
 citadelPosition();if(changed)citadelAnimateHero(previous,id);
 $('citadel-location').textContent=btn.querySelector('.citadel-room-name').textContent.replace(/ · \d+$/,'');$('citadel-room-info').textContent=citadelPublicInfo(id);if(loaded){citadelRenderActivities();citadelRenderBuilding();citadelRoomJournal();syncCitadelResidents(pointsInfo().L);$('citadel-building-feedback').textContent='';}}
 document.querySelectorAll('[data-croom]').forEach(function(btn){btn.addEventListener('click',function(){citadelMove(btn.dataset.croom);});});
@@ -4801,10 +4802,11 @@ function renderAllInner() {
   $('fx-shake').addEventListener('change', function () { FX.shake = $('fx-shake').value; saveFx(); });
   $('fx-sound').value = FX.sound;
   $('fx-sound').addEventListener('change', function () { FX.sound = $('fx-sound').value; saveFx(); });
-  $('gear').addEventListener('click', function () { $('setup').hidden = false; });
+  $('gear').addEventListener('click', function () { if(window.__citadelShell)window.__citadelShell.openAuxiliary('settings');$('setup').hidden = false; });
   $('trophy-btn').addEventListener('click', function () { $('trophy').hidden = false; });
-  $('trophy-x').addEventListener('click', function () { $('trophy').hidden = true; if(document.body.classList.contains('citadel-shell-active')&&history.state?.citadelOverlay==='achievements')history.back(); });
-  $('setup-x').addEventListener('click', function () { $('setup').hidden = true; if(document.body.classList.contains('citadel-shell-active')&&history.state?.citadelOverlay==='settings')history.back(); });
+  $('trophy-btn').addEventListener('click',function(){if(window.__citadelShell)window.__citadelShell.openAuxiliary('achievements');});
+  $('trophy-x').addEventListener('click', function () { $('trophy').hidden = true; if(document.body.classList.contains('citadel-shell-active')&&history.state?.citadelOverlay==='achievements'){if(window.__citadelShell)window.__citadelShell.backFromAuxiliary();else history.back();} });
+  $('setup-x').addEventListener('click', function () { $('setup').hidden = true; if(document.body.classList.contains('citadel-shell-active')&&history.state?.citadelOverlay==='settings'){if(window.__citadelShell)window.__citadelShell.backFromAuxiliary();else history.back();} });
   $('setup').addEventListener('click', function (e) { if (e.target === $('setup')) $('setup-x').click(); });
   ['setup','trophy'].forEach(function(id){
     var modal=$(id),previousFocus=null;
@@ -5034,7 +5036,7 @@ function renderAllInner() {
       if (first && !S.citadel) {
         var decor = {}, selected = null;
         try {
-          selected = localStorage.getItem('plan.citadel.selectedRoom.v1');
+          selected = localStorage.getItem(citadelSelectedKey);
           citadelRooms.forEach(function (room) { var value = localStorage.getItem(citadelDecorKey(room)); if (citadelDecorChoices.some(function (c) { return c.id === value; })) decor[room] = value; });
         } catch (e) {}
         if (selected || Object.keys(decor).length) {
@@ -5172,16 +5174,33 @@ function renderAllInner() {
     function closeMenu(silent){var was=home.dataset.menu==='open';home.dataset.menu='';menuButton.setAttribute('aria-expanded','false');if(was&&!silent&&history.state?.citadelMenu)history.back();}
     menuButton.onclick=function(){if(home.dataset.menu==='open'){closeMenu();return;}home.dataset.menu='open';menuButton.setAttribute('aria-expanded','true');history.pushState(Object.assign({},history.state,{citadelMenu:true}),'');};
     var dialog=document.createElement('dialog');dialog.className='citadel-system-dialog';dialog.innerHTML='<header><strong id="citadel-system-title"></strong><button type="button" aria-label="Вернуться в Цитадель">✕</button></header><div class="citadel-system-content"></div>';document.body.appendChild(dialog);
-    var moved=null,anchor=null,origin=null,drawer='',zoom=window.innerWidth<650?.85:1,baseWidth=760;
+    var moved=null,anchor=null,origin=null,drawer='',zoom=window.innerWidth<650?.85:1,baseWidth=760,systemFocus=null;
+    var uiPrefix=window.PLAN_CONFIG&&PLAN_CONFIG.testMode?'plan.android-test.':'plan.',cameraKey=uiPrefix+'citadel.camera.v1',viewKey=uiPrefix+'citadel.view.v1';
+    var savedView=null,restoreViewPending=true,auxiliary=null,auxiliaryBack=false;
+    try{var sv=JSON.parse(localStorage.getItem(viewKey)||'null');if(sv&&sv.version===1&&typeof sv.section==='string')savedView=sv;}catch(e){}
+    function returnFocus(node){if(node&&node.isConnected&&node.getClientRects().length)node.focus({preventScroll:true});else if(!dialog.open){var target=home.dataset.uiView==='room'?$('citadel-interior-stage'):dock.querySelector('[data-section="overview"]');if(target&&target.getClientRects().length)target.focus({preventScroll:true});}}
+    function openAuxiliary(kind){
+      var panel=kind==='settings'?$('setup'):$('trophy');
+      if(auxiliary&&auxiliary.panel===panel)return;
+      auxiliary={panel:panel,parent:panel.parentNode,next:panel.nextSibling,focus:document.activeElement,collection:document.activeElement?.dataset.profileCollection};
+      // A native dialog makes siblings inert: nested settings must join its top layer.
+      if(dialog.open){dialog.appendChild(panel);auxiliary.blocked=Array.from(dialog.children).filter(function(n){return n!==panel;}).map(function(n){var previous=n.inert;n.inert=true;return [n,previous];});}
+      requestAnimationFrame(function(){if(!panel.hidden){var first=panel.querySelector('button,input,select');if(first)first.focus({preventScroll:true});}});
+      if(history.state?.citadelOverlay!==kind)history.pushState(Object.assign({},history.state,{citadelOverlay:kind}),'');
+    }
+    function restoreAuxiliary(){if(!auxiliary||!auxiliary.panel.hidden)return;var a=auxiliary;auxiliary=null;(a.blocked||[]).forEach(function(row){row[0].inert=row[1];});if(a.panel.parentNode!==a.parent)a.parent.insertBefore(a.panel,a.next);var focus=a.focus;if(!focus?.isConnected&&/^[0-3]$/.test(a.collection||''))focus=document.querySelector('[data-profile-collection="'+a.collection+'"]');returnFocus(focus);}
+    [$('setup'),$('trophy')].forEach(function(panel){new MutationObserver(restoreAuxiliary).observe(panel,{attributes:true,attributeFilter:['hidden']});});
     function restore(){if(moved&&origin){origin.insertBefore(moved,anchor);moved=null;origin=null;anchor=null;}}
-    function closeSystem(silent){if(dialog.open)dialog.close();restore();if(!silent&&history.state?.citadelOverlay==='system')history.back();}
+    function closeSystem(silent){var was=dialog.open;if(was){if(dialog.contains(document.activeElement))document.activeElement.blur();dialog.close();}restore();if(!silent&&history.state?.citadelOverlay==='system')history.back();if(was)returnFocus(systemFocus);}
     // One shared finance switcher stays outside the scrolling panel. Wheel reuses spend.
     var financeNav=document.createElement('nav');financeNav.className='citadel-finance-nav';financeNav.setAttribute('aria-label','Финансы');financeNav.setAttribute('role','tablist');financeNav.hidden=true;
     [['spend','Траты'],['money','Деньги'],['avito','Авито'],['wheel','Колесо']].forEach(function(item){var b=document.createElement('button');b.type='button';b.role='tab';b.dataset.finance=item[0];b.textContent=item[1];b.onclick=function(){showSystem(item[0],item[1]);};financeNav.appendChild(b);});
     dialog.insertBefore(financeNav,dialog.querySelector('.citadel-system-content'));
     financeNav.addEventListener('keydown',function(e){var buttons=Array.from(financeNav.children),index=buttons.indexOf(document.activeElement);if(index<0)return;var next=e.key==='ArrowRight'?(index+1)%4:e.key==='ArrowLeft'?(index+3)%4:e.key==='Home'?0:e.key==='End'?3:-1;if(next<0)return;e.preventDefault();buttons[next].click();buttons[next].focus();});
-    dialog.addEventListener('close',function(){if(!dialog.open)restore();});dialog.querySelector('header button').onclick=function(){closeSystem();};
-    function showSystem(id,label){
+    dialog.addEventListener('close',function(){if(!dialog.open)restore();});dialog.addEventListener('cancel',function(e){e.preventDefault();if(!$('setup').hidden){$('setup-x').click();return;}closeSystem();});dialog.querySelector('header button').onclick=function(){closeSystem();};
+    function showSystem(id,label,restoring){
+      if(!restoring)restoreViewPending=false;
+      if(!dialog.open)systemFocus=document.activeElement;
       var financeId=id,isFinance=['spend','money','avito','wheel'].indexOf(id)>=0;
       closeDrawer(true);if(dialog.open&&isFinance)restore();else closeSystem(true);
       financeNav.hidden=!isFinance;
@@ -5225,7 +5244,7 @@ function renderAllInner() {
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Память']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];if(item[0]==='shop')b.setAttribute('aria-label','Воспоминания');b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});
     var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.onclick=function(){menuButton.click();};dock.appendChild(dockMenu);
     var shade=document.createElement('div');shade.className='citadel-shell-shade';home.appendChild(shade);shade.onclick=closeDrawer;
-    function pushOverlay(kind){var state=Object.assign({},history.state,{citadelOverlay:kind});if(history.state?.citadelOverlay)history.replaceState(state,'');else history.pushState(state,'');}
+    function pushOverlay(kind){var previous=history.state?.citadelOverlay,state=Object.assign({},history.state,{citadelOverlay:kind});if(previous===kind||previous==='drawer')history.replaceState(state,'');else history.pushState(state,'');}
     function closeDrawer(silent){var was=drawer;drawer='';home.dataset.drawer='';if(was&&!silent&&history.state?.citadelOverlay==='drawer')history.back();}
     function toggleDrawer(side){if(drawer===side){closeDrawer();return;}drawer=side;home.dataset.drawer=drawer;pushOverlay('drawer');refreshDrawer();}
     var left=document.createElement('aside'),right=document.createElement('aside');left.className='citadel-shell-drawer left';right.className='citadel-shell-drawer right';
@@ -5279,10 +5298,26 @@ function renderAllInner() {
     // Also route the original focus action through the same viewport-only camera.
     $('citadel-focus').removeEventListener('click',citadelFocus);$('citadel-focus').addEventListener('click',focusRoom);
     [['−',function(){cameraZoom(zoom-.2);}],['Общий вид',function(){zoom=Math.max(.4,viewport.clientWidth/baseWidth);cameraSize();cameraScroll(0,0);}],['+',function(){cameraZoom(zoom+.2);}],['К комнате',focusRoom]].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[0];b.onclick=item[1];camera.appendChild(b);});
-    var savedCamera=null;try{savedCamera=JSON.parse(localStorage.getItem('plan.citadel.camera.v1')||'null');}catch(e){}
+    var savedCamera=null;try{var sc=JSON.parse(localStorage.getItem(cameraKey)||'null');if(sc&&Number.isFinite(sc.zoom)&&Number.isFinite(sc.left)&&Number.isFinite(sc.top))savedCamera={zoom:Math.max(.4,Math.min(2,sc.zoom)),left:Math.max(0,sc.left),top:Math.max(0,sc.top)};}catch(e){}
     if(savedCamera&&Number.isFinite(savedCamera.zoom))zoom=Math.max(.4,Math.min(2,savedCamera.zoom));
     cameraSize();function restoreCamera(){requestAnimationFrame(function(){cameraSize();if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);else viewport.scrollTo(0,0);lastCamera={left:viewport.scrollLeft,top:viewport.scrollTop};citadelPosition();cameraCaptions();});}restoreCamera();window.addEventListener('load',restoreCamera,{once:true});
-    var saveCamera=0;function persistCamera(){clearTimeout(saveCamera);saveCamera=setTimeout(function(){try{localStorage.setItem('plan.citadel.camera.v1',JSON.stringify({left:lastCamera.left,top:lastCamera.top,zoom:zoom}));}catch(e){}},300);}
+    var saveCamera=0;function flushCamera(){clearTimeout(saveCamera);saveCamera=0;try{localStorage.setItem(cameraKey,JSON.stringify({left:lastCamera.left,top:lastCamera.top,zoom:zoom}));}catch(e){}}
+    function persistCamera(){clearTimeout(saveCamera);saveCamera=setTimeout(flushCamera,300);}
+    var sectionLabels={today:'Задания',week:'Хроника',diet:'Тело',goals:'Путь',money:'Финансы',spend:'Траты',avito:'Авито',wheel:'Колесо',wardrobe:'Профиль',shop:'Воспоминания'};
+    function flushView(){
+      if(!loaded||restoreViewPending)return;
+      var section=dialog.open&&moved?moved.id:'overview';if(section==='spend'&&!financeNav.hidden&&financeNav.querySelector('[data-finance="wheel"][aria-selected="true"]'))section='wheel';
+      var value={version:1,section:section,roomView:home.dataset.uiView,scroll:dialog.open?dialog.querySelector('.citadel-system-content').scrollTop:inside.scrollTop};
+      try{localStorage.setItem(viewKey,JSON.stringify(value));}catch(e){}
+    }
+    function restoreView(){
+      if(!restoreViewPending||!loaded)return;restoreViewPending=false;var view=savedView;savedView=null;if(!view)return;
+      if(Object.prototype.hasOwnProperty.call(sectionLabels,view.section))showSystem(view.section,sectionLabels[view.section],true);
+      else if(view.section==='overview'&&['room','upgrades','people'].indexOf(view.roomView)>=0&&citadelRoomOpen(citadelSelected)){citadelEnter();citadelSetArtView(view.roomView);pushOverlay('room');}
+      requestAnimationFrame(function(){var scroller=dialog.open?dialog.querySelector('.citadel-system-content'):inside;scroller.scrollTop=Number.isFinite(view.scroll)?Math.max(0,view.scroll):0;});
+    }
+    function flushShell(){flushCamera();flushView();}
+    window.addEventListener('pagehide',flushShell);document.addEventListener('visibilitychange',function(){if(document.hidden)flushShell();else scheduleViewport();});
     viewport.addEventListener('scroll',function(){if(home.dataset.uiView!=='overview')return;lastCamera={left:viewport.scrollLeft,top:viewport.scrollTop};scheduleCaptions();persistCamera();},{passive:true});
     var pinch=null,lastPinch=0;
     function pinchCenter(a,b){var box=viewport.getBoundingClientRect();return {x:(a.clientX+b.clientX)/2-box.left,y:(a.clientY+b.clientY)/2-box.top,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)};}
@@ -5291,18 +5326,22 @@ function renderAllInner() {
     viewport.addEventListener('touchend',function(e){if(e.touches.length<2&&pinch){pinch=null;lastPinch=Date.now();}},{passive:true});
     viewport.addEventListener('touchcancel',function(){pinch=null;lastPinch=Date.now();},{passive:true});
     viewport.addEventListener('click',function(e){if(Date.now()-lastPinch<450){e.preventDefault();e.stopImmediatePropagation();}},true);
-    window.addEventListener('resize',cameraSize);
+    var viewportFrame=0;
+    function fitFocusedControl(){var input=document.activeElement;if(!input||!input.matches('input,textarea,select'))return;var scroller=input.closest('.citadel-system-content,.setup');if(!scroller)return;var a=input.getBoundingClientRect(),b=scroller.getBoundingClientRect(),delta=a.bottom>b.bottom-12?a.bottom-b.bottom+12:a.top<b.top+12?a.top-b.top-12:0;if(delta)scroller.scrollTop+=delta;}
+    function applyViewport(){viewportFrame=0;var v=window.visualViewport,normal=!v||Math.abs(v.scale-1)<.05,height=normal&&v?Math.min(innerHeight,v.height):innerHeight,top=normal&&v?Math.max(0,v.offsetTop):0;if(!Number.isFinite(height)||height<160)return;document.documentElement.style.setProperty('--app-height',Math.round(height)+'px');document.documentElement.style.setProperty('--app-top',Math.round(top)+'px');document.documentElement.classList.toggle('citadel-keyboard-open',height<innerHeight-100&&!!document.activeElement?.matches('input,textarea,select'));cameraSize();fitFocusedControl();}
+    function scheduleViewport(){if(!viewportFrame)viewportFrame=requestAnimationFrame(applyViewport);}
+    window.addEventListener('resize',scheduleViewport);if(window.visualViewport){visualViewport.addEventListener('resize',scheduleViewport);visualViewport.addEventListener('scroll',scheduleViewport);}document.addEventListener('focusin',scheduleViewport);document.addEventListener('focusout',scheduleViewport);window.addEventListener('pageshow',scheduleViewport);scheduleViewport();
     new ResizeObserver(function(){measureShell();scheduleCaptions();}).observe(header);
     new MutationObserver(function(){measureShell();if(home.dataset.uiView==='overview')requestAnimationFrame(function(){cameraSize();viewport.scrollTo(lastCamera.left,lastCamera.top);cameraCaptions();});}).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
-    window.addEventListener('popstate',function(){if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open)return;if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
+    window.addEventListener('popstate',function(){if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open)return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
-    function updateShellStatus(){if(!loaded)return;var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}
+    function updateShellStatus(){if(!loaded)return;restoreView();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}
     new MutationObserver(updateShellStatus).observe($('citadel-live-rank'),{childList:true,characterData:true,subtree:true});
     new MutationObserver(updateShellStatus).observe(dialog,{attributes:true,attributeFilter:['open']});
     new MutationObserver(updateShellStatus).observe($('qlist'),{childList:true,subtree:true,attributes:true,attributeFilter:['aria-pressed']});
     updateShellStatus();
-    window.__citadelShell={tutorialNavigate:function(id,label){closeMenu(true);closeDrawer(true);$('setup').hidden=true;$('trophy').hidden=true;closeSystem(true);if(id==='overview'){citadelSetArtView('overview');}else showSystem(id,label);},refresh:refreshDrawer,openSystem:showSystem,viewport:viewport};
+    window.__citadelShell={tutorialNavigate:function(id,label){closeMenu(true);closeDrawer(true);$('setup').hidden=true;$('trophy').hidden=true;closeSystem(true);if(id==='overview'){citadelSetArtView('overview');}else showSystem(id,label);},refresh:refreshDrawer,openSystem:showSystem,openAuxiliary:openAuxiliary,backFromAuxiliary:function(){auxiliaryBack=true;history.back();},viewport:viewport};
   }
   citadelShellInit();
   if(window.VkachAwakening)window.VkachAwakening.init(function(id,label){if(window.__citadelShell){window.__citadelShell.tutorialNavigate(id,label);return;}$('setup').hidden=true;$('trophy').hidden=true;if(id==='settings')$('gear').click();else if(id==='achievements')$('trophy-btn').click();else if(id==='overview'){$('citadel-home').open=true;$('citadel-home').scrollIntoView();}else citadelNavigate(id);});

@@ -163,5 +163,17 @@ try{
   const t=await c.newPage();await t.goto(fakeOrigin+'/');await t.waitForFunction(()=>!!PlanSync);await t.evaluate(()=>PlanSync.sync(true));assert.equal(external,0);await c.close();
  }
  console.log('PASS invalid test OAuth configuration fails closed');passed++;
+ const presentation=await browser.newContext({timezoneId:'Europe/Moscow',viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce',serviceWorkers:'block'});
+ const prodCamera='{"left":87,"top":144,"zoom":1.4}',prodView='{"version":1,"section":"wardrobe","scroll":90}';
+ await presentation.route('https://**/*',route=>route.fulfill({body:'',contentType:'text/css'}));
+ await presentation.addInitScript(({prodCamera,prodView})=>{localStorage.setItem('plan.citadel.camera.v1',prodCamera);localStorage.setItem('plan.citadel.view.v1',prodView);localStorage.setItem('plan.citadel.selectedRoom.v1','vault');localStorage.setItem('plan.android-test.awakening.v1',JSON.stringify({version:1,status:'skipped',step:0}));},{prodCamera,prodView});
+ const ui=await presentation.newPage();ui.on('pageerror',e=>errors.push(String(e)));await ui.goto(url+'/android-test/');await ui.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
+ assert(!await ui.locator('.citadel-system-dialog').isVisible(),'test app must not restore production section');
+ await ui.locator('.citadel-shell-camera button').getByText('+',{exact:true}).click();await ui.locator('.citadel-shell-dock [data-section="wardrobe"]').click();await ui.locator('#profile-hero').waitFor({state:'visible'});
+ await ui.evaluate(()=>window.dispatchEvent(new Event('pagehide')));
+ assert(await ui.evaluate(()=>!!localStorage.getItem('plan.android-test.citadel.camera.v1')));assert.equal(await ui.evaluate(()=>JSON.parse(localStorage.getItem('plan.android-test.citadel.view.v1')).section),'wardrobe');
+ assert.equal(await ui.evaluate(()=>localStorage.getItem('plan.citadel.selectedRoom.v1')),'vault');assert.equal(await ui.evaluate(()=>localStorage.getItem('plan.android-test.citadel.selectedRoom.v1')),'rest');assert.equal(await ui.evaluate(()=>localStorage.getItem('plan.citadel.camera.v1')),prodCamera);assert.equal(await ui.evaluate(()=>localStorage.getItem('plan.citadel.view.v1')),prodView);
+ await ui.reload();await ui.locator('#profile-hero').waitFor({state:'visible'});assert.equal(await ui.evaluate(()=>localStorage.getItem('plan.citadel.selectedRoom.v1')),'vault');assert.equal(await ui.evaluate(()=>localStorage.getItem('plan.android-test.citadel.selectedRoom.v1')),'rest');assert.equal(await ui.evaluate(()=>localStorage.getItem('plan.citadel.camera.v1')),prodCamera);assert.equal(await ui.evaluate(()=>localStorage.getItem('plan.citadel.view.v1')),prodView);await presentation.close();
+ console.log('PASS isolated camera and resumed section never read or overwrite production preferences');passed++;
  assert.deepEqual(errors,[]);console.log('PASS '+passed+' Android-build isolation groups; no runtime errors');
 }catch(e){console.error('FAIL Android-build isolation:',e?.stack||String(e));process.exitCode=1;}finally{await browser.close();await new Promise(r=>server.close(r));}

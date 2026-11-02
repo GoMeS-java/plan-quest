@@ -41,9 +41,10 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
  await dismiss(page);return {page,context,session};
 }
 async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await p.clock.runFor(30).catch(()=>{});await p.waitForTimeout(15);if(!await p.locator('#legend-scene[open]').count())return;}}
-async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));}
+async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));if(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-shell'))){if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').first().click();if(await p.locator('#citadel-home').getAttribute('data-ui-view')!=='overview')await p.locator('[data-room-view="overview"]').click();}}
 async function shellMenu(p){if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
 async function shellNav(p,label){
+ if(await p.locator('.citadel-system-dialog').isVisible()){await p.locator('.citadel-system-dialog header button').first().click();await p.waitForFunction(()=>!document.querySelector('.citadel-system-dialog').open);}
  const quick={'Цитадель':'overview','Задания':'today','Профиль':'wardrobe','Воспоминания':'shop'};
  if(quick[label]){
   const dock=p.locator('.citadel-shell-dock [data-section="'+quick[label]+'"]');
@@ -71,6 +72,45 @@ function advancedSeed(){
  return seed;
 }
 try {
+
+ await check('1.1 Android nested settings remain interactive above profile and Back unwinds to room',async()=>{
+  const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await shellNav(p,'Профиль');
+  const category=p.locator('#profile-collections button:not(:disabled)').first();await category.click();await p.waitForFunction(()=>!document.querySelector('#setup').hidden);
+  assert(await p.locator('#setup').evaluate(n=>n.parentElement.matches('.citadel-system-dialog')),'nested settings must be inside the native top layer');
+  await p.locator('#fx-shake').selectOption('off');assert.equal(await p.locator('#fx-shake').inputValue(),'off');
+  await p.goBack();await p.waitForFunction(()=>document.querySelector('#setup').hidden);assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible());assert(await category.evaluate(n=>n===document.activeElement),'focus returns to the category');
+  await category.click();await p.locator('#data-management').click();const menu=p.locator('.pl-menu');await menu.waitFor({state:'visible'});assert(await menu.evaluate(n=>!!n.closest('.citadel-system-dialog')),'backup controls share the active top layer');await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-android-nested-backup.png')});
+  const downloadEvent=p.waitForEvent('download');await menu.getByRole('button',{name:'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ',exact:true}).click();const backup=await downloadEvent;assert(backup.suggestedFilename().endsWith('.json'));
+  p.once('dialog',d=>d.accept());const chooserEvent=p.waitForEvent('filechooser');await menu.getByRole('button',{name:'ВОССТАНОВИТЬ КОПИЮ ИЗ ФАЙЛА',exact:true}).click();const chooser=await chooserEvent;await chooser.setFiles([]);
+  await p.keyboard.press('Escape');await menu.waitFor({state:'hidden'});assert(await p.locator('#setup').isVisible());assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible());
+  await p.locator('#data-management').click();await menu.waitFor({state:'visible'});await p.goBack();await menu.waitFor({state:'hidden'});assert(await p.locator('#setup').isVisible(),'Back closes backup controls before nested settings');
+  await p.keyboard.press('Escape');await p.waitForFunction(()=>document.querySelector('#setup').hidden);assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible(),'Escape must close only nested settings');
+  await p.goBack();await p.waitForFunction(()=>!document.querySelector('.citadel-system-dialog').open);assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
+  await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');assert.equal(new URL(p.url()).origin,url);await context.close();
+ });
+
+ await check('1.1 Android visual keyboard viewport preserves form draft and accessible controls through rotation',async()=>{
+  const {page:p,context}=await open({shell:true});await shellNav(p,'Авито');await p.locator('#av-name').fill('Synthetic keyboard draft');
+  await p.evaluate(()=>{window.__nativeViewport=window.visualViewport;Object.defineProperty(window,'visualViewport',{configurable:true,value:{height:330,width:390,offsetTop:18,scale:1}});window.dispatchEvent(new Event('resize'));});await p.locator('#av-name').focus();await p.clock.runFor(80);
+  const small=await p.locator('.citadel-system-dialog').evaluate(n=>{var r=n.getBoundingClientRect(),a=document.querySelector('#av-name').getBoundingClientRect();return {top:r.top,bottom:r.bottom,inputTop:a.top,inputBottom:a.bottom,keyboard:document.documentElement.classList.contains('citadel-keyboard-open')};});
+  assert(small.keyboard);assert(small.top>=18&&small.bottom<=349);assert(small.inputTop>=small.top&&small.inputBottom<=small.bottom,'focused input must be above the visual keyboard');
+  await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-android-keyboard-form.png')});
+  await p.setViewportSize({width:844,height:390});await p.clock.runFor(80);assert.equal(await p.locator('#av-name').inputValue(),'Synthetic keyboard draft');assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth+1));
+  await p.evaluate(()=>{Object.defineProperty(window,'visualViewport',{configurable:true,value:window.__nativeViewport});window.dispatchEvent(new Event('resize'));});await p.setViewportSize({width:390,height:844});await p.clock.runFor(80);
+  assert(!await p.locator('html').evaluate(n=>n.classList.contains('citadel-keyboard-open')));await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('.citadel-shell-dock').isVisible());await context.close();
+ });
+
+ await check('1.1 Android background flush restores last section, scroll and camera without progress writes',async()=>{
+  const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.clock.runFor(80);const before=await docs(p);
+  await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();await p.locator('.citadel-viewport').evaluate(n=>n.scrollTo(120,180));await p.clock.runFor(20);
+  const camera=await p.locator('.citadel-viewport').evaluate(n=>({left:n.scrollLeft,top:n.scrollTop}));await shellNav(p,'Профиль');await p.locator('.citadel-system-content').evaluate(n=>n.scrollTop=150);
+  await p.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new Event('pagehide'));});
+  const saved=await p.evaluate(()=>({camera:JSON.parse(localStorage.getItem('plan.citadel.camera.v1')),view:JSON.parse(localStorage.getItem('plan.citadel.view.v1'))}));assert.equal(saved.view.section,'wardrobe');assert.equal(saved.camera.left,camera.left);assert.equal(saved.camera.top,camera.top);assert(saved.view.scroll>=100);
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading()&&document.querySelector('.citadel-system-dialog').open&&document.querySelector('#wardrobe').closest('.citadel-system-dialog'));await p.clock.runFor(80);assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollTop>=100));
+  const after=await docs(p);delete before['cfg/citadel'];delete after['cfg/citadel'];assert.deepEqual(after,before,'only presentation preferences may be flushed');
+  await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-android-restored-profile.png')});await context.close();
+  const damaged=await open({shell:true,legacy:{'plan.citadel.camera.v1':'{"left":"invalid","top":null,"zoom":999}','plan.citadel.view.v1':'{"version":1,"section":"__proto__","scroll":999999}'}});assert(await damaged.page.locator('#citadel-home').isVisible());assert(!await damaged.page.locator('.citadel-system-dialog').isVisible());await damaged.context.close();
+ });
 
  await check('1.1 lighting follows real apertures, phases and restored sources without game writes',async()=>{
   const {page:p,context}=await open({width:960,height:1000,shell:true,seed:advancedSeed(),day:'2027-04-16'});
@@ -204,7 +244,7 @@ try {
   const before=await docs(p);await p.locator('#citadel-interior-stage').focus();await p.keyboard.press('ArrowRight');
   const saved=await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.citadel.walk.v1')).rest);assert(saved.x>.5);
   assert.deepEqual(await docs(p),before,'walking must never write progress');
-  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room','reload restores the room directly');
   const actual=await p.locator('#citadel-interior-stage').evaluate(n=>{const h=n.querySelector('.citadel-hero-sprite');return {x:(parseFloat(h.style.left)+h.offsetWidth/2)/n.clientWidth,y:parseFloat(h.style.bottom)/n.clientHeight};});
   assert(Math.abs(actual.x-saved.x)<.02&&Math.abs(actual.y-saved.y)<.02);assert.deepEqual(await docs(p),before);await context.close();
  });
@@ -651,7 +691,7 @@ try {
   assert.equal(await p.locator('.is-locked').count(),0);await p.evaluate(()=>__qa.idle());
   const after=await docs(p);assert.deepEqual(after['buys/citadel-archive-2'],before['buys/citadel-archive-2']);assert.equal(Object.keys(after).filter(k=>k.startsWith('buys/')).length,1);
   await p.reload();await p.waitForFunction(()=>document.querySelector('[data-croom="archive"]').dataset.revealed==='true');await dismiss(p);
-  assert.equal(await p.locator('[data-croom="archive"]').evaluate(n=>!!n._reveal),false);await p.locator('[data-croom="archive"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
+  assert.equal(await p.locator('[data-croom="archive"]').evaluate(n=>!!n._reveal),false);await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
  });
  await check('0.76 failed progress write cannot reveal a room or spend resources',async()=>{
   const {page:p,context}=await open({day:'2027-04-16',shell:true});const before=await docs(p);
