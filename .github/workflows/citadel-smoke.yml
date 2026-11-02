@@ -1,7 +1,7 @@
 name: Integrated Citadel smoke test
 on:
   push:
-    branches: [citadel-development-20261030]
+    branches: [citadel-development-20261030, vkach-1-1-perestroyka]
   pull_request:
     paths:
       - 'src/citadel*.js'
