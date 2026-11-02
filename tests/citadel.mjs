@@ -48,7 +48,7 @@ async function shellNav(p,label){
   if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
   const group=p.locator('.citadel-shell-nav .citadel-menu-group').filter({has:p.locator('summary').filter({hasText:'СИСТЕМА'})});
   await group.locator('summary').click();
-  await group.locator(label==='Настройки'?'#gear':'#trophy-btn').click();
+  await group.locator('[data-section="'+(label==='Настройки'?'settings':'achievements')+'"]').click();
   return;
  }
  if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);

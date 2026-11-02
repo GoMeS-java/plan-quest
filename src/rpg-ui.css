@@ -81,6 +81,7 @@ body.citadel-shell-active .citadel-shell-nav .citadel-menu-group-items button{mi
 body.citadel-shell-active .citadel-shell-nav .citadel-menu-group-items #plslot{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:center;border-top:1px solid #5a4567;padding-top:8px;margin-top:2px}
 body.citadel-shell-active .citadel-shell-nav .citadel-menu-group-items #plslot>.gear{display:none}
 body.citadel-shell-active .citadel-shell-nav #plslot{border-top:1px solid #5a4567;padding-top:8px;margin-top:4px}
+body.citadel-shell-active .citadel-shell-nav .citadel-system-shortcut{font-size:22px;min-height:48px;line-height:1;background:#281e35;color:#eed8f3;border:1px solid #675174}
 body.citadel-shell-active .citadel-shell-drawer{padding:14px 12px 24px;border:1px solid #76607f;background:linear-gradient(120deg,#241a30,#12101e)}
 body.citadel-shell-active .citadel-shell-drawer h2{font:600 16px/1.3 Georgia,serif;letter-spacing:.03em;margin:4px 0 12px}
 body.citadel-shell-active .citadel-shell-drawer button{min-height:44px;font:13px/1.4 var(--font-body);box-shadow:none;border:1px solid #52415e;border-radius:3px;padding:9px 10px;margin:3px 0}

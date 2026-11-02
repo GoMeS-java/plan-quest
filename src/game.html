@@ -5156,6 +5156,11 @@ function renderAllInner() {
     // Do not duplicate them as separate menu actions.
     var systemLinks=navGroup('СИСТЕМА',[]);
     systemLinks.appendChild($('plslot'));
+    [['achievements','🏆','Достижения'],['settings','⚙','Настройки']].forEach(function(entry){
+      var b=document.createElement('button');b.type='button';b.className='citadel-system-shortcut';
+      b.dataset.section=entry[0];b.textContent=entry[1];b.setAttribute('aria-label',entry[2]);b.title=entry[2];
+      b.onclick=function(){closeMenu(true);showSystem(entry[0],entry[2]);};systemLinks.appendChild(b);
+    });
     var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Память']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];if(item[0]==='shop')b.setAttribute('aria-label','Воспоминания');b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});
     var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.onclick=function(){menuButton.click();};dock.appendChild(dockMenu);
