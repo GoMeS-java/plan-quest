@@ -140,6 +140,17 @@ body.citadel-shell-active [data-croom="observatory"][data-room-level="1"]:before
 
 body.citadel-shell-active [data-croom="rest"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="rest"][data-level="1"]:before{background:url("assets/citadel/rest-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
 
+/* Rebuild on the original arched architecture, not a flat replacement wall.
+   The same ruin geometry remains present after each purchased renovation. */
+body.citadel-shell-active [data-croom="rest"]:is([data-room-level="2"],[data-room-level="3"]):before,
+body.citadel-shell-active .citadel-interior-stage[data-room="rest"]:is([data-level="2"],[data-level="3"]):before{
+ background:url("assets/citadel/rest-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;
+ opacity:1;filter:none
+}
+body.citadel-shell-active .citadel-interior-stage[data-room="rest"]:is([data-level="2"],[data-level="3"]) .citadel-interior-renovation{
+ box-shadow:inset 22px 0 27px #0907148c,inset -22px 0 27px #0907148c,inset 0 -30px 28px #080614b8,inset 0 24px 20px #0806147a!important
+}
+
 body.citadel-shell-active [data-croom="study"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="study"][data-level="1"]:before{background:url("assets/citadel/study-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
 
 body.citadel-shell-active [data-croom="archive"][data-room-level="1"]:before,body.citadel-shell-active .citadel-interior-stage[data-room="archive"][data-level="1"]:before{background:url("assets/citadel/archive-ruins.svg") center/100% 100%,#202237 url("assets/citadel/stone.svg") center/96px 24px!important;opacity:1;filter:none}
