@@ -61,7 +61,7 @@ async function shellNav(p,label){
  await target.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});
  await target.click();
 }
-async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await b.isVisible()))await shellMenu(p);await b.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});await b.click();}
+async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await b.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=window.PlanDB;await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
 function advancedSeed(){
