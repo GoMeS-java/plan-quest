@@ -534,3 +534,39 @@ body.citadel-shell-active .lvup .lbox{max-height:calc(var(--app-height,100dvh) -
 .citadel-keyboard-open body.citadel-shell-active .setup{align-items:flex-start;padding-top:8px}
 .citadel-keyboard-open body.citadel-shell-active .citadel-system-content{scroll-padding:12px;padding-bottom:20px}
 @media(max-height:420px){body.citadel-shell-active .citadel-system-dialog>header{min-height:44px}body.citadel-shell-active .citadel-finance-nav button{min-height:40px}}
+
+/* 1.1: earned-only RPG collection; approved room and reception art is untouched. */
+.achievement-intro{font:13px/1.5 system-ui,sans-serif;color:#c2aecb;margin:0}
+.achievement-filters{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;border-bottom:1px solid #50415e}
+.achievement-filters button{min-height:44px;flex:1 1 105px;padding:8px;border:1px solid #635071;background:#261d31;color:#d8c4df;font:12px/1.3 system-ui,sans-serif}
+.achievement-filters button[aria-pressed="true"]{border-color:#d1ad7c;color:#ffe3b7;background:#423049;box-shadow:inset 0 -2px #ba9275}
+.achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.achievement-card{position:relative;min-width:0;padding:14px 12px 10px;border:1px solid #887197;background:radial-gradient(ellipse at 50% 0,#49325155,transparent 70%),linear-gradient(140deg,#271f35,#15111f);box-shadow:inset 0 0 0 3px #31273d,0 3px 8px #0005;overflow-wrap:anywhere}
+.achievement-card:before{content:'';position:absolute;inset:5px;border:1px solid #715d7b66;pointer-events:none}
+.achievement-card[data-rarity="superrare"]{border:2px solid #c8a779;background:radial-gradient(ellipse at 50% 0,#9c704c30,transparent 65%),linear-gradient(140deg,#39283c,#1c1425);box-shadow:inset 0 0 0 3px #302333,0 3px 9px #0007}
+.achievement-card[data-rarity="superrare"]:before{border-color:#b18c6266;clip-path:polygon(0 0,33% 0,33% 2%,67% 2%,67% 0,100% 0,100% 100%,67% 100%,67% 98%,33% 98%,33% 100%,0 100%)}
+.achievement-emblem{display:block;width:64px;height:64px;image-rendering:pixelated;margin:0 auto 10px}
+.achievement-rarity{display:block;text-align:center;font:10px/1.4 system-ui,sans-serif;letter-spacing:1.4px;color:#bca2cf}
+.achievement-card[data-rarity="superrare"] .achievement-rarity{color:#e2c18d}
+.achievement-card h3{font:600 16px/1.4 Georgia,serif;text-align:center;color:#eeddea;margin:8px 0;min-height:44px}
+.achievement-date{display:block;font:11px/1.5 system-ui,sans-serif;color:#b5a3c0;text-align:center}
+.achievement-featured{display:block;margin:9px 0 0;padding:5px 7px;border:1px solid #967950;background:#3d3027;color:#e6c596;font:11px/1.4 system-ui,sans-serif;text-align:center}
+.achievement-card-details{position:relative;margin-top:12px;border-top:1px solid #58465f}
+.achievement-card-details summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:44px;font:11px/1.4 system-ui,sans-serif;color:#dbc099;list-style:none}
+.achievement-card-details summary:after{content:'+';font-size:20px}.achievement-card-details[open] summary:after{content:'−'}
+.achievement-card-details p{font:12px/1.55 system-ui,sans-serif;color:#d4c2d9;margin:7px 0}
+.achievement-card-details .achievement-rewards{padding:8px;border-left:2px solid #b69468;background:#19141e;color:#d6bf97}
+.achievement-showcase-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:10px 0}
+body.citadel-shell-active .achievement-showcase-actions button{padding:6px 3px;min-width:0;font-size:11px}
+.achievement-history{list-style:none;padding:0;margin:0;border-left:2px solid #806485}
+.achievement-history li{position:relative;display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:9px;margin-left:10px;padding:8px 0;border-bottom:1px solid #45364e}
+.achievement-history li:before{content:'';position:absolute;left:-15px;width:6px;height:6px;background:#caad83;box-shadow:0 0 0 3px #2d2034}
+.achievement-history time{font:11px/1.5 system-ui,sans-serif;color:#baa6c2}
+.achievement-history button{min-height:44px;min-width:0;text-align:left;white-space:normal}
+.achievement-grid[hidden],.achievement-images[hidden],.achievement-history[hidden],#sklist[hidden],#alist[hidden]{display:none!important}
+@media(max-width:430px){.achievement-grid{grid-template-columns:1fr}.achievement-history li{grid-template-columns:72px minmax(0,1fr)}}
+.achievement-card[hidden]{display:none!important}
+.achievement-card[data-rarity="superrare"]:after{content:'';position:absolute;pointer-events:none;top:14px;left:14px;width:3px;height:3px;background:#f6ddaa;box-shadow:8px 4px #b89060,0 13px #c6a171;animation:achievementStarlight 4.8s steps(3,end) infinite}
+#trophy[hidden] .achievement-card:after,.citadel-suspended .achievement-card:after{animation-play-state:paused!important}
+@keyframes achievementStarlight{0%,100%{opacity:.45}45%{opacity:.95}70%{opacity:.65}}
+@media(prefers-reduced-motion:reduce){.achievement-card:after{animation:none!important}}

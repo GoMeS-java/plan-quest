@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const source=readFileSync('src/game.html','utf8');
+const begin=source.indexOf('  function achievementStamp('),end=source.indexOf('  function achievementSigil(',begin);
+assert(begin>=0&&end>begin);
+const hidden={id:'sealed'};for(const k of ['title','t','d','pts','cos'])Object.defineProperty(hidden,k,{get(){throw Error('unowned definition was inspected');}});
+const ctx={lastGI:{ach:{first:'2026-11-01',second:'2026-11-02',unknown:true,invalid:'2026-02-30'}},ACH:[{id:'first',d:'Already earned',pts:2},hidden,{id:'unknown',d:'Known without date'},{id:'invalid',d:'Known with damaged date'}],LEG:[{id:'second',title:'Owned milestone',d:'Owned description',pts:3,cos:'owned-style'}],ROOM_OF:{},cosOf:()=>''};
+vm.createContext(ctx);vm.runInContext(source.slice(begin,end),ctx);
+let rows=ctx.achievementOwnedRows();assert.equal(rows.length,4);assert.equal(rows[0].id,'second');assert.equal(rows[1].id,'first');assert.equal(rows[0].kind,'superrare');assert.equal(rows[1].kind,'mark');assert.equal(rows.find(r=>r.id==='invalid').date,'');assert.equal(rows.find(r=>r.id==='unknown').date,'');assert(!JSON.stringify(rows).includes('sealed'));
+ctx.lastGI.ach=Object.create({sealed:'2026-11-02'});assert.equal(ctx.achievementOwnedRows().length,0,'inherited flags do not disclose content');
+ctx.lastGI.ach={first:false};assert.equal(ctx.achievementOwnedRows().length,0);
+assert.equal(ctx.achievementStamp('2024-02-29'),'2024-02-29');assert.equal(ctx.achievementStamp('2025-02-29'),'');assert.equal(ctx.achievementStamp(null),'');
+console.log('PASS achievement collection: earned-only projection, unopened getters untouched, existing rarity groups and validated chronological dates');

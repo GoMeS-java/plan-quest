@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="b1a8bad67848";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="b6f4bb722f74";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -991,7 +991,9 @@ html,body{overflow-anchor:none}
 <div class="setup" id="trophy" hidden role="dialog" aria-modal="true" aria-label="Аспекты и отметины">
   <div class="sbox">
     <div class="shead"><b>АСПЕКТЫ И ОТМЕТИНЫ</b><button class="gear" id="trophy-x" type="button" aria-label="Закрыть">&#10005;</button></div>
-    <h2>АСПЕКТЫ</h2>
+    <p class="achievement-intro">Здесь хранится то, что уже стало частью твоего пути.</p>
+    <nav id="achievement-filters" class="achievement-filters" aria-label="Категории коллекции"></nav>
+    <h2 id="aspect-h">АСПЕКТЫ</h2>
     <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
     <h2 id="ach-h">ОТМЕТИНЫ</h2>
     <div id="alist" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -1016,7 +1018,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка b1a8bad67848</span></div>
+    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка b6f4bb722f74</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -3374,7 +3376,11 @@ html,body{overflow-anchor:none}
     var seen={};next=next.slice(0,3).map(function(id){if(!valid[id]||seen[id])return '';seen[id]=true;return id;});
     var look=Object.assign({},S.look||cachedLook||{});look.showcase=next;
     S.look=look;try{localStorage.setItem('look',JSON.stringify(look));}catch(e){}
-    renderProfile();enqueue(function(){return db.doc('cfg/look').set(look);});
+    renderProfile();Promise.resolve(enqueue(function(){return db.doc('cfg/look').set(look);})).catch(function(){
+      // A failed preference write must not turn the next click into a removal.
+      S.look=savedRecord('cfg/look')||{};try{localStorage.setItem('look',JSON.stringify(S.look));}catch(e){}
+      renderProfile();achievementViewKey='';renderAch();toast('Витрина не сохранена. Проверь хранилище и повтори выбор.');
+    });
   }
   function renderProfileJourney(p){
     var meter=$('profile-rank-meter');meter.max=Math.max(1,p.need);meter.value=Math.max(0,Math.min(p.P,p.need));
@@ -3710,13 +3716,71 @@ html,body{overflow-anchor:none}
     try { navigator.clipboard.writeText(acCopyText).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); }
   });
   $('ac-ok').addEventListener('click', function () { $('achup').hidden = true; achShowing = false; showNextAch(); });
-  var achievementViewKey='';
+  // 1.1: project only owned definitions into the collection; never enumerate mysteries.
+  function achievementStamp(value){
+    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return '';
+    var time=Date.parse(value+'T12:00:00Z');return Number.isFinite(time)&&new Date(time).toISOString().slice(0,10)===value?value:'';
+  }
+  function achievementOwnedRows(){
+    var dates=lastGI&&lastGI.ach||{},rows=[];
+    [[ACH,'mark'],[LEG,'superrare']].forEach(function(group){group[0].forEach(function(def){
+      if(!Object.prototype.hasOwnProperty.call(dates,def.id)||!dates[def.id])return;
+      rows.push({id:def.id,kind:group[1],name:def.title||def.t||def.d||'Полученная отметина',description:def.d||'',date:achievementStamp(dates[def.id]),points:Number(def.pts)||0,cos:group[1]==='superrare'?def.cos:cosOf(def.id),title:def.title||'',room:group[1]==='superrare'?(ROOM_OF[def.id]||''):''});
+    });});
+    return rows.sort(function(a,b){return b.date.localeCompare(a.date)||a.id.localeCompare(b.id);});
+  }
+  function achievementSigil(canvas,row){
+    canvas.width=64;canvas.height=64;var ctx=canvas.getContext('2d');if(!ctx)return;
+    var seed=2166136261;for(var i=0;i<row.id.length;i++){seed^=row.id.charCodeAt(i);seed=Math.imul(seed,16777619)>>>0;}
+    var color=row.kind==='superrare'?'#e4bd87':'#b8a0cf';ctx.fillStyle='#171322';ctx.fillRect(0,0,64,64);
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.strokeRect(5,5,54,54);if(row.kind==='superrare'){ctx.strokeRect(9,9,46,46);ctx.fillStyle='#806147';[[2,2],[56,2],[2,56],[56,56]].forEach(function(p){ctx.fillRect(p[0],p[1],6,6);});}
+    var shields=['01111111110','01222222210','01211111210','01211211210','01212221210','01211211210','00121112100','00122222100','00012221000','00001210000','00000100000'];
+    var blade=['00001210000','00001210000','00001210000','00001210000','00001210000','00111211100','00001110000','00001110000','00001210000','00001210000','00001110000'];
+    var book=['01111011110','12222122221','12112121121','12222122221','12112121121','12222122221','12112121121','12222122221','12222122221','01111111110','00000100000'];
+    var flame=['00000100000','00001210000','00001210000','00011211000','00112112100','00122112210','01222122210','01221212210','01222222210','00122222100','00011111000'];
+    var star=['00000100000','00001210000','00001210000','01111211110','01222222210','00122222100','00012221000','00122122100','00121012100','01210001210','01100000110'];
+    var cat=row.cos&&COS[row.cos]&&COS[row.cos].cat,motif=cat==='aura'?flame:cat==='title'?star:cat==='frame'?shields:cat==='bg'?book:[shields,blade,book,flame,star][seed%5];
+    var tones=['',color,row.kind==='superrare'?'#fff1cc':'#ece0ef'];for(var y=0;y<11;y++)for(var x=0;x<11;x++){var value=Number(motif[y][x]);if(value){ctx.fillStyle=tones[value];ctx.fillRect(16+x*3,15+y*3,3,3);}}
+    ctx.fillStyle=color;for(var k=0;k<4;k++)if(seed&(1<<k))ctx.fillRect(14+k*10,52,3,2);
+  }
+  var achievementFilter='all',achievementViewKey='';
+  function applyAchievementFilter(){
+    var aspects=achievementFilter==='all'||achievementFilter==='aspects',marks=achievementFilter==='all'||achievementFilter==='marks'||achievementFilter==='superrare',images=achievementFilter==='all'||achievementFilter==='images';
+    $('aspect-h').hidden=!aspects;$('sklist').hidden=!aspects;
+    var grid=$('achievement-grid'),echoes=$('achievement-images'),history=$('achievement-history');if(grid){grid.hidden=!marks;grid.querySelectorAll('[data-achievement]').forEach(function(card){card.hidden=achievementFilter==='superrare'&&card.dataset.rarity!=='superrare';});}if(echoes)echoes.hidden=!images;if(history)history.hidden=achievementFilter!=='history';
+    $('ach-h').textContent=achievementFilter==='history'?'ЛЕТОПИСЬ ОТКРЫТИЙ':achievementFilter==='images'?'ПОЛУЧЕННЫЕ ОБРАЗЫ':'ОТМЕТИНЫ';$('ach-h').hidden=achievementFilter==='aspects';$('alist').hidden=achievementFilter==='aspects';
+    $('achievement-filters').querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.achievementFilter===achievementFilter));});
+  }
+  function renderAchievementFilters(){
+    var box=$('achievement-filters');clear(box);var rows=achievementOwnedRows(),groups=[['all','Всё полученное'],['aspects','Аспекты']];if(rows.length)groups.push(['marks','Отметины']);if(rows.some(function(r){return r.kind==='superrare';}))groups.push(['superrare','Суперредкие']);if(fateOwned().length||legendOwned().length)groups.push(['images','Образы']);groups.push(['history','История']);
+    if(!groups.some(function(g){return g[0]===achievementFilter;}))achievementFilter='all';
+    groups.forEach(function(row){var b=el('button',null,row[1]);b.type='button';b.dataset.achievementFilter=row[0];b.onclick=function(){achievementFilter=row[0];applyAchievementFilter();};box.appendChild(b);});applyAchievementFilter();
+  }
+  function renderAchievementCollection(box){
+    var rows=achievementOwnedRows(),grid=el('div','achievement-grid');grid.id='achievement-grid';box.appendChild(grid);
+    if(!rows.length)grid.appendChild(el('p','hint achievement-empty','Полученные отметины появятся здесь. Закрытые страницы остаются тайной.'));
+    var chosen=profileSelected();rows.forEach(function(row){
+      var card=el('article','achievement-card');card.dataset.achievement=row.id;card.dataset.rarity=row.kind;
+      var emblem=el('canvas','achievement-emblem');emblem.setAttribute('aria-hidden','true');achievementSigil(emblem,row);card.appendChild(emblem);
+      card.appendChild(el('span','achievement-rarity',row.kind==='superrare'?'СУПЕРРЕДКАЯ':'ОТМЕТИНА'));card.appendChild(el('h3',null,row.name));card.appendChild(el('time','achievement-date',row.date?'Получено '+row.date.split('-').reverse().join('.'):'Дата получения не записана'));
+      var selected=chosen.map(function(id,i){return id===row.id?i+1:0;}).filter(Boolean);if(selected.length)card.appendChild(el('span','achievement-featured','На витрине · место '+selected[0]));
+      var details=el('details','achievement-card-details');details.appendChild(el('summary',null,'ПОДРОБНЕЕ'));details.appendChild(el('p',null,row.description));
+      var rewards=[];if(row.points)rewards.push('+'+row.points+' осколков');if(row.title)rewards.push('Титул «'+row.title+'»');if(row.id!=='z33'&&row.cos&&COS[row.cos])rewards.push('Оформление «'+COS[row.cos].n+'»');if(row.id!=='z33'&&row.room&&ROOM_ITEMS[row.room])rewards.push('Предмет «'+ROOM_ITEMS[row.room].n+'»');
+      if(rewards.length)details.appendChild(el('p','achievement-rewards','Получено: '+rewards.join(' · ')));
+      var slots=el('div','achievement-showcase-actions');slots.setAttribute('aria-label','Выбрать место в витрине');[0,1,2].forEach(function(index){var b=el('button',null,'Место '+(index+1));b.type='button';b.dataset.showcaseSlot=String(index);b.setAttribute('aria-pressed',String(chosen[index]===row.id));b.onclick=function(){var next=profileSelected().map(function(id){return id===row.id?'':id;});next[index]=profileSelected()[index]===row.id?'':row.id;profileSaveShowcase(next);};slots.appendChild(b);});details.appendChild(slots);card.appendChild(details);grid.appendChild(card);
+    });
+    var images=el('section','achievement-images');images.id='achievement-images';box.appendChild(images);renderLegendCollection(images);
+    var history=el('ol','achievement-history');history.id='achievement-history';history.setAttribute('aria-label','История полученных отметин');
+    if(!rows.length)history.appendChild(el('li','hint','В летописи пока нет полученных отметин.'));
+    rows.forEach(function(row){var li=el('li'),date=el('time',null,row.date?row.date.split('-').reverse().join('.'):'Дата не записана'),button=el('button',null,row.name);if(row.date)date.dateTime=row.date;button.type='button';button.onclick=function(){achievementFilter='marks';applyAchievementFilter();var card=grid.querySelector('[data-achievement="'+row.id+'"]'),details=card.querySelector('details');details.open=true;details.querySelector('summary').focus({preventScroll:true});card.scrollIntoView({block:'nearest'});};li.appendChild(date);li.appendChild(button);history.appendChild(li);});box.appendChild(history);
+    box.appendChild(el('p','hint','Неоткрытые отметины хранят свою тайну.'));
+  }
   function renderAch() {
     if (!lastGI) return;
     var viewKey=JSON.stringify([lastGI.ach,lastGI.ups,lastGI.nups,S.look||cachedLook,S.legends,S.fate,!!window.__COS_ALL]);
     if(viewKey===achievementViewKey)return;
     achievementViewKey=viewKey;
-    var box = $('alist'), sk = $('sklist');
+    var box = $('alist'), sk = $('sklist'),opened=Array.from(box.querySelectorAll('[data-achievement] details[open]')).map(function(n){return n.parentElement.dataset.achievement;}),focus=document.activeElement,focusCard=focus&&focus.closest('[data-achievement]'),focusId=focusCard&&focusCard.dataset.achievement,focusSlot=focus&&focus.dataset.showcaseSlot;
     clear(box); clear(sk);
     var any = false;
     SK_KEYS.forEach(function (key) {
@@ -3734,23 +3798,9 @@ html,body{overflow-anchor:none}
       sk.appendChild(questButton(N.name + ' ' + SK_ROMAN[u.lvl - 1], N.desc(u.lvl) + ' Открыт ' + dshort(u.date) + '. Следующие ступени скрыты.', '✓', true, null, true));
     });
     if (!any) sk.appendChild(el('div', 'hint', 'Скрытые Аспекты открываются сами, когда накопится достаточно или ты сделаешь рекорд.'));
-    var open = 0;
-    LEG.forEach(function (G) {
-      var d = lastGI.ach[G.id], cc = G.cos;
-      if (d) { open++; box.appendChild(questButton('Суперредкое: ' + G.d, dshort(d) + (G.title ? ' · титул «' + G.title + '»' : '') + (G.id === 'z33' ? '' : cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : '') + (ROOM_OF[G.id] && G.id !== 'z33' ? ' · предмет «' + ROOM_ITEMS[ROOM_OF[G.id]].n + '»' : ''), G.pts ? '+' + G.pts : '✓', true, null, true)); }
-
-    });
-    ACH.forEach(function (A) {
-      var d = lastGI.ach[A.id];
-      if (d) {
-        open++;
-        var cc = cosOf(A.id);
-        box.appendChild(questButton('Открыто: ' + A.d, dshort(d) + (A.title ? ' · титул «' + A.title + '»' : '') + (cc && COS[cc] ? ' · оформление «' + COS[cc].n + '»' : ''), '+' + A.pts, true, null, true));
-      }
-    });
-    renderLegendCollection(box);
-    box.appendChild(el('p','hint','Неоткрытые отметины хранят свою тайну.'));
-    $('ach-h').textContent = 'ОТМЕТИНЫ';
+    renderAchievementCollection(box);
+    renderAchievementFilters();
+    opened.forEach(function(id){var card=box.querySelector('[data-achievement="'+id+'"] details');if(card)card.open=true;});if(focusId){var target=box.querySelector('[data-achievement="'+focusId+'"] '+(focusSlot!==undefined?'[data-showcase-slot="'+focusSlot+'"]':'summary'));if(target)target.focus({preventScroll:true});}
     updateNameTag();
     renderLook();
   }
@@ -4541,7 +4591,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
       var select=el('button',null,legendActive()&&legendActive().id===d.id?'УБРАТЬ ОФОРМЛЕНИЕ':'ПРИМЕНИТЬ ОФОРМЛЕНИЕ');select.type='button';select.setAttribute('aria-pressed',String(!!(legendActive()&&legendActive().id===d.id)));select.onclick=function(){legendSelect(legendActive()&&legendActive().id===d.id?'':d.id);};article.appendChild(select);
       var visit=el('button',null,'К ОФОРМЛЕНИЮ');visit.type='button';visit.onclick=function(){legendSelect(d.id).then(function(){if(citadelRoomOpen(d.room)){$('trophy').hidden=true;var hs=Object.assign({},history.state);delete hs.citadelOverlay;history.replaceState(hs,'');citadelMove(d.room);citadelEnter();}else toast('Оформление сохранено. Комната пока закрыта.');});};article.appendChild(visit);box.appendChild(article);
     });
-    LEG.forEach(function(g){if(!lastGI.ach[g.id])return;var b=el('button','legend-replay','ВСПОМНИТЬ · '+(g.title||'Отметина'));b.type='button';b.onclick=function(){legendScene('legacy:'+g.id);};box.appendChild(b);});
+    LEG.forEach(function(g){if(!lastGI.ach[g.id])return;var b=el('button','legend-replay','ВСПОМНИТЬ · '+(g.title||'Отметина'));b.type='button';b.onclick=function(){legendScene('legacy:'+g.id);};var target=$('alist').querySelector('[data-achievement="'+g.id+'"] .achievement-card-details')||box;target.appendChild(b);});
   }
   function legendDecorate(){
     var active=legendActive(),stage=$('citadel-interior-stage');

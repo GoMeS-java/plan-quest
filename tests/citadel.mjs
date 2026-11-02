@@ -71,7 +71,50 @@ function advancedSeed(){
  for(let n=0;n<180;n++){const dt=new Date('2026-10-19T12:00:00Z');dt.setUTCDate(dt.getUTCDate()+n);const k=dt.toISOString().slice(0,10),t=dt.getTime();seed['days/'+k]={q:Array(10).fill(true),steps:50000,kcal:2100};seed['per/'+k]={squat:[t,t+7200000,t+14400000],pushup:[t,t+7200000,t+14400000],squatR:[100,100,100],pushupR:[100,100,100],workout:[t]};}
  return seed;
 }
+async function achievementPreview(p,name){
+ await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());
+ await p.evaluate(()=>{window.__achievementShot=[];document.querySelectorAll('.achievement-card h3,.achievement-card-details>p,.achievement-history button,.legend-replay').forEach(n=>{__achievementShot.push([n,n.textContent]);n.textContent=n.matches('h3,button')?'Полученная отметина':n.classList.contains('achievement-rewards')?'Полученные награды скрыты в демонстрации.':'Описание скрыто в демонстрации.';});var note=document.createElement('p');note.id='achievement-shot-note';note.className='hint';note.textContent='Демонстрация: названия, условия и награды скрыты.';document.querySelector('#trophy .shead').after(note);});
+ try{await p.screenshot({path:resolve(out,name)});}finally{await p.evaluate(()=>{for(const [n,text]of window.__achievementShot||[])if(n.isConnected)n.textContent=text;document.querySelector('#achievement-shot-note')?.remove();delete window.__achievementShot;});}
+}
 try {
+
+ await check('1.1 RPG achievement collection keeps unopened definitions and counts out of the interface',async()=>{
+  const {page:p,context}=await open({shell:true});const before=await docs(p);await shellNav(p,'Достижения');
+  assert.equal(await p.locator('.achievement-card').count(),0);assert.equal(await p.locator('[data-achievement-filter="marks"]').count(),0);assert.equal(await p.locator('[data-achievement-filter="images"]').count(),0);
+  await p.locator('[data-achievement-filter="history"]').click();assert(await p.locator('#achievement-history').isVisible());assert.equal(await p.locator('#achievement-history li').count(),1);
+  assert(!/\d+\s*(\/|из)\s*\d+|осталось|%/.test(await p.locator('#alist').innerText()),'empty collection must not reveal target totals');assert.deepEqual(await docs(p),before);await context.close();
+ });
+
+ await check('1.1 RPG achievement cards, chronology and showcase use existing earned records without new rewards',async()=>{
+  const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});const before=await docs(p);await shellNav(p,'Достижения');const count=await p.locator('.achievement-card').count();assert(count>0);
+  await p.locator('[data-achievement-filter="marks"]').click();assert(await p.locator('#achievement-grid').isVisible());assert(await p.locator('#achievement-images').isHidden());assert(await p.locator('#sklist').isHidden());
+  await p.locator('#trophy').evaluate(n=>n.scrollTop=0);await achievementPreview(p,'v11-achievements-cards-390.png');
+  const rare=p.locator('[data-achievement-filter="superrare"]');if(await rare.count()){await rare.click();assert.equal(await p.locator('.achievement-card[data-rarity="mark"]:visible').count(),0);assert(await p.locator('.achievement-card[data-rarity="superrare"]:visible').count()>0);assert.equal(await p.locator('.achievement-card[data-rarity="superrare"]').first().evaluate(n=>getComputedStyle(n,'::after').animationName),'none');await achievementPreview(p,'v11-achievements-rare-390.png');await p.locator('[data-achievement-filter="marks"]').click();}
+  const card=p.locator('.achievement-card').first(),id=await card.getAttribute('data-achievement');await card.locator('summary').click();assert(await card.locator('.achievement-card-details').evaluate(n=>n.open));
+  const canvas=await card.locator('canvas').evaluate(n=>n.toDataURL());assert(canvas.length>100);await card.locator('[data-showcase-slot="1"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase?.[1]===id,id);
+  assert.equal(await card.locator('[data-showcase-slot="1"]').getAttribute('aria-pressed'),'true');assert(await card.locator('details').evaluate(n=>n.open),'detail survives preference save');assert.equal(await p.locator('#profile-showcase .profile-award').count(),3);
+  await card.locator('[data-showcase-slot="2"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase?.[2]===id,id);assert.equal((await docs(p))['cfg/look'].d.showcase.filter(v=>v===id).length,1,'an achievement occupies only one chosen slot');
+  await achievementPreview(p,'v11-achievements-detail-390.png');
+  await p.locator('[data-achievement-filter="history"]').click();assert.equal(await p.locator('#achievement-history button').count(),count);const dates=await p.locator('#achievement-history time[datetime]').evaluateAll(ns=>ns.map(n=>n.dateTime));assert.deepEqual(dates,dates.slice().sort().reverse());
+  await p.locator('#trophy').evaluate(n=>n.scrollTop=0);await achievementPreview(p,'v11-achievements-history-390.png');await p.locator('#achievement-history button').first().click();assert(await p.locator('.achievement-card').first().locator('details').evaluate(n=>n.open));
+  const after=await docs(p);delete before['cfg/look'];delete after['cfg/look'];assert.deepEqual(after,before,'collection navigation and showcase do not alter gameplay data');await context.close();
+ });
+
+ await check('1.1 RPG collection cards and history fit narrow, landscape and desktop screens',async()=>{
+  for(const [width,height]of [[320,760],[430,900],[844,390],[1280,1000]]){
+   const {page:p,context}=await open({width,height,shell:true,mobile:width<900,seed:advancedSeed(),day:'2027-04-16'});await shellNav(p,'Достижения');await p.locator('[data-achievement-filter="marks"]').click();await p.locator('.achievement-card').first().locator('summary').click();
+   assert(await p.locator('#trophy .sbox').evaluate(n=>n.scrollWidth<=n.clientWidth+1),'card overflow at '+width);assert(await p.locator('.achievement-showcase-actions button').first().evaluate(n=>n.getBoundingClientRect().height>=44));
+   if(width===1280)await achievementPreview(p,'v11-achievements-cards-desktop.png');await p.locator('[data-achievement-filter="history"]').click();assert(await p.locator('#trophy .sbox').evaluate(n=>n.scrollWidth<=n.clientWidth+1));await context.close();
+  }
+ });
+
+ await check('1.1 achievement showcase rejects failed storage without a false selected badge and can retry',async()=>{
+  const {page:p,context}=await open({shell:true,seed:{...advancedSeed(),'cfg/look':{showcase:['','',''],futureField:'preserve'}},day:'2027-04-16'});await shellNav(p,'Достижения');await p.locator('[data-achievement-filter="marks"]').click();const card=p.locator('.achievement-card').first(),id=await card.getAttribute('data-achievement');await card.locator('summary').click();
+  await p.evaluate(()=>{window.__showcaseStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __showcaseStorage.call(this,key,value);};});
+  await card.locator('[data-showcase-slot="0"]').click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(80);
+  assert.equal((await docs(p))['cfg/look'].d.showcase[0],'');assert.equal(await card.locator('[data-showcase-slot="0"]').getAttribute('aria-pressed'),'false','failed save must not look committed');
+  await p.evaluate(()=>{Storage.prototype.setItem=window.__showcaseStorage;});await card.locator('[data-showcase-slot="0"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase[0]===id,id);assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
+ });
 
  await check('1.1 Android nested settings remain interactive above profile and Back unwinds to room',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await shellNav(p,'Профиль');
