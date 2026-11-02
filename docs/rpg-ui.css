@@ -71,6 +71,9 @@ body.citadel-shell-active .citadel-shell-dock button[aria-current="page"]{color:
 body.citadel-shell-active .citadel-shell-dock{gap:0;border-top:1px solid #665171;background:#15101f;padding-top:0;padding-bottom:env(safe-area-inset-bottom)}
 body.citadel-shell-active .citadel-shell-nav button{font:500 12px/1.3 var(--font-body);min-height:46px;border:1px solid #604d6e;box-shadow:none;border-radius:3px;white-space:normal}
 body.citadel-shell-active .citadel-shell-nav .citadel-menu-quick{display:none!important}
+/* The bottom dock disappears on larger screens, so its primary destinations
+   must remain reachable from the desktop header. */
+@media(min-width:700px){body.citadel-shell-active .citadel-shell-nav .citadel-menu-quick{display:inline-flex!important;align-items:center;justify-content:center;flex:none;min-height:40px;font-size:11px;padding:5px 9px}}
 body.citadel-shell-active .citadel-shell-nav .citadel-menu-group{grid-column:1/-1;min-width:0;border:1px solid #665173;border-radius:4px;background:#21182d;overflow:visible}
 body.citadel-shell-active .citadel-shell-nav .citadel-menu-group>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:11px 13px;box-sizing:border-box;font:600 13px/1.4 var(--font-body);color:#eed8ed}
 body.citadel-shell-active .citadel-shell-nav .citadel-menu-group>summary::-webkit-details-marker{display:none}
