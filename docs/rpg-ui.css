@@ -727,3 +727,44 @@ body.citadel-shell-active #citadel-home :is([data-croom="cloister"][data-room-le
 :root[data-aura="orbit"],[data-aura-preview="orbit"]{--aura-pixels:url('assets/citadel/aura-orbit.svg');--aura-period:4.8s;--aura-preview-glow:#e7d4a488}
 [data-aura-preview="soft"]{--aura-pixels:none;--aura-preview-glow:#fff0c888}
 /* END generated pixel auras */
+/* BEGIN generated reward frames */
+:root{--reward-frame-art:none;--reward-frame-light:none;--reward-frame-period:8s}
+:root[data-reward-frame="gold"],[data-frame-preview="gold"]{--reward-frame-art:url('assets/citadel/frame-gold.svg');--reward-frame-light:url('assets/citadel/frame-gold-light.svg');--reward-frame-period:8s}
+:root[data-reward-frame="double"],[data-frame-preview="double"]{--reward-frame-art:url('assets/citadel/frame-double.svg');--reward-frame-light:url('assets/citadel/frame-double-light.svg');--reward-frame-period:10s}
+:root[data-reward-frame="dash"],[data-frame-preview="dash"]{--reward-frame-art:url('assets/citadel/frame-dash.svg');--reward-frame-light:url('assets/citadel/frame-dash-light.svg');--reward-frame-period:8s}
+:root[data-reward-frame="neon"],[data-frame-preview="neon"]{--reward-frame-art:url('assets/citadel/frame-neon.svg');--reward-frame-light:url('assets/citadel/frame-neon-light.svg');--reward-frame-period:4.5s}
+:root[data-reward-frame="wood"],[data-frame-preview="wood"]{--reward-frame-art:url('assets/citadel/frame-wood.svg');--reward-frame-light:url('assets/citadel/frame-wood-light.svg');--reward-frame-period:12s}
+:root[data-reward-frame="ice"],[data-frame-preview="ice"]{--reward-frame-art:url('assets/citadel/frame-ice.svg');--reward-frame-light:url('assets/citadel/frame-ice-light.svg');--reward-frame-period:7s}
+:root[data-reward-frame="pixel"],[data-frame-preview="pixel"]{--reward-frame-art:url('assets/citadel/frame-pixel.svg');--reward-frame-light:url('assets/citadel/frame-pixel-light.svg');--reward-frame-period:9s}
+:root[data-reward-frame="vine"],[data-frame-preview="vine"]{--reward-frame-art:url('assets/citadel/frame-vine.svg');--reward-frame-light:url('assets/citadel/frame-vine-light.svg');--reward-frame-period:9s}
+:root[data-reward-frame="rgb"],[data-frame-preview="rgb"]{--reward-frame-art:url('assets/citadel/frame-rgb.svg');--reward-frame-light:url('assets/citadel/frame-rgb-light.svg');--reward-frame-period:10s}
+:root[data-reward-frame="vitrage"],[data-frame-preview="vitrage"]{--reward-frame-art:url('assets/citadel/frame-vitrage.svg');--reward-frame-light:url('assets/citadel/frame-vitrage-light.svg');--reward-frame-period:12s}
+:root[data-reward-frame="abyss"],[data-frame-preview="abyss"]{--reward-frame-art:url('assets/citadel/frame-abyss.svg');--reward-frame-light:url('assets/citadel/frame-abyss-light.svg');--reward-frame-period:8s}
+:root[data-reward-frame="shard"],[data-frame-preview="shard"]{--reward-frame-art:url('assets/citadel/frame-shard.svg');--reward-frame-light:url('assets/citadel/frame-shard-light.svg');--reward-frame-period:9s}
+:root[data-reward-frame="scan"],[data-frame-preview="scan"]{--reward-frame-art:url('assets/citadel/frame-scan.svg');--reward-frame-light:url('assets/citadel/frame-scan-light.svg');--reward-frame-period:5s}
+:root[data-reward-frame="sunset"],[data-frame-preview="sunset"]{--reward-frame-art:url('assets/citadel/frame-sunset.svg');--reward-frame-light:url('assets/citadel/frame-sunset-light.svg');--reward-frame-period:11s}
+/* END generated reward frames */
+.profile-stage{position:relative}
+.reward-frame{display:none;position:absolute;inset:0;pointer-events:none;z-index:4;--reward-frame-width:16px}
+.reward-frame:before,.reward-frame:after{content:'';position:absolute;inset:0;pointer-events:none;box-sizing:border-box;border:var(--reward-frame-width) solid transparent;border-image:var(--reward-frame-art) 16.666667% round;image-rendering:pixelated}
+.reward-frame:after{border-image-source:var(--reward-frame-light);opacity:.25;animation:rewardFrameGleam var(--reward-frame-period,8s) ease-in-out infinite}
+:root[data-pixel-frame] :is(.profile-stage,.stage)>.reward-frame{display:block}
+:root[data-pixel-frame] .profile-stage{padding:22px 20px}
+:root[data-pixel-frame] .profile-stage :is(.profile-title,.profile-name){max-width:100%;box-sizing:border-box;padding:1px 6px;background:#100f1ac9;text-shadow:0 1px #000;overflow-wrap:anywhere}
+:root[data-pixel-frame][data-realm-landscape] .profile-stage{background:linear-gradient(#0c0b1644,#0c0b1699),var(--realm-landscape) center/cover no-repeat;image-rendering:pixelated}
+:root[data-pixel-frame] .stage{animation:none;border:4px solid transparent;outline:none;box-shadow:none}
+:root[data-pixel-frame] .stage>.reward-frame{z-index:2}
+:root[data-pixel-frame] .stage :is(.wopen,.nametag){z-index:4}
+:root[data-pixel-frame] .stage .hero{bottom:34px}
+:root[data-pixel-frame] .stage .hero canvas{width:min(144px,40vw)}
+.frame-preview{display:block;position:relative;flex:none;width:132px;height:164px;overflow:hidden;background:linear-gradient(#0c0b1644,#0c0b1699),var(--realm-landscape,radial-gradient(ellipse at 50% 75%,#514067,#171124 70%)) center/cover no-repeat;image-rendering:pixelated}
+.frame-preview-anchor{position:absolute;left:42px;top:42px;width:48px;height:78px}
+.frame-preview canvas{display:block;position:relative;z-index:1;width:48px;height:78px;image-rendering:pixelated;filter:drop-shadow(0 0 3px var(--shared-hero-aura))}
+.frame-preview .shared-aura-layer{display:block;animation-play-state:paused}
+.frame-preview .reward-frame{display:block;--reward-frame-width:12px}
+.frame-preview .reward-frame:after{animation-play-state:paused}
+.frame-choice:is(:hover,:focus-visible,[aria-pressed="true"]) .shared-aura-layer,.frame-choice:is(:hover,:focus-visible,[aria-pressed="true"]) .reward-frame:after{animation-play-state:running}
+.looksec[data-look-category="frame"] .frame-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;flex:1 1 146px;min-width:0;max-width:250px;min-height:202px;text-align:center}
+.setup[hidden] .reward-frame:after,.look-group:not([open]) .reward-frame:after,.citadel-suspended .reward-frame:after,dialog:not([open]) .reward-frame:after,[hidden] .reward-frame:after{animation-play-state:paused!important}
+@keyframes rewardFrameGleam{0%,35%,100%{opacity:.08}48%{opacity:.8}62%{opacity:.15}75%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.reward-frame:after{animation:none!important;opacity:.25}}
