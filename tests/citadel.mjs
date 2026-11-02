@@ -43,7 +43,17 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
 async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await p.clock.runFor(30).catch(()=>{});await p.waitForTimeout(15);if(!await p.locator('#legend-scene[open]').count())return;}}
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));}
 async function shellMenu(p){if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
-async function shellNav(p,label){if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();}
+async function shellNav(p,label){
+ if(label==='Настройки'||label==='Достижения'){
+  if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
+  const group=p.locator('.citadel-shell-nav .citadel-menu-group').filter({has:p.locator('summary').filter({hasText:'СИСТЕМА'})});
+  await group.locator('summary').click();
+  await group.locator(label==='Настройки'?'#gear':'#trophy-btn').click();
+  return;
+ }
+ if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
+ await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();
+}
 async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await b.isVisible()))await shellMenu(p);await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=window.PlanDB;await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
