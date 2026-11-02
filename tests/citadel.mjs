@@ -56,7 +56,7 @@ async function shellNav(p,label){
  await target.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});
  await target.click();
 }
-async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await b.isVisible()))await shellMenu(p);await b.click();}
+async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await b.isVisible()))await shellMenu(p);await b.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=window.PlanDB;await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
 function advancedSeed(){
@@ -66,6 +66,30 @@ function advancedSeed(){
  return seed;
 }
 try {
+
+ await check('1.1 profile shows current progress, three achievement slots and a compact wardrobe',async()=>{
+  const {page:p,context}=await open({shell:true});
+  const before=await docs(p);
+  await shellNav(p,'Профиль');
+  assert(await p.locator('#profile-hero').isVisible());
+  assert.equal(await p.locator('#profile-showcase .profile-award').count(),3);
+  assert.equal(await p.locator('#profile-days').innerText(),'1');
+  assert.equal(await p.locator('#profile-checks').innerText(),'0');
+  assert(await p.locator('#profile-rank').innerText());
+  assert(!(await p.locator('#profile-wardrobe').evaluate(n=>n.open)));
+  await p.locator('#profile-showcase .profile-award').first().click();
+  assert(await p.locator('#profile-picker').isVisible());
+  assert.equal(await p.locator('#profile-achievements button').count(),1,'unearned achievements must not be exposed in the picker');
+  await p.locator('#profile-picker-close').click();
+  await p.locator('#profile-title-open').click();
+  assert(await p.locator('#profile-titles').isVisible());
+  await p.locator('#profile-title-open').click();
+  await p.locator('#profile-gear-open').click();
+  assert(await p.locator('#profile-wardrobe').evaluate(n=>n.open));
+  assert.equal(await p.locator('.wardrobe-worn').count(),3);
+  assert.deepEqual(await docs(p),before,'viewing the profile must not change progress records');
+  await context.close();
+ });
 
  await check('1.0 Awakening stays voluntary for existing profiles and navigates real sections without game writes',async()=>{
   const {page:p,context}=await open({shell:true});
