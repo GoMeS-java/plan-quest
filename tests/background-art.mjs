@@ -11,6 +11,9 @@ for(const key of keys){
  const path=context.lookLandscape(key);assert(path,'every existing background must have art');
  const svg=await readFile('src/'+path,'utf8');assert(svg.includes('shape-rendering="crispEdges"'));assert((svg.match(/<g id=/g)||[]).length>=3,'multiple depth planes');assert(worker.includes(path),'offline cache includes every landscape');
  assert.equal(await readFile('docs/'+path,'utf8'),svg);
+ if(key!=='winter')for(const n of [1,2]){
+  const life='assets/citadel/realm-'+key+'-life-'+n+'.svg';const art=await readFile('src/'+life,'utf8');assert(/<(rect|polygon|path)\b/.test(art),'every nonwinter background has a populated detail layer');assert(worker.includes(life),'detail layer is cached offline');assert.equal(await readFile('docs/'+life,'utf8'),art);
+ }
 }
 const leg=source.slice(source.indexOf('  var LEG = ['),source.indexOf('];',source.indexOf('  var LEG = ['))+2);
 const awarded=[...leg.matchAll(/cos:\s*'(b_[^']+)'/g)].map(m=>m[1]);

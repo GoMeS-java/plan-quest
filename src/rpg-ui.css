@@ -575,7 +575,7 @@ body.citadel-shell-active .achievement-showcase-actions button{padding:6px 3px;m
 :root[data-citadel-bg="beach"]{--realm-landscape:url('assets/citadel/realm-beach.svg')}
 :root[data-citadel-bg="cave"]{--realm-landscape:url('assets/citadel/realm-cave.svg')}
 :root[data-realm-landscape] .citadel-shell .citadel-sky{background-image:var(--realm-landscape)!important;background-position:center 60%!important;background-size:cover!important}
-:root[data-realm-landscape] body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:.58;background:var(--realm-landscape) center/100% 100% no-repeat;image-rendering:pixelated;animation:none}
+:root[data-realm-landscape] body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:.58;background:var(--realm-landscape) center/cover no-repeat;image-rendering:pixelated;animation:none;mask-image:var(--window-mask,var(--aperture-mask));z-index:0}
 :root[data-realm-landscape] .stage .window{background:var(--realm-landscape) center/cover no-repeat;image-rendering:pixelated;overflow:hidden}
 :root[data-realm-landscape] .stage .window :is(.moon,.star){visibility:hidden}
 .looksec[data-look-category="bg"] .realm-choice{flex:1 1 146px;max-width:320px;min-width:0;min-height:104px;padding:7px;display:flex;flex-direction:column;align-items:stretch;gap:8px;text-align:center;line-height:1.5;white-space:normal}
@@ -599,9 +599,9 @@ body.citadel-shell-active .achievement-showcase-actions button{padding:6px 3px;m
 
 /* Quiet snowfall outside; fast snow and frost are clipped to the actual glazing. */
 .citadel-window-weather,.citadel-window-frost{display:none;position:absolute;inset:0;pointer-events:none;image-rendering:pixelated}
-:root[data-citadel-bg="winter"] .citadel-window-weather{display:block;mask:var(--aperture-mask) center/100% 100% no-repeat;mask-mode:luminance;opacity:.82;background-image:radial-gradient(1px 1px at 9px 11px,#f4f7f7 99%,transparent),radial-gradient(3px 1px at 29px 17px,#deebf1 99%,transparent),linear-gradient(154deg,transparent 37%,#edf4f566 47%,transparent 57%);background-size:23px 31px,47px 39px,151px 83px;animation:citadelWindowBlizzard 1.8s linear infinite}
-:root[data-citadel-bg="winter"] .citadel-window-frost{display:block;background:var(--frost-art) center/100% 100% no-repeat;opacity:.9}
-:root:is([data-citadel-bg="rain"],[data-citadel-bg="storm"]) .citadel-window-weather{display:block;mask:var(--aperture-mask) center/100% 100% no-repeat;mask-mode:luminance;opacity:.32;background:repeating-linear-gradient(107deg,transparent 0 22px,#c0d8ee 23px 24px,transparent 25px 48px);background-size:64px 96px;animation:citadelWindowRain 1.4s linear infinite}
+:root[data-citadel-bg="winter"] .citadel-window-weather{display:block;mask:var(--window-mask,var(--aperture-mask)) center/100% 100% no-repeat;mask-mode:luminance;opacity:.82;background-image:radial-gradient(1px 1px at 9px 11px,#f4f7f7 99%,transparent),radial-gradient(3px 1px at 29px 17px,#deebf1 99%,transparent),linear-gradient(154deg,transparent 37%,#edf4f566 47%,transparent 57%);background-size:23px 31px,47px 39px,151px 83px;animation:citadelWindowBlizzard 1.8s linear infinite;z-index:2}
+:root[data-citadel-bg="winter"] .citadel-window-frost{display:block;background:var(--frost-art) center/100% 100% no-repeat;opacity:.9;z-index:3}
+:root:is([data-citadel-bg="rain"],[data-citadel-bg="storm"]) .citadel-window-weather{display:block;mask:var(--window-mask,var(--aperture-mask)) center/100% 100% no-repeat;mask-mode:luminance;opacity:.32;background:repeating-linear-gradient(107deg,transparent 0 22px,#c0d8ee 23px 24px,transparent 25px 48px);background-size:64px 96px;animation:citadelWindowRain 1.4s linear infinite;z-index:2}
 body.citadel-shell-active #citadel-home :is([data-croom="rest"],[data-room="rest"]){--frost-art:url('assets/citadel/rest-frost.svg')}
 body.citadel-shell-active #citadel-home :is([data-croom="study"],[data-room="study"]){--frost-art:url('assets/citadel/study-frost.svg')}
 body.citadel-shell-active #citadel-home :is([data-croom="archive"],[data-room="archive"]){--frost-art:url('assets/citadel/archive-frost.svg')}
@@ -623,3 +623,76 @@ body.citadel-shell-active #citadel-home :is([data-croom="cloister"],[data-room="
 @keyframes citadelQuietSnow{to{background-position:8px 113px,-9px 151px,11px 137px}}
 @keyframes citadelNearSnow{to{background-position:-5px 131px,7px 163px}}
 @media(prefers-reduced-motion:reduce){.citadel-window-weather,.citadel-realm-particles,.citadel-realm-particles:after{animation:none!important}}
+:root[data-citadel-bg="winter"] body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:1}
+
+/* Each owned environment has two small, independently timed native pixel layers. */
+.citadel-realm-detail{display:none;position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+:root[data-realm-landscape]:not([data-citadel-bg="winter"]) .citadel-realm-detail{display:block}
+.citadel-realm-detail:before,.citadel-realm-detail:after{content:'';position:absolute;inset:0;pointer-events:none;background:var(--realm-life-a) center 60%/cover no-repeat;image-rendering:pixelated;animation:var(--realm-motion-a,realmTwinkle) var(--realm-speed-a,6s) ease-in-out infinite alternate;opacity:.6}
+.citadel-realm-detail:after{background-image:var(--realm-life-b);animation-name:var(--realm-motion-b,realmTwinkle);animation-duration:var(--realm-speed-b,9s);animation-delay:-2s}
+.citadel-daylight .citadel-realm-detail{z-index:1;mask:var(--window-mask,var(--aperture-mask)) center/100% 100% no-repeat;mask-mode:luminance}
+.citadel-daylight .citadel-realm-detail:before,.citadel-daylight .citadel-realm-detail:after{background-position:center;background-size:cover}
+.stage .window .citadel-realm-detail:before,.stage .window .citadel-realm-detail:after{background-position:center}
+.citadel-room .citadel-realm-detail:before,.citadel-room .citadel-realm-detail:after{animation:none!important}
+.citadel-suspended .citadel-realm-detail:before,.citadel-suspended .citadel-realm-detail:after,#citadel-interior[hidden] .citadel-realm-detail:before,#citadel-interior[hidden] .citadel-realm-detail:after,#citadel-home:not([data-ui-view="overview"]) .citadel-sky .citadel-realm-detail:before,#citadel-home:not([data-ui-view="overview"]) .citadel-sky .citadel-realm-detail:after{animation-play-state:paused!important}
+@keyframes realmTwinkle{0%,18%{opacity:.15}37%{opacity:.85}54%{opacity:.38}79%,100%{opacity:.65}}
+@keyframes realmCityLights{0%,13%,64%{opacity:.12}28%,46%{opacity:.9}81%,100%{opacity:.55}}
+@keyframes realmFireflies{0%{opacity:.12;transform:translate(0,0)}55%{opacity:.9;transform:translate(3px,-2px)}100%{opacity:.22;transform:translate(-2px,-4px)}}
+@keyframes realmSurf{from{opacity:.15;transform:translate(-2px,0)}to{opacity:.8;transform:translate(2px,1px)}}
+@keyframes realmMist{from{opacity:.2;transform:translate(-4px,0)}to{opacity:.7;transform:translate(5px,1px)}}
+@keyframes realmRays{from{opacity:.15}to{opacity:.75}}
+@keyframes realmBirds{from{opacity:.25;transform:translate(-7px,0)}to{opacity:.8;transform:translate(10px,-2px)}}
+@keyframes realmStorm{0%,87%,94%,100%{opacity:.05}89%,92%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.citadel-realm-detail:before,.citadel-realm-detail:after{animation:none!important;transform:none!important;opacity:.35}}
+.look-landscape{position:relative;overflow:hidden}
+[data-realm-preview="winter"]{--realm-life-a:none;--realm-life-b:none}
+.look-landscape .citadel-realm-detail{display:block}
+.look-landscape .citadel-realm-detail:before,.look-landscape .citadel-realm-detail:after{background-position:center;animation-play-state:paused}
+.realm-choice:is(:hover,:focus-visible,[aria-pressed="true"]) .citadel-realm-detail:before,.realm-choice:is(:hover,:focus-visible,[aria-pressed="true"]) .citadel-realm-detail:after{animation-play-state:running}
+.setup[hidden] .citadel-realm-detail:before,.setup[hidden] .citadel-realm-detail:after,.look-group:not([open]) .citadel-realm-detail:before,.look-group:not([open]) .citadel-realm-detail:after{animation-play-state:paused!important}
+/* BEGIN generated realm alignment */
+body.citadel-shell-active #citadel-home :is([data-croom="rest"][data-room-level="1"],[data-room="rest"][data-level="1"]){--window-mask:url('assets/citadel/rest-windows-1.svg');--frost-art:url('assets/citadel/rest-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="rest"][data-room-level="2"],[data-room="rest"][data-level="2"]){--window-mask:url('assets/citadel/rest-windows-2.svg');--frost-art:url('assets/citadel/rest-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="rest"][data-room-level="3"],[data-room="rest"][data-level="3"]){--window-mask:url('assets/citadel/rest-windows-3.svg');--frost-art:url('assets/citadel/rest-frost-3.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="study"][data-room-level="1"],[data-room="study"][data-level="1"]){--window-mask:url('assets/citadel/study-windows-1.svg');--frost-art:url('assets/citadel/study-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="study"][data-room-level="2"],[data-room="study"][data-level="2"]){--window-mask:url('assets/citadel/study-windows-2.svg');--frost-art:url('assets/citadel/study-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="study"][data-room-level="3"],[data-room="study"][data-level="3"]){--window-mask:url('assets/citadel/study-windows-3.svg');--frost-art:url('assets/citadel/study-frost-3.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="archive"][data-room-level="1"],[data-room="archive"][data-level="1"]){--window-mask:url('assets/citadel/archive-windows-1.svg');--frost-art:url('assets/citadel/archive-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="archive"][data-room-level="2"],[data-room="archive"][data-level="2"]){--window-mask:url('assets/citadel/archive-windows-2.svg');--frost-art:url('assets/citadel/archive-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="archive"][data-room-level="3"],[data-room="archive"][data-level="3"]){--window-mask:url('assets/citadel/archive-windows-3.svg');--frost-art:url('assets/citadel/archive-frost-3.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="forge"][data-room-level="1"],[data-room="forge"][data-level="1"]){--window-mask:url('assets/citadel/forge-windows-1.svg');--frost-art:url('assets/citadel/forge-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="forge"][data-room-level="2"],[data-room="forge"][data-level="2"]){--window-mask:url('assets/citadel/forge-windows-2.svg');--frost-art:url('assets/citadel/forge-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="forge"][data-room-level="3"],[data-room="forge"][data-level="3"]){--window-mask:url('assets/citadel/forge-windows-3.svg');--frost-art:url('assets/citadel/forge-frost-3.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="throne"][data-room-level="1"],[data-room="throne"][data-level="1"]){--window-mask:url('assets/citadel/throne-windows-1.svg');--frost-art:url('assets/citadel/throne-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="throne"][data-room-level="2"],[data-room="throne"][data-level="2"]){--window-mask:url('assets/citadel/throne-windows-2.svg');--frost-art:url('assets/citadel/throne-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="throne"][data-room-level="3"],[data-room="throne"][data-level="3"]){--window-mask:url('assets/citadel/throne-windows-3.svg');--frost-art:url('assets/citadel/throne-frost-3.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="observatory"][data-room-level="1"],[data-room="observatory"][data-level="1"]){--window-mask:url('assets/citadel/observatory-windows-1.svg');--frost-art:url('assets/citadel/observatory-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="observatory"][data-room-level="2"],[data-room="observatory"][data-level="2"]){--window-mask:url('assets/citadel/observatory-windows-2.svg');--frost-art:url('assets/citadel/observatory-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="observatory"][data-room-level="3"],[data-room="observatory"][data-level="3"]){--window-mask:url('assets/citadel/observatory-windows-3.svg');--frost-art:url('assets/citadel/observatory-frost-3.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="gatehouse"][data-room-level="1"],[data-room="gatehouse"][data-level="1"]){--window-mask:url('assets/citadel/gatehouse-windows-1.svg');--frost-art:url('assets/citadel/gatehouse-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="gatehouse"][data-room-level="2"],[data-room="gatehouse"][data-level="2"]){--window-mask:url('assets/citadel/gatehouse-windows-2.svg');--frost-art:url('assets/citadel/gatehouse-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="gatehouse"][data-room-level="3"],[data-room="gatehouse"][data-level="3"]){--window-mask:url('assets/citadel/gatehouse-windows-3.svg');--frost-art:url('assets/citadel/gatehouse-frost-3.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="refectory"][data-room-level="1"],[data-room="refectory"][data-level="1"]){--window-mask:url('assets/citadel/refectory-windows-1.svg');--frost-art:url('assets/citadel/refectory-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="refectory"][data-room-level="2"],[data-room="refectory"][data-level="2"]){--window-mask:url('assets/citadel/refectory-windows-2.svg');--frost-art:url('assets/citadel/refectory-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="refectory"][data-room-level="3"],[data-room="refectory"][data-level="3"]){--window-mask:url('assets/citadel/refectory-windows-3.svg');--frost-art:url('assets/citadel/refectory-frost-3.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="cloister"][data-room-level="1"],[data-room="cloister"][data-level="1"]){--window-mask:url('assets/citadel/cloister-windows-1.svg');--frost-art:url('assets/citadel/cloister-frost-1.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="cloister"][data-room-level="2"],[data-room="cloister"][data-level="2"]){--window-mask:url('assets/citadel/cloister-windows-2.svg');--frost-art:url('assets/citadel/cloister-frost-2.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="cloister"][data-room-level="3"],[data-room="cloister"][data-level="3"]){--window-mask:url('assets/citadel/cloister-windows-3.svg');--frost-art:url('assets/citadel/cloister-frost-3.svg')}
+:root[data-citadel-bg="city"],[data-realm-preview="city"]{--realm-life-a:url('assets/citadel/realm-city-life-1.svg');--realm-life-b:url('assets/citadel/realm-city-life-2.svg');--realm-motion-a:realmCityLights;--realm-speed-a:3.7s;--realm-motion-b:realmCityLights;--realm-speed-b:6.1s}
+:root[data-citadel-bg="library"],[data-realm-preview="library"]{--realm-life-a:url('assets/citadel/realm-library-life-1.svg');--realm-life-b:url('assets/citadel/realm-library-life-2.svg');--realm-motion-a:realmRays;--realm-speed-a:7s;--realm-motion-b:realmCityLights;--realm-speed-b:11s}
+:root[data-citadel-bg="attic"],[data-realm-preview="attic"]{--realm-life-a:url('assets/citadel/realm-attic-life-1.svg');--realm-life-b:url('assets/citadel/realm-attic-life-2.svg');--realm-motion-a:realmRays;--realm-speed-a:9s;--realm-motion-b:realmCityLights;--realm-speed-b:6s}
+:root[data-citadel-bg="chamber"],[data-realm-preview="chamber"]{--realm-life-a:url('assets/citadel/realm-chamber-life-1.svg');--realm-life-b:url('assets/citadel/realm-chamber-life-2.svg');--realm-motion-a:realmTwinkle;--realm-speed-a:6s;--realm-motion-b:realmRays;--realm-speed-b:8s}
+:root[data-citadel-bg="forest"],[data-realm-preview="forest"]{--realm-life-a:url('assets/citadel/realm-forest-life-1.svg');--realm-life-b:url('assets/citadel/realm-forest-life-2.svg');--realm-motion-a:realmFireflies;--realm-speed-a:7s;--realm-motion-b:realmFireflies;--realm-speed-b:11s}
+:root[data-citadel-bg="beach"],[data-realm-preview="beach"]{--realm-life-a:url('assets/citadel/realm-beach-life-1.svg');--realm-life-b:url('assets/citadel/realm-beach-life-2.svg');--realm-motion-a:realmSurf;--realm-speed-a:6s;--realm-motion-b:realmSurf;--realm-speed-b:8s}
+:root[data-citadel-bg="cave"],[data-realm-preview="cave"]{--realm-life-a:url('assets/citadel/realm-cave-life-1.svg');--realm-life-b:url('assets/citadel/realm-cave-life-2.svg');--realm-motion-a:realmRays;--realm-speed-a:6s;--realm-motion-b:realmTwinkle;--realm-speed-b:9s}
+:root[data-citadel-bg="space"],[data-realm-preview="space"]{--realm-life-a:url('assets/citadel/realm-space-life-1.svg');--realm-life-b:url('assets/citadel/realm-space-life-2.svg');--realm-motion-a:realmTwinkle;--realm-speed-a:5s;--realm-motion-b:realmTwinkle;--realm-speed-b:8s}
+:root[data-citadel-bg="watch"],[data-realm-preview="watch"]{--realm-life-a:url('assets/citadel/realm-watch-life-1.svg');--realm-life-b:url('assets/citadel/realm-watch-life-2.svg');--realm-motion-a:realmMist;--realm-speed-a:16s;--realm-motion-b:realmTwinkle;--realm-speed-b:8.5s}
+:root[data-citadel-bg="abyss"],[data-realm-preview="abyss"]{--realm-life-a:url('assets/citadel/realm-abyss-life-1.svg');--realm-life-b:url('assets/citadel/realm-abyss-life-2.svg');--realm-motion-a:realmRays;--realm-speed-a:4s;--realm-motion-b:realmTwinkle;--realm-speed-b:9s}
+:root[data-citadel-bg="aurora"],[data-realm-preview="aurora"]{--realm-life-a:url('assets/citadel/realm-aurora-life-1.svg');--realm-life-b:url('assets/citadel/realm-aurora-life-2.svg');--realm-motion-a:realmRays;--realm-speed-a:8s;--realm-motion-b:realmMist;--realm-speed-b:12s}
+:root[data-citadel-bg="dawn"],[data-realm-preview="dawn"]{--realm-life-a:url('assets/citadel/realm-dawn-life-1.svg');--realm-life-b:url('assets/citadel/realm-dawn-life-2.svg');--realm-motion-a:realmMist;--realm-speed-a:15s;--realm-motion-b:realmMist;--realm-speed-b:22s}
+:root[data-citadel-bg="sunrise"],[data-realm-preview="sunrise"]{--realm-life-a:url('assets/citadel/realm-sunrise-life-1.svg');--realm-life-b:url('assets/citadel/realm-sunrise-life-2.svg');--realm-motion-a:realmRays;--realm-speed-a:12s;--realm-motion-b:realmRays;--realm-speed-b:16s}
+:root[data-citadel-bg="sunset"],[data-realm-preview="sunset"]{--realm-life-a:url('assets/citadel/realm-sunset-life-1.svg');--realm-life-b:url('assets/citadel/realm-sunset-life-2.svg');--realm-motion-a:realmBirds;--realm-speed-a:22s;--realm-motion-b:realmBirds;--realm-speed-b:27s}
+:root[data-citadel-bg="rain"],[data-realm-preview="rain"]{--realm-life-a:url('assets/citadel/realm-rain-life-1.svg');--realm-life-b:url('assets/citadel/realm-rain-life-2.svg');--realm-motion-a:realmSurf;--realm-speed-a:2.8s;--realm-motion-b:realmSurf;--realm-speed-b:4s}
+:root[data-citadel-bg="storm"],[data-realm-preview="storm"]{--realm-life-a:url('assets/citadel/realm-storm-life-1.svg');--realm-life-b:url('assets/citadel/realm-storm-life-2.svg');--realm-motion-a:realmSurf;--realm-speed-a:3s;--realm-motion-b:realmStorm;--realm-speed-b:11s}
+:root[data-citadel-bg="peaks"],[data-realm-preview="peaks"]{--realm-life-a:url('assets/citadel/realm-peaks-life-1.svg');--realm-life-b:url('assets/citadel/realm-peaks-life-2.svg');--realm-motion-a:realmMist;--realm-speed-a:14s;--realm-motion-b:realmMist;--realm-speed-b:19s}
+/* END generated realm alignment */

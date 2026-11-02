@@ -2,6 +2,7 @@
 from pathlib import Path
 import random
 import re
+import xml.etree.ElementTree as ET
 
 DEST = Path(__file__).resolve().parents[1] / 'src/assets/citadel'
 
@@ -304,7 +305,7 @@ def snow_roof():
 
 def frost_masks():
     # Use the actual apertures, including their mullions: ice cannot invent a window.
-    for source in DEST.glob('*-apertures.svg'):
+    for source in list(DEST.glob('*-apertures.svg'))+list(DEST.glob('*-windows-*.svg')):
         content=source.read_text(encoding='utf-8');inner=content[content.index('>')+1:content.rindex('</svg>')]
         defs='<defs><filter id="ice" x="-5%" y="-5%" width="110%" height="110%"><feColorMatrix type="luminanceToAlpha" result="glass"/><feMorphology in="glass" operator="erode" radius="2.2" result="core"/><feComposite in="glass" in2="core" operator="out" result="edge"/><feFlood flood-color="#d5e9f4"/><feComposite in2="edge" operator="in"/></filter></defs>'
         branches=[]
@@ -315,7 +316,119 @@ def frost_masks():
                     y=bottom-4-step*4;xx=x+sign*step
                     branches.append(f'<path d="M{xx-sign*3} {y+4}L{xx} {y}l{sign*2} -5m{-sign*2} 5l{sign*5} -1" fill="none" stroke="#dceff5" stroke-width="1" opacity=".75"/>')
         svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">'+defs+'<defs><mask id="glass-mask">'+inner+'</mask></defs><g filter="url(#ice)">'+inner+'</g><g mask="url(#glass-mask)">'+''.join(branches)+'</g></svg>\n'
-        (DEST/source.name.replace('-apertures','-frost')).write_text(svg,encoding='utf-8')
+        target=source.name.replace('-apertures','-frost').replace('-windows-','-frost-')
+        (DEST/target).write_text(svg,encoding='utf-8')
+
+
+def visible_windows():
+    from citadel_interiors import arch, furnishings, details, ruined
+    from citadel_room_depth import ROOMS, path
+    def black(svg):
+        return re.sub(r'(fill|stroke)="(?!none")[^"]+"',lambda m:m[1]+'="#000"',svg)
+    for room in ROOMS:
+        if room=='vault':continue
+        geometry=''
+        if room=='observatory':
+            geometry=arch(126,228,8,201,'#fff','#000')+path('M137 197Q242 38 342 197M145 148H335M240 17V200','none','#000',2)
+        elif room=='gatehouse':
+            geometry=arch(168,144,36,220,'#fff','#000')
+            for x in range(177,310,14):geometry+=path(f'M{x} 83V217','none','#000',4)
+            geometry+=path('M173 125H309M173 176H309','none','#000',5)
+        elif room=='forge':
+            geometry=arch(338,66,46,173,'#fff','#000')+path('M371 53V174M341 118H401','none','#000',3)
+        elif room=='cloister':
+            for x in [65,185,305]:
+                geometry+=arch(x,104,24,215,'#fff','#000')
+                geometry+=path(f'M{x+5} 195q36 -45 94 -22v42h-94Z','#000','none',0)
+                geometry+=path(f'M{x+14} 211v-48m7 26l-7 -15 -8 8m70 28v-66','none','#000',3)
+        else:
+            for x in [100,324]:
+                geometry+=arch(x+6,44,31,176,'#fff','#000')
+                geometry+=path(f'M{x+28} 32V179M{x+5} 103H{x+51}M{x+5} 143H{x+51}','none','#000',3)
+        # Subtract the same foreground artwork at its actual stage transform.
+        # This fills the whole pane without painting over a bed, shelf or telescope.
+        for level in [1,2,3]:
+            foreground=black(ruined(room)) if level==1 else '<g transform="translate(0,-10) scale(1,.94)">'+black(furnishings(room,level)+details(room,level))+'</g>'
+            svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">'+geometry+foreground+'</svg>\n'
+            (DEST/f'{room}-windows-{level}.svg').write_text(svg,encoding='utf-8')
+
+
+def ambient_details():
+    ns='{http://www.w3.org/2000/svg}'
+    for key in ['forest','beach','cave','space','aurora','watch','abyss','dawn','sunrise','sunset','city','rain','storm','peaks','library','attic','chamber']:
+        groups=[Scene(),Scene()]
+        colors={
+            'city':['#b99c84'],'library':['#b89b83','#dbbc92'],'attic':['#b49a7b'],
+            'chamber':['#b77b80'],'space':['#c8c8dd'],'watch':['#c8c8dd'],
+            'cave':['#9bcad0','#8facc6','#b4a3ce','#8bb3c2'],
+            'abyss':['#e5c3d6','#ae85b1'],'aurora':['#65bfa5','#afafd0']}
+        if key in colors:
+            source=ET.fromstring((DEST/f'realm-{key}.svg').read_text(encoding='utf-8'))
+            n=0
+            for node in source.iter():
+                if node.get('fill') in colors[key]:
+                    node.tag=node.tag.replace(ns,'');node.attrib.pop('opacity',None)
+                    highlights={'city':'#ffe6af','library':'#ffe6af','attic':'#ffe6af','chamber':'#eeacba','space':'#fff6e8','watch':'#fff6e8','abyss':'#f3d4ff'}
+                    if key in highlights:node.set('fill',highlights[key])
+                    elif key=='cave':node.set('fill','#ecd9ff' if node.get('fill')=='#b4a3ce' else '#c5f4ff')
+                    elif key=='aurora':node.set('fill','#9ce8ce' if node.get('fill')=='#65bfa5' else '#d6c2ed')
+                    groups[1 if key=='watch' else n%2].parts.append(ET.tostring(node,encoding='unicode'));n+=1
+            if key=='watch':
+                groups[0].rect(232,26,43,2,'#b1c3d4',.25);groups[0].rect(246,29,41,2,'#b1c3d4',.18)
+        elif key=='forest':
+            for n,(x,y) in enumerate([(72,86),(105,101),(215,91),(251,111),(147,98),(183,88)]):
+                groups[n%2].rect(x-1,y-1,3,3,'#c7d79a',.15);groups[n%2].rect(x,y,1,1,'#e3e3ad')
+        elif key=='beach':
+            for n,(x,y,w) in enumerate([(101,83,27),(173,79,41),(226,89,28),(141,98,31),(188,94,23)]):
+                groups[n%2].rect(x,y,w,1,'#bcd0cc');groups[n%2].rect(x+7,y+2,w-12,1,'#7f9eaa')
+        elif key in ['rain','storm']:
+            for n,(x,y,w) in enumerate([(94,117,21),(145,120,29),(209,116,19)]):
+                groups[n%2].rect(x,y,w,1,'#93aab7');groups[n%2].rect(x+3,y-2,w-6,1,'#93aab7',.5)
+            if key=='storm':groups[1].poly('226,27 235,27 225,46 231,46 212,68 221,47 215,47','#e0eaf3')
+        elif key=='peaks':
+            for n,(x,y,w) in enumerate([(51,42,29),(189,34,39),(94,88,46),(239,81,51)]):
+                groups[n%2].rect(x,y,w,1,'#c5dae5',.65);groups[n%2].rect(x+4,y+2,w-11,1,'#c5dae5',.35)
+        elif key=='dawn':
+            for n,(x,y,w) in enumerate([(16,92,94),(116,102,119),(209,88,102)]):
+                groups[n%2].rect(x,y,w,2,'#d0b6b0',.26);groups[n%2].rect(x+9,y+3,w-27,1,'#e6c5b6',.17)
+        elif key=='sunrise':
+            for n,(x,y,w,h) in enumerate([(207,46,4,31),(243,44,3,34),(216,38,18,2),(215,78,19,2)]):groups[n%2].rect(x,y,w,h,'#f0d9ad',.4)
+        elif key=='sunset':
+            for n,(x,y) in enumerate([(106,36),(137,43),(174,30),(193,44)]):groups[n%2].poly(f'{x-3},{y} {x},{y+1} {x+3},{y} {x+2},{y+2} {x},{y+3} {x-2},{y+2}','#272c43')
+        for n,scene in enumerate(groups):scene.save(key+f'-life-{n+1}')
+
+
+def environment_styles():
+    from citadel_room_depth import ROOMS
+    rules=['/* BEGIN generated realm alignment */']
+    for room in ROOMS:
+        if room=='vault':continue
+        for level in [1,2,3]:
+            rules.append('body.citadel-shell-active #citadel-home :is([data-croom="'+room+'"][data-room-level="'+str(level)+'"],[data-room="'+room+'"][data-level="'+str(level)+'"]){--window-mask:url(\'assets/citadel/'+room+'-windows-'+str(level)+'.svg\');--frost-art:url(\'assets/citadel/'+room+'-frost-'+str(level)+'.svg\')}')
+    motions={
+        'city':('realmCityLights',3.7,'realmCityLights',6.1),
+        'library':('realmRays',7,'realmCityLights',11),
+        'attic':('realmRays',9,'realmCityLights',6),
+        'chamber':('realmTwinkle',6,'realmRays',8),
+        'forest':('realmFireflies',7,'realmFireflies',11),
+        'beach':('realmSurf',6,'realmSurf',8),
+        'cave':('realmRays',6,'realmTwinkle',9),
+        'space':('realmTwinkle',5,'realmTwinkle',8),
+        'watch':('realmMist',16,'realmTwinkle',8.5),
+        'abyss':('realmRays',4,'realmTwinkle',9),
+        'aurora':('realmRays',8,'realmMist',12),
+        'dawn':('realmMist',15,'realmMist',22),
+        'sunrise':('realmRays',12,'realmRays',16),
+        'sunset':('realmBirds',22,'realmBirds',27),
+        'rain':('realmSurf',2.8,'realmSurf',4),
+        'storm':('realmSurf',3,'realmStorm',11),
+        'peaks':('realmMist',14,'realmMist',19)}
+    for key,(a,da,b,db) in motions.items():
+        rules.append(':root[data-citadel-bg="'+key+'"],[data-realm-preview="'+key+'"]{--realm-life-a:url(\'assets/citadel/realm-'+key+'-life-1.svg\');--realm-life-b:url(\'assets/citadel/realm-'+key+'-life-2.svg\');--realm-motion-a:'+a+';--realm-speed-a:'+str(da)+'s;--realm-motion-b:'+b+';--realm-speed-b:'+str(db)+'s}')
+    rules.append('/* END generated realm alignment */')
+    css=DEST.parents[1]/'rpg-ui.css';content=css.read_text(encoding='utf-8')
+    content=re.sub(r'/\* BEGIN generated realm alignment \*/[\s\S]*?/\* END generated realm alignment \*/\n?','',content)
+    css.write_bytes((content.rstrip()+'\n'+'\n'.join(rules)+'\n').encode('utf-8'))
 
 
 if __name__ == '__main__':
@@ -324,5 +437,5 @@ if __name__ == '__main__':
     for key in ['dawn','sunrise','sunset']:dawn(key)
     for key in ['rain','storm']:weather(key)
     for key in ['library','attic','chamber']:heritage(key)
-    snow_roof();frost_masks()
+    snow_roof();visible_windows();frost_masks();ambient_details();environment_styles()
     print('Built existing environment landscapes, fitted roof snow and aperture frost')

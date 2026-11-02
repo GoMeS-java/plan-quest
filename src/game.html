@@ -1899,6 +1899,9 @@ html,body{overflow-anchor:none}
     root.setAttribute('data-citadel-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
     root.toggleAttribute('data-realm-landscape', !!lookLandscape(root.getAttribute('data-citadel-bg')));
     var sky = document.querySelector('.citadel-sky');
+    if (sky && !sky.querySelector('.citadel-realm-detail')) {
+      var detail = document.createElement('span'); detail.className = 'citadel-realm-detail'; detail.setAttribute('aria-hidden', 'true'); sky.appendChild(detail);
+    }
     if (sky && !sky.querySelector('.citadel-realm-particles')) {
       var particles = document.createElement('div');
       particles.className = 'citadel-realm-particles';
@@ -2179,7 +2182,7 @@ html,body{overflow-anchor:none}
       ids.forEach(function (id) {
         var it = COS[id], pv = null;
         if (c.k === 'theme') { pv = el('i', 'sw'); pv.style.background = it.sw; }
-        else if (c.k === 'bg') { var landscape = lookLandscape(it.key); pv = el('i', landscape ? 'sw look-landscape' : 'sw'); pv.setAttribute('aria-hidden', 'true'); if (landscape) pv.style.backgroundImage = 'url("' + landscape + '")'; else pv.style.background = it.pv; }
+        else if (c.k === 'bg') { var landscape = lookLandscape(it.key); pv = el('i', landscape ? 'sw look-landscape' : 'sw'); pv.setAttribute('aria-hidden', 'true'); if (landscape) { pv.style.backgroundImage = 'url("' + landscape + '")'; pv.dataset.realmPreview = it.key; pv.appendChild(el('span','citadel-realm-detail')); } else pv.style.background = it.pv; }
         else if (c.k === 'coin') { pv = el('span', 'coin'); pv.setAttribute('data-skin', it.key); }
         else if (c.k === 'bar') { pv = el('div', 'bar mini'); pv.setAttribute('data-skin', it.key); for (var z = 0; z < 6; z++) pv.appendChild(el('i', z < 4 ? 'on' : '')); }
         else { pv = el('i', 'sw'); pv.style.background = it.sw; }
@@ -4127,7 +4130,7 @@ function citadelRoomActions(){
 }
 // One shared light layer per existing scene; no timers, input or save writes.
 document.querySelectorAll('[data-croom],#citadel-interior-stage').forEach(function(scene){var daylight=document.createElement('span');daylight.className='citadel-daylight';daylight.setAttribute('aria-hidden','true');scene.appendChild(daylight);var light=document.createElement('span');light.className='citadel-room-light';light.setAttribute('aria-hidden','true');var source=document.createElement('i');source.className='citadel-light-source';light.appendChild(source);scene.appendChild(light);});
-document.querySelectorAll('.citadel-daylight,.stage .window').forEach(function(layer){['citadel-window-weather','citadel-window-frost'].forEach(function(name){var ice=document.createElement('i');ice.className=name;ice.setAttribute('aria-hidden','true');layer.appendChild(ice);});});
+document.querySelectorAll('.citadel-daylight,.stage .window').forEach(function(layer){['citadel-window-weather','citadel-window-frost','citadel-realm-detail'].forEach(function(name){var ice=document.createElement('i');ice.className=name;ice.setAttribute('aria-hidden','true');layer.appendChild(ice);});});
 var citadelWalkStage=$('citadel-interior-stage');citadelWalkStage.tabIndex=0;citadelWalkStage.setAttribute('role','group');citadelWalkStage.setAttribute('aria-label','Комната. Нажми на пол или используй стрелки, чтобы пройти.');
 citadelWalkStage.addEventListener('click',function(e){if(e.target.closest('button,[role="button"]'))return;var r=this.getBoundingClientRect(),y=(r.bottom-e.clientY)/r.height;if(y>.34)return;citadelWalkTo((e.clientX-r.left)/r.width,y);});
 citadelWalkStage.addEventListener('keydown',function(e){if(e.target!==this)return;var p=citadelWalkPositions[citadelSelected]||{x:.5,y:.08},keys={ArrowLeft:[-.1,0],ArrowRight:[.1,0],ArrowUp:[0,.04],ArrowDown:[0,-.04]},d=keys[e.key];if(!d)return;e.preventDefault();citadelWalkTo(p.x+d[0],p.y+d[1]);});

@@ -87,14 +87,39 @@ try {
 
  await check('1.1 every existing background has an applied pixel landscape and private owned preview',async()=>{
   const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15',width:430});const before=await docs(p);const variants=await p.evaluate(()=>__qa.backgroundVisualFixture());let n=0;
+  await p.emulateMedia({reducedMotion:'no-preference'});
   for(const row of variants){
    await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);const choice=sec.locator('[data-look-id="'+row.id+'"]');
    assert.equal(await choice.locator('.look-landscape').count(),1);await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученный фон';});
+   if(row.key==='winter')assert.equal(await choice.locator('.citadel-realm-detail').evaluate(n=>getComputedStyle(n,'::before').backgroundImage),'none','winter preview must not inherit another selected environment lights');
    await choice.screenshot({path:resolve(out,'v11-all-background-'+String(++n).padStart(2,'0')+'-preview.png')});await choice.click();await p.clock.runFor(80);await p.evaluate(()=>__qa.idle());
    assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),row.key);assert(await p.locator('.citadel-sky').evaluate((el,key)=>getComputedStyle(el).backgroundImage.includes('realm-'+key+'.svg'),row.key));
+   if(row.key!=='winter'){
+    const details=await p.locator('.citadel-sky>.citadel-realm-detail').evaluate(n=>({art:getComputedStyle(n,'::before').backgroundImage,name:getComputedStyle(n,'::before').animationName,pointer:getComputedStyle(n).pointerEvents}));assert(details.art.includes('realm-'+row.key+'-life-1.svg'));assert.notEqual(details.name,'none');assert.equal(details.pointer,'none');
+    if(['city','beach','cave','aurora'].includes(row.key)){
+     await shellNav(p,'Настройки');await sec.evaluate(n=>n.closest('details').open=true);await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученный фон';});await choice.hover();assert.equal(await choice.locator('.citadel-realm-detail').evaluate(n=>getComputedStyle(n,'::before').animationPlayState),'running');
+     let first,last;for(let frame=0;frame<8;frame++){await p.waitForTimeout(250);last=await choice.screenshot({path:resolve(out,'v11-live-'+row.key+'-frame-'+frame+'.png')});if(!first)first=last;}assert.notDeepEqual(last,first,'the themed preview must visibly animate');
+     await p.locator('#setup-x').click();
+    }
+   }
   }
-  const count=await p.locator('.citadel-window-weather').count();await p.evaluate(()=>{__qa.render();__qa.render();});assert.equal(await p.locator('.citadel-window-weather').count(),count,'render does not accumulate weather layers');
+  await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await p.locator('.citadel-sky>.citadel-realm-detail').evaluate(n=>getComputedStyle(n,'::before').animationName),'none');await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('#citadel-home').evaluate(n=>n.classList.add('citadel-suspended'));assert.equal(await p.locator('.citadel-sky>.citadel-realm-detail').evaluate(n=>getComputedStyle(n,'::before').animationPlayState),'paused');await p.locator('#citadel-home').evaluate(n=>n.classList.remove('citadel-suspended'));
+  const count=await p.locator('.citadel-window-weather').count();await p.evaluate(()=>{__qa.render();__qa.render();});assert.equal(await p.locator('.citadel-window-weather').count(),count,'render does not accumulate weather layers');assert.equal(await p.locator('.citadel-sky>.citadel-realm-detail').count(),1);
   const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'visual fixtures and selection cannot grant achievements or rewards');await context.close();
+ });
+ await check('1.1 winter fills top and bottom panes while preserving frames and foreground at every stage',async()=>{
+  const day='2027-09-15';const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter'}},day,width:1280,height:940,mobile:false});
+  const pixels=await p.evaluate(async()=>{
+   async function mask(level){const img=new Image();img.src='assets/citadel/rest-windows-'+level+'.svg';await img.decode();const c=document.createElement('canvas');c.width=480;c.height=320;const x=c.getContext('2d');x.drawImage(img,0,0,480,320);return x.getImageData(0,0,480,320).data;}
+   const a=await mask(1),b=await mask(3);let top=0,bottom=0,occluded=0;const upper=[],lower=[];for(let y=31;y<176;y++)for(let x=106;x<150;x++){const i=(y*480+x)*4;if(b[i]>240){if(y<39)top++;if(y>143)bottom++;if(y>40&&y<58)upper.push([x,y]);if(y>147&&y<162)lower.push([x,y]);}}for(let i=0;i<a.length;i+=4)if(a[i]>240&&b[i]<10)occluded++;return {top,bottom,occluded,mullion:b[(119*480+128)*4],points:[upper[Math.floor(upper.length/2)],lower[Math.floor(lower.length/2)]]};
+  });assert(pixels.top>0,'glass above the old mask must be filled');assert(pixels.bottom>100,'lower pane must be filled');assert(pixels.occluded>0,'stage furniture is cut out of the exterior mask');assert.equal(pixels.mullion,0,'mullions are preserved');
+  for(const level of [1,2,3]){
+   await p.evaluate(async level=>{__qa.move('rest');document.querySelector('#citadel-enter').click();if(level>1){await __qa.upgrade('rest',level-1);await __qa.idle();}},level);
+   const sample=await p.locator('#citadel-interior-stage .citadel-daylight').evaluate(n=>({mask:getComputedStyle(n,'::after').maskImage,opacity:getComputedStyle(n,'::after').opacity,weather:getComputedStyle(n.querySelector('.citadel-window-weather')).zIndex,backdrop:getComputedStyle(n,'::after').zIndex}));assert(sample.mask.includes('rest-windows-'+level+'.svg'));assert.equal(sample.opacity,'1','old yellow glass cannot bleed through the winter scene');assert(Number(sample.weather)>Number(sample.backdrop));
+  }
+  await p.emulateMedia({reducedMotion:'reduce'});const stage=p.locator('#citadel-interior-stage');const geometry=await stage.evaluate(n=>({width:n.clientWidth,height:n.clientHeight,left:n.clientLeft,top:n.clientTop}));const shot=await stage.screenshot({path:resolve(out,'v11-winter-complete-panes.png')});
+  const colors=await p.evaluate(async({png,points,g})=>{const img=new Image();img.src=png;await img.decode();const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d');x.drawImage(img,0,0);return points.map(([px,py])=>Array.from(x.getImageData(Math.round(g.left+(px+.5)*g.width/480),Math.round(g.top+(py+.5)*g.height/320),1,1).data).slice(0,3));},{png:'data:image/png;base64,'+shot.toString('base64'),points:pixels.points,g:geometry});
+  assert(colors.every(c=>c[2]>=c[0]),'upper and lower glass must show cold exterior colors, never yellow letterboxing');await context.close();
  });
  await check('1.1 earned winter taiga has quiet roof snow, window blizzard and frost with reduced motion',async()=>{
   const day='2027-09-15',seed={...landscapeSeed(),'cfg/rare':{z02:day}};const {page:p,context}=await open({shell:true,seed,day,width:1280,height:940,mobile:false});
@@ -104,7 +129,7 @@ try {
   await sky.screenshot({path:resolve(out,'v11-winter-castle-desktop.png')});
   for(let frame=0;frame<8;frame++){await p.waitForTimeout(180);await sky.screenshot({path:resolve(out,'v11-winter-sky-frame-'+frame+'.png')});}
   await p.evaluate(async()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();await __qa.upgrade('rest',1);await __qa.idle();await __qa.upgrade('rest',2);await __qa.idle();});
-  const stage=p.locator('#citadel-interior-stage');const weather=stage.locator('.citadel-window-weather');const snow=await weather.evaluate(n=>({mask:getComputedStyle(n).maskImage,name:getComputedStyle(n).animationName,duration:getComputedStyle(n).animationDuration,pointer:getComputedStyle(n).pointerEvents}));assert(snow.mask.includes('rest-apertures.svg'));assert.equal(snow.name,'citadelWindowBlizzard');assert.equal(snow.duration,'1.8s');assert.equal(snow.pointer,'none');assert((await stage.locator('.citadel-window-frost').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('rest-frost.svg'));
+  const stage=p.locator('#citadel-interior-stage');const weather=stage.locator('.citadel-window-weather');const snow=await weather.evaluate(n=>({mask:getComputedStyle(n).maskImage,name:getComputedStyle(n).animationName,duration:getComputedStyle(n).animationDuration,pointer:getComputedStyle(n).pointerEvents}));assert(snow.mask.includes('rest-windows-3.svg'));assert.equal(snow.name,'citadelWindowBlizzard');assert.equal(snow.duration,'1.8s');assert.equal(snow.pointer,'none');assert((await stage.locator('.citadel-window-frost').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('rest-frost-3.svg'));
   await stage.screenshot({path:resolve(out,'v11-winter-room-desktop.png')});
   for(let frame=0;frame<8;frame++){await p.waitForTimeout(180);await stage.screenshot({path:resolve(out,'v11-winter-room-frame-'+frame+'.png')});}
   await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await weather.evaluate(n=>getComputedStyle(n).animationName),'none');assert.equal(await p.locator('.citadel-realm-particles').evaluate(n=>getComputedStyle(n).animationName),'none');
@@ -115,7 +140,7 @@ try {
   const day='2027-09-15';const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter'}},day});const before=await docs(p);
   for(const room of ['rest','throne','study','archive','forge','observatory','gatehouse','refectory','cloister','vault']){
    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);const layer=p.locator('#citadel-interior-stage .citadel-daylight');
-   if(room==='vault')assert.equal(await layer.evaluate(n=>getComputedStyle(n).display),'none','closed vault has no invented window');else{assert((await layer.locator('.citadel-window-weather').evaluate(n=>getComputedStyle(n).maskImage)).includes(room+'-apertures.svg'));assert((await layer.locator('.citadel-window-frost').evaluate(n=>getComputedStyle(n).backgroundImage)).includes(room+'-frost.svg'));}
+   if(room==='vault')assert.equal(await layer.evaluate(n=>getComputedStyle(n).display),'none','closed vault has no invented window');else{assert((await layer.locator('.citadel-window-weather').evaluate(n=>getComputedStyle(n).maskImage)).includes(room+'-windows-1.svg'));assert((await layer.locator('.citadel-window-frost').evaluate(n=>getComputedStyle(n).backgroundImage)).includes(room+'-frost-1.svg'));}
   }
   await p.evaluate(()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();});
   for(const width of [320,360,390,430,844,1280]){await p.setViewportSize({width,height:width===844?390:900});await p.clock.runFor(80);assert(await p.locator('#citadel-interior-stage').evaluate(n=>n.scrollWidth<=n.clientWidth+1));if(width===390)await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'v11-winter-room-mobile.png')});}
@@ -133,7 +158,7 @@ try {
    await p.screenshot({path:resolve(out,'v11-landscape-'+key+'-390.png')});
    await p.locator('[data-croom="rest"]').click();await p.clock.runFor(80);await p.locator('#citadel-interior').waitFor({state:'visible'});
    const layer=await p.locator('#citadel-interior-stage .citadel-daylight').evaluate(n=>({mask:getComputedStyle(n,'::after').maskImage,art:getComputedStyle(n,'::after').backgroundImage,pointer:getComputedStyle(n,'::after').pointerEvents}));
-   assert(layer.mask.includes('rest-apertures.svg'));assert(layer.art.includes('realm-'+key+'.svg'));assert.equal(layer.pointer,'none');
+   assert(layer.mask.includes('rest-windows-1.svg'));assert(layer.art.includes('realm-'+key+'.svg'));assert.equal(layer.pointer,'none');
    await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'v11-landscape-'+key+'-room-390.png')});
    await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),key);
   }
