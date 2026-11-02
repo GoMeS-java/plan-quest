@@ -52,7 +52,9 @@ async function shellNav(p,label){
   return;
  }
  if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
- await p.locator('.citadel-shell-nav button').filter({hasText:label}).click();
+ const target=p.locator('.citadel-shell-nav button').filter({hasText:label}).first();
+ await target.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});
+ await target.click();
 }
 async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await b.isVisible()))await shellMenu(p);await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
