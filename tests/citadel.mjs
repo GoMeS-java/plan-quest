@@ -47,7 +47,7 @@ async function shellNav(p,label){
  if(label==='Настройки'||label==='Достижения'){
   if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
   const group=p.locator('.citadel-shell-nav .citadel-menu-group').filter({has:p.locator('summary').filter({hasText:'СИСТЕМА'})});
-  await group.locator('summary').click();
+  if(!(await group.evaluate(n=>n.open)))await group.locator('summary').click();
   await group.locator('[data-section="'+(label==='Настройки'?'settings':'achievements')+'"]').click();
   return;
  }
