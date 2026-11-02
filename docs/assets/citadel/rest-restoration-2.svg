@@ -22,6 +22,10 @@
   <path d="M154 141Q203 129 264 141V165H154Z" fill="url(#bed)" stroke="#b69794" stroke-width="2"/>
   <path d="M156 146Q201 154 262 145" fill="none" stroke="#f1dfcd" stroke-opacity=".6" stroke-width="3"/>
   <path d="M154 161H266V170H154Z" fill="url(#wood)" stroke="#a48270" stroke-width="2"/>
+  <!-- Structural supports visually anchor the restored bed to the floor. -->
+  <path d="M155 169h9v25h-9zM256 169h9v25h-9z" fill="#372634" stroke="#806070" stroke-width="1.5"/>
+  <path d="M152 193h17v3h-17zM252 193h17v3h-17z" fill="#1b1726" stroke="#9a756e" stroke-width="1"/>
+  <path d="M137 196q66-9 147 0" fill="none" stroke="#080913" stroke-opacity=".65" stroke-width="6"/>
   <path d="M162 138q18-11 37-2v12h-37ZM207 136q18-10 41 1v11h-41Z" fill="#d5c4ba" stroke="#927988" stroke-width="1.5"/>
   <!-- Old claw marks deliberately survive the renovation. -->
   <path d="M317 53l-7 16 4 12-10 15m19-38-6 14 4 10-6 12m18-33-4 17 4 9" fill="none" stroke="#160e22" stroke-opacity=".6" stroke-width="2"/>
