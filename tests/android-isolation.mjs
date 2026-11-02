@@ -106,6 +106,8 @@ try{
   const before=await financial(),version=(await readFile('src/version.txt','utf8')).trim();
   assert.equal(await t.evaluate(()=>APP_VERSION),version);assert.equal(await t.evaluate(()=>PLAN_CONFIG.cloudEnabled),false);
   if(!(await t.locator('.citadel-shell-nav').isVisible())){if(await t.locator('.citadel-shell-menu-toggle').isVisible())await t.locator('.citadel-shell-menu-toggle').click();else await t.locator('.citadel-shell-dock button').last().click();}
+  const financeGroup=t.locator('.citadel-shell-nav .citadel-menu-group').filter({has:t.locator('[data-section="money"]')});
+  if(!(await financeGroup.evaluate(n=>n.open)))await financeGroup.locator('summary').click();
   await t.locator('.citadel-shell-nav [data-section="money"]').click();
   for(const id of ['wheel','spend','money','avito','wheel']){
    await t.locator('[data-finance="'+id+'"]').click();
