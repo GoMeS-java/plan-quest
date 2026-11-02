@@ -1,22 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200">
-  <defs>
-    <linearGradient id="drape" x2="1" y2="1"><stop stop-color="#6f3859"/><stop offset=".55" stop-color="#492d54"/><stop offset="1" stop-color="#241e39"/></linearGradient>
-    <linearGradient id="rug" x2="1" y2="1"><stop stop-color="#90635f" stop-opacity=".82"/><stop offset="1" stop-color="#543b66" stop-opacity=".9"/></linearGradient>
-    <radialGradient id="glow"><stop stop-color="#f8c68d" stop-opacity=".3"/><stop offset="1" stop-color="#f8c68d" stop-opacity="0"/></radialGradient>
-  </defs>
-  <!-- Level three adds luxury to level two, without covering its geometry. -->
-  <ellipse cx="240" cy="135" rx="135" ry="85" fill="url(#glow)"/>
-  <path d="M108 175Q208 162 341 175L358 190H92Z" fill="url(#rug)" stroke="#b49373" stroke-width="2"/>
-  <path d="M106 178Q213 169 342 178M111 185Q215 176 341 185" fill="none" stroke="#d3a675" stroke-opacity=".55" stroke-width="1.5"/>
-  <path d="M145 121Q156 101 176 103L166 150Q155 145 145 155Z" fill="url(#drape)" stroke="#b08a80" stroke-width="2"/>
-  <path d="M265 121Q254 101 234 103L248 150Q256 145 267 155Z" fill="url(#drape)" stroke="#b08a80" stroke-width="2"/>
-  <path d="M147 116Q204 88 266 116" fill="none" stroke="#d1a670" stroke-width="3"/>
-  <path d="M164 105Q206 96 251 106" fill="none" stroke="#f3d4a1" stroke-opacity=".65" stroke-width="1.5"/>
-  <path d="M57 65v63M423 65v63" fill="none" stroke="#e0b77f" stroke-opacity=".65" stroke-width="2"/>
-  <path d="M48 69q9-13 18 0v39q-9 9-18 0ZM414 69q9-13 18 0v39q-9 9-18 0Z" fill="url(#drape)" stroke="#977388" stroke-width="1.5"/>
-  <path d="M49 71q6 12 0 30m383-30q-6 12 0 30" fill="none" stroke="#bc8a95" stroke-opacity=".6" stroke-width="1.5"/>
-  <path d="M76 151l-11 19h22ZM404 151l-11 19h22Z" fill="#604759" stroke="#bd9876" stroke-width="2"/>
-  <path d="M74 147h5v7h-5Zm327 0h5v7h-5Z" fill="#ffd194"/>
-  <!-- A surviving fracture is left exposed beside the renewed wall panels. -->
-  <path d="M317 53l-7 16 4 12-10 15m19-38-6 14 4 10-6 12" fill="none" stroke="#1b1428" stroke-opacity=".68" stroke-width="1.7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200" shape-rendering="crispEdges">
+<defs>
+ <linearGradient id="velvet" x2="1" y2="1"><stop stop-color="#9b6280"/><stop offset=".45" stop-color="#613956"/><stop offset="1" stop-color="#2f263f"/></linearGradient>
+ <radialGradient id="gold"><stop stop-color="#ffddaa" stop-opacity=".43"/><stop offset="1" stop-color="#ffba77" stop-opacity="0"/></radialGradient>
+</defs>
+<!-- A restored suite: rich furnishings, layered textiles, and a changed lighting atmosphere. -->
+<ellipse cx="118" cy="122" rx="117" ry="92" fill="url(#gold)"/>
+<ellipse cx="357" cy="125" rx="110" ry="86" fill="url(#gold)"/>
+<!-- Hanging banners in existing stone bays; never fake extra window openings. -->
+<path d="M194 32L215 35V92L205 101L194 92Z" fill="url(#velvet)" stroke="#c99c74" stroke-width="2"/>
+<path d="M246 32L267 29V92L257 102L246 91Z" fill="url(#velvet)" stroke="#c99c74" stroke-width="2"/>
+<path d="M200 49L209 60L201 72M261 48L251 61L260 73" fill="none" stroke="#d8ae83" stroke-width="2"/>
+<!-- Ornate hearth mantel: restored stone is richer without changing gothic arches. -->
+<path d="M10 96H137V104H10Z" fill="#8e7580" stroke="#d0ac8a" stroke-width="2"/>
+<path d="M19 107V144M128 107V144" stroke="#a78c87" stroke-width="6"/>
+<path d="M16 149H131V157H16Z" fill="#705b65" stroke="#d0a689" stroke-width="2"/>
+<path d="M47 94V83H57V93M108 94V82H118V93" stroke="#e3b988" stroke-width="3"/>
+<!-- Tall armchair and a side table make it feel inhabited. -->
+<path d="M169 138L211 131L230 140L186 149Z" fill="#6c465c" stroke="#c49d7c" stroke-width="2"/>
+<path d="M171 110L211 106V143L169 148Z" fill="url(#velvet)" stroke="#bc947c" stroke-width="4"/>
+<path d="M165 149L190 151L199 179L175 176Z" fill="#593c52" stroke="#b28b72" stroke-width="2"/>
+<path d="M211 141L231 146L225 176L201 173Z" fill="#573b4e" stroke="#b28b72" stroke-width="2"/>
+<path d="M199 178L209 178V192H199ZM177 176L187 176V190H177Z" fill="#36283b"/>
+<path d="M228 150L266 145L277 151L240 160Z" fill="#a27c65" stroke="#d3aa83" stroke-width="2"/>
+<path d="M241 158L250 158V187H241ZM266 153L274 152V182H266Z" fill="#5b424b" stroke="#b48f73" stroke-width="2"/>
+<path d="M247 145L252 134L257 145" fill="#f9d68b"/><path d="M249 136V129H253V136" stroke="#a17e60" stroke-width="2"/>
+<!-- Large elaborate carpet extends through the actual foreground floor. -->
+<path d="M109 183L249 151L358 166L317 200H67Z" fill="#7b4b68" stroke="#d2aa7f" stroke-width="3"/>
+<path d="M127 183L249 160L338 169L306 194H92Z" fill="none" stroke="#e3bb8d" stroke-width="2"/>
+<path d="M154 184L251 166L318 175L291 191H131Z" fill="none" stroke="#d4a17c" stroke-width="2" stroke-dasharray="7 3"/>
+<path d="M208 180L252 171L285 180L248 189Z" fill="#b3818b" stroke="#e4bc8d" stroke-width="2"/>
+<!-- Bed canopy follows the bed's angle and sits on its actual posts. -->
+<path d="M293 115L416 103L443 115L319 131Z" fill="#3e2d42" stroke="#c7a078" stroke-width="3"/>
+<path d="M294 116L418 105L441 114L319 128Z" fill="url(#velvet)" stroke="#e1b787" stroke-width="2"/>
+<path d="M298 121L318 132L315 163L301 158ZM420 115L438 120L434 161L421 149Z" fill="url(#velvet)" stroke="#caa177" stroke-width="2"/>
+<path d="M309 130L314 151M429 126L426 148" stroke="#e3bb8c" stroke-width="2"/>
+<path d="M320 157L417 150L451 166L343 179Z" fill="#85546e" opacity=".75"/>
+<path d="M339 185L460 167V178L341 196Z" fill="#755062" stroke="#d3a57d" stroke-width="2"/>
+<path d="M347 189L454 175M349 193L453 180" fill="none" stroke="#c6a27f" stroke-width="1.5"/>
+<!-- Bedside candles and book stacks. -->
+<path d="M285 154V146H289V154M297 153V142H301V153" stroke="#f5cf91" stroke-width="3"/>
+<path d="M285 144L287 138L289 144M297 140L299 133L301 140" fill="#ffe3a4"/>
+<path d="M149 137L173 132V136L149 142ZM150 131L174 126V130L150 135Z" fill="#c59e83"/>
+<!-- An old fracture is intentionally visible despite the wealth. -->
+<path d="M226 44l-7 14 5 9-9 12" stroke="#130f20" stroke-width="2.5" fill="none" opacity=".8"/>
 </svg>

@@ -1,32 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200">
-  <defs>
-    <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#6e5067" stop-opacity=".16"/><stop offset="1" stop-color="#b3846d" stop-opacity=".08"/></linearGradient>
-    <linearGradient id="wood" x2="0" y2="1"><stop stop-color="#806052"/><stop offset=".5" stop-color="#503643"/><stop offset="1" stop-color="#211c32"/></linearGradient>
-    <linearGradient id="bed" x2="0" y2="1"><stop stop-color="#e2caba"/><stop offset="1" stop-color="#856c84"/></linearGradient>
-    <radialGradient id="warm"><stop stop-color="#f6bf78" stop-opacity=".48"/><stop offset="1" stop-color="#f6bf78" stop-opacity="0"/></radialGradient>
-  </defs>
-  <!-- Transparent restoration: original stone arches and damage remain visible. -->
-  <path d="M18 41H462V173H18Z" fill="url(#wall)"/>
-  <path d="M25 48V173M455 48V173M101 47V171M376 47V171" stroke="#c5a08a" stroke-opacity=".32" stroke-width="2"/>
-  <path d="M25 56H101M376 56H455M25 150H102M376 150H455" stroke="#c5a08a" stroke-opacity=".3" stroke-width="2"/>
-  <path d="M40 58Q64 31 87 58V132H40Z" fill="#382b43" fill-opacity=".42" stroke="#ba9889" stroke-opacity=".55" stroke-width="2"/>
-  <path d="M393 58Q417 31 441 58V132H393Z" fill="#382b43" fill-opacity=".42" stroke="#ba9889" stroke-opacity=".55" stroke-width="2"/>
-  <!-- Small lamps at fixed wall points; lighting does not cover text or the castle exterior. -->
-  <ellipse cx="98" cy="91" rx="55" ry="51" fill="url(#warm)"/>
-  <ellipse cx="378" cy="91" rx="55" ry="51" fill="url(#warm)"/>
-  <path d="M90 94h15m-12-4h9v8h-9zM370 94h15m-12-4h9v8h-9z" fill="#d7aa70" stroke="#71505c" stroke-width="2"/>
-  <path d="M97 85q-5 6 0 9q5-3 0-9M377 85q-5 6 0 9q5-3 0-9" fill="#ffe1a1"/>
-  <!-- The same bed footprint as the abandoned room. -->
-  <path d="M144 162Q203 157 272 162L286 180H133Z" fill="#513648" opacity=".7"/>
-  <path d="M150 146V117Q201 91 267 117V146" fill="none" stroke="url(#wood)" stroke-width="10"/>
-  <path d="M154 141Q203 129 264 141V165H154Z" fill="url(#bed)" stroke="#b69794" stroke-width="2"/>
-  <path d="M156 146Q201 154 262 145" fill="none" stroke="#f1dfcd" stroke-opacity=".6" stroke-width="3"/>
-  <path d="M154 161H266V170H154Z" fill="url(#wood)" stroke="#a48270" stroke-width="2"/>
-  <!-- Structural supports visually anchor the restored bed to the floor. -->
-  <path d="M155 169h9v25h-9zM256 169h9v25h-9z" fill="#372634" stroke="#806070" stroke-width="1.5"/>
-  <path d="M152 193h17v3h-17zM252 193h17v3h-17z" fill="#1b1726" stroke="#9a756e" stroke-width="1"/>
-  <path d="M137 196q66-9 147 0" fill="none" stroke="#080913" stroke-opacity=".65" stroke-width="6"/>
-  <path d="M162 138q18-11 37-2v12h-37ZM207 136q18-10 41 1v11h-41Z" fill="#d5c4ba" stroke="#927988" stroke-width="1.5"/>
-  <!-- Old claw marks deliberately survive the renovation. -->
-  <path d="M317 53l-7 16 4 12-10 15m19-38-6 14 4 10-6 12m18-33-4 17 4 9" fill="none" stroke="#160e22" stroke-opacity=".6" stroke-width="2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200" shape-rendering="crispEdges">
+<defs>
+ <linearGradient id="wood" x2="0" y2="1"><stop stop-color="#a28065"/><stop offset=".4" stop-color="#624855"/><stop offset="1" stop-color="#292437"/></linearGradient>
+ <linearGradient id="linen" x2="0" y2="1"><stop stop-color="#e1d0b9"/><stop offset="1" stop-color="#8d7d94"/></linearGradient>
+ <radialGradient id="fire"><stop stop-color="#ffbf7a" stop-opacity=".45"/><stop offset="1" stop-color="#ffbd74" stop-opacity="0"/></radialGradient>
+</defs>
+<!-- A real sloping floor and clear walking lane, preserving the original gothic walls. -->
+<path d="M0 132L240 113L480 132V200H0Z" fill="#1c1c2d" opacity=".45"/>
+<path d="M0 158L240 128L480 158M0 184L240 146L480 184M70 150L91 200M166 135L158 200M321 134L341 200M414 150L396 200" fill="none" stroke="#958291" stroke-opacity=".33"/>
+<path d="M0 200L240 157L480 200" fill="none" stroke="#c3a17e" opacity=".35" stroke-width="2"/>
+<!-- Repaired hearth in the left alcove, not an extra window. -->
+<ellipse cx="79" cy="121" rx="87" ry="75" fill="url(#fire)"/>
+<path d="M16 105H133V150H16Z" fill="#302737" stroke="#897584" stroke-width="3"/>
+<path d="M30 145V119Q75 81 119 119V145Z" fill="#12121e" stroke="#9b8490" stroke-width="3"/>
+<path d="M20 100H131V109H20Z" fill="#6b5867" stroke="#b4937b" stroke-width="2"/>
+<path d="M42 145L58 127L67 136L78 117L90 135L100 127L111 145" fill="#b9694d"/>
+<path d="M52 145L64 131L71 140L79 123L87 141L101 136L105 145" fill="#ffbd71"/>
+<path d="M26 149H125L134 158H15Z" fill="#504354" stroke="#9e8190" stroke-width="2"/>
+<!-- Bookshelf and desk give the chamber a second zone. -->
+<path d="M143 78L190 72V144L140 152Z" fill="#302635" stroke="#9c756a" stroke-width="3"/>
+<path d="M149 91L181 86M149 112L181 107M149 133L181 128" stroke="#997369" stroke-width="4"/>
+<path d="M153 88V100H160V87M164 86V99H171V85M174 84V97H180V83M153 110V122H162V109M165 107V120H173V106" stroke="#b49c7f" stroke-width="4"/>
+<path d="M30 155L147 138L172 151L50 171Z" fill="url(#wood)" stroke="#be9779" stroke-width="2"/>
+<path d="M49 170L61 169L62 196H50ZM148 155L158 152V183H148Z" fill="#41303d" stroke="#917267" stroke-width="2"/>
+<path d="M77 142L89 125L105 138Z" fill="#b9a58d"/><path d="M113 140L117 127L128 131L132 140Z" fill="#514454"/>
+<!-- A clearly visible runner between zones. -->
+<path d="M154 177L252 151L333 163L277 200H115Z" fill="#594052" stroke="#b28c78" stroke-width="2"/>
+<path d="M170 182L252 159L313 166L272 194H139Z" fill="none" stroke="#d1aa85" stroke-width="2" stroke-dasharray="7 4"/>
+<path d="M192 183L256 167L286 169L253 190L168 191Z" fill="#8c6273" opacity=".5"/>
+<!-- Bed is freestanding, in perspective, with legs touching the foreground floor. -->
+<path d="M292 184L445 174L478 189L327 199Z" fill="#050710" opacity=".8"/>
+<path d="M296 119L418 109L440 119L318 132Z" fill="#9c7867" stroke="#c0a086" stroke-width="2"/>
+<path d="M296 119L318 132V162L296 151ZM418 109L440 119V158L418 147Z" fill="#503b49" stroke="#a28375" stroke-width="2"/>
+<path d="M317 141L418 132L456 158L341 174Z" fill="#b6a58f" stroke="#ddc4a9" stroke-width="2"/>
+<path d="M326 141L414 137L434 148L342 158Z" fill="#e4d4bf"/>
+<path d="M318 151L419 143L460 166L341 184Z" fill="url(#linen)" stroke="#846d7a" stroke-width="2"/>
+<path d="M321 158L418 150L450 166L343 178Z" fill="#78617d" opacity=".7"/>
+<path d="M341 183L460 166V177L341 195Z" fill="url(#wood)" stroke="#a7836f" stroke-width="2"/>
+<path d="M341 189H352V200H341ZM448 176H460V193L448 195Z" fill="#302738" stroke="#967263" stroke-width="2"/>
+<path d="M298 118V163M439 119V158" stroke="#c8a07f" stroke-width="4"/>
+<!-- Nightstand and warm fixed wall lamp. -->
+<path d="M269 155L300 150L311 157L280 162Z" fill="#876857" stroke="#b9977b" stroke-width="2"/>
+<path d="M280 162L311 157V181L280 186Z" fill="#443340" stroke="#99776b" stroke-width="2"/>
+<ellipse cx="273" cy="105" rx="39" ry="37" fill="url(#fire)"/>
+<path d="M265 112H281M268 107H278V117H268Z" fill="#c5a07e" stroke="#786071" stroke-width="2"/>
+<path d="M273 109Q268 103 273 97Q278 104 273 109" fill="#ffe3aa"/>
+<!-- A surviving crack is deliberately not repaired. -->
+<path d="M226 44l-7 14 5 9-9 12m15-26-5 14 5 8" fill="none" stroke="#110d1b" stroke-width="2" opacity=".75"/>
 </svg>

@@ -466,19 +466,19 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 :root[data-citadel-bg="storm"] .citadel-realm-particles:before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 45%,#c8d9ffbb 49%,transparent 52%);opacity:0;animation:citadelLightning 11s steps(1,end) infinite}
 @keyframes citadelLightning{0%,88%,92%,100%{opacity:0}89%,91%{opacity:1}}
 
-/* Перестройка 1.1: personal quarters retain the same abandoned masonry and
-   furniture footprint at every tier. Restoration is transparent vector art. */
+/* Перестройка 1.1: keep original arched masonry, but let the whole floor plan
+   evolve. Never stack the abandoned bed over the restored furniture. */
 :is(.citadel-room[data-croom="rest"][data-room-level="2"],.citadel-room[data-croom="rest"][data-room-level="3"],.citadel-interior-stage[data-room="rest"][data-level="2"],.citadel-interior-stage[data-room="rest"][data-level="3"]):before{
  background:#202237 url("assets/citadel/stone.svg") center/96px 24px!important;
  opacity:1;filter:brightness(.8) saturate(.75)
 }
 .citadel-room[data-croom="rest"][data-room-level="2"]:after,
 .citadel-interior-stage[data-room="rest"][data-level="2"] .citadel-interior-renovation{
- background:url("assets/citadel/rest-restoration-2.svg") center/100% 100% no-repeat,url("assets/citadel/rest-scene0.svg") center/100% 100% no-repeat,var(--renovation) center/100% 100% no-repeat!important;
+ background:url("assets/citadel/rest-restoration-2.svg") center/100% 100% no-repeat!important;
  image-rendering:auto!important
 }
 .citadel-room[data-croom="rest"][data-room-level="3"]:after,
 .citadel-interior-stage[data-room="rest"][data-level="3"] .citadel-interior-renovation{
- background:url("assets/citadel/rest-restoration-3.svg") center/100% 100% no-repeat,url("assets/citadel/rest-restoration-2.svg") center/100% 100% no-repeat,url("assets/citadel/rest-scene0.svg") center/100% 100% no-repeat,var(--renovation) center/100% 100% no-repeat!important;
+ background:url("assets/citadel/rest-restoration-3.svg") center/100% 100% no-repeat,url("assets/citadel/rest-restoration-2.svg") center/100% 100% no-repeat!important;
  image-rendering:auto!important
 }
