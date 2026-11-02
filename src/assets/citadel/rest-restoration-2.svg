@@ -17,12 +17,6 @@
   <path d="M90 94h15m-12-4h9v8h-9zM370 94h15m-12-4h9v8h-9z" fill="#d7aa70" stroke="#71505c" stroke-width="2"/>
   <path d="M97 85q-5 6 0 9q5-3 0-9M377 85q-5 6 0 9q5-3 0-9" fill="#ffe1a1"/>
   <!-- The same bed footprint as the abandoned room. -->
-  <!-- A deep, carved bed base covers the former broken frame as the room is
-       renovated; the old furniture must not ghost through the new mattress. -->
-  <path d="M139 143Q202 129 278 143L285 190Q207 198 133 190Z" fill="#241c2c" stroke="#684b55" stroke-width="3"/>
-  <path d="M145 163Q207 169 274 163L276 185Q205 191 141 185Z" fill="#3e2c3c"/>
-  <path d="M149 176Q201 182 270 176" fill="none" stroke="#836471" stroke-opacity=".65" stroke-width="2"/>
-  <path d="M139 188Q208 198 283 188" fill="none" stroke="#0a0a18" stroke-opacity=".8" stroke-width="6"/>
   <path d="M144 162Q203 157 272 162L286 180H133Z" fill="#513648" opacity=".7"/>
   <path d="M150 146V117Q201 91 267 117V146" fill="none" stroke="url(#wood)" stroke-width="10"/>
   <path d="M154 141Q203 129 264 141V165H154Z" fill="url(#bed)" stroke="#b69794" stroke-width="2"/>

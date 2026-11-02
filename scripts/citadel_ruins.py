@@ -2,7 +2,7 @@
 from pathlib import Path
 from random import Random
 ROOMS=('throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault')
-def make(room,seed):
+def make(room,seed,restored=False):
  r=Random(seed);p=[]
  def rect(x,y,w,h,c,op=1):p.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{c}" opacity="{op}"/>')
  def path(d,c,stroke=None,sw=1):p.append(f'<path d="{d}" fill="{c}"'+(f' stroke="{stroke}" stroke-width="{sw}"' if stroke else '')+'/>')
@@ -51,7 +51,7 @@ def make(room,seed):
    for i in range(24):
     xx=x+5+r.randrange(32);yy=r.choice((135,167,197,228));rect(xx,yy,3,r.randrange(8,17),r.choice(('#4e4050','#5d4c4c','#3b4353')))
   rect(169,218,128,7,'#665155');rect(180,225,6,37,'#3d303c');path('M284 225v19l-8 13 4 6 12-18v-20z','#493642')
- elif room=='rest':
+ elif room=='rest' and not restored:
   rect(151,239,156,10,'#51414c');rect(155,212,7,48,'#574652');rect(299,233,7,31,'#372d39');path('M160 229l48-10 34 9 52-3 1 13-135 5z','#4c414e');path('M189 216l27 3-9 8-28-2z','#756672')
  elif room=='throne':
   rect(185,244,115,8,'#514a5b');rect(196,235,94,9,'#605768');path('M226 230v-57l9-19 8 23 16 2-7 47z','#3f394b');path('M218 195h38l4 8-40 2z','#66606d')
@@ -85,3 +85,4 @@ def make(room,seed):
  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" preserveAspectRatio="none" shape-rendering="crispEdges">'+''.join(p)+'</svg>\n'
 if __name__=='__main__':
  for i,room in enumerate(ROOMS):Path(f'src/assets/citadel/{room}-ruins.svg').write_text(make(room,50+i))
+ Path('src/assets/citadel/rest-structure.svg').write_text(make('rest',52,restored=True))
