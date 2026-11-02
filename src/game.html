@@ -1897,6 +1897,7 @@ html,body{overflow-anchor:none}
     // Earned sanctuary environments now dress the entire Citadel as well.
     // Keep the same saved look ID, so old backups and unlocks need no migration.
     root.setAttribute('data-citadel-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
+    root.toggleAttribute('data-realm-landscape', !!lookLandscape(root.getAttribute('data-citadel-bg')));
     var sky = document.querySelector('.citadel-sky');
     if (sky && !sky.querySelector('.citadel-realm-particles')) {
       var particles = document.createElement('div');
@@ -2102,7 +2103,7 @@ html,body{overflow-anchor:none}
     ];
   }
   function lookLandscape(key) {
-    return ['forest', 'beach', 'cave'].indexOf(key) !== -1 ? 'assets/citadel/realm-' + key + '.svg' : '';
+    return ['forest', 'beach', 'cave', 'winter', 'space', 'aurora', 'watch', 'abyss', 'dawn', 'sunrise', 'sunset', 'city', 'rain', 'storm', 'peaks', 'library', 'attic', 'chamber'].indexOf(key) !== -1 ? 'assets/citadel/realm-' + key + '.svg' : '';
   }
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
@@ -4126,6 +4127,7 @@ function citadelRoomActions(){
 }
 // One shared light layer per existing scene; no timers, input or save writes.
 document.querySelectorAll('[data-croom],#citadel-interior-stage').forEach(function(scene){var daylight=document.createElement('span');daylight.className='citadel-daylight';daylight.setAttribute('aria-hidden','true');scene.appendChild(daylight);var light=document.createElement('span');light.className='citadel-room-light';light.setAttribute('aria-hidden','true');var source=document.createElement('i');source.className='citadel-light-source';light.appendChild(source);scene.appendChild(light);});
+document.querySelectorAll('.citadel-daylight,.stage .window').forEach(function(layer){['citadel-window-weather','citadel-window-frost'].forEach(function(name){var ice=document.createElement('i');ice.className=name;ice.setAttribute('aria-hidden','true');layer.appendChild(ice);});});
 var citadelWalkStage=$('citadel-interior-stage');citadelWalkStage.tabIndex=0;citadelWalkStage.setAttribute('role','group');citadelWalkStage.setAttribute('aria-label','Комната. Нажми на пол или используй стрелки, чтобы пройти.');
 citadelWalkStage.addEventListener('click',function(e){if(e.target.closest('button,[role="button"]'))return;var r=this.getBoundingClientRect(),y=(r.bottom-e.clientY)/r.height;if(y>.34)return;citadelWalkTo((e.clientX-r.left)/r.width,y);});
 citadelWalkStage.addEventListener('keydown',function(e){if(e.target!==this)return;var p=citadelWalkPositions[citadelSelected]||{x:.5,y:.08},keys={ArrowLeft:[-.1,0],ArrowRight:[.1,0],ArrowUp:[0,.04],ArrowDown:[0,-.04]},d=keys[e.key];if(!d)return;e.preventDefault();citadelWalkTo(p.x+d[0],p.y+d[1]);});

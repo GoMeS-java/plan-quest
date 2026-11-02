@@ -570,14 +570,56 @@ body.citadel-shell-active .achievement-showcase-actions button{padding:6px 3px;m
 #trophy[hidden] .achievement-card:after,.citadel-suspended .achievement-card:after{animation-play-state:paused!important}
 @keyframes achievementStarlight{0%,100%{opacity:.45}45%{opacity:.95}70%{opacity:.65}}
 @media(prefers-reduced-motion:reduce){.achievement-card:after{animation:none!important}}
-/* 1.1: first three unapproved earned landscapes. Existing room art and weather stay intact. */
+/* 1.1: existing earned landscapes; rooms and ownership rules remain the source of truth. */
 :root[data-citadel-bg="forest"]{--realm-landscape:url('assets/citadel/realm-forest.svg')}
 :root[data-citadel-bg="beach"]{--realm-landscape:url('assets/citadel/realm-beach.svg')}
 :root[data-citadel-bg="cave"]{--realm-landscape:url('assets/citadel/realm-cave.svg')}
-:root:is([data-citadel-bg="forest"],[data-citadel-bg="beach"],[data-citadel-bg="cave"]) .citadel-shell .citadel-sky{background-image:var(--realm-landscape)!important;background-position:center 60%!important;background-size:cover!important}
-:root:is([data-citadel-bg="forest"],[data-citadel-bg="beach"],[data-citadel-bg="cave"]) body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:.58;background:var(--realm-landscape) center/100% 100% no-repeat;image-rendering:pixelated}
-:root:is([data-citadel-bg="forest"],[data-citadel-bg="beach"],[data-citadel-bg="cave"]) .stage .window{background:var(--realm-landscape) center/cover no-repeat;image-rendering:pixelated}
-:root:is([data-citadel-bg="forest"],[data-citadel-bg="beach"],[data-citadel-bg="cave"]) .stage .window :is(.moon,.star){visibility:hidden}
+:root[data-realm-landscape] .citadel-shell .citadel-sky{background-image:var(--realm-landscape)!important;background-position:center 60%!important;background-size:cover!important}
+:root[data-realm-landscape] body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:.58;background:var(--realm-landscape) center/100% 100% no-repeat;image-rendering:pixelated;animation:none}
+:root[data-realm-landscape] .stage .window{background:var(--realm-landscape) center/cover no-repeat;image-rendering:pixelated;overflow:hidden}
+:root[data-realm-landscape] .stage .window :is(.moon,.star){visibility:hidden}
 .looksec[data-look-category="bg"] .realm-choice{flex:1 1 146px;max-width:320px;min-width:0;min-height:104px;padding:7px;display:flex;flex-direction:column;align-items:stretch;gap:8px;text-align:center;line-height:1.5;white-space:normal}
 .looksec .realm-choice .look-landscape{display:block;width:100%;height:auto;aspect-ratio:5/2;flex:none;margin:0;box-sizing:border-box;border:1px solid #66546e;background-position:center;background-size:cover;image-rendering:pixelated}
 .looksec .realm-choice[aria-pressed="true"] .look-landscape{border-color:#d3b17b;box-shadow:0 0 0 1px #d3b17b55}
+:root[data-citadel-bg="winter"]{--realm-landscape:url('assets/citadel/realm-winter.svg')}
+:root[data-citadel-bg="space"]{--realm-landscape:url('assets/citadel/realm-space.svg')}
+:root[data-citadel-bg="aurora"]{--realm-landscape:url('assets/citadel/realm-aurora.svg')}
+:root[data-citadel-bg="watch"]{--realm-landscape:url('assets/citadel/realm-watch.svg')}
+:root[data-citadel-bg="abyss"]{--realm-landscape:url('assets/citadel/realm-abyss.svg')}
+:root[data-citadel-bg="dawn"]{--realm-landscape:url('assets/citadel/realm-dawn.svg')}
+:root[data-citadel-bg="sunrise"]{--realm-landscape:url('assets/citadel/realm-sunrise.svg')}
+:root[data-citadel-bg="sunset"]{--realm-landscape:url('assets/citadel/realm-sunset.svg')}
+:root[data-citadel-bg="city"]{--realm-landscape:url('assets/citadel/realm-city.svg')}
+:root[data-citadel-bg="rain"]{--realm-landscape:url('assets/citadel/realm-rain.svg')}
+:root[data-citadel-bg="storm"]{--realm-landscape:url('assets/citadel/realm-storm.svg')}
+:root[data-citadel-bg="peaks"]{--realm-landscape:url('assets/citadel/realm-peaks.svg')}
+:root[data-citadel-bg="library"]{--realm-landscape:url('assets/citadel/realm-library.svg')}
+:root[data-citadel-bg="attic"]{--realm-landscape:url('assets/citadel/realm-attic.svg')}
+:root[data-citadel-bg="chamber"]{--realm-landscape:url('assets/citadel/realm-chamber.svg')}
+
+/* Quiet snowfall outside; fast snow and frost are clipped to the actual glazing. */
+.citadel-window-weather,.citadel-window-frost{display:none;position:absolute;inset:0;pointer-events:none;image-rendering:pixelated}
+:root[data-citadel-bg="winter"] .citadel-window-weather{display:block;mask:var(--aperture-mask) center/100% 100% no-repeat;mask-mode:luminance;opacity:.82;background-image:radial-gradient(1px 1px at 9px 11px,#f4f7f7 99%,transparent),radial-gradient(3px 1px at 29px 17px,#deebf1 99%,transparent),linear-gradient(154deg,transparent 37%,#edf4f566 47%,transparent 57%);background-size:23px 31px,47px 39px,151px 83px;animation:citadelWindowBlizzard 1.8s linear infinite}
+:root[data-citadel-bg="winter"] .citadel-window-frost{display:block;background:var(--frost-art) center/100% 100% no-repeat;opacity:.9}
+:root:is([data-citadel-bg="rain"],[data-citadel-bg="storm"]) .citadel-window-weather{display:block;mask:var(--aperture-mask) center/100% 100% no-repeat;mask-mode:luminance;opacity:.32;background:repeating-linear-gradient(107deg,transparent 0 22px,#c0d8ee 23px 24px,transparent 25px 48px);background-size:64px 96px;animation:citadelWindowRain 1.4s linear infinite}
+body.citadel-shell-active #citadel-home :is([data-croom="rest"],[data-room="rest"]){--frost-art:url('assets/citadel/rest-frost.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="study"],[data-room="study"]){--frost-art:url('assets/citadel/study-frost.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="archive"],[data-room="archive"]){--frost-art:url('assets/citadel/archive-frost.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="throne"],[data-room="throne"]){--frost-art:url('assets/citadel/throne-frost.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="forge"],[data-room="forge"]){--frost-art:url('assets/citadel/forge-frost.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="observatory"],[data-room="observatory"]){--frost-art:url('assets/citadel/observatory-frost.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="gatehouse"],[data-room="gatehouse"]){--frost-art:url('assets/citadel/gatehouse-frost.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="refectory"],[data-room="refectory"]){--frost-art:url('assets/citadel/refectory-frost.svg')}
+body.citadel-shell-active #citadel-home :is([data-croom="cloister"],[data-room="cloister"]){--frost-art:url('assets/citadel/cloister-frost.svg')}
+:root[data-citadel-bg="winter"] .citadel-realm-particles{opacity:1;background-image:radial-gradient(1px 1px at 14px 17px,#dae6ee 99%,transparent),radial-gradient(1px 2px at 51px 37px,#fff 99%,transparent),radial-gradient(2px 2px at 91px 9px,#f4f8fa 99%,transparent);background-size:83px 113px,127px 151px,173px 137px;animation:citadelQuietSnow 18s linear infinite}
+:root[data-citadel-bg="winter"] .citadel-realm-particles:before{opacity:1;background:url('assets/citadel/snow-roof.svg') center/100% 100% no-repeat}
+:root[data-citadel-bg="winter"] .citadel-realm-particles:after{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(2px 2px at 24px 22px,#fff 99%,transparent),radial-gradient(1px 1px at 102px 61px,#f2f6fa 99%,transparent);background-size:149px 131px,179px 163px;opacity:.7;animation:citadelNearSnow 12s linear infinite}
+.stage[data-bg="winter"]::before{background:none;animation:none}
+:root[data-citadel-bg="winter"] .stage .window .citadel-window-weather{mask:none}
+:root[data-citadel-bg="winter"] .stage .window .citadel-window-frost{background:none;box-shadow:inset 0 0 0 2px #e0edf2,inset 0 0 12px 4px #ccdfef88}
+.citadel-room .citadel-window-weather{animation:none!important}
+.citadel-suspended :is(.citadel-window-weather,.citadel-realm-particles,.citadel-realm-particles:after){animation-play-state:paused!important}
+@keyframes citadelWindowBlizzard{to{background-position:-138px 93px,-188px 78px,-302px 166px}}
+@keyframes citadelQuietSnow{to{background-position:8px 113px,-9px 151px,11px 137px}}
+@keyframes citadelNearSnow{to{background-position:-5px 131px,7px 163px}}
+@media(prefers-reduced-motion:reduce){.citadel-window-weather,.citadel-realm-particles,.citadel-realm-particles:after{animation:none!important}}
