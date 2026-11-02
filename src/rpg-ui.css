@@ -696,3 +696,34 @@ body.citadel-shell-active #citadel-home :is([data-croom="cloister"][data-room-le
 :root[data-citadel-bg="storm"],[data-realm-preview="storm"]{--realm-life-a:url('assets/citadel/realm-storm-life-1.svg');--realm-life-b:url('assets/citadel/realm-storm-life-2.svg');--realm-motion-a:realmSurf;--realm-speed-a:3s;--realm-motion-b:realmStorm;--realm-speed-b:11s}
 :root[data-citadel-bg="peaks"],[data-realm-preview="peaks"]{--realm-life-a:url('assets/citadel/realm-peaks-life-1.svg');--realm-life-b:url('assets/citadel/realm-peaks-life-2.svg');--realm-motion-a:realmMist;--realm-speed-a:14s;--realm-motion-b:realmMist;--realm-speed-b:19s}
 /* END generated realm alignment */
+.profile-hero-anchor{display:block;position:relative;width:112px;height:182px}
+.profile-hero-anchor canvas{display:block;position:relative;z-index:1}
+.shared-aura-layer{display:none;position:absolute;left:-50%;top:-19.23077%;width:200%;height:138.46154%;pointer-events:none;image-rendering:pixelated;background:var(--aura-pixels) 0 0/400% 100% no-repeat;animation:sharedAuraPixels var(--aura-period,3s) steps(1,end) infinite;z-index:0}
+:root[data-pixel-aura] :is(.profile-hero-anchor,.hero,.citadel-hero-sprite)>.shared-aura-layer{display:block}
+:root[data-pixel-aura] .hero:before,:root[data-pixel-aura] .hero:after{display:none}
+:root[data-pixel-aura] .hero canvas{filter:drop-shadow(0 0 var(--shared-hero-aura-size) var(--shared-hero-aura));animation:bob 1.6s steps(1) infinite;position:relative;z-index:1}
+.aura-preview{display:block;position:relative;width:96px;height:108px;flex:none;margin:auto;overflow:hidden}
+.aura-preview-anchor{display:block;position:absolute;left:24px;top:15px;width:48px;height:78px}
+.aura-preview canvas{display:block;position:relative;width:48px;height:78px;image-rendering:pixelated;z-index:1;filter:drop-shadow(0 0 3px var(--aura-preview-glow,transparent))}
+.aura-preview .shared-aura-layer{display:block;animation-play-state:paused}
+.aura-choice:is(:hover,:focus-visible,[aria-pressed="true"]) .shared-aura-layer{animation-play-state:running}
+.looksec[data-look-category="aura"] .aura-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;flex:1 1 130px;min-width:0;max-width:240px;min-height:142px;text-align:center}
+.setup[hidden] .shared-aura-layer,.look-group:not([open]) .shared-aura-layer,.citadel-suspended .shared-aura-layer,#citadel-interior[hidden] .shared-aura-layer,dialog:not([open]) .shared-aura-layer,[hidden] .shared-aura-layer,#citadel-home:not([data-ui-view="overview"]) #citadel-avatar .shared-aura-layer{animation-play-state:paused!important}
+@keyframes sharedAuraPixels{0%,100%{background-position:0 0}25%{background-position:33.333333% 0}50%{background-position:66.666667% 0}75%{background-position:100% 0}}
+@media(prefers-reduced-motion:reduce){.shared-aura-layer{animation:none!important;background-position:0 0}:root[data-pixel-aura] .hero canvas{animation:none!important}}
+/* BEGIN generated pixel auras */
+:root{--aura-pixels:none;--aura-period:3s}
+:root[data-aura="pulse"],[data-aura-preview="pulse"]{--aura-pixels:url('assets/citadel/aura-pulse.svg');--aura-period:2.4s;--aura-preview-glow:#fff0b088}
+:root[data-aura="warm"],[data-aura-preview="warm"]{--aura-pixels:url('assets/citadel/aura-warm.svg');--aura-period:3.4s;--aura-preview-glow:#ffdb9e88}
+:root[data-aura="cold"],[data-aura-preview="cold"]{--aura-pixels:url('assets/citadel/aura-cold.svg');--aura-period:3.2s;--aura-preview-glow:#dcf5f688}
+:root[data-aura="violet"],[data-aura-preview="violet"]{--aura-pixels:url('assets/citadel/aura-violet.svg');--aura-period:3.8s;--aura-preview-glow:#e4c4ed88}
+:root[data-aura="green"],[data-aura-preview="green"]{--aura-pixels:url('assets/citadel/aura-green.svg');--aura-period:4.2s;--aura-preview-glow:#d9e5b088}
+:root[data-aura="flame"],[data-aura-preview="flame"]{--aura-pixels:url('assets/citadel/aura-flame.svg');--aura-period:1.2s;--aura-preview-glow:#ffe6a088}
+:root[data-aura="hearth"],[data-aura-preview="hearth"]{--aura-pixels:url('assets/citadel/aura-hearth.svg');--aura-period:3.6s;--aura-preview-glow:#ffe3a488}
+:root[data-aura="nebula"],[data-aura-preview="nebula"]{--aura-pixels:url('assets/citadel/aura-nebula.svg');--aura-period:5.6s;--aura-preview-glow:#e0c9ef88}
+:root[data-aura="abyss"],[data-aura-preview="abyss"]{--aura-pixels:url('assets/citadel/aura-abyss.svg');--aura-period:4.4s;--aura-preview-glow:#d4b4e288}
+:root[data-aura="smoke"],[data-aura-preview="smoke"]{--aura-pixels:url('assets/citadel/aura-smoke.svg');--aura-period:3.8s;--aura-preview-glow:#cf7d8088}
+:root[data-aura="focus"],[data-aura-preview="focus"]{--aura-pixels:url('assets/citadel/aura-focus.svg');--aura-period:3.4s;--aura-preview-glow:#d9edf088}
+:root[data-aura="orbit"],[data-aura-preview="orbit"]{--aura-pixels:url('assets/citadel/aura-orbit.svg');--aura-period:4.8s;--aura-preview-glow:#e7d4a488}
+[data-aura-preview="soft"]{--aura-pixels:none;--aura-preview-glow:#fff0c888}
+/* END generated pixel auras */
