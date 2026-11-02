@@ -2,6 +2,7 @@
   "name": "plan-quest-checks",
   "private": true,
   "scripts": {
+    "test:profile": "node tests/profile-showcase.mjs",
     "test": "node tests/citadel.mjs",
     "test:isolation": "node tests/android-isolation.mjs",
     "test:all": "npm run test:fate && npm run test:legends && npm run test:world && npm run test:economy && npm run test:google && npm test && npm run test:isolation",

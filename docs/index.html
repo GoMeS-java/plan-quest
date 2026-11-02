@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="859f5d201aa8";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="83028d4f1f2a";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -479,6 +479,19 @@ input, select { font: inherit; background: var(--bg); color: var(--fg); border: 
 .witem:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
 .witem canvas { width: 64px; height: 104px; image-rendering: pixelated; display: block; }
 .witem span { text-align: center; overflow-wrap: anywhere; }
+.profile-card{display:flex;flex-direction:column;gap:12px;border:1px solid #705580;background:linear-gradient(145deg,#241b32,#100f1b);padding:12px;min-width:0}
+.profile-heading,.profile-picker-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.profile-heading h2{margin:0}.profile-heading span{color:var(--gold);font-size:12px}
+.profile-stage{display:flex;flex-direction:column;align-items:center;gap:5px;background:radial-gradient(ellipse at 50% 75%,#514067,#171124 70%);border:1px solid #4c3d5b;padding:13px 8px}
+.profile-title{font-family:var(--font-display);font-size:10px;color:var(--gold);text-align:center;min-height:18px}
+.profile-hero-wrap{height:210px;display:flex;align-items:center;justify-content:center}.profile-hero-wrap canvas{width:112px;height:182px;image-rendering:pixelated;filter:drop-shadow(0 8px 3px #0008)}
+.profile-name{font-family:var(--font-display);font-size:11px;color:var(--fg)}
+.profile-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.profile-stats>div{display:flex;flex-direction:column;gap:6px;min-width:0;padding:10px 6px;background:#2c203a;border:1px solid #534067;text-align:center}
+.profile-stats small{font-size:11px;color:var(--muted)}.profile-stats b{font-size:15px;color:var(--fg);overflow-wrap:anywhere}
+.profile-section-title{font-family:var(--font-display);font-size:10px;color:var(--gold);display:flex;align-items:center;justify-content:space-between;gap:5px}.profile-section-title small{font:11px system-ui;color:var(--muted)}
+.profile-showcase{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.profile-award{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:92px;min-width:0;padding:7px 4px;border:1px solid #71538e;background:#342440;color:var(--fg);font:11px/1.3 system-ui;text-align:center;overflow-wrap:anywhere}
+.profile-award-icon{font-size:25px;color:var(--gold)}.profile-picker{display:flex;flex-direction:column;gap:6px;padding:10px;background:#231b30;border:1px solid #644974;max-height:240px;overflow:auto}.profile-picker[hidden]{display:none}
+.profile-achievements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.profile-option{min-height:44px;min-width:0;background:#34263d;color:var(--fg);border:1px solid #745685;padding:9px;font:12px/1.35 system-ui;overflow-wrap:anywhere}.profile-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.profile-actions button{min-height:44px;background:#3a2947;border:1px solid #795b8c;color:var(--fg)}
+.profile-wardrobe{border:1px solid var(--line);padding:10px}.profile-wardrobe>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--gold);font:12px/1.4 var(--font-display)}
 .chip { display: inline-block; align-self: flex-start; border: 2px solid var(--line); padding: 2px 8px; color: var(--fg); }
 .wbig { font-family: var(--font-display); font-size: 22px; }
 .wbig small { font-size: 11px; color: var(--muted); }
@@ -845,17 +858,32 @@ html,body{overflow-anchor:none}
   </section>
 
   <section class="panel" id="wardrobe" data-g="a">
-    <h2>ОБОЛОЧКА</h2>
-    <div class="hint">Спящий, выбери экипировку, и твой персонаж наверху сразу изменится.</div>
+    <div class="profile-card" aria-label="Профиль Спящего">
+      <div class="profile-heading"><h2>ПРОФИЛЬ СПЯЩЕГО</h2><span id="profile-rank">Ранг —</span></div>
+      <div class="profile-stage"><div id="profile-title" class="profile-title">СПЯЩИЙ</div><div class="profile-hero-wrap"><canvas id="profile-hero" width="32" height="52" aria-label="Твой персонаж в выбранной экипировке"></canvas></div><div class="profile-name">СПЯЩИЙ</div></div>
+      <div class="profile-stats" aria-label="Текущий прогресс"><div><small>Осколки</small><b id="profile-shards">—</b></div><div><small>Ядра души</small><b id="profile-cores">—</b></div><div><small>Эссенция</small><b id="profile-essence">—</b></div></div>
+      <div class="profile-section-title">ИЗБРАННЫЕ ДОСТИЖЕНИЯ <small>3 места</small></div>
+      <div id="profile-showcase" class="profile-showcase" aria-label="Три избранных достижения"></div>
+      <div id="profile-picker" class="profile-picker" hidden><div class="profile-picker-head"><b>ВЫБРАТЬ ДОСТИЖЕНИЕ</b><button type="button" id="profile-picker-close">✕</button></div><div id="profile-achievements" class="profile-achievements"></div></div>
+      <div class="profile-section-title">СТАТИСТИКА ПУТИ</div>
+      <div class="profile-stats profile-history"><div><small>Дней с записями</small><b id="profile-days">—</b></div><div><small>Отметок заданий</small><b id="profile-checks">—</b></div><div><small>Получено достижений</small><b id="profile-ach-count">—</b></div></div>
+      <div class="profile-actions"><button type="button" id="profile-title-open">ВЫБРАТЬ ЗВАНИЕ</button><button type="button" id="profile-gear-open">ГАРДЕРОБ</button></div>
+      <div id="profile-titles" class="profile-picker" hidden></div>
+    </div>
+    <details id="profile-wardrobe" class="profile-wardrobe"><summary>ГАРДЕРОБ И ЭКИПИРОВКА</summary>
+    <div class="hint">Выбор одежды сразу меняет единого персонажа в профиле и Цитадели.</div>
     <h2>ВЕРХНЯЯ ОДЕЖДА</h2>
     <p class="hero-feedback" id="wardrobe-status" role="status" aria-live="polite"></p><div class="hint" id="wardrobe-equipped"></div><div class="wgrid" id="wd-outer"></div>
     <h2>ВЕРХ</h2>
     <div class="wgrid" id="wd-top"></div>
     <h2>НИЗ</h2>
     <div class="wgrid" id="wd-bottom"></div>
+    </details>
+    <details class="profile-wardrobe"><summary>СТАРАЯ КОЛЛЕКЦИЯ УБЕЖИЩА</summary>
     <h2>УБЕЖИЩЕ</h2>
     <div class="hint">Предметы, которые Заклятие выдаёт за судьбоносные находки. Нажми на предмет, чтобы убрать его из убежища или вернуть.</div>
     <div class="rmw" id="wd-room"></div>
+    </details>
     <div class="note">Купил новую вещь? Пришли фото, и Заклятие добавит её в твою экипировку.</div>
   </section>
 
@@ -984,7 +1012,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка 859f5d201aa8</span></div>
+    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка 83028d4f1f2a</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -2038,7 +2066,7 @@ html,body{overflow-anchor:none}
     nx[cat] = id || '';
     S.look = nx;
     try { localStorage.setItem('look', JSON.stringify(nx)); } catch (e) {}
-    applyLook(); renderRoom(); updateNameTag(); renderLook();
+    applyLook(); renderRoom(); updateNameTag(); renderLook(); renderProfile();
     enqueue(function () { return db.doc('cfg/look').set(nx); });
   }
   function titleList() {
@@ -3322,6 +3350,51 @@ html,body{overflow-anchor:none}
     try{node._worldEffect=node.animate(frames,{duration:duration,easing:'steps(4,end)'});}catch(e){}
   }
   var wardrobeSaving=false;
+  var profilePickSlot=-1;
+  function profileEarned(){
+    if(!lastGI||!lastGI.ach)return [];
+    return LEG.concat(ACH).filter(function(a){return !!lastGI.ach[a.id];}).map(function(a){return {id:a.id,name:a.title||a.t||'Полученное достижение'};});
+  }
+  function profileSelected(){
+    var look=(S.look&&typeof S.look==='object')?S.look:(cachedLook||{});
+    var saved=Array.isArray(look.showcase)?look.showcase:[];
+    return [0,1,2].map(function(i){return typeof saved[i]==='string'?saved[i]:'';});
+  }
+  function profileSaveShowcase(next){
+    if(!db)return;
+    var owned=profileEarned(),valid={};owned.forEach(function(a){valid[a.id]=true;});
+    var seen={};next=next.slice(0,3).map(function(id){if(!valid[id]||seen[id])return '';seen[id]=true;return id;});
+    var look=Object.assign({},S.look||cachedLook||{});look.showcase=next;
+    S.look=look;try{localStorage.setItem('look',JSON.stringify(look));}catch(e){}
+    renderProfile();enqueue(function(){return db.doc('cfg/look').set(look);});
+  }
+  function renderProfile(){
+    var box=$('profile-showcase');if(!box)return;
+    var p=pointsInfo(),earned=profileEarned(),byId={};earned.forEach(function(a){byId[a.id]=a;});
+    $('profile-rank').textContent='РАНГ '+p.L;
+    $('profile-shards').textContent=p.P+' / '+p.need;
+    $('profile-cores').textContent=String(p.avail);
+    $('profile-essence').textContent=String(abyssBalance(S.abyss));
+    var days=0,checks=0;Object.keys(S.days).forEach(function(k){var d=S.days[k];if(!d)return;days++;if(Array.isArray(d.q))d.q.forEach(function(v){if(v===true)checks++;});});
+    $('profile-days').textContent=String(days);$('profile-checks').textContent=String(checks);$('profile-ach-count').textContent=String(earned.length);
+    paintSprite($('profile-hero'),buildSprite(outfitFrom(allItems(),outfitIds())));
+    var titles=titleList(),look=(S.look&&typeof S.look==='object')?S.look:(cachedLook||{}),title='СПЯЩИЙ';
+    if(titles.length){var selected=titles.filter(function(t){return t.id===look.title;})[0];title=(selected||titles[titles.length-1]).title;}
+    $('profile-title').textContent=title;
+    var selected=profileSelected();clear(box);
+    selected.forEach(function(id,i){var item=byId[id],button=el('button','profile-award');button.type='button';button.setAttribute('aria-label','Выбрать достижение '+(i+1));button.appendChild(el('span','profile-award-icon',item?'✦':'＋'));button.appendChild(el('span',null,item?item.name:'ВЫБРАТЬ'));button.onclick=function(){profilePickSlot=i;renderProfilePicker();};box.appendChild(button);});
+    $('profile-title-open').onclick=function(){$('profile-titles').hidden=!$('profile-titles').hidden;};
+    $('profile-gear-open').onclick=function(){$('profile-wardrobe').open=true;$('profile-wardrobe').scrollIntoView({block:'start',behavior:'smooth'});};
+    var titleBox=$('profile-titles');clear(titleBox);
+    var auto=el('button','profile-option','АВТО: ПОСЛЕДНИЙ ТИТУЛ');auto.type='button';auto.onclick=function(){setLook('title','');titleBox.hidden=true;};titleBox.appendChild(auto);
+    titles.forEach(function(t){var b=el('button','profile-option',t.title);b.type='button';b.setAttribute('aria-pressed',look.title===t.id?'true':'false');b.onclick=function(){setLook('title',t.id);titleBox.hidden=true;};titleBox.appendChild(b);});
+  }
+  function renderProfilePicker(){
+    var picker=$('profile-picker'),list=$('profile-achievements');clear(list);picker.hidden=false;
+    var blank=el('button','profile-option','ОСВОБОДИТЬ СЛОТ');blank.type='button';blank.onclick=function(){var s=profileSelected();s[profilePickSlot]='';profileSaveShowcase(s);picker.hidden=true;};list.appendChild(blank);
+    profileEarned().forEach(function(a){var b=el('button','profile-option',a.name);b.type='button';b.onclick=function(){var s=profileSelected();s=s.map(function(id){return id===a.id?'':id;});s[profilePickSlot]=a.id;profileSaveShowcase(s);picker.hidden=true;};list.appendChild(b);});
+    $('profile-picker-close').onclick=function(){picker.hidden=true;};
+  }
   function equipItem(slot,id){
     if(!db||wardrobeSaving||['top','bottom','outer'].indexOf(slot)<0||outfitIds()[slot]===id)return;
     var expected=outfitIds()[slot];
@@ -3337,6 +3410,7 @@ html,body{overflow-anchor:none}
     },function(){var message='Экипировка не сохранена. Повтори после устранения ошибки.';$('wardrobe-status').textContent=message;heroProgressFailed(message);}).finally(function(){wardrobeSaving=false;document.querySelectorAll('.witem').forEach(function(b){b.disabled=false;});});
   }
   function renderWardrobe() {
+    renderProfile();
     bodyStageNow = bodyStage();bodyShapeNow=bodyShape();
     if(document.activeElement!==$('body-goal'))$('body-goal').value=(S.bodyAppearance||{}).goal||'';
     var ids = outfitIds();
