@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="b6f4bb722f74";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="dce4f62d1820";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -1018,7 +1018,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка b6f4bb722f74</span></div>
+    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка dce4f62d1820</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -2074,7 +2074,12 @@ html,body{overflow-anchor:none}
     S.look = nx;
     try { localStorage.setItem('look', JSON.stringify(nx)); } catch (e) {}
     applyLook(); renderRoom(); updateNameTag(); renderLook(); renderProfile();
-    enqueue(function () { return db.doc('cfg/look').set(nx); });
+    Promise.resolve(enqueue(function () { return db.doc('cfg/look').set(nx); })).catch(function () {
+      S.look = savedRecord('cfg/look') || {};
+      try { localStorage.setItem('look', JSON.stringify(S.look)); } catch (e) {}
+      applyLook(); renderRoom(); updateNameTag(); renderLook(); renderProfile();
+      toast('Оформление не сохранено. Проверь хранилище и повтори выбор.');
+    });
   }
   function titleList() {
     var out = [];
@@ -2097,6 +2102,9 @@ html,body{overflow-anchor:none}
       { name: 'ИНТЕРФЕЙС', note: 'Цвета, шкалы и другие детали экрана.', cats: ['theme', 'coin', 'bar', 'pat', 'font', 'chk', 'tab'] },
       { name: 'ЗВУКИ И ЭФФЕКТЫ', note: 'Косметические эффекты касаний и новых рангов.', cats: ['fx', 'lv', 'snd'] }
     ];
+  }
+  function lookLandscape(key) {
+    return ['forest', 'beach', 'cave'].indexOf(key) !== -1 ? 'assets/citadel/realm-' + key + '.svg' : '';
   }
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
@@ -2141,10 +2149,12 @@ html,body{overflow-anchor:none}
     COS_CATS.forEach(function (c) {
       var ids = Object.keys(COS).filter(function (id) { return COS[id].cat === c.k && un[id]; });
       if (!ids.length) return;
-      var sec = el('div', 'looksec'); sec.appendChild(el('b', null, c.n));
+      var sec = el('div', 'looksec'); sec.dataset.lookCategory = c.k; sec.appendChild(el('b', null, c.n));
       var chips = el('div', 'chips');
       function chip(id, label, pv) {
         var b = el('button', 'chip'); b.type = 'button';
+        b.dataset.lookId = id;
+        if (pv && pv.classList.contains('look-landscape')) b.classList.add('realm-choice');
         b.setAttribute('aria-pressed', (look[c.k] || '') === id ? 'true' : 'false');
         if (pv) b.appendChild(pv);
         b.appendChild(document.createTextNode(label));
@@ -2170,7 +2180,7 @@ html,body{overflow-anchor:none}
       ids.forEach(function (id) {
         var it = COS[id], pv = null;
         if (c.k === 'theme') { pv = el('i', 'sw'); pv.style.background = it.sw; }
-        else if (c.k === 'bg') { pv = el('i', 'sw'); pv.style.background = it.pv; }
+        else if (c.k === 'bg') { var landscape = lookLandscape(it.key); pv = el('i', landscape ? 'sw look-landscape' : 'sw'); pv.setAttribute('aria-hidden', 'true'); if (landscape) pv.style.backgroundImage = 'url("' + landscape + '")'; else pv.style.background = it.pv; }
         else if (c.k === 'coin') { pv = el('span', 'coin'); pv.setAttribute('data-skin', it.key); }
         else if (c.k === 'bar') { pv = el('div', 'bar mini'); pv.setAttribute('data-skin', it.key); for (var z = 0; z < 6; z++) pv.appendChild(el('i', z < 4 ? 'on' : '')); }
         else { pv = el('i', 'sw'); pv.style.background = it.sw; }

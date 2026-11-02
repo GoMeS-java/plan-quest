@@ -71,12 +71,52 @@ function advancedSeed(){
  for(let n=0;n<180;n++){const dt=new Date('2026-10-19T12:00:00Z');dt.setUTCDate(dt.getUTCDate()+n);const k=dt.toISOString().slice(0,10),t=dt.getTime();seed['days/'+k]={q:Array(10).fill(true),steps:50000,kcal:2100};seed['per/'+k]={squat:[t,t+7200000,t+14400000],pushup:[t,t+7200000,t+14400000],squatR:[100,100,100],pushupR:[100,100,100],workout:[t]};}
  return seed;
 }
+function landscapeSeed(){
+ const seed=advancedSeed();
+ for(let n=0;n<320;n++){const dt=new Date('2026-10-19T12:00:00Z');dt.setUTCDate(dt.getUTCDate()+n);const k=dt.toISOString().slice(0,10),t=dt.getTime();seed['days/'+k]={q:Array(10).fill(true),steps:50000,kcal:2100};seed['per/'+k]={squat:[t,t+7200000,t+14400000],pushup:[t,t+7200000,t+14400000],squatR:[100,100,100],pushupR:[100,100,100],workout:[t]};}
+ return seed;
+}
 async function achievementPreview(p,name){
  await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());
  await p.evaluate(()=>{window.__achievementShot=[];document.querySelectorAll('.achievement-card h3,.achievement-card-details>p,.achievement-history button,.legend-replay').forEach(n=>{__achievementShot.push([n,n.textContent]);n.textContent=n.matches('h3,button')?'Полученная отметина':n.classList.contains('achievement-rewards')?'Полученные награды скрыты в демонстрации.':'Описание скрыто в демонстрации.';});var note=document.createElement('p');note.id='achievement-shot-note';note.className='hint';note.textContent='Демонстрация: названия, условия и награды скрыты.';document.querySelector('#trophy .shead').after(note);});
  try{await p.screenshot({path:resolve(out,name)});}finally{await p.evaluate(()=>{for(const [n,text]of window.__achievementShot||[])if(n.isConnected)n.textContent=text;document.querySelector('#achievement-shot-note')?.remove();delete window.__achievementShot;});}
 }
 try {
+
+ await check('1.1 earned landscape previews apply to sky and real apertures, persist and remove without gameplay writes',async()=>{
+  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});const before=await docs(p);
+  for(const key of ['forest','beach','cave']){
+   await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);
+   const choice=sec.locator('[data-look-id="b_'+key+'"]');assert.equal(await choice.count(),1,'existing progress owns this fixture variant');assert(await choice.locator('.look-landscape').evaluate(n=>getComputedStyle(n).backgroundImage.includes('realm-')));
+   await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученный фон';});await choice.screenshot({path:resolve(out,'v11-landscape-'+key+'-preview.png')});
+   await choice.click();await p.evaluate(()=>__qa.idle());await p.clock.runFor(80);await p.waitForFunction(k=>document.documentElement.dataset.citadelBg===k,key);await castle(p);
+   assert(await p.locator('.citadel-sky').evaluate((n,k)=>getComputedStyle(n).backgroundImage.includes('realm-'+k+'.svg'),key));
+   await p.screenshot({path:resolve(out,'v11-landscape-'+key+'-390.png')});
+   await p.locator('[data-croom="rest"]').click();await p.clock.runFor(80);await p.locator('#citadel-interior').waitFor({state:'visible'});
+   const layer=await p.locator('#citadel-interior-stage .citadel-daylight').evaluate(n=>({mask:getComputedStyle(n,'::after').maskImage,art:getComputedStyle(n,'::after').backgroundImage,pointer:getComputedStyle(n,'::after').pointerEvents}));
+   assert(layer.mask.includes('rest-apertures.svg'));assert(layer.art.includes('realm-'+key+'.svg'));assert.equal(layer.pointer,'none');
+   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'v11-landscape-'+key+'-room-390.png')});
+   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),key);
+  }
+  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'');assert(!(await p.locator('.citadel-sky').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('realm-'));
+  const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'selection changes no openings, resources, achievements or progress');await context.close();
+ });
+ await check('1.1 landscape choices fit mobile and desktop and forged locked selections expose no previews',async()=>{
+  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);
+  for(const width of [320,360,390,430,844,1280]){
+   await p.setViewportSize({width,height:width===844?390:844});await p.clock.runFor(100);
+   assert(await sec.evaluate(n=>n.scrollWidth<=n.clientWidth+1),'background selection must not overflow');
+   assert(await sec.locator('.realm-choice').evaluateAll(ns=>ns.every(n=>n.getBoundingClientRect().height>=44&&n.getBoundingClientRect().width>=44)));
+  }
+  await context.close();const locked=await open({shell:true,seed:{...initial,'cfg/look':{bg:'b_forest'}}});assert.equal(await locked.page.evaluate(()=>document.documentElement.dataset.citadelBg),'');await shellNav(locked.page,'Настройки');assert.equal(await locked.page.locator('.look-landscape').count(),0);await locked.context.close();
+ });
+
+ await check('1.1 landscape selection rolls back after storage failure and retry preserves sibling appearance',async()=>{
+  const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve',showcase:['','','']}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);
+  await p.evaluate(()=>{window.__landscapeStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __landscapeStorage.call(this,key,value);};});
+  await sec.locator('[data-look-id="b_forest"]').click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(80);assert.equal((await docs(p))['cfg/look'].d.bg||'','');assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'','failed selection must not remain applied');assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('look')).bg||''),'');
+  await p.evaluate(()=>Storage.prototype.setItem=window.__landscapeStorage);await dismiss(p);await shellNav(p,'Настройки');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="b_forest"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>document.documentElement.dataset.citadelBg==='forest');const saved=(await docs(p))['cfg/look'].d;assert.equal(saved.bg,'b_forest');assert.equal(saved.futureField,'preserve');assert.deepEqual(saved.showcase,['','','']);await context.close();
+ });
 
  await check('1.1 RPG achievement collection keeps unopened definitions and counts out of the interface',async()=>{
   const {page:p,context}=await open({shell:true});const before=await docs(p);await shellNav(p,'Достижения');

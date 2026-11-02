@@ -2072,7 +2072,12 @@ html,body{overflow-anchor:none}
     S.look = nx;
     try { localStorage.setItem('look', JSON.stringify(nx)); } catch (e) {}
     applyLook(); renderRoom(); updateNameTag(); renderLook(); renderProfile();
-    enqueue(function () { return db.doc('cfg/look').set(nx); });
+    Promise.resolve(enqueue(function () { return db.doc('cfg/look').set(nx); })).catch(function () {
+      S.look = savedRecord('cfg/look') || {};
+      try { localStorage.setItem('look', JSON.stringify(S.look)); } catch (e) {}
+      applyLook(); renderRoom(); updateNameTag(); renderLook(); renderProfile();
+      toast('Оформление не сохранено. Проверь хранилище и повтори выбор.');
+    });
   }
   function titleList() {
     var out = [];
@@ -2095,6 +2100,9 @@ html,body{overflow-anchor:none}
       { name: 'ИНТЕРФЕЙС', note: 'Цвета, шкалы и другие детали экрана.', cats: ['theme', 'coin', 'bar', 'pat', 'font', 'chk', 'tab'] },
       { name: 'ЗВУКИ И ЭФФЕКТЫ', note: 'Косметические эффекты касаний и новых рангов.', cats: ['fx', 'lv', 'snd'] }
     ];
+  }
+  function lookLandscape(key) {
+    return ['forest', 'beach', 'cave'].indexOf(key) !== -1 ? 'assets/citadel/realm-' + key + '.svg' : '';
   }
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
@@ -2139,10 +2147,12 @@ html,body{overflow-anchor:none}
     COS_CATS.forEach(function (c) {
       var ids = Object.keys(COS).filter(function (id) { return COS[id].cat === c.k && un[id]; });
       if (!ids.length) return;
-      var sec = el('div', 'looksec'); sec.appendChild(el('b', null, c.n));
+      var sec = el('div', 'looksec'); sec.dataset.lookCategory = c.k; sec.appendChild(el('b', null, c.n));
       var chips = el('div', 'chips');
       function chip(id, label, pv) {
         var b = el('button', 'chip'); b.type = 'button';
+        b.dataset.lookId = id;
+        if (pv && pv.classList.contains('look-landscape')) b.classList.add('realm-choice');
         b.setAttribute('aria-pressed', (look[c.k] || '') === id ? 'true' : 'false');
         if (pv) b.appendChild(pv);
         b.appendChild(document.createTextNode(label));
@@ -2168,7 +2178,7 @@ html,body{overflow-anchor:none}
       ids.forEach(function (id) {
         var it = COS[id], pv = null;
         if (c.k === 'theme') { pv = el('i', 'sw'); pv.style.background = it.sw; }
-        else if (c.k === 'bg') { pv = el('i', 'sw'); pv.style.background = it.pv; }
+        else if (c.k === 'bg') { var landscape = lookLandscape(it.key); pv = el('i', landscape ? 'sw look-landscape' : 'sw'); pv.setAttribute('aria-hidden', 'true'); if (landscape) pv.style.backgroundImage = 'url("' + landscape + '")'; else pv.style.background = it.pv; }
         else if (c.k === 'coin') { pv = el('span', 'coin'); pv.setAttribute('data-skin', it.key); }
         else if (c.k === 'bar') { pv = el('div', 'bar mini'); pv.setAttribute('data-skin', it.key); for (var z = 0; z < 6; z++) pv.appendChild(el('i', z < 4 ? 'on' : '')); }
         else { pv = el('i', 'sw'); pv.style.background = it.sw; }

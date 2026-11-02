@@ -570,3 +570,14 @@ body.citadel-shell-active .achievement-showcase-actions button{padding:6px 3px;m
 #trophy[hidden] .achievement-card:after,.citadel-suspended .achievement-card:after{animation-play-state:paused!important}
 @keyframes achievementStarlight{0%,100%{opacity:.45}45%{opacity:.95}70%{opacity:.65}}
 @media(prefers-reduced-motion:reduce){.achievement-card:after{animation:none!important}}
+/* 1.1: first three unapproved earned landscapes. Existing room art and weather stay intact. */
+:root[data-citadel-bg="forest"]{--realm-landscape:url('assets/citadel/realm-forest.svg')}
+:root[data-citadel-bg="beach"]{--realm-landscape:url('assets/citadel/realm-beach.svg')}
+:root[data-citadel-bg="cave"]{--realm-landscape:url('assets/citadel/realm-cave.svg')}
+:root:is([data-citadel-bg="forest"],[data-citadel-bg="beach"],[data-citadel-bg="cave"]) .citadel-shell .citadel-sky{background-image:var(--realm-landscape)!important;background-position:center 60%!important;background-size:cover!important}
+:root:is([data-citadel-bg="forest"],[data-citadel-bg="beach"],[data-citadel-bg="cave"]) body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:.58;background:var(--realm-landscape) center/100% 100% no-repeat;image-rendering:pixelated}
+:root:is([data-citadel-bg="forest"],[data-citadel-bg="beach"],[data-citadel-bg="cave"]) .stage .window{background:var(--realm-landscape) center/cover no-repeat;image-rendering:pixelated}
+:root:is([data-citadel-bg="forest"],[data-citadel-bg="beach"],[data-citadel-bg="cave"]) .stage .window :is(.moon,.star){visibility:hidden}
+.looksec[data-look-category="bg"] .realm-choice{flex:1 1 146px;max-width:320px;min-width:0;min-height:104px;padding:7px;display:flex;flex-direction:column;align-items:stretch;gap:8px;text-align:center;line-height:1.5;white-space:normal}
+.looksec .realm-choice .look-landscape{display:block;width:100%;height:auto;aspect-ratio:5/2;flex:none;margin:0;box-sizing:border-box;border:1px solid #66546e;background-position:center;background-size:cover;image-rendering:pixelated}
+.looksec .realm-choice[aria-pressed="true"] .look-landscape{border-color:#d3b17b;box-shadow:0 0 0 1px #d3b17b55}
