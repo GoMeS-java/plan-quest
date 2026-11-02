@@ -133,13 +133,15 @@ def details(room, level):
         for x in (57, 116):
             s += path(f'M{x} 217v49m-3 -36h6', 'none', '#987c6d', 2)
     if room == 'study':
-        s += path('M213 229l22 -3 9 7 -22 4ZM245 225l18 1 -2 9 -18 -2Z', '#d5c29e', '#807076', 1)
+        s += path('M201 251l19 -3 10 5 -19 4Z', '#d5c29e', '#807076', 1)
+        s += path('M206 251l12 -2m-9 4l11 -2', 'none', '#8b7762', 1)
     if room == 'archive':
         s += shelf(306, 180, 38, 72, level == 3)
         s += path('M247 244l25 -5 12 8 -25 5Z', '#d3c09c', '#8e7772', 1)
     if room == 'forge':
-        for x in (332, 351, 372, 393):
-            s += path(f'M{x} 199v28m-5 -27h10', 'none', '#baa89a', 3)
+        for x in (336, 357, 378, 400):
+            s += path(f'M{x} 194v6q-4 4 0 6v18', 'none', '#827576', 2)
+        s += path('M329 204h13v5h-13ZM351 206h12v6h-12ZM374 205v8h8v-8M395 207h10v5h-10', '#a49c99', '#3b323e', 1)
         for x,y in ((79,221),(96,215),(112,227)):
             s += rect(x, y, 2, 3, '#ffd79a', 'none', 0)
     if room == 'refectory':
@@ -155,25 +157,27 @@ def details(room, level):
             s += path('M210 188l8 -19 13 9 17 -29 18 29 13 -9 16 20Z', '#997553', gold, 2)
             s += path('M235 206l12 -9 14 9 -14 12Z', '#bea078', '#463140', 2)
         if room == 'forge':
-            s += path('M330 237l58 -8 23 13 -60 9Z', '#79727a', '#b5a39a', 2)
-            for x in (343, 359, 376):
-                s += rect(x, 229, 10, 8, '#a6a0a0', '#55505e', 1)
+            for x in (359, 375):
+                s += path(f'M{x} 236l14 -2 6 3 -14 3v4l-6 -3Z', '#a6a0a0', '#55505e', 1)
         if room == 'gatehouse':
-            s += path('M276 256l57 -8 16 10 -56 11ZM289 268v13m47 -22v13', '#746052', '#ba9874', 3)
+            s += path('M278 255v25h5v-25m45 -7v25h5v-25', '#655046', '#342b37', 1)
+            s += path('M276 256l57 -8 16 10 -56 11v5l56 -11v-5m-56 11l-17 -8Z', '#746052', '#ba9874', 2)
         if room == 'vault':
             for x,y in ((154,260),(234,263),(316,259)):
                 s += rect(x, y, 8, 10, '#c1a47b', '#544356', 1)
                 s += rect(x+3, y+4, 2, 4, '#372b3a', 'none', 0)
         if room == 'rest':
-            s += path('M294 196V156M442 200V152', 'none', '#b79b7b', 4)
+            # Four continuous posts connect the canopy to the bed frame.
+            s += path('M294 249V153M405 226V141M332 287V170M449 267V156', 'none', '#89664f', 5)
+            s += path('M294 247V155M332 284V173M449 264V159', 'none', '#d1af80', 1)
             s += path('M287 149L403 138 449 155 323 170Z', '#543349', '#c8a078', 3)
             s += path('M291 153L322 168V237L302 224ZM416 151L443 157V221L428 210Z', '#64415c', '#ac8e7b', 2)
             s += path('M298 167l2 40m9 -33v44m126 -52v37', 'none', '#8d607a', 2)
-        if room in ('archive','study','rest'):
-            s += path('M324 277l22 -4 7 8 -23 4Z', tint, gold, 1)
         if room == 'cloister':
             for x in (74, 391):
-                s += path(f'M{x} 259v-51m0 33q-25 -23 -24 -33 22 1 24 20m0 -5q25 -30 24 -40 -24 6 -24 30', 'none', '#6b9873', 5)
+                s += path(f'M{x-13} 254l4 25h18l4 -25Z', '#65504f', '#ad8d71', 2)
+                s += f'<ellipse cx="{x}" cy="254" rx="14" ry="5" fill="#342c32" stroke="#ad8d71" stroke-width="2"/>'
+                s += path(f'M{x} 256v-47m0 29q-21 -21 -22 -29 20 0 22 19m0 -5q22 -27 22 -37 -21 6 -22 29', 'none', '#6b9873', 4)
         if room == 'observatory':
             s += path('M58 228l45 -5 12 9 -45 7Z', '#b0b6bc', '#665d73', 2)
             s += '<circle cx="83" cy="227" r="11" fill="none" stroke="#d8bc8b" stroke-width="2"/>'
@@ -184,7 +188,7 @@ def furnishings(room, level):
     rich = level == 3
     gold = PALETTES[room][1]
     if room == 'rest':
-        return shelf(128, 187, 52, 80, rich)+desk(185, 242, level)+bed(2).replace('#7b6c80', '#76546f' if rich else '#7b6c80')+chest(268, 242, rich)
+        return shelf(128, 187, 52, 80, rich)+chest(267, 222, rich)+bed(2).replace('#7b6c80', '#76546f' if rich else '#7b6c80')+desk(172, 247, level)
     if room == 'forge':
         s = '<ellipse cx="90" cy="294" rx="76" ry="10" fill="#080911" opacity=".7"/>'
         s += path('M28 190L124 183 143 199V286L28 296Z', '#51444b', '#9b8277', 2)
@@ -199,8 +203,9 @@ def furnishings(room, level):
         s += path('M187 256l28 -7 58 3 -15 15 -28 1 7 24 -34 5 2 -27Z', '#555761', '#aaa2a0', 2)
         s += path('M191 255l25 -10 57 5 -19 11 -45 2Z', '#929398', '#bdb0a3', 1)
         s += path('M208 276l23 -2m-23 7l24 -2', 'none', '#2c2936', 2)
-        s += desk(317, 239, level)
-        s += path('M320 194h94M324 194v38m87 -38v36', 'none', '#6f5650', 4)
+        s += desk(317, 239, level, workshop=True)
+        s += rect(321, 190, 94, 8, '#694e43', '#ac8766', 1)
+        s += path('M326 195v30m84 -30v30', 'none', '#70574d', 4)
         return s
     if room == 'throne':
         s = path('M157 239L278 219 342 245 224 272Z', '#60505d', '#a8917d', 2)
@@ -223,17 +228,17 @@ def furnishings(room, level):
         s += path('M243 213V184M218 217l-4 22m54 -22l5 22', 'none', '#83b9b3', 2)
         s += path('M198 253l22 4m42 -4l24 -4m-70 13l33 2', 'none', '#87aaa7', 1)
         for x in (24, 360):
+            s += f'<ellipse cx="{x+48}" cy="282" rx="49" ry="6" fill="#0c151b" opacity=".6"/>'
+            for dx,dy in ((10,261),(76,253)):
+                s += path(f'M{x+dx} {dy}h10v21l-10 2Z', '#657365', '#394b48', 1)
+                s += path(f'M{x+dx+10} {dy}l5 -2v21l-5 2Z', '#3f5350', '#394b48', 1)
+            s += path(f'M{x} 253l77 -9 18 10v6l-79 12 -16 -12Z', '#59695e', '#8e9b80', 2)
             s += path(f'M{x} 253l77 -9 18 10 -79 12Z', '#7a8274', '#acae91', 2)
-            s += path(f'M{x+10} 262v22m78 -31v21', 'none', '#536456', 7)
         return s
     s = item_set(room, level)
     if room == 'observatory':
         s += path('M200 200l6 15m20 -23l6 15m57 -39l6 15', 'none', '#d2b48a', 4)
         s += '<circle cx="246" cy="218" r="7" fill="#b6a48a" stroke="#4a4657" stroke-width="2"/>'
-    # Fine joinery and wood grain keep large panels from reading as flat boxes.
-    if room in ('study', 'archive', 'vault', 'gatehouse'):
-        for x in (40, 390):
-            s += path(f'M{x} 223l15 -2m-12 5l17 -1m-20 5l10 -1', 'none', '#a88a78', .7)
     return s
 
 

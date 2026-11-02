@@ -408,7 +408,10 @@ body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person{
 body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person[data-facing="left"]{scale:-1 1!important}
 body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person[role="button"]:before{inset:auto;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
 body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person:after{pointer-events:none}
-body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interior-object{z-index:6}
+body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interior-object{z-index:6;border-color:transparent;background:none;box-shadow:none}
+body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interior-object:hover,
+body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interior-object[data-inspected="true"]{border-color:transparent;background:none;box-shadow:none}
+body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interior-object:focus-visible{outline:2px solid #f0cf91;outline-offset:2px}
 body.citadel-shell-active #citadel-home .citadel-interior-stage[data-room="rest"]{--object-x:36%;--object-y:66%;--object-w:23%;--object-h:17%}
 body.citadel-shell-active #citadel-home .citadel-interior-stage[data-room="study"]{--object-x:36%;--object-y:64%;--object-w:25%;--object-h:18%}
 body.citadel-shell-active #citadel-home .citadel-interior-stage[data-room="archive"]{--object-x:78%;--object-y:49%;--object-w:15%;--object-h:26%}
