@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200">
+  <defs>
+    <linearGradient id="drape" x2="1" y2="1"><stop stop-color="#6f3859"/><stop offset=".55" stop-color="#492d54"/><stop offset="1" stop-color="#241e39"/></linearGradient>
+    <linearGradient id="rug" x2="1" y2="1"><stop stop-color="#90635f" stop-opacity=".82"/><stop offset="1" stop-color="#543b66" stop-opacity=".9"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#f8c68d" stop-opacity=".3"/><stop offset="1" stop-color="#f8c68d" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- Level three adds luxury to level two, without covering its geometry. -->
+  <ellipse cx="240" cy="135" rx="135" ry="85" fill="url(#glow)"/>
+  <path d="M108 175Q208 162 341 175L358 190H92Z" fill="url(#rug)" stroke="#b49373" stroke-width="2"/>
+  <path d="M106 178Q213 169 342 178M111 185Q215 176 341 185" fill="none" stroke="#d3a675" stroke-opacity=".55" stroke-width="1.5"/>
+  <path d="M145 121Q156 101 176 103L166 150Q155 145 145 155Z" fill="url(#drape)" stroke="#b08a80" stroke-width="2"/>
+  <path d="M265 121Q254 101 234 103L248 150Q256 145 267 155Z" fill="url(#drape)" stroke="#b08a80" stroke-width="2"/>
+  <path d="M147 116Q204 88 266 116" fill="none" stroke="#d1a670" stroke-width="3"/>
+  <path d="M164 105Q206 96 251 106" fill="none" stroke="#f3d4a1" stroke-opacity=".65" stroke-width="1.5"/>
+  <path d="M57 65v63M423 65v63" fill="none" stroke="#e0b77f" stroke-opacity=".65" stroke-width="2"/>
+  <path d="M48 69q9-13 18 0v39q-9 9-18 0ZM414 69q9-13 18 0v39q-9 9-18 0Z" fill="url(#drape)" stroke="#977388" stroke-width="1.5"/>
+  <path d="M49 71q6 12 0 30m383-30q-6 12 0 30" fill="none" stroke="#bc8a95" stroke-opacity=".6" stroke-width="1.5"/>
+  <path d="M76 151l-11 19h22ZM404 151l-11 19h22Z" fill="#604759" stroke="#bd9876" stroke-width="2"/>
+  <path d="M74 147h5v7h-5Zm327 0h5v7h-5Z" fill="#ffd194"/>
+  <!-- A surviving fracture is left exposed beside the renewed wall panels. -->
+  <path d="M317 53l-7 16 4 12-10 15m19-38-6 14 4 10-6 12" fill="none" stroke="#1b1428" stroke-opacity=".68" stroke-width="1.7"/>
+</svg>

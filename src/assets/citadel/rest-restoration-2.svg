@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200">
+  <defs>
+    <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#6e5067" stop-opacity=".16"/><stop offset="1" stop-color="#b3846d" stop-opacity=".08"/></linearGradient>
+    <linearGradient id="wood" x2="0" y2="1"><stop stop-color="#806052"/><stop offset=".5" stop-color="#503643"/><stop offset="1" stop-color="#211c32"/></linearGradient>
+    <linearGradient id="bed" x2="0" y2="1"><stop stop-color="#e2caba"/><stop offset="1" stop-color="#856c84"/></linearGradient>
+    <radialGradient id="warm"><stop stop-color="#f6bf78" stop-opacity=".48"/><stop offset="1" stop-color="#f6bf78" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- Transparent restoration: original stone arches and damage remain visible. -->
+  <path d="M18 41H462V173H18Z" fill="url(#wall)"/>
+  <path d="M25 48V173M455 48V173M101 47V171M376 47V171" stroke="#c5a08a" stroke-opacity=".32" stroke-width="2"/>
+  <path d="M25 56H101M376 56H455M25 150H102M376 150H455" stroke="#c5a08a" stroke-opacity=".3" stroke-width="2"/>
+  <path d="M40 58Q64 31 87 58V132H40Z" fill="#382b43" fill-opacity=".42" stroke="#ba9889" stroke-opacity=".55" stroke-width="2"/>
+  <path d="M393 58Q417 31 441 58V132H393Z" fill="#382b43" fill-opacity=".42" stroke="#ba9889" stroke-opacity=".55" stroke-width="2"/>
+  <!-- Small lamps at fixed wall points; lighting does not cover text or the castle exterior. -->
+  <ellipse cx="98" cy="91" rx="55" ry="51" fill="url(#warm)"/>
+  <ellipse cx="378" cy="91" rx="55" ry="51" fill="url(#warm)"/>
+  <path d="M90 94h15m-12-4h9v8h-9zM370 94h15m-12-4h9v8h-9z" fill="#d7aa70" stroke="#71505c" stroke-width="2"/>
+  <path d="M97 85q-5 6 0 9q5-3 0-9M377 85q-5 6 0 9q5-3 0-9" fill="#ffe1a1"/>
+  <!-- The same bed footprint as the abandoned room. -->
+  <path d="M144 162Q203 157 272 162L286 180H133Z" fill="#513648" opacity=".7"/>
+  <path d="M150 146V117Q201 91 267 117V146" fill="none" stroke="url(#wood)" stroke-width="10"/>
+  <path d="M154 141Q203 129 264 141V165H154Z" fill="url(#bed)" stroke="#b69794" stroke-width="2"/>
+  <path d="M156 146Q201 154 262 145" fill="none" stroke="#f1dfcd" stroke-opacity=".6" stroke-width="3"/>
+  <path d="M154 161H266V170H154Z" fill="url(#wood)" stroke="#a48270" stroke-width="2"/>
+  <path d="M162 138q18-11 37-2v12h-37ZM207 136q18-10 41 1v11h-41Z" fill="#d5c4ba" stroke="#927988" stroke-width="1.5"/>
+  <!-- Old claw marks deliberately survive the renovation. -->
+  <path d="M317 53l-7 16 4 12-10 15m19-38-6 14 4 10-6 12m18-33-4 17 4 9" fill="none" stroke="#160e22" stroke-opacity=".6" stroke-width="2"/>
+</svg>
