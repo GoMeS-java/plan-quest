@@ -482,28 +482,3 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
  background:url("assets/citadel/rest-restoration-3.svg") center/100% 100% no-repeat,url("assets/citadel/rest-restoration-2.svg") center/100% 100% no-repeat!important;
  image-rendering:auto!important
 }
-
-/* 1.1 spatial composition: all ten chambers use the same grounded 480x320
-   coordinate space as the hero. Floors and furniture are room-specific. */
-:is(.citadel-room[data-croom="rest"],.citadel-interior-stage[data-room="rest"]){--depth2:url("assets/citadel/rest-depth-2.svg");--depth3:url("assets/citadel/rest-depth-3.svg")}
-:is(.citadel-room[data-croom="study"],.citadel-interior-stage[data-room="study"]){--depth2:url("assets/citadel/study-depth-2.svg");--depth3:url("assets/citadel/study-depth-3.svg")}
-:is(.citadel-room[data-croom="archive"],.citadel-interior-stage[data-room="archive"]){--depth2:url("assets/citadel/archive-depth-2.svg");--depth3:url("assets/citadel/archive-depth-3.svg")}
-:is(.citadel-room[data-croom="forge"],.citadel-interior-stage[data-room="forge"]){--depth2:url("assets/citadel/forge-depth-2.svg");--depth3:url("assets/citadel/forge-depth-3.svg")}
-:is(.citadel-room[data-croom="throne"],.citadel-interior-stage[data-room="throne"]){--depth2:url("assets/citadel/throne-depth-2.svg");--depth3:url("assets/citadel/throne-depth-3.svg")}
-:is(.citadel-room[data-croom="observatory"],.citadel-interior-stage[data-room="observatory"]){--depth2:url("assets/citadel/observatory-depth-2.svg");--depth3:url("assets/citadel/observatory-depth-3.svg")}
-:is(.citadel-room[data-croom="gatehouse"],.citadel-interior-stage[data-room="gatehouse"]){--depth2:url("assets/citadel/gatehouse-depth-2.svg");--depth3:url("assets/citadel/gatehouse-depth-3.svg")}
-:is(.citadel-room[data-croom="refectory"],.citadel-interior-stage[data-room="refectory"]){--depth2:url("assets/citadel/refectory-depth-2.svg");--depth3:url("assets/citadel/refectory-depth-3.svg")}
-:is(.citadel-room[data-croom="cloister"],.citadel-interior-stage[data-room="cloister"]){--depth2:url("assets/citadel/cloister-depth-2.svg");--depth3:url("assets/citadel/cloister-depth-3.svg")}
-:is(.citadel-room[data-croom="vault"],.citadel-interior-stage[data-room="vault"]){--depth2:url("assets/citadel/vault-depth-2.svg");--depth3:url("assets/citadel/vault-depth-3.svg")}
-body.citadel-shell-active :is(.citadel-room[data-room-level="2"],.citadel-room[data-room-level="3"],.citadel-interior-stage[data-level="2"],.citadel-interior-stage[data-level="3"]):before{
- background:url("assets/citadel/rest-structure.svg") center/100% 100% no-repeat!important;
- opacity:1!important;filter:none!important
-}
-body.citadel-shell-active .citadel-room[data-room-level="2"]:after,
-body.citadel-shell-active .citadel-interior-stage[data-level="2"] .citadel-interior-renovation{
- background:var(--depth2) center/100% 100% no-repeat!important;image-rendering:pixelated!important
-}
-body.citadel-shell-active .citadel-room[data-room-level="3"]:after,
-body.citadel-shell-active .citadel-interior-stage[data-level="3"] .citadel-interior-renovation{
- background:var(--depth3) center/100% 100% no-repeat!important;image-rendering:pixelated!important
-}

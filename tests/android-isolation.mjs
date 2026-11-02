@@ -3,14 +3,14 @@
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
-import {resolve,extname} from 'node:path';
+import {resolve,extname,sep} from 'node:path';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
 const root=resolve('.'), errors=[], requests=[];
 const server=createServer(async(req,res)=>{try{
  const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
  const file=resolve(root,'.'+(path.endsWith('/')?path+'index.html':path));
- if(!file.startsWith(root+'/android-test/')&&!file.startsWith(root+'/docs/'))throw Error();
+ if(!file.startsWith(resolve(root,'android-test')+sep)&&!file.startsWith(resolve(root,'docs')+sep))throw Error();
  res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp'})[extname(file)]||'text/plain');
  res.setHeader('Cache-Control','no-cache');res.end(await readFile(file));
 }catch{res.writeHead(404);res.end();}});

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="4a48b93f78c6";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="ae973f483e51";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -1012,7 +1012,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка 4a48b93f78c6</span></div>
+    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка ae973f483e51</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -1087,6 +1087,7 @@ html,body{overflow-anchor:none}
 </div>
 
 <script src="citadel-world.js"></script>
+<script src="citadel-space.js"></script>
 <script src="legends.js"></script>
 <script src="fate.js"></script>
 <dialog id="citadel-mystery" aria-labelledby="citadel-mystery-title" aria-describedby="citadel-mystery-text"><h2 id="citadel-mystery-title">Неизведанная комната</h2><p id="citadel-mystery-text"></p><form method="dialog"><button autofocus>Понятно</button></form></dialog>
@@ -3954,7 +3955,7 @@ function citadelUpgrade(room,expectedLevel) {
   if(abyssBalance(tx.get('cfg/abyss-economy'),purchases)<offer.cost)return 'Не хватает Эссенции Бездны.';
   tx.set('buys/citadel-'+room+'-'+offer.level,{kind:'citadel-room',currency:'abyss',room:room,level:offer.level,item:'citadel-'+room+'-'+offer.level,name:'Цитадель: '+offer.name,cost:offer.cost,ts:Date.now()});
   return 'Построено: '+offer.name+'. Потрачено эссенций: '+offer.cost+'.';
- }).then(function(message){$('citadel-building-feedback').textContent=message;});}).finally(function(){citadelBuilding=false;citadelRenderBuilding();}).catch(function(){});
+ }).then(function(message){$('citadel-building-feedback').textContent=message;if(message.indexOf('Построено:')===0&&citadelSelected===room&&!$('citadel-interior').hidden)citadelFiniteEffect($('citadel-interior-stage'),[{opacity:.55},{opacity:1}],560);});}).finally(function(){citadelBuilding=false;citadelRenderBuilding();}).catch(function(){});
 }
 function citadelRenderBuilding() {
  if(!citadelRoomOpen(citadelSelected))return;
@@ -3981,13 +3982,16 @@ function citadelRenderDecor(){if(!citadelRoomOpen(citadelSelected))return;legend
 var citadelObjects={gatehouse:['Засов ворот','Кованые створки закрывают проход от холодного ветра. Дозорный проверяет их каждый день.'],refectory:['Длинный стол','К вечеру здесь собираются жители Цитадели.'],cloister:['Каменная арка','Под сводом растёт мох. Сквозь решётку падает свет внешнего двора.'],vault:['Книга казны','Ядра души общие со Воспоминаниями. Все расходы записаны в истории покупок.'],throne:['Древний трон','Камень помнит каждого, кто решался на нём сидеть.'],observatory:['Звёздная линза','Сквозь мутное стекло видны созвездия, которых нет на обычном небе.'],rest:['Старая кровать','Место, где даже кошмары ненадолго теряют власть.'],study:['Книга записей','На страницах отражается путь, который ты проходишь в реальности.'],archive:['Стеллаж воспоминаний','Время не трогает эти страницы.'],forge:['Горн','Угли ждут часа, когда мастерская пробудится.']};
 // Interior motion is presentation state; it never awards or writes progress.
 var citadelWalkPositions={},citadelWalkAnimation=null;
+var citadelWalkKey=window.PLAN_CONFIG&&window.PLAN_CONFIG.testMode?'plan.android-test.citadel.walk.v1':'plan.citadel.walk.v1';
+try{var storedWalk=JSON.parse(localStorage.getItem(citadelWalkKey)||'{}');citadelRooms.forEach(function(id){var p=storedWalk&&storedWalk[id];if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.x<=1&&p.y>=0&&p.y<=1)citadelWalkPositions[id]={x:p.x,y:p.y};});}catch(e){}
+function citadelRememberWalk(){try{localStorage.setItem(citadelWalkKey,JSON.stringify(citadelWalkPositions));}catch(e){}}
 function citadelStopWalk(){
  var stage=$('citadel-interior-stage'),hero=stage.querySelector('.citadel-hero-sprite');
  if(citadelWalkAnimation){
   // Freeze the rendered position before cancelling WAAPI. The inline style
   // already holds the destination, which would otherwise cause a visible jump.
   if(hero&&stage.clientWidth&&stage.clientHeight){var style=getComputedStyle(hero),left=parseFloat(style.left),bottom=parseFloat(style.bottom);hero.style.left=left+'px';hero.style.bottom=bottom+'px';citadelWalkPositions[citadelSelected]={x:(left+hero.offsetWidth/2)/stage.clientWidth,y:bottom/stage.clientHeight};}
-  citadelWalkAnimation.cancel();citadelWalkAnimation=null;
+  citadelWalkAnimation.cancel();citadelWalkAnimation=null;citadelRememberWalk();
  }
  stage.dataset.moving='false';$('citadel-walk-target').hidden=true;
 }
@@ -4004,14 +4008,20 @@ function citadelWalkTo(x,y,animate){
  });});
  spots.sort(function(a,b){return a.d-b.d;});if(spots.length){x=spots[0].x;y=spots[0].y;}
  var from={left:getComputedStyle(hero).left,bottom:getComputedStyle(hero).bottom};
+ var plane=CitadelSpace.route(citadelSelected,citadelRoomLevel(citadelSelected),{x:(parseFloat(from.left)+hw/2)/w*480,y:(1-parseFloat(from.bottom)/h)*320},{x:x*480,y:(1-y)*320});
+ var destination=plane[plane.length-1];x=destination.x/480;y=1-destination.y/320;
  citadelStopWalk();citadelWalkPositions[citadelSelected]={x:x,y:y};
  var left=Math.round(w*x-hero.offsetWidth/2),bottom=Math.round(stage.clientHeight*y);
  stage.dataset.facing=left<parseFloat(from.left)?'left':'right';hero.style.left=left+'px';hero.style.bottom=bottom+'px';
  var marker=$('citadel-walk-target');marker.style.left=(x*100)+'%';marker.style.bottom=(y*100)+'%';marker.hidden=animate===false||window.matchMedia('(prefers-reduced-motion:reduce)').matches;
  if(animate!==false&&!document.hidden&&!window.matchMedia('(prefers-reduced-motion:reduce)').matches){
-  stage.dataset.moving='true';var movement=hero.animate([from,{left:left+'px',bottom:bottom+'px'}],{duration:Math.min(800,Math.max(200,Math.abs(parseFloat(from.left)-left)*3)),easing:'linear'});
-  citadelWalkAnimation=movement;movement.onfinish=function(){if(citadelWalkAnimation===movement){stage.dataset.moving='false';citadelWalkAnimation=null;marker.hidden=true;citadelFaceResidents();}};
- }
+  stage.dataset.moving='true';
+  var distance=0,lengths=[0];for(var pi=1;pi<plane.length;pi++){distance+=Math.hypot((plane[pi].x-plane[pi-1].x)*w/480,(plane[pi].y-plane[pi-1].y)*h/320);lengths.push(distance);}
+  var frames=plane.map(function(p,i){return {left:Math.round(w*p.x/480-hw/2)+'px',bottom:Math.round(h*(1-p.y/320))+'px',offset:distance?lengths[i]/distance:i/(plane.length-1||1)};});
+  if(frames.length===1)frames.push({left:left+'px',bottom:bottom+'px',offset:1});
+  var movement=hero.animate(frames,{duration:Math.min(1800,Math.max(200,distance*3)),easing:'linear'});
+  citadelWalkAnimation=movement;movement.onfinish=function(){if(citadelWalkAnimation===movement){stage.dataset.moving='false';citadelWalkAnimation=null;marker.hidden=true;citadelRememberWalk();citadelFaceResidents();}};
+ }else if(animate!==false){citadelRememberWalk();}
  citadelFaceResidents();
 }
 function citadelRoomActions(){
@@ -4030,7 +4040,7 @@ var citadelWalkStage=$('citadel-interior-stage');citadelWalkStage.tabIndex=0;cit
 citadelWalkStage.addEventListener('click',function(e){if(e.target.closest('button,[role="button"]'))return;var r=this.getBoundingClientRect(),y=(r.bottom-e.clientY)/r.height;if(y>.34)return;citadelWalkTo((e.clientX-r.left)/r.width,y);});
 citadelWalkStage.addEventListener('keydown',function(e){if(e.target!==this)return;var p=citadelWalkPositions[citadelSelected]||{x:.5,y:.08},keys={ArrowLeft:[-.1,0],ArrowRight:[.1,0],ArrowUp:[0,.04],ArrowDown:[0,-.04]},d=keys[e.key];if(!d)return;e.preventDefault();citadelWalkTo(p.x+d[0],p.y+d[1]);});
 window.addEventListener('resize',function(){var p=citadelWalkPositions[citadelSelected];if(p)citadelWalkTo(p.x,p.y,false);});
-function citadelStopEffects(){document.querySelectorAll('.citadel-hero-sprite,.citadel-interior-stage *').forEach(function(n){if(n._worldEffect)n._worldEffect.cancel();if(n._reaction)n._reaction.cancel();});}
+function citadelStopEffects(){document.querySelectorAll('.citadel-hero-sprite,.citadel-interior-stage,.citadel-interior-stage *').forEach(function(n){if(n._worldEffect)n._worldEffect.cancel();if(n._reaction)n._reaction.cancel();});}
 document.addEventListener('visibilitychange',function(){if(document.hidden){citadelStopWalk();citadelStopEffects();}});
 window.matchMedia('(prefers-reduced-motion:reduce)').addEventListener('change',function(e){if(e.matches){citadelStopWalk();citadelStopEffects();}});
 
@@ -4081,7 +4091,7 @@ function citadelHeroReact(){
  sprite._reaction=sprite.animate([{translate:'0 0'},{translate:'0 -2px'},{translate:'0 0'}],{duration:320,easing:'steps(2,end)'});
 }
 $('citadel-interior-object').addEventListener('click',citadelInspectObject);$('citadel-interior-object').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();citadelInspectObject();}});
-function citadelEnter(){var scene=$('citadel-interior'),room=$('citadel-interior-stage');if(!scene||!room||!loaded)return;var selectedBtn=document.querySelector('[data-croom="'+citadelSelected+'"]');if(!citadelRoomOpen(citadelSelected)){citadelShowMystery(citadelSelected);return;}room.dataset.room=citadelSelected;delete $('citadel-interior-object').dataset.inspected;$('citadel-interior-object').setAttribute('aria-label','Осмотреть: '+citadelObjects[citadelSelected][0]);$('citadel-interior-title').textContent=$('citadel-location').textContent;$('citadel-interior-caption').textContent=citadelRoomInfo[citadelSelected];scene.hidden=false;if($('citadel-home').classList.contains('citadel-expanded')&&$('citadel-home').dataset.uiView!=='upgrades')citadelSetArtView('room');citadelRenderExits();citadelRoomConversation();syncCitadelAvatar();var walk=citadelWalkPositions[citadelSelected]||{x:.5,y:.08};citadelWalkTo(walk.x,walk.y,false);citadelRoomActions();citadelRenderDecor();citadelRenderBuilding();$('citadel-object-status').textContent='Нажми на светящийся предмет, чтобы осмотреть его.';if($('citadel-home').classList.contains('citadel-shell')){scene.scrollTop=0;scene.parentElement.scrollTop=0;if($('citadel-home').dataset.uiView==='upgrades'){var building=scene.querySelector('.citadel-building');scene.scrollTop=building.getBoundingClientRect().top-scene.getBoundingClientRect().top-8;}}else scene.scrollIntoView({behavior:'auto',block:'nearest'});}
+function citadelEnter(){var scene=$('citadel-interior'),room=$('citadel-interior-stage');if(!scene||!room||!loaded)return;var selectedBtn=document.querySelector('[data-croom="'+citadelSelected+'"]');if(!citadelRoomOpen(citadelSelected)){citadelShowMystery(citadelSelected);return;}room.dataset.room=citadelSelected;delete $('citadel-interior-object').dataset.inspected;$('citadel-interior-object').setAttribute('aria-label','Осмотреть: '+citadelObjects[citadelSelected][0]);$('citadel-interior-title').textContent=$('citadel-location').textContent;$('citadel-interior-caption').textContent=citadelRoomInfo[citadelSelected];scene.hidden=false;if($('citadel-home').classList.contains('citadel-expanded')&&$('citadel-home').dataset.uiView!=='upgrades')citadelSetArtView('room');citadelRenderExits();citadelRoomConversation();syncCitadelAvatar();var walk=citadelWalkPositions[citadelSelected]||{x:.5,y:.08};citadelWalkTo(walk.x,walk.y,false);citadelRoomActions();citadelRenderDecor();citadelRenderBuilding();citadelPositionInteriorResidents();$('citadel-object-status').textContent='Нажми на светящийся предмет, чтобы осмотреть его.';if($('citadel-home').classList.contains('citadel-shell')){scene.scrollTop=0;scene.parentElement.scrollTop=0;if($('citadel-home').dataset.uiView==='upgrades'){var building=scene.querySelector('.citadel-building');scene.scrollTop=building.getBoundingClientRect().top-scene.getBoundingClientRect().top-8;}}else scene.scrollIntoView({behavior:'auto',block:'nearest'});}
 $('citadel-enter').addEventListener('click',citadelEnter);$('citadel-interior-close').addEventListener('click',function(){citadelStopWalk();$('citadel-interior').hidden=true;if($('citadel-home').classList.contains('citadel-expanded')){citadelSetArtView('overview');requestAnimationFrame(citadelPosition);}});
 function citadelFocus(){if(!loaded)return;if($('citadel-home').classList.contains('citadel-expanded'))citadelSetArtView('overview');var room=document.querySelector('[data-croom="'+citadelSelected+'"]');if(room)room.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});}
 $('citadel-focus').addEventListener('click',citadelFocus);
@@ -4281,8 +4291,24 @@ function citadelNodePoint(id){
  var r=node.getBoundingClientRect(),c=castle.getBoundingClientRect();
  return {x:r.left-c.left-castle.clientLeft+r.width*.5,y:r.bottom-c.top-castle.clientTop-(id.indexOf('hall-')===0?6:11)};
 }
+function citadelPositionInteriorResidents(){
+ var stage=$('citadel-interior-stage');if($('citadel-interior').hidden||!stage.clientWidth)return;
+ var r=stage.getBoundingClientRect(),occupied=Array.from(stage.querySelectorAll('.citadel-interior-object,.citadel-scene-door')).map(function(n){return n.getBoundingClientRect();});
+ stage.querySelectorAll('.citadel-person').forEach(function(n){
+  var candidates=[.32,.68,.5,.22,.78,.4,.6],placed=false;
+  for(var k=0;k<candidates.length;k++){
+   var x=candidates[k],y=.035;n.style.left='calc('+x*100+'% - '+n.offsetWidth/2+'px)';n.style.bottom=y*100+'%';
+   var b=n.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2,hit={left:cx-22,right:cx+22,top:cy-22,bottom:cy+22};
+   if(hit.left<r.left||hit.right>r.right||hit.bottom>r.bottom)continue;
+   if(occupied.every(function(o){return hit.right+2<=o.left||hit.left-2>=o.right||hit.bottom+2<=o.top||hit.top-2>=o.bottom;})){occupied.push(hit);placed=true;break;}
+  }
+  // The action panel remains an accessible alternative on the smallest scenes.
+  n.style.zIndex='5';
+ });
+}
 function citadelPositionResidents(states){
  if(!$('citadel-home').open||document.hidden)return;
+ citadelPositionInteriorResidents();
  (states||citadelPeople.map(citadelNpcState)).forEach(function(st,i){
   var sprite=$('citadel-castle').querySelector('.is-travelling[data-person="'+citadelPeople[i].key+'"]');if(!sprite)return;
   var a=citadelNodePoint(st.node),b=citadelNodePoint(st.next);if(!a||!b)return;
@@ -5157,7 +5183,7 @@ function renderAllInner() {
     // Trophy and gear already live in the original three-icon system toolbar.
     // Do not duplicate them as separate menu actions.
     var systemLinks=navGroup('СИСТЕМА',[]);
-    systemLinks.appendChild($('plslot'));
+    nav.appendChild($('plslot'));
     [['achievements','🏆','Достижения'],['settings','⚙','Настройки']].forEach(function(entry){
       var b=document.createElement('button');b.type='button';b.className='citadel-system-shortcut';
       b.dataset.section=entry[0];b.textContent=entry[1];b.setAttribute('aria-label',entry[2]);b.title=entry[2];
