@@ -44,6 +44,11 @@ async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.q
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));}
 async function shellMenu(p){if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
 async function shellNav(p,label){
+ const quick={'Цитадель':'overview','Задания':'today','Профиль':'wardrobe','Воспоминания':'shop'};
+ if(quick[label]){
+  const dock=p.locator('.citadel-shell-dock [data-section="'+quick[label]+'"]');
+  if(await dock.isVisible()){await dock.click();return;}
+ }
  if(label==='Настройки'||label==='Достижения'){
   if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
   const group=p.locator('.citadel-shell-nav .citadel-menu-group').filter({has:p.locator('summary').filter({hasText:'СИСТЕМА'})});
