@@ -1890,6 +1890,7 @@ html,body{overflow-anchor:none}
       if (th.v) Object.keys(th.v).forEach(function (k) { root.style.setProperty(k, th.v[k]); });
       if (th.prem) startPrem(th.prem);
     }
+    root.toggleAttribute('data-interface-theme',!!ok(look.theme,'theme'));
     root.setAttribute('data-tx', (ok(look.theme, 'theme') && COS[look.theme].tx) || '');
     root.setAttribute('data-coin', ok(look.coin, 'coin') ? COS[look.coin].key : '');
     root.setAttribute('data-bar', ok(look.bar, 'bar') ? COS[look.bar].key : '');
@@ -2101,18 +2102,42 @@ html,body{overflow-anchor:none}
     });
   }
   function titleList() {
-    var out = [];
-    if (!lastGI) return out;
-    LEG.concat(ACH).forEach(function (A) { var d = lastGI.ach[A.id]; if (A.title && d) out.push({ id: A.id, title: A.title, date: d }); });
-    out.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
-    return out;
+    var out=[];if(!lastGI||!lastGI.ach)return out;
+    [[LEG,'superrare'],[ACH,'mark']].forEach(function(group){group[0].forEach(function(A){
+      if(!Object.prototype.hasOwnProperty.call(lastGI.ach,A.id)||!lastGI.ach[A.id])return;
+      if(A.title)out.push({id:A.id,title:A.title,date:lastGI.ach[A.id],kind:group[1]});
+    });});
+    out.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});return out;
   }
-  function updateNameTag() {
-    var nt = document.querySelector('.nametag'), list = titleList(), look = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {}), t = '', i;
-    if (!nt) return;
-    for (i = 0; i < list.length; i++) if (list[i].id === look.title) t = list[i].title;
-    if (!t && list.length) t = list[list.length - 1].title;
-    nt.textContent = t || 'СПЯЩИЙ';
+  function titleChoice(list,look){
+    var id=look&&look.title||'';
+    return id==='__none__'||list.some(function(t){return t.id===id;})?id:'';
+  }
+  function heroTitle(){
+    var list=titleList(),look=S.look&&typeof S.look==='object'?S.look:cachedLook||{},id=titleChoice(list,look);
+    if(id==='__none__'||!list.length)return 'СПЯЩИЙ';
+    var selected=list.filter(function(t){return t.id===id;})[0];return (selected||list[list.length-1]).title;
+  }
+  function updateNameTag(){var nt=document.querySelector('.nametag');if(nt)nt.textContent=heroTitle();}
+  function titlePreview(row){
+    var preview=el('span','title-preview');preview.setAttribute('aria-hidden','true');preview.dataset.titleKind=row.kind||'plain';
+    var ribbon=el('span','title-preview-ribbon',row.title),portrait=document.createElement('canvas');portrait.width=32;portrait.height=52;
+    var ctx=portrait.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage($('hero'),0,0,32,52);
+    preview.appendChild(ribbon);preview.appendChild(portrait);return preview;
+  }
+  function renderTitleChoices(box,profile){
+    var list=titleList(),look=S.look&&typeof S.look==='object'?S.look:cachedLook||{},current=titleChoice(list,look),active=document.activeElement;
+    var focused=active&&box.contains(active)?active.dataset.titleId:null;clear(box);
+    var choices=[{id:'',title:list.length?list[list.length-1].title:'СПЯЩИЙ',label:'АВТО: ПОСЛЕДНИЙ ТИТУЛ',note:'Меняется при получении нового титула'},
+      {id:'__none__',title:'СПЯЩИЙ',label:'БЕЗ ТИТУЛА',note:'Оставить имя героя'}].concat(list.map(function(t){return {id:t.id,title:t.title,kind:t.kind,label:t.title,note:achievementStamp(t.date)?'Получен '+t.date.split('-').reverse().join('.'):'Полученный титул'};}));
+    choices.forEach(function(row){
+      var button=el('button',(profile?'profile-option':'chip')+' title-choice');button.type='button';button.dataset.titleId=row.id;
+      button.setAttribute('aria-pressed',row.id===current?'true':'false');button.appendChild(titlePreview(row));
+      button.appendChild(el('span','title-choice-label',row.label));button.appendChild(el('small',null,row.note));
+      button.onclick=function(){setLook('title',row.id);if(profile){box.hidden=true;$('profile-title-open').setAttribute('aria-expanded','false');$('profile-title-open').focus();}};
+      box.appendChild(button);
+    });
+    if(focused!==null){var replacement=Array.from(box.querySelectorAll('[data-title-id]')).filter(function(b){return b.dataset.titleId===focused;})[0];if(replacement)replacement.focus({preventScroll:true});}
   }
   function lookGroupDefinitions() {
     return [
@@ -2135,7 +2160,7 @@ html,body{overflow-anchor:none}
     anchor.appendChild(canvas);anchor.appendChild(el('span','shared-aura-layer'));preview.appendChild(anchor);return preview;
   }
   function refreshAuraPreviews() {
-    document.querySelectorAll('.aura-preview canvas,.frame-preview canvas').forEach(function(canvas){var ctx=canvas.getContext('2d');ctx.clearRect(0,0,32,52);ctx.imageSmoothingEnabled=false;ctx.drawImage($('hero'),0,0,32,52);});
+    document.querySelectorAll('.aura-preview canvas,.frame-preview canvas,.title-preview canvas').forEach(function(canvas){var ctx=canvas.getContext('2d');ctx.clearRect(0,0,32,52);ctx.imageSmoothingEnabled=false;ctx.drawImage($('hero'),0,0,32,52);});
   }
   function framePixels(key) {
     return ['gold','double','dash','neon','wood','ice','pixel','vine','rgb','vitrage','abyss','shard','scan','sunset'].indexOf(key)!==-1?'assets/citadel/frame-'+key+'.svg':'';
@@ -2146,9 +2171,27 @@ html,body{overflow-anchor:none}
     var ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage($('hero'),0,0,32,52);
     anchor.appendChild(canvas);anchor.appendChild(el('span','shared-aura-layer'));preview.appendChild(anchor);preview.appendChild(el('span','reward-frame'));return preview;
   }
+  function interfaceCategory(cat){return ['theme','coin','bar','pat','font','chk','tab'].indexOf(cat)!==-1;}
+  function interfacePreview(cat,it){
+    it=it||{};var preview=el('span','interface-preview');preview.dataset.interfaceKind=cat;preview.dataset.interfaceKey=it.key||'';preview.setAttribute('aria-hidden','true');
+    if(cat==='theme'){
+      var palette=Object.assign({'--bg':'#100f19','--panel':'#201c2a','--panel-2':'#2b2536','--line':'#51465e','--fg':'#e9e1e7','--muted':'#b3a8bc','--gold':'#cead7b','--gold-dark':'#7e624d'},it.v||{});
+      if(it.prem)palette['--gold']=it.sw;
+      Object.keys(palette).forEach(function(k){preview.style.setProperty(k,palette[k]);});
+      var heading=el('span','preview-heading','ЦИТАДЕЛЬ'),tabs=el('span','preview-tabs');tabs.appendChild(el('span','preview-tab','ГЕРОЙ'));tabs.appendChild(el('span','preview-tab','ЗАПИСИ'));
+      preview.appendChild(heading);preview.appendChild(tabs);var swatches=el('span','preview-swatches');['--gold','--panel-2','--line','--muted'].forEach(function(k){var sw=el('i');sw.style.background='var('+k+')';swatches.appendChild(sw);});preview.appendChild(swatches);
+    }else if(cat==='coin'){var coin=el('span','coin');coin.dataset.skin=it.key||'';preview.appendChild(coin);}
+    else if(cat==='bar'){var bar=el('span','bar mini');bar.dataset.skin=it.key||'';for(var i=0;i<6;i++)bar.appendChild(el('i',i<4?'on':''));preview.appendChild(bar);}
+    else if(cat==='font'){preview.appendChild(el('span','preview-heading','ГЕРОЙ'));preview.appendChild(el('span','preview-font-line','Ранг · история'));}
+    else if(cat==='tab'){var tabs=el('span','preview-tabs');tabs.appendChild(el('span','preview-tab','ГЕРОЙ'));tabs.appendChild(el('span','preview-tab','ЗАПИСИ'));preview.appendChild(tabs);}
+    else if(cat==='chk'){preview.appendChild(el('span','preview-check',({star:'★',heart:'♥',bolt:'✦',flower:'✿'})[it.key]||'✓'));preview.appendChild(el('span','preview-font-line','Выполнено'));}
+    return preview;
+  }
   function renderLook() {
     var box = $('looklist'), un = unlockedCos();
     if (!box) return;
+    var focused=document.activeElement,focusTitle=box.contains(focused)&&focused.hasAttribute('data-title-id')?focused.dataset.titleId:null;
+    var focusChoice=box.contains(focused)&&focused.hasAttribute('data-look-id')?{id:focused.dataset.lookId,cat:focused.closest('[data-look-category]').dataset.lookCategory}:null;
     var openGroups = Array.from(box.querySelectorAll('.look-group')).map(function (d) { return d.open; });
     clear(box);
     var any = false;
@@ -2171,18 +2214,8 @@ html,body{overflow-anchor:none}
       d.appendChild(content); box.appendChild(d); g.content = content; g.details = d; g.count = count; g.total = 0;
     });
     if (tl.length) {
-      var tsec = el('div', 'looksec'); tsec.appendChild(el('b', null, 'ТИТУЛ'));
-      var tch = el('div', 'chips'), cur = '';
-      tl.forEach(function (x) { if (x.id === look.title) cur = x.id; });
-      function tchip(id, label) {
-        var b = el('button', 'chip'); b.type = 'button';
-        b.setAttribute('aria-pressed', (cur || '') === id ? 'true' : 'false');
-        b.appendChild(document.createTextNode(label));
-        b.addEventListener('click', function () { setLook('title', id); });
-        tch.appendChild(b);
-      }
-      tchip('', 'ПОСЛЕДНИЙ');
-      tl.forEach(function (x) { tchip(x.id, x.title); });
+      var tsec=el('div','looksec');tsec.dataset.lookCategory='title';tsec.appendChild(el('b',null,'ТИТУЛ'));
+      var tch=el('div','chips title-choices');renderTitleChoices(tch,false);
       tsec.appendChild(tch); groupFor('title').content.appendChild(tsec);
       groupFor('title').total += tl.length;
     }
@@ -2197,6 +2230,7 @@ html,body{overflow-anchor:none}
         if (pv && pv.classList.contains('look-landscape')) b.classList.add('realm-choice');
         if (pv && pv.classList.contains('aura-preview')) b.classList.add('aura-choice');
         if (pv && pv.classList.contains('frame-preview')) b.classList.add('frame-choice');
+        if(pv&&pv.classList.contains('interface-preview'))b.classList.add('interface-choice');
         b.setAttribute('aria-pressed', (look[c.k] || '') === id ? 'true' : 'false');
         if (pv) b.appendChild(pv);
         b.appendChild(document.createTextNode(label));
@@ -2218,10 +2252,11 @@ html,body{overflow-anchor:none}
         });
         chips.appendChild(b);
       }
-      chip('', 'СТАНДАРТ', null);
+      chip('', 'СТАНДАРТ',interfaceCategory(c.k)?interfacePreview(c.k,null):null);
       ids.forEach(function (id) {
         var it = COS[id], pv = null;
-        if (c.k === 'theme') { pv = el('i', 'sw'); pv.style.background = it.sw; }
+        if(interfaceCategory(c.k)){pv=interfacePreview(c.k,it);}
+        else if (c.k === 'theme') { pv = el('i', 'sw'); pv.style.background = it.sw; }
         else if (c.k === 'bg') { var landscape = lookLandscape(it.key); pv = el('i', landscape ? 'sw look-landscape' : 'sw'); pv.setAttribute('aria-hidden', 'true'); if (landscape) { pv.style.backgroundImage = 'url("' + landscape + '")'; pv.dataset.realmPreview = it.key; pv.appendChild(el('span','citadel-realm-detail')); } else pv.style.background = it.pv; }
         else if (c.k === 'coin') { pv = el('span', 'coin'); pv.setAttribute('data-skin', it.key); }
         else if (c.k === 'aura') { pv = auraPreview(it); }
@@ -2237,6 +2272,8 @@ html,body{overflow-anchor:none}
       g.count.textContent = g.total + ' открыто';
       g.details.hidden = !g.total;
     });
+    var replacement=focusTitle!==null?Array.from(box.querySelectorAll('[data-title-id]')).filter(function(b){return b.dataset.titleId===focusTitle;})[0]:focusChoice?Array.from(box.querySelectorAll('[data-look-id]')).filter(function(b){return b.dataset.lookId===focusChoice.id&&b.closest('[data-look-category]').dataset.lookCategory===focusChoice.cat;})[0]:null;
+    if(replacement)replacement.focus({preventScroll:true});
   }
   function dq0(day) { return !!(day.q && day.q[2]); }
   function growthInfo(SI, today) {
@@ -3473,16 +3510,14 @@ html,body{overflow-anchor:none}
     $('profile-days').textContent=String(days);$('profile-checks').textContent=String(checks);$('profile-ach-count').textContent=String(earned.length);
     bodyShapeNow=bodyShape();paintSprite($('profile-hero'),buildSprite(outfitFrom(allItems(),outfitIds())));
     renderProfileJourney(p);
-    var titles=titleList(),look=(S.look&&typeof S.look==='object')?S.look:(cachedLook||{}),title='СПЯЩИЙ';
-    if(titles.length){var selected=titles.filter(function(t){return t.id===look.title;})[0];title=(selected||titles[titles.length-1]).title;}
-    $('profile-title').textContent=title;
+    $('profile-title').textContent=heroTitle();
     var selected=profileSelected();clear(box);
     selected.forEach(function(id,i){var item=byId[id],button=el('button','profile-award');button.type='button';button.setAttribute('aria-label','Выбрать достижение '+(i+1));button.appendChild(el('span','profile-award-icon',item?'✦':'＋'));button.appendChild(el('span',null,item?item.name:'ВЫБРАТЬ'));button.onclick=function(){profilePickSlot=i;renderProfilePicker();};box.appendChild(button);});
-    $('profile-title-open').onclick=function(){$('profile-titles').hidden=!$('profile-titles').hidden;};
+    $('profile-title-open').setAttribute('aria-controls','profile-titles');
+    $('profile-title-open').setAttribute('aria-expanded',$('profile-titles').hidden?'false':'true');
+    $('profile-title-open').onclick=function(){var box=$('profile-titles');box.hidden=!box.hidden;this.setAttribute('aria-expanded',box.hidden?'false':'true');};
     $('profile-gear-open').onclick=function(){$('profile-wardrobe').open=true;$('profile-wardrobe').scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});};
-    var titleBox=$('profile-titles');clear(titleBox);
-    var auto=el('button','profile-option','АВТО: ПОСЛЕДНИЙ ТИТУЛ');auto.type='button';auto.onclick=function(){setLook('title','');titleBox.hidden=true;};titleBox.appendChild(auto);
-    titles.forEach(function(t){var b=el('button','profile-option',t.title);b.type='button';b.setAttribute('aria-pressed',look.title===t.id?'true':'false');b.onclick=function(){setLook('title',t.id);titleBox.hidden=true;};titleBox.appendChild(b);});
+    renderTitleChoices($('profile-titles'),true);
   }
   function renderProfilePicker(){
     var picker=$('profile-picker'),list=$('profile-achievements');clear(list);picker.hidden=false;
