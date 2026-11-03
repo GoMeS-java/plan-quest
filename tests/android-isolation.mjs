@@ -109,7 +109,7 @@ try{
   const financeGroup=t.locator('.citadel-shell-nav .citadel-menu-group').filter({has:t.locator('[data-section="money"]')});
   if(!(await financeGroup.evaluate(n=>n.open)))await financeGroup.locator('summary').click();
   await t.locator('.citadel-shell-nav [data-section="money"]').click();
-  for(const id of ['wheel','spend','money','avito','wheel']){
+  for(const id of ['wheel','spend','money','wheel']){
    await t.locator('[data-finance="'+id+'"]').click();
    assert.equal(await t.locator('.citadel-finance-nav [aria-selected="true"]').getAttribute('data-finance'),id);
    assert(await t.locator('.citadel-finance-nav button').evaluateAll(ns=>ns.every(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().height>=44)));

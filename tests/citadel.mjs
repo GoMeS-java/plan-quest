@@ -10,13 +10,13 @@ const {chromium} = require('playwright');
 const root = resolve('docs'), out = resolve(process.env.TEST_OUTPUT || 'test-results');
 const currentVersion = (await readFile(resolve('src/version.txt'),'utf8')).trim();
 await mkdir(out, {recursive:true});
-const expose = `window.__qa={portrait:{data:function(){return {sprite:buildSprite(outfitFrom(allItems(),outfitIds())),outfit:outfitFrom(allItems(),outfitIds()),palette:C,totals:lastGI&&lastGI.st,shape:bodyShape()};}},eventEffects:typeof clearEventEffects==='function'?{tap:fxBurst,rank:lvFx,clear:clearEventEffects,burst:burst,setFlash:function(v){FX.flash=v;},popup:function(kind){if(kind==='rank')showLevelUp(12,2);else{achShowing=false;achQueue=[{id:kind==='achievement'?'a:visual-fixture':'ms:visual-fixture',kind:kind==='achievement'?'ОТМЕТИНА':'ОТЧЁТ',big:'Игровое событие',text:'Предпросмотр оформления события'}];showNextAch();}}}:null,cosmeticsIdle:function(){return (typeof fateBusy==='undefined'||!fateBusy&&Object.keys(fateQueued||{}).length===0&&(!window.VkachFate||VkachFate.pending(S.fate).length===0)&&fateSignature===JSON.stringify([lastGI.ach,S.fate]))&&(typeof legendBusy==='undefined'||!legendBusy&&legendSignature===legendInputSignature()&&!legendOwned().some(function(d){return !d.presented;}));},privateNotesSafe:function(){var t=document.querySelector('.release-notes').textContent.toLocaleLowerCase();return LEG.every(function(g){var item=ROOM_OF[g.id]&&ROOM_ITEMS[ROOM_OF[g.id]];return !item||!!lastGI.ach[g.id]||!t.includes(item.n.toLocaleLowerCase());});},scene:typeof legendScene==='function'?legendScene:null,equip:typeof equipItem==='function'?equipItem:null,progressSequence:function(){return typeof heroProgressSequence==='undefined'?0:heroProgressSequence;},faceResidents:typeof citadelFaceResidents==='function'?citadelFaceResidents:null,loading:function(){return loaded;},readiness:function(){return {loaded,pending,seen:Object.keys(seen)};},sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){return chain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
+const expose = `window.__qa={realm:typeof realmIdle==='function'?{idle:realmIdle,owned:realmOwned,sync:realmSync}:null,portrait:{data:function(){return {sprite:buildSprite(outfitFrom(allItems(),outfitIds())),outfit:outfitFrom(allItems(),outfitIds()),palette:C,totals:lastGI&&lastGI.st,shape:bodyShape()};}},eventEffects:typeof clearEventEffects==='function'?{tap:fxBurst,rank:lvFx,clear:clearEventEffects,burst:burst,setFlash:function(v){FX.flash=v;},popup:function(kind){if(kind==='rank')showLevelUp(12,2);else{achShowing=false;achQueue=[{id:kind==='achievement'?'a:visual-fixture':'ms:visual-fixture',kind:kind==='achievement'?'ОТМЕТИНА':'ОТЧЁТ',big:'Игровое событие',text:'Предпросмотр оформления события'}];showNextAch();}}}:null,cosmeticsIdle:function(){return (typeof realmIdle==='undefined'||realmIdle())&&(typeof fateBusy==='undefined'||!fateBusy&&Object.keys(fateQueued||{}).length===0&&(!window.VkachFate||VkachFate.pending(S.fate).length===0)&&fateSignature===JSON.stringify([lastGI.ach,S.fate]))&&(typeof legendBusy==='undefined'||!legendBusy&&legendSignature===legendInputSignature()&&!legendOwned().some(function(d){return !d.presented;}));},privateNotesSafe:function(){var t=document.querySelector('.release-notes').textContent.toLocaleLowerCase();return LEG.every(function(g){var item=ROOM_OF[g.id]&&ROOM_ITEMS[ROOM_OF[g.id]];return !item||!!lastGI.ach[g.id]||!t.includes(item.n.toLocaleLowerCase());});},scene:typeof legendScene==='function'?legendScene:null,equip:typeof equipItem==='function'?equipItem:null,progressSequence:function(){return typeof heroProgressSequence==='undefined'?0:heroProgressSequence;},faceResidents:typeof citadelFaceResidents==='function'?citadelFaceResidents:null,loading:function(){return loaded;},readiness:function(){return {loaded,pending,seen:Object.keys(seen)};},sheet:function(){return citadelHeroSheet;},shape:typeof bodyShape==='function'?bodyShape:null,outfitCheck:function(){var old=bodyShapeNow;try{return [.6,.76,1].every(function(f){bodyShapeNow=f;return BUILTIN.every(function(it){var ids={top:"knit_beige",bottom:"pants_brown",outer:"none"};ids[it.slot]=it.id;var a=buildSprite(outfitFrom(allItems(),ids));return a.length===32*52&&a.some(function(c,i){return Math.floor(i/32)===50&&c;})&&a.some(function(c,i){return Math.floor(i/32)===35&&(i%32<10||i%32>21)&&c&&c!==C.out;});});});}finally{bodyShapeNow=old;}},writeDay:typeof dayWrite==='function'?dayWrite:null,exercise:typeof doExercise==='function'?doExercise:null,undoExercise:typeof undoExercise==='function'?undoExercise:null,trialAdd:typeof trialAdd==='function'?trialAdd:null,toggleMeet:typeof toggleMeet==='function'?toggleMeet:null,markProgress:typeof recordRare==='function'?recordRare:null,S:S,balance:balances,points:pointsInfo,trial:trialOf,trialProg:trialProg,render:renderAll,steps:stepInfo,idle:function(){window.__qaAwaitingChain=chain;return window.__qaAwaitingChain;},upgrade:typeof citadelUpgrade==='function'?citadelUpgrade:null,abyssEvents:typeof abyssEvents==='function'?abyssEvents:null,roomLevel:typeof citadelRoomLevel==='function'?citadelRoomLevel:null,decor:typeof citadelSetDecor==='function'?citadelSetDecor:null,buy:buy,npcState:typeof citadelNpcState==='function'?function(key){return citadelNpcState(citadelPeople.find(p=>p.key===key));}:null,move:typeof citadelMove==='function'?citadelMove:null};`;
 // The visual fixture is injected only into this test server, never into a build or save.
 const backgroundFixture=`window.__qa.backgroundVisualFixture=function(){window.__qaBackgroundArt={};var rows=Object.keys(COS).filter(function(id){return COS[id].cat==='bg';}).map(function(id){window.__qaBackgroundArt[id]=true;return {id:id,key:COS[id].key};});applyLook();renderLook();return rows;};`;
 const auraFixture=`window.__qa.auraVisualFixture=function(){window.__qaBackgroundArt={};var rows=Object.keys(COS).filter(function(id){return COS[id].cat==='aura';}).map(function(id){window.__qaBackgroundArt[id]=true;return {id:id,key:COS[id].key};});applyLook();renderLook();return rows;};`;
 const interfaceFixture=`window.__qa.appearance={look:setLook,titles:titleList,fixture:function(){window.__qaBackgroundArt={};var rows=Object.keys(COS).filter(function(id){return ['theme','coin','bar','pat','font','chk','tab'].includes(COS[id].cat);}).map(function(id){window.__qaBackgroundArt[id]=true;return {id:id,cat:COS[id].cat,key:COS[id].key||'',gold:COS[id].v&&COS[id].v['--gold']};});applyLook();renderLook();return rows;}};`;
 const frameFixture=`window.__qa.frameVisualFixture=function(){window.__qaBackgroundArt={};Object.keys(COS).forEach(function(id){if(['frame','aura','bg'].indexOf(COS[id].cat)!==-1)window.__qaBackgroundArt[id]=true;});applyLook();renderLook();return Object.keys(COS).filter(function(id){return COS[id].cat==='frame';}).map(function(id){return {id:id,key:COS[id].key};});};`;
-function instrument(html) { html=html.replace('function renderAllInner() {','function renderAllInner() { window.__qaRenderCount=(window.__qaRenderCount||0)+1;').replace('function unlockedCos() {','function unlockedCos() { if(window.__qaBackgroundArt)return window.__qaBackgroundArt;');const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+backgroundFixture+auraFixture+frameFixture+interfaceFixture+html.slice(i); }
+function instrument(html) { html=html.replace("$('achup').dataset.event =","$('achup').dataset.qaRealmNotice=/^a:realm:/.test(e.id||'')?'true':'false';$('achup').dataset.event =").replace('function renderAllInner() {','function renderAllInner() { window.__qaRenderCount=(window.__qaRenderCount||0)+1;').replace('function realmSync(){','function realmSync(){if(window.__qaPauseRealm)return;').replace('function unlockedCos() {','function unlockedCos() { if(window.__qaBackgroundArt)return window.__qaBackgroundArt;');const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+backgroundFixture+auraFixture+frameFixture+interfaceFixture+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
 // Normalize only the historical fixture's storage bootstrap to the current local adapter.
 const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'}).replace(/var cl = window\.\w+;/, 'var cl = {use: function(){return Promise.resolve(window.PlanDB);}};');
@@ -42,26 +42,27 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));try{await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');}catch(e){console.log('Initial profile diagnostic',await page.evaluate(()=>({title:document.title,rank:document.querySelector('#citadel-live-rank')?.textContent,readiness:window.__qa?.readiness?.()})).catch(()=>({pageUnavailable:true})),errors);throw e;}
  if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await page.evaluate(()=>__qa.idle());await page.waitForFunction(()=>__qa.cosmeticsIdle());}
+ if(shell)await page.addLocatorHandler(page.locator('#achup[data-qa-realm-notice="true"]:not([hidden])'),()=>page.evaluate(()=>document.querySelector('#ac-ok').click()));
  if(!shell)await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first(),()=>dismiss(page));
  await dismiss(page);return {page,context,session};
 }
-async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();for(const id of ['achup','lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await p.clock.runFor(30).catch(()=>{});await p.waitForTimeout(15);if(!await p.locator('#legend-scene[open]').count())return;}}
+async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();if(!document.getElementById('achup')?.hidden)document.getElementById('ac-ok')?.click();for(const id of ['lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await p.clock.runFor(30).catch(()=>{});await p.waitForTimeout(15);if(!await p.locator('#legend-scene[open]').count()&&await p.locator('#achup').isHidden()&&await p.locator('#lvup').isHidden())return;}}
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));if(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-shell'))){if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').first().click();if(await p.locator('#citadel-home').getAttribute('data-ui-view')!=='overview')await p.locator('[data-room-view="overview"]').click();}}
-async function shellMenu(p){if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
+async function shellMenu(p){if(await p.locator('#setup').isVisible())await p.locator('#setup-x').click();if(await p.locator('#trophy').isVisible())await p.locator('#trophy-x').click();if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').click();await dismiss(p);if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
 async function shellNav(p,label){
+ if(await p.locator('#setup').isVisible())await p.locator('#setup-x').click();if(await p.locator('#trophy').isVisible())await p.locator('#trophy-x').click();
  if(await p.locator('.citadel-system-dialog').isVisible()){await p.locator('.citadel-system-dialog header button').first().click();await p.waitForFunction(()=>!document.querySelector('.citadel-system-dialog').open);}
+ await dismiss(p);
  const quick={'Цитадель':'overview','Задания':'today','Профиль':'wardrobe','Воспоминания':'shop'};
  if(quick[label]){
   const dock=p.locator('.citadel-shell-dock [data-section="'+quick[label]+'"]');
   if(await dock.isVisible()){await dock.click();return;}
  }
  if(label==='Настройки'||label==='Достижения'){
-  if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
-  const group=p.locator('.citadel-shell-nav .citadel-menu-group').filter({has:p.locator('summary').filter({hasText:'СИСТЕМА'})});
-  if(!(await group.evaluate(n=>n.open)))await group.locator('summary').click();
-  await group.locator('[data-section="'+(label==='Настройки'?'settings':'achievements')+'"]').click();
-  return;
+  await shellNav(p,'Профиль');await p.locator(label==='Настройки'?'#profile-settings-open':'#profile-achievements-open').click();return;
  }
+
+ if(['Траты','Деньги','Колесо'].includes(label)){await shellNav(p,'Финансы');await p.locator('.citadel-finance-nav [data-finance=\"'+({'Траты':'spend','Деньги':'money','Колесо':'wheel'})[label]+'\"]').click();return;}
  if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
  const target=p.locator('.citadel-shell-nav button').filter({hasText:label}).first();
  await target.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});
@@ -89,6 +90,39 @@ async function achievementPreview(p,name){
 try {
 
 
+
+ await check('1.1 profile is the single system hub and finance has three reachable tabs',async()=>{
+  const {page:p,context}=await open({shell:true});await shellNav(p,'Профиль');assert.equal(await p.locator('.profile-system-hub button').count(),3);await p.locator('#profile-settings-open').click();assert(await p.locator('#setup').isVisible());await p.locator('#setup-x').click();assert(await p.locator('#profile-settings-open').evaluate(n=>n===document.activeElement));await p.locator('#profile-achievements-open').click();assert(await p.locator('#trophy').isVisible());await p.locator('#trophy-x').click();
+  if(process.env.SYSTEM_CAPTURE)await p.locator('.profile-system-hub').screenshot({path:resolve(out,'systems-profile-hub.png')});
+  await shellNav(p,'Финансы');const nav=p.locator('.citadel-finance-nav');assert.deepEqual(await nav.locator('button').allTextContents(),['Траты','Деньги','Колесо']);await nav.locator('[data-finance="spend"]').click();await nav.locator('[data-finance="spend"]').focus();await p.keyboard.press('ArrowLeft');assert.equal(await nav.locator('[aria-selected="true"]').getAttribute('data-finance'),'wheel');await p.keyboard.press('ArrowRight');assert.equal(await nav.locator('[aria-selected="true"]').getAttribute('data-finance'),'spend');
+  if(process.env.SYSTEM_CAPTURE)await nav.screenshot({path:resolve(out,'systems-finance-tabs.png')});await context.close();
+ });
+ await check('1.1 completed Awakening receives a separate short guide with pause replay and unchanged game records',async()=>{
+  const base={version:1,step:9,status:'done'},legacy={'plan.awakening.v1':JSON.stringify(base)};const {page:p,context}=await open({shell:true,legacy});await p.waitForFunction(()=>!document.querySelector('#awakening-coach').hidden);const before=await docs(p);assert.match(await p.locator('.awakening-count').innerText(),/1 \/ 3$/);assert.match(await p.locator(' .awakening-copy').innerText(),/портрет/);
+  if(process.env.SYSTEM_CAPTURE)await p.locator('#awakening-coach').screenshot({path:resolve(out,'systems-learning-profile.png')});await p.locator('[data-coach="next"]').click();await p.locator('[data-coach="pause"]').click();assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.awakening.v1'))),base);
+  await shellNav(p,'Профиль');await p.locator('#profile-learning-open').click();assert.match(await p.locator('.awakening-count').innerText(),/2 \/ 3$/);await p.locator('[data-coach="next"]').click();if(process.env.SYSTEM_CAPTURE){await p.waitForTimeout(700);await p.evaluate(()=>{document.querySelector('#setup').scrollTop=0;document.querySelector('#awakening-coach').scrollIntoView({block:'center',behavior:'instant'});});await p.waitForTimeout(100);await p.locator('#awakening-coach').screenshot({path:resolve(out,'systems-learning-appearance.png')});}await p.locator('[data-coach="next"]').click();assert(await p.locator('#awakening-coach').isHidden());assert.deepEqual(await docs(p),before);
+  await p.reload();await p.waitForFunction(()=>__qa.loading());assert(await p.locator('#awakening-coach').isHidden());await context.close();
+ });
+ await check('1.1 rebuild awards use durable room actions and cosmetics remain earned-only across reload',async()=>{
+  const seed=landscapeSeed();seed['cfg/abyss-economy']={version:1,rank:1,earned:50000,claims:{}};
+  for(const room of ['rest','throne','study','archive','forge','observatory','gatehouse','refectory','cloister','vault'])for(const level of [2,3])seed['buys/citadel-'+room+'-'+level]={kind:'citadel-room',currency:'abyss',room,level,cost:100,ts:1798804800000};
+  for(let i=0;i<12;i++){const d=new Date('2026-10-19T12:00Z');d.setUTCDate(d.getUTCDate()+i*7);seed['weights/r'+i]={kg:150-i/10,date:d.toISOString().slice(0,10),ts:i};seed['spont/r'+i]={done:true,heavy:true,date:'2027-09-15',name:'Synthetic real task',ts:i};}
+  seed['cfg/citadel']={selectedRoom:'rest',decor:{rest:'banner',study:'lantern',forge:'crystal'}};seed['wardrobe/custom']={slot:'top',name:'Synthetic garment',shape:'knit',c:{base:'#6947ab',alt:'#9872c9',shade:'#402b70'}};seed['cfg/outfit']={top:'custom',bottom:'pants_brown',outer:'coat_camel'};
+  const {page:p,context}=await open({shell:true,seed,day:'2027-09-15'});await p.waitForFunction(()=>__qa.realm.idle());let owned=await p.evaluate(()=>__qa.realm.owned());assert(owned.some(d=>d.kind==='superrare'));assert(owned.some(d=>d.clothes));assert(owned.every(d=>d.presented));
+  await p.evaluate(async()=>{const ids=Array.from(document.querySelectorAll('#achievement-grid [data-achievement]'),n=>n.dataset.achievement).filter(id=>!id.startsWith('rebuild')).slice(0,3);await PlanDB.doc('cfg/look').set({showcase:ids,title:ids[0],bg:'b_forest',aura:'au_soft',frame:'fr_gold',future:'preserve'});});await p.waitForFunction(()=>__qa.realm.idle());await p.evaluate(()=>__qa.idle());await dismiss(p);await shellNav(p,'Достижения');owned=await p.evaluate(()=>__qa.realm.owned());assert(await p.evaluate(rows=>rows.every(d=>!!document.querySelector('[data-achievement="'+d.id+'"]')),owned));
+  const snapshot=await docs(p),inventory=Object.keys(snapshot).filter(k=>k.startsWith('wardrobe/'));assert(inventory.length>1);assert(owned.filter(d=>d.clothes).every(d=>snapshot['wardrobe/'+d.clothes]));
+  await p.reload();await p.waitForFunction(()=>__qa.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.deepEqual(await p.evaluate(()=>__qa.realm.owned()),owned);const after=await docs(p);assert.deepEqual(Object.keys(after).filter(k=>k.startsWith('wardrobe/')),inventory);assert.equal(after['cfg/look'].d.future,'preserve');
+  await shellNav(p,'Профиль');await p.locator('#profile-gear-open').click();for(const row of owned.filter(d=>d.clothes)){const id=row.clothes,slot=snapshot['wardrobe/'+id].d.slot;assert(await p.locator('.witem[data-item="'+id+'"] .wardrobe-reward').count());await p.locator('.witem[data-item="'+id+'"]').click();await p.evaluate(()=>__qa.idle());assert.equal((await docs(p))['cfg/outfit'].d[slot],id);assert.equal(await p.locator('#profile-portrait-'+slot).textContent(),snapshot['wardrobe/'+id].d.name);}await context.close();
+ });
+ await check('1.1 failed award persistence grants nothing and retry has one receipt and no currency mutation',async()=>{
+  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await p.evaluate(()=>window.__qaPauseRealm=true);const before=await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()}));await write(p,'buys/citadel-rest-2',{kind:'citadel-room',currency:'abyss',room:'rest',level:2,cost:100,ts:1798804800000});
+  await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};window.__qaPauseRealm=false;try{__qa.realm.sync();await __qa.idle();}finally{Storage.prototype.setItem=original;}});assert.equal(await p.evaluate(()=>__qa.realm.owned().length),0);assert(!(await docs(p))['cfg/realm-achievements']);
+  await p.evaluate(()=>__qa.realm.sync());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.realm.owned().length>0&&__qa.realm.idle());assert.equal(await p.evaluate(()=>__qa.realm.owned().length),1);assert.deepEqual(await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()})),before);
+  const saved=(await docs(p))['cfg/realm-achievements'];await p.evaluate(()=>{__qa.realm.sync();__qa.render();});await p.evaluate(()=>__qa.idle());assert.deepEqual((await docs(p))['cfg/realm-achievements'],saved);await context.close();
+ });
+ await check('1.1 rebuild discoveries and presentation receipts survive older backup restore',async()=>{
+  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});const old=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));await write(p,'buys/citadel-rest-2',{kind:'citadel-room',currency:'abyss',room:'rest',level:2,cost:100,ts:1798804800000});await p.waitForFunction(()=>__qa.realm.owned().length>0&&__qa.realm.idle());const earned=await p.evaluate(()=>__qa.realm.owned());await p.evaluate(async copy=>PlanSync.importObj(copy,true),old);await p.waitForFunction(()=>__qa.realm.idle());assert.deepEqual(await p.evaluate(()=>__qa.realm.owned()),earned);assert(earned.every(d=>d.presented));await context.close();
+ });
  await check('1.1 detailed portrait derives its silhouette clothing and detail from the shared sprite without writes',async()=>{
   const {page:p,context}=await open({shell:true});await shellNav(p,'Профиль');const before=await docs(p);
   const result=await p.evaluate(()=>{const input=__qa.portrait.data(),canvas=document.querySelector('#profile-portrait-canvas'),actual=canvas.getContext('2d').getImageData(0,0,192,192).data;let mismatch=0,detail=0;for(let y=0;y<192;y++)for(let x=0;x<192;x++){const c=input.sprite[Math.floor(y/6)*32+Math.floor(x/6)],i=(y*192+x)*4;if(!!c!==(actual[i+3]>0))mismatch++;if(c&&c!=='#'+Array.from(actual.slice(i,i+3),v=>v.toString(16).padStart(2,'0')).join(''))detail++;}return {mismatch,detail,cached:VkachPortrait.paint(canvas,input.sprite,input.outfit,input.palette),sameHero:document.querySelector('#hero').toDataURL()===document.querySelector('#profile-hero').toDataURL()};});assert.equal(result.mismatch,0);assert(result.detail>1000);assert.equal(result.cached,false);assert(result.sameHero);await p.evaluate(()=>{__qa.render();__qa.render();});assert.deepEqual(await docs(p),before);await context.close();
@@ -439,12 +473,12 @@ try {
  });
 
  await check('1.1 Android visual keyboard viewport preserves form draft and accessible controls through rotation',async()=>{
-  const {page:p,context}=await open({shell:true});await shellNav(p,'Авито');await p.locator('#av-name').fill('Synthetic keyboard draft');
-  await p.evaluate(()=>{window.__nativeViewport=window.visualViewport;Object.defineProperty(window,'visualViewport',{configurable:true,value:{height:330,width:390,offsetTop:18,scale:1}});window.dispatchEvent(new Event('resize'));});await p.locator('#av-name').focus();await p.clock.runFor(80);
-  const small=await p.locator('.citadel-system-dialog').evaluate(n=>{var r=n.getBoundingClientRect(),a=document.querySelector('#av-name').getBoundingClientRect();return {top:r.top,bottom:r.bottom,inputTop:a.top,inputBottom:a.bottom,keyboard:document.documentElement.classList.contains('citadel-keyboard-open')};});
+  const {page:p,context}=await open({shell:true});await shellNav(p,'Деньги');await p.locator('#what').fill('Synthetic keyboard draft');
+  await p.evaluate(()=>{window.__nativeViewport=window.visualViewport;Object.defineProperty(window,'visualViewport',{configurable:true,value:{height:330,width:390,offsetTop:18,scale:1}});window.dispatchEvent(new Event('resize'));});await p.locator('#what').focus();await p.clock.runFor(80);
+  const small=await p.locator('.citadel-system-dialog').evaluate(n=>{var r=n.getBoundingClientRect(),a=document.querySelector('#what').getBoundingClientRect();return {top:r.top,bottom:r.bottom,inputTop:a.top,inputBottom:a.bottom,keyboard:document.documentElement.classList.contains('citadel-keyboard-open')};});
   assert(small.keyboard);assert(small.top>=18&&small.bottom<=349);assert(small.inputTop>=small.top&&small.inputBottom<=small.bottom,'focused input must be above the visual keyboard');
   await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-android-keyboard-form.png')});
-  await p.setViewportSize({width:844,height:390});await p.clock.runFor(80);assert.equal(await p.locator('#av-name').inputValue(),'Synthetic keyboard draft');assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth+1));
+  await p.setViewportSize({width:844,height:390});await p.clock.runFor(80);assert.equal(await p.locator('#what').inputValue(),'Synthetic keyboard draft');assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth+1));
   await p.evaluate(()=>{Object.defineProperty(window,'visualViewport',{configurable:true,value:window.__nativeViewport});window.dispatchEvent(new Event('resize'));});await p.setViewportSize({width:390,height:844});await p.clock.runFor(80);
   assert(!await p.locator('html').evaluate(n=>n.classList.contains('citadel-keyboard-open')));await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('.citadel-shell-dock').isVisible());await context.close();
  });
@@ -627,8 +661,8 @@ try {
   assert(await p.locator('#awakening-coach').isHidden());
   const before=await docs(p);
   await shellNav(p,'Настройки');await p.locator('#awakening-start').click();
-  for(let step=0;step<10;step++){
-   assert.match(await p.locator('.awakening-count').innerText(),new RegExp((step+1)+' / 10$'));
+  for(let step=0;step<13;step++){
+   assert.match(await p.locator('.awakening-count').innerText(),new RegExp((step+1)+' / 13$'));
    assert(await p.locator('#awakening-coach').isVisible());
    assert(await p.locator('.awakening-target').count()>0,'real visible interface target at step '+step);
    if(step===1)assert(await p.locator('#wardrobe').isVisible());
@@ -649,19 +683,19 @@ try {
   const {page:p,context}=await open({shell:true,seed:{...initial,'cfg/citadel':{selectedRoom:'rest',decor:{}}}});await shellNav(p,'Настройки');await p.locator('#awakening-start').click();
   await p.locator('[data-coach="next"]').click();await p.locator('[data-coach="next"]').click();
   const before=await docs(p);await p.reload();await p.waitForFunction(()=>__qa.loading());
-  await p.waitForFunction(()=>!document.getElementById('awakening-coach').hidden);assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 10$/);
+  await p.waitForFunction(()=>!document.getElementById('awakening-coach').hidden);assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 13$/);
   await p.locator('[data-coach="pause"]').click();await p.reload();await p.waitForFunction(()=>__qa.loading());assert(await p.locator('#awakening-coach').isHidden());
-  if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog>header button').click();await shellNav(p,'Настройки');assert.match(await p.locator('#awakening-start').innerText(),/ПРОДОЛЖИТЬ/);await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 10$/);
+  if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog>header button').click();await shellNav(p,'Настройки');assert.match(await p.locator('#awakening-start').innerText(),/ПРОДОЛЖИТЬ/);await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 13$/);
   await p.locator('.citadel-system-dialog>header button').click();await p.waitForFunction(()=>document.getElementById('awakening-coach').hidden);
-  await shellNav(p,'Настройки');await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 10$/);
+  await shellNav(p,'Настройки');await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/3 \/ 13$/);
   await p.goBack();assert(await p.locator('#awakening-coach').isHidden());
   await shellNav(p,'Настройки');await p.locator('#awakening-start').click();await p.locator('[data-coach="skip"]').click();
-  if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog>header button').click();await shellNav(p,'Настройки');await p.locator('#awakening-restart').click();assert.match(await p.locator('.awakening-count').innerText(),/1 \/ 10$/);
+  if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog>header button').click();await shellNav(p,'Настройки');await p.locator('#awakening-restart').click();assert.match(await p.locator('.awakening-count').innerText(),/1 \/ 13$/);
   await p.locator('[data-coach="skip"]').click();assert.deepEqual(await docs(p),before);await context.close();
  });
  await check('1.0 new profiles receive Awakening once and failed preference writes remain visible',async()=>{
   const {page:p,context}=await open({shell:true,fresh:true,seed:{}});
-  await p.waitForFunction(()=>!document.getElementById('awakening-coach').hidden);assert.match(await p.locator('.awakening-count').innerText(),/1 \/ 10$/);
+  await p.waitForFunction(()=>!document.getElementById('awakening-coach').hidden);assert.match(await p.locator('.awakening-count').innerText(),/1 \/ 13$/);
   await p.locator('[data-coach="skip"]').click();await p.reload();await p.waitForFunction(()=>__qa.loading());assert(await p.locator('#awakening-coach').isHidden());
   await shellNav(p,'Настройки');await p.evaluate(()=>{window.__realPrefWrite=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.awakening.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __realPrefWrite.call(this,k,v);};});
   await p.locator('#awakening-restart').click();assert(await p.locator('.awakening-warning').isVisible());
@@ -669,7 +703,7 @@ try {
  });
  await check('1.0 Awakening fits narrow, keyboard-sized and landscape viewports with accessible controls',async()=>{
   const {page:p,context}=await open({shell:true});await shellNav(p,'Настройки');await p.locator('#awakening-start').click();
-  for(let step=0;step<10;step++){
+  for(let step=0;step<13;step++){
    for(const [width,height]of [[320,480],[390,360],[844,390],[390,844]]){
     await p.setViewportSize({width,height});await p.waitForTimeout(25);
     assert(await p.locator('#awakening-coach').evaluate(n=>n.scrollWidth<=n.clientWidth),'coach must wrap at step '+step);
@@ -691,12 +725,12 @@ try {
   const before=await docs(p);await shellNav(p,'Настройки');await p.locator('#awakening-start').click();
   for(let n=0;n<3;n++)await p.locator('[data-coach="next"]').click();
   await context.setOffline(true);await p.reload();await p.waitForFunction(()=>!document.getElementById('awakening-coach').hidden);
-  assert.match(await p.locator('.awakening-count').innerText(),/4 \/ 10$/);assert(await p.evaluate(async()=>!!await caches.match(new URL('awakening.js',location.href))));
+  assert.match(await p.locator('.awakening-count').innerText(),/4 \/ 13$/);assert(await p.evaluate(async()=>!!await caches.match(new URL('awakening.js',location.href))));
   await p.locator('[data-coach="pause"]').click();
   assert.deepEqual(await docs(p),before);const content=records=>Object.fromEntries(Object.entries(records).map(([k,v])=>[k,v.d]));
   const roundtrip=await p.evaluate(async()=>{const copy=await PlanSync.backupFor(PlanSync._docs());await PlanSync.validateBackup(copy);await PlanSync.importObj(copy,true);return true;});assert(roundtrip);
   assert.deepEqual(content(await docs(p)),content(before));await p.reload();await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');assert(await p.locator('#awakening-coach').isHidden());
-  await shellNav(p,'Настройки');await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/4 \/ 10$/);assert.deepEqual(content(await docs(p)),content(before));await context.close();
+  await shellNav(p,'Настройки');await p.locator('#awakening-start').click();assert.match(await p.locator('.awakening-count').innerText(),/4 \/ 13$/);assert.deepEqual(content(await docs(p)),content(before));await context.close();
  });
 
  await check('0.90 identical newer discovery snapshots advance the preference clock against stale devices',async()=>{
@@ -1335,16 +1369,10 @@ try {
   await p.locator('#tx-cancel').click();await p.locator('#log button[aria-label="Изменить операцию"]').click();await p.locator('#amt').fill('15,25');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx[0].amt===15.25);assert.equal((await docs(p))['tx/'+id].d.futureField,'preserved');
   await context.close();
  });
- await check('0.72 finance and Avito drafts survive unrelated writes and actual totals update',async()=>{
-  const seed={...structuredClone(initial),'avito/one':{name:'Synthetic account',amt:10,ts:1}};const {page:p,context}=await open({seed,shell:true});await shellNav(p,'Финансы');
-  await p.locator('#n-comm').fill('Keep draft');await p.locator('#a-comm').fill('42,50');
-  await write(p,'weights/unrelated',{kg:130,date,ts:2});assert.equal(await p.locator('#n-comm').inputValue(),'Keep draft');assert.equal(await p.locator('#a-comm').inputValue(),'42,50');
-  await p.locator('.citadel-finance-nav [data-finance="avito"]').click();const value=p.locator('#av-value-one');await value.fill('25,55');
-  await write(p,'days/'+date,{q:Array(10).fill(false),steps:1234});assert.equal(await value.inputValue(),'25,55');
-  await p.locator('#av-name').focus();await p.waitForFunction(()=>__qa.S.avito[0].amt===25.55);assert.match(await p.locator('#av-total').innerText(),/25,55/);
-  await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('avito/one').update({amt:30.25});});await p.waitForFunction(()=>__qa.S.avito[0].amt===30.25);assert.equal(await value.inputValue(),'30.25');
-  await p.locator('#av-name').fill('Synthetic new');await p.locator('#av-amt').fill('4,75');await p.evaluate(()=>{document.querySelector('#av-add').click();document.querySelector('#av-add').click();});await p.waitForFunction(()=>__qa.S.avito.length===2);assert.match(await p.locator('#av-total').innerText(),/35/);
-  await p.reload();await p.waitForFunction(()=>__qa.S.avito.length===2);assert.equal((await p.evaluate(()=>__qa.S.avito)).reduce((n,r)=>n+r.amt,0),35);await context.close();
+ await check('1.1 removed marketplace UI preserves archived records and finance drafts',async()=>{
+  const seed={...structuredClone(initial),'avito/one':{name:'Synthetic archived account',amt:10,ts:1}};const {page:p,context}=await open({seed,shell:true});await shellNav(p,'Финансы');await p.locator('#n-comm').fill('Keep draft');await p.locator('#a-comm').fill('42,50');
+  await write(p,'weights/unrelated',{kg:130,date,ts:2});assert.equal(await p.locator('#n-comm').inputValue(),'Keep draft');assert.equal(await p.locator('#a-comm').inputValue(),'42,50');assert.equal(await p.locator('#avito,[data-finance="avito"],[data-t="avito"]').count(),0);assert(!await p.locator('body').innerText().then(t=>/авито/i.test(t)));assert.deepEqual((await docs(p))['avito/one'].d,seed['avito/one']);
+  await p.reload();await p.waitForFunction(()=>__qa.loading());assert.deepEqual((await docs(p))['avito/one'].d,seed['avito/one']);await context.close();
  });
  await check('0.72 concurrent day patches and trial deltas preserve sibling history and unknown fields',async()=>{
   const seed=structuredClone(initial);seed['days/'+date].futureField='keep';const {page:p,context}=await open({seed});const other=await context.newPage();await other.goto(url);await other.waitForFunction(()=>__qa.S.days['2026-10-30']);
@@ -1548,7 +1576,7 @@ try {
   await p.clock.runFor(400);assert.deepEqual(await docs(p),before,'animation must not write game progress');
   await shellNav(p,'Профиль');await p.screenshot({path:resolve(out,'hero-070-wardrobe-390.png')});await context.close();
  });
- await check('Android 0.69 finance wheel uses the existing chart and persistent four-tab navigation',async()=>{
+ await check('Android 0.69 finance wheel uses the existing chart and persistent three-tab navigation',async()=>{
   for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]])for(const populated of [false,true]){
    const seed=populated?structuredClone(initial):{};
    if(populated)seed['tx/wheel']={amt:125.5,kind:'out',acc:'cash',cat:'Продукты',what:'Synthetic wheel',date,ts:1,counted:true};
@@ -1557,10 +1585,10 @@ try {
    await p.evaluate(()=>window.__sameDocument={});const marker=await p.evaluateHandle(()=>window.__sameDocument);
    await shellNav(p,'Финансы');
    const nav=p.locator('.citadel-finance-nav');assert(await nav.isVisible());
-   assert.deepEqual(await nav.locator('button').allTextContents(),['Траты','Деньги','Авито','Колесо']);
+   assert.deepEqual(await nav.locator('button').allTextContents(),['Траты','Деньги','Колесо']);
    assert(await nav.locator('button').evaluateAll(ns=>ns.every(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().height>=44)));
    const originalChart=await p.locator('#donut').elementHandle();
-   for(const id of ['wheel','spend','money','avito','wheel','money','wheel']){
+   for(const id of ['wheel','spend','money','wheel','money','wheel']){
     await nav.locator('[data-finance="'+id+'"]').click();await p.clock.runFor(32);
     assert.equal(await nav.locator('[aria-selected="true"]').getAttribute('data-finance'),id);
     assert(await nav.isVisible());assert.equal(await p.locator('.citadel-system-content .panel').count(),1);
@@ -1679,13 +1707,13 @@ try {
    if(width===390){await p.locator('.citadel-shell-dock button').last().click();assert.equal(await p.locator('.citadel-shell-menu-toggle').getAttribute('aria-expanded'),'true');await p.screenshot({path:resolve(out,'shell-menu-390.png')});await shellMenu(p);}
    if(width<1050){await shellDrawer(p,'left');assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');
    if(width===390)await p.screenshot({path:resolve(out,'shell-left-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:width-5,y:100}});assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'');
-   if(width===390){for(const [label,id] of [['Хроника','week'],['Траты','spend'],['Авито','avito']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}}
+   if(width===390){for(const [label,id] of [['Хроника','week'],['Траты','spend']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());await p.locator('.citadel-system-dialog header button').click();}}
    await shellDrawer(p,'right');assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'right');
    if(width===390)await p.screenshot({path:resolve(out,'shell-right-390.png')});await p.locator('.citadel-shell-shade').click({position:{x:5,y:100}});}
    await shellNav(p,'Задания');assert(await p.locator('.citadel-system-dialog').isVisible());assert.equal(await p.evaluate(()=>!!history.state?.citadelMystery),false,'ordinary panels must not add mystery history entries');assert(await p.locator('.citadel-system-dialog #qlist').isVisible());if(width===390)await p.screenshot({path:resolve(out,'rpg-tasks-390.png')});
    await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('#citadel-castle').isVisible());
    for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());if(width===390)await p.screenshot({path:resolve(out,'rpg-'+id+'-390.png')});await p.locator('.citadel-system-dialog header button').click();}
-   if(width===390){await shellNav(p,'Настройки');assert(await p.locator('#setup').isVisible());await p.screenshot({path:resolve(out,'rpg-settings-390.png')});await p.locator('#setup-x').click();await shellNav(p,'Достижения');assert(await p.locator('#trophy').isVisible());await p.screenshot({path:resolve(out,'rpg-achievements-390.png')});await p.locator('#trophy-x').click();}
+   if(width===390){await shellNav(p,'Настройки');assert(await p.locator('#setup').isVisible());await p.screenshot({path:resolve(out,'rpg-settings-390.png')});await p.locator('#setup-x').click();await shellNav(p,'Достижения');assert(await p.locator('#trophy').isVisible());await p.screenshot({path:resolve(out,'rpg-achievements-390.png')});await p.locator('#trophy-x').click();assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible());await p.locator('.citadel-system-dialog header button').click();}
    await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});if(width===390)await p.screenshot({path:resolve(out,'shell-room-390.png')});
    await shellNav(p,'Цитадель');assert(await p.locator('#citadel-castle').isVisible());
@@ -1965,7 +1993,7 @@ try {
   const {page:p,context}=await open();await p.locator('#d-yest').click();await castle(p);await p.locator('[data-citadel-tab="today"]').click();assert.equal(await p.locator('#d-today').getAttribute('aria-pressed'),'true');
   await p.locator('[data-citadel-tab="week"]').click();assert(await p.locator('#week').isVisible());
   for(const tab of ['today','week','shop','diet','goals']){await p.locator('.tab[data-t="'+tab+'"]').click();assert(await p.locator('#'+tab).isVisible());}
-  await p.locator('#pg-btn-b').click();for(const tab of ['spend','money','avito']){await p.locator('.tab[data-t="'+tab+'"]').click();assert(await p.locator('#'+tab).isVisible());}await p.locator('#pg-btn-a').click();
+  await p.locator('#pg-btn-b').click();for(const tab of ['spend','money']){await p.locator('.tab[data-t="'+tab+'"]').click();assert(await p.locator('#'+tab).isVisible());}await p.locator('#pg-btn-a').click();
   await context.close();
  });
  await check('daily, steps, spontaneous and weekly writes update mirrors and survive reload',async()=>{

@@ -168,7 +168,7 @@
   // Discovery receipts are monotonic; preference follows the selected snapshot.
   function retainDiscovery(path, local, incoming) {
     if(!local && !incoming)return null;
-    var engine=path==='cfg/fate'?window.VkachFate:window.VkachLegends;
+    var engine=path==='cfg/fate'?window.VkachFate:path==='cfg/realm-achievements'?window.VkachRealm:window.VkachLegends;
     if(!engine||!engine.merge)throw new Error('Discovery engine unavailable');
     return engine.merge(local,incoming);
   }
@@ -180,7 +180,7 @@
       var local = persistedDocs(), next = clone(local), changedLocal = false, changedRemote = false, conflicts = [];
       Object.keys(rd).forEach(function (p) {
         var l = local[p], r = rd[p];
-        if((p==='cfg/fate'||p==='cfg/legends')&&(l&&l.d||r.d)){
+        if((p==='cfg/fate'||p==='cfg/legends'||p==='cfg/realm-achievements')&&(l&&l.d||r.d)){
           var fate=retainDiscovery(p,l&&l.d,r.d);
           if(l&&l.d&&l.u>r.u&&Object.prototype.hasOwnProperty.call(l.d,'active'))fate.active=l.d.active;
           if(!l||!same(l.d,fate)){next[p]={d:fate,u:Math.max(Date.now(),(l&&l.u||0)+1,r.u+1)};changedLocal=true;}
@@ -267,7 +267,7 @@
       var local = corruptRaw !== null ? clone(docs) : persistedDocs(), next = {}, now = Date.now();
       recovery(local, incoming);
       Object.keys(Object.assign({}, local, incoming)).forEach(function (p) {
-        next[p] = { d: (p==='cfg/fate'||p==='cfg/legends')&&((local[p]&&local[p].d)||(incoming[p]&&incoming[p].d)) ? retainDiscovery(p,local[p]&&local[p].d,incoming[p]&&incoming[p].d) : incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
+        next[p] = { d: (p==='cfg/fate'||p==='cfg/legends'||p==='cfg/realm-achievements')&&((local[p]&&local[p].d)||(incoming[p]&&incoming[p].d)) ? retainDiscovery(p,local[p]&&local[p].d,incoming[p]&&incoming[p].d) : incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
       });
       // Persist the cloud pause before replacing data, even if later storage fails.
       meta.signed = false; meta.syncPaused = true;
@@ -291,7 +291,7 @@
         if (conflict) { next[p] = { d: choice === 'remote' ? r.d : l ? l.d : null, u: Math.max(Date.now(), (l && l.u || 0) + 1, r.u + 1) }; accepted[p] = JSON.stringify(r); }
         else if (!l || r.u > l.u) next[p] = clone(r);
       });
-      ['cfg/fate','cfg/legends'].forEach(function(path){
+      ['cfg/fate','cfg/legends','cfg/realm-achievements'].forEach(function(path){
         if(!((local[path]&&local[path].d)||(remote[path]&&remote[path].d)))return;
         var prior=local[path],chosen=next[path];
         var combined=retainDiscovery(path,prior&&prior.d,remote[path]&&remote[path].d);if(chosen&&chosen.d&&Object.prototype.hasOwnProperty.call(chosen.d,'active'))combined.active=chosen.d.active;
