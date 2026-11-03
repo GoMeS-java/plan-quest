@@ -855,3 +855,23 @@ html[data-font="wide"] body.citadel-shell-active :is(.citadel-shell-title,.profi
 .interface-preview[data-interface-kind="font"][data-interface-key="curse"] .preview-heading{letter-spacing:1px;text-shadow:0 0 6px #d4243e,0 0 14px #d4243e80}
 html[data-font="curse"] body.citadel-shell-active :is(.citadel-shell-title,.profile-title){letter-spacing:1px;text-shadow:0 0 6px #d4243e,0 0 14px #d4243e80}
 @media(max-width:360px){.looksec .interface-choice,.title-choice{flex-basis:115px}.preview-tab{font-size:8px;padding:4px}.title-preview-ribbon{padding-inline:5px;font-size:10px}}
+
+/* The portrait is a read-only, detailed rendering of the existing equipped hero. */
+.profile-portrait{border:1px solid #65536f;background:#1b1724;min-width:0}
+.profile-portrait>summary{min-height:44px;padding:12px;cursor:pointer;color:var(--gold);font:600 11px/1.5 var(--font-body);letter-spacing:.05em}
+.profile-portrait-content{display:grid;grid-template-columns:minmax(0,192px) minmax(0,1fr);gap:12px;padding:0 12px 12px;align-items:center}
+.profile-portrait-frame{position:relative;display:flex;justify-content:center;align-items:end;min-width:0;aspect-ratio:1;margin:0;border:1px solid #a18865;background:radial-gradient(ellipse at 45% 32%,#5c4b60,#231b30 60%,#100f18);box-shadow:inset 0 0 0 4px #241b2c,inset 0 0 0 5px #6a526b;overflow:hidden}
+.profile-portrait-frame:before{content:"";position:absolute;inset:9px;border:1px solid #d4b77a40;pointer-events:none}
+.profile-portrait-frame canvas{position:relative;display:block;width:100%;height:auto;image-rendering:pixelated;filter:drop-shadow(2px 3px 0 #100c16)}
+.profile-portrait-record{min-width:0;font:12px/1.5 var(--font-body);color:var(--fg);overflow-wrap:anywhere}
+.profile-portrait-record>p{margin:0 0 9px;color:var(--gold)}
+.profile-portrait-record dl{margin:0;display:grid;gap:7px}.profile-portrait-record dl>div{padding-bottom:6px;border-bottom:1px solid #ffffff15}
+.profile-portrait-record dt{font-size:10px;color:var(--muted)}.profile-portrait-record dd{margin:2px 0 0}
+.profile-portrait-record .hint{margin:9px 0 0;color:var(--muted);font-size:11px}
+.profile-development{min-width:0;display:grid;gap:9px;padding:10px;border:1px solid #55435d;background:#1b1724}
+.profile-development-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.profile-development-grid>div{display:flex;flex-direction:column;justify-content:space-between;gap:6px;padding:9px;min-width:0;border:1px solid #4c3d57;background:linear-gradient(135deg,#2d2336,#211b2b)}
+.profile-development-grid small{font:11px/1.4 var(--font-body);color:var(--muted);overflow-wrap:anywhere}
+.profile-development-grid b{font:600 19px/1.4 var(--font-display);color:#e1c08d;overflow-wrap:anywhere}
+.profile-development .hint{margin:0}
+@media(max-width:430px){.profile-portrait-content{grid-template-columns:1fr}.profile-portrait-frame{width:min(100%,240px);justify-self:center}.profile-portrait-record dl{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.profile-portrait-record dt{font-size:9px}.profile-portrait-record dd{font-size:11px}}

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="b15426d4ebb5";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="edc73a8a58a8";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -864,6 +864,8 @@ html,body{overflow-anchor:none}
       <div class="profile-stats" aria-label="Текущий прогресс"><div><small>Осколки</small><b id="profile-shards">—</b></div><div><small>Ядра души</small><b id="profile-cores">—</b></div><div><small>Эссенция</small><b id="profile-essence">—</b></div></div>
       <div class="profile-rank-path"><label for="profile-rank-meter" id="profile-rank-next">Путь к следующему рангу</label><progress id="profile-rank-meter" value="0" max="1"></progress></div>
       <div id="profile-equipment" class="profile-equipment" aria-label="Надетая экипировка"></div>
+      <details class="profile-portrait" id="profile-portrait" open><summary>ПОРТРЕТ И ОБЛИК</summary><div class="profile-portrait-content"><figure class="profile-portrait-frame"><canvas id="profile-portrait-canvas" width="192" height="192" role="img" aria-label="Подробный портрет твоего героя"></canvas></figure><div class="profile-portrait-record"><p id="profile-portrait-caption"></p><dl><div><dt>Верх</dt><dd id="profile-portrait-top"></dd></div><div><dt>Верхняя одежда</dt><dd id="profile-portrait-outer"></dd></div><div><dt>Низ</dt><dd id="profile-portrait-bottom"></dd></div></dl><p class="hint">Портрет меняется вместе с одеждой и силуэтом героя.</p></div></div></details>
+      <section class="profile-development" aria-label="Развитие по записям"><div class="profile-section-title">РАЗВИТИЕ ГЕРОЯ</div><div class="profile-development-grid"><div><small>Пройдено шагов</small><b id="profile-total-steps">0</b></div><div><small>Приседания</small><b id="profile-total-squat">0</b></div><div><small>Отжимания на коленях</small><b id="profile-total-pushup">0</b></div><div><small>Дней с тренировкой</small><b id="profile-total-workouts">0</b></div></div><p class="hint">По записям в заданиях и хронике до сегодняшнего дня.</p></section>
       <div class="profile-section-title">ИЗБРАННЫЕ ДОСТИЖЕНИЯ <small>3 места</small></div>
       <div id="profile-showcase" class="profile-showcase" aria-label="Три избранных достижения"></div>
       <div id="profile-picker" class="profile-picker" hidden><div class="profile-picker-head"><b>ВЫБРАТЬ ДОСТИЖЕНИЕ</b><button type="button" id="profile-picker-close">✕</button></div><div id="profile-achievements" class="profile-achievements"></div></div>
@@ -1018,7 +1020,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка b15426d4ebb5</span></div>
+    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка edc73a8a58a8</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -1096,6 +1098,7 @@ html,body{overflow-anchor:none}
 <script src="citadel-space.js"></script>
 <script src="legends.js"></script>
 <script src="fate.js"></script>
+<script src="portrait.js"></script>
 <dialog id="citadel-mystery" aria-labelledby="citadel-mystery-title" aria-describedby="citadel-mystery-text"><h2 id="citadel-mystery-title">Неизведанная комната</h2><p id="citadel-mystery-text"></p><form method="dialog"><button autofocus>Понятно</button></form></dialog>
 <script>window.APP_VERSION = "1.0";
 (function () {
@@ -3479,8 +3482,12 @@ html,body{overflow-anchor:none}
   function renderProfileJourney(p){
     var meter=$('profile-rank-meter');meter.max=Math.max(1,p.need);meter.value=Math.max(0,Math.min(p.P,p.need));
     $('profile-rank-next').textContent='ДО РАНГА '+(p.L+1)+' · '+Math.max(0,p.need-p.P)+' ОСКОЛКОВ';
-    var ids=outfitIds(),items=allItems(),equipment=$('profile-equipment');clear(equipment);
-    [['outer','Плащ'],['top','Верх'],['bottom','Низ']].forEach(function(row){var item=items.find(function(it){return it.id===ids[row[0]];});var chip=el('div','profile-equipped');chip.appendChild(el('small',null,row[1]));chip.appendChild(el('span',null,item?item.name:'Без верхней одежды'));equipment.appendChild(chip);});
+    var resolved=outfitFrom(allItems(),outfitIds()),equipment=$('profile-equipment');clear(equipment);
+    [['outer','Верхняя одежда'],['top','Верх'],['bottom','Низ']].forEach(function(row){var item=resolved[row[0]],label=item?item.name:'Без верхней одежды';var chip=el('div','profile-equipped');chip.appendChild(el('small',null,row[1]));chip.appendChild(el('span',null,label));equipment.appendChild(chip);$('profile-portrait-'+row[0]).textContent=label;});
+    var records=bodyMeasurements(),latest=records.length?records[records.length-1]:null;
+    $('profile-portrait-caption').textContent=latest?'Облик по записи от '+latest.date.split('-').reverse().join('.'):'Текущий облик героя';
+    var totals=lastGI&&lastGI.st||{};
+    [['steps','steps'],['squat','sq'],['pushup','pu'],['workouts','wk']].forEach(function(row){var value=Number(totals[row[1]]);$('profile-total-'+row[0]).textContent=(Number.isFinite(value)&&value>0?Math.floor(value):0).toLocaleString('ru-RU');});
     var week=$('profile-week'),today=dkey(new Date()),total=0;clear(week);
     for(var i=6;i>=0;i--){var key=addDays(today,-i),record=S.days[key]||{},active=activeIdx(key),done=active.filter(function(n){return (record.q||[])[n]===true;}).length;total+=done;
       var day=el('div','profile-day'+(key===today?' is-today':'')),label=parseKey(key).toLocaleDateString('ru-RU',{weekday:'short'}),count=el('span','profile-day-count',done+' / '+active.length),bar=el('i','profile-day-bar');
@@ -3510,7 +3517,9 @@ html,body{overflow-anchor:none}
     $('profile-essence').textContent=String(abyssBalance(S.abyss));
     var days=0,checks=0;Object.keys(S.days).forEach(function(k){var d=S.days[k];if(!d)return;days++;if(Array.isArray(d.q))d.q.forEach(function(v){if(v===true)checks++;});});
     $('profile-days').textContent=String(days);$('profile-checks').textContent=String(checks);$('profile-ach-count').textContent=String(earned.length);
-    bodyShapeNow=bodyShape();paintSprite($('profile-hero'),buildSprite(outfitFrom(allItems(),outfitIds())));
+    bodyShapeNow=bodyShape();var appearance=outfitFrom(allItems(),outfitIds()),sprite=buildSprite(appearance);
+    paintSprite($('profile-hero'),sprite);
+    if(window.VkachPortrait)VkachPortrait.paint($('profile-portrait-canvas'),sprite,appearance,C);
     renderProfileJourney(p);
     $('profile-title').textContent=heroTitle();
     var selected=profileSelected();clear(box);
