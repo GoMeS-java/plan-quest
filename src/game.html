@@ -5548,8 +5548,31 @@ function renderAllInner() {
     var title=document.createElement('strong');title.className='citadel-shell-title';title.textContent='⚜ ЗАКЛЯТИЕ КОШМАРА';header.appendChild(title);var shellStatus=document.createElement('span');shellStatus.className='citadel-shell-status';header.appendChild(shellStatus);
     var nav=document.createElement('nav');nav.className='citadel-shell-nav';nav.id='citadel-shell-nav';nav.setAttribute('aria-label','Разделы игры');header.appendChild(nav);home.insertBefore(header,inside);var roomTools=document.createElement('nav');roomTools.className='citadel-room-tools';roomTools.setAttribute('aria-label','Действия комнаты');[['overview','К замку'],['upgrades','Обустроить'],['people','Жители']].forEach(function(item){var b=document.createElement('button');b.type='button';b.dataset.roomView=item[0];b.textContent=item[1];b.onclick=function(){citadelSetArtView(item[0]);if(item[0]==='upgrades')citadelEnter();if(item[0]==='overview'&&history.state?.citadelOverlay==='room'){var state=Object.assign({},history.state);delete state.citadelOverlay;history.replaceState(state,'');}};roomTools.appendChild(b);});home.insertBefore(roomTools,inside);
     var menuButton=document.createElement('button');menuButton.type='button';menuButton.className='citadel-shell-menu-toggle';menuButton.textContent='РАЗДЕЛЫ';menuButton.setAttribute('aria-label','Открыть разделы игры');menuButton.setAttribute('aria-controls','citadel-shell-nav');menuButton.setAttribute('aria-expanded','false');header.insertBefore(menuButton,nav);
-    function closeMenu(silent){var was=home.dataset.menu==='open';home.dataset.menu='';menuButton.setAttribute('aria-expanded','false');if(was&&!silent&&history.state?.citadelMenu)history.back();}
-    menuButton.onclick=function(){if(home.dataset.menu==='open'){closeMenu();return;}home.dataset.menu='open';menuButton.setAttribute('aria-expanded','true');history.pushState(Object.assign({},history.state,{citadelMenu:true}),'');};
+    var menuReturning=false,menuTrigger=null;
+    var menuHeading=el('div','citadel-menu-heading');
+    menuHeading.appendChild(el('strong',null,'Разделы'));
+    var menuClose=el('button','citadel-menu-close','✕');menuClose.type='button';menuClose.setAttribute('aria-label','Закрыть разделы');menuClose.onclick=function(){closeMenu();};
+    menuHeading.appendChild(menuClose);nav.appendChild(menuHeading);
+    function menuExpanded(expanded){
+      menuButton.setAttribute('aria-expanded',String(expanded));
+      dockMenu.setAttribute('aria-expanded',String(expanded));
+    }
+    function returnMenuFocus(){if(menuTrigger&&menuTrigger.getClientRects().length)menuTrigger.focus({preventScroll:true});}
+    function closeMenu(silent){
+      if(home.dataset.menu!=='open')return;
+      home.dataset.menu='';menuExpanded(false);
+      if(silent)return;
+      returnMenuFocus();
+      if(history.state?.citadelMenu){menuReturning=true;history.back();}
+    }
+    function toggleMenu(trigger){
+      if(home.dataset.menu==='open'){closeMenu();return;}
+      if(menuReturning)return;
+      menuTrigger=trigger;home.dataset.menu='open';menuExpanded(true);
+      history.pushState(Object.assign({},history.state,{citadelMenu:true}),'');
+      menuClose.focus({preventScroll:true});
+    }
+    menuButton.onclick=function(){toggleMenu(menuButton);};
     var dialog=document.createElement('dialog');dialog.className='citadel-system-dialog';dialog.innerHTML='<header><strong id="citadel-system-title"></strong><button type="button" aria-label="Вернуться в Цитадель">✕</button></header><div class="citadel-system-content"></div>';document.body.appendChild(dialog);
     var moved=null,anchor=null,origin=null,drawer='',zoom=window.innerWidth<650?.85:1,baseWidth=760,systemFocus=null;
     var uiPrefix=window.PLAN_CONFIG&&PLAN_CONFIG.testMode?'plan.android-test.':'plan.',cameraKey=uiPrefix+'citadel.camera.v1',viewKey=uiPrefix+'citadel.view.v1';
@@ -5608,10 +5631,9 @@ function renderAllInner() {
     }
     navGroup('ПУТЬ И ПРОГРЕСС',[['week','Хроника'],['diet','Тело'],['goals','Путь']]);
     navGroup('КАЗНА И ДЕЛА',[['money','Финансы']]);
-    nav.appendChild($('plslot'));
     var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Память']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];if(item[0]==='shop')b.setAttribute('aria-label','Воспоминания');b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});
-    var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.onclick=function(){menuButton.click();};dock.appendChild(dockMenu);
+    var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.setAttribute('aria-controls','citadel-shell-nav');dockMenu.setAttribute('aria-expanded','false');dockMenu.onclick=function(){toggleMenu(dockMenu);};dock.appendChild(dockMenu);
     var shade=document.createElement('div');shade.className='citadel-shell-shade';home.appendChild(shade);shade.onclick=closeDrawer;
     function pushOverlay(kind){var previous=history.state?.citadelOverlay,state=Object.assign({},history.state,{citadelOverlay:kind});if(previous===kind||previous==='drawer')history.replaceState(state,'');else history.pushState(state,'');}
     function closeDrawer(silent){var was=drawer;drawer='';home.dataset.drawer='';if(was&&!silent&&history.state?.citadelOverlay==='drawer')history.back();}
@@ -5620,6 +5642,7 @@ function renderAllInner() {
     left.setAttribute('aria-label','Управление Цитаделью');right.setAttribute('aria-label','Комната и жители');home.appendChild(left);home.appendChild(right);
     var castleLinks=navGroup('УПРАВЛЕНИЕ ЗАМКОМ',[]);
     [['left','Цитадель'],['right','Жители']].forEach(function(entry){var b=document.createElement('button');b.type='button';b.className='citadel-shell-tail '+entry[0];b.textContent=entry[0]==='left'?'Обзор Цитадели':'Комната и жители';b.setAttribute('aria-label','Открыть панель: '+entry[1]);b.dataset.drawerOpen=entry[0];b.onclick=function(){closeMenu(true);if(history.state?.citadelMenu){var state=Object.assign({},history.state);delete state.citadelMenu;history.replaceState(state,'');}toggleDrawer(entry[0]);};castleLinks.appendChild(b);});
+    nav.appendChild($('plslot'));
     function drawerButton(host,label,fn){var b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;host.appendChild(b);}
     function refreshDrawer(){
       left.textContent='';right.textContent='';var h=document.createElement('h2');h.textContent='Путь Спящего';left.appendChild(h);
@@ -5702,7 +5725,7 @@ function renderAllInner() {
     window.addEventListener('resize',scheduleViewport);if(window.visualViewport){visualViewport.addEventListener('resize',scheduleViewport);visualViewport.addEventListener('scroll',scheduleViewport);}document.addEventListener('focusin',scheduleViewport);document.addEventListener('focusout',scheduleViewport);window.addEventListener('pageshow',scheduleViewport);scheduleViewport();
     new ResizeObserver(function(){measureShell();scheduleCaptions();}).observe(header);
     new MutationObserver(function(){measureShell();if(home.dataset.uiView==='overview')requestAnimationFrame(function(){cameraSize();viewport.scrollTo(lastCamera.left,lastCamera.top);cameraCaptions();});}).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
-    window.addEventListener('popstate',function(){if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
+    window.addEventListener('popstate',function(){if(menuReturning){menuReturning=false;return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open)return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
     function updateShellStatus(){if(!loaded)return;restoreView();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}

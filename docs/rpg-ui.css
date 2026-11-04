@@ -434,13 +434,26 @@ body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interio
 body.citadel-shell-active #citadel-home .citadel-room-light:before,
 body.citadel-shell-active #citadel-home .citadel-light-source{display:none}
 
-body.citadel-shell-active .citadel-shell-nav>#plslot{grid-column:1/-1;display:flex;justify-content:center;flex-wrap:wrap}
+body.citadel-shell-active .citadel-menu-heading{display:none}
+body.citadel-shell-active .citadel-shell-nav>#plslot{grid-column:1/-1;display:flex;justify-content:center;flex-wrap:wrap;border:0;padding:0;margin:0}
+body.citadel-shell-active .citadel-shell-nav>#plslot .pl-bar{max-width:100%;flex-wrap:wrap;justify-content:center;gap:4px;padding:3px;background:#21182d;border:1px solid #5d486b;border-radius:5px}
+body.citadel-shell-active .citadel-shell-nav>#plslot .pl-bar button{min-width:44px;min-height:44px;height:auto;width:auto;padding:5px 8px;border-color:transparent;border-radius:3px;background:#2b2037;color:#e3cfe9;text-shadow:none;opacity:1}
+body.citadel-shell-active .citadel-shell-nav>#plslot .pl-bar button:hover{background:#3a2b48;border-color:#756084}
+body.citadel-shell-active .citadel-shell-nav>#plslot .pl-bar .pl-chip.upd{color:#f1d1a0;border-color:#9a7856}
+body.citadel-shell-active .citadel-shell-nav>#plslot .pl-bar #trophy-btn{filter:saturate(.5)}
+body.citadel-shell-active .citadel-shell-nav>#plslot .pl-bar .gear{font-size:16px}
+@media(max-width:699px){
+ body.citadel-shell-active .citadel-shell-nav .citadel-menu-heading{position:sticky;top:0;z-index:2;background:#130e20;display:flex;grid-column:1/-1;align-items:center;justify-content:space-between;gap:8px;padding:0 0 5px 3px;color:#efdaee}
+ body.citadel-shell-active .citadel-shell-nav .citadel-menu-close{min-width:44px;min-height:44px;font-size:17px}
+ body.citadel-shell-active .citadel-shell-nav>#plslot{justify-content:stretch}
+ body.citadel-shell-active .citadel-shell-nav>#plslot .pl-bar{width:100%;justify-content:flex-start}
+}
 
 /* Desktop groups must keep their controls wide enough inside the scrollable nav. */
 @media(min-width:700px){
  body.citadel-shell-active .citadel-shell-nav{align-items:flex-start}
  body.citadel-shell-active .citadel-shell-nav .citadel-menu-group{flex:0 0 180px}
- body.citadel-shell-active .citadel-shell-nav>#plslot{flex:0 0 88px}
+ body.citadel-shell-active .citadel-shell-nav>#plslot{flex:0 0 auto}
 }
 
 /* 1.1: light belongs to the existing apertures and restored local sources. */

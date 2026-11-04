@@ -1845,7 +1845,19 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());if(width===390)await p.screenshot({path:resolve(out,'rpg-'+id+'-390.png')});await p.locator('.citadel-system-dialog header button').click();}
    if(width===390){await shellNav(p,'Настройки');assert(await p.locator('#setup').isVisible());await p.screenshot({path:resolve(out,'rpg-settings-390.png')});await p.locator('#setup-x').click();await shellNav(p,'Достижения');assert(await p.locator('#trophy').isVisible());await p.screenshot({path:resolve(out,'rpg-achievements-390.png')});await p.locator('#trophy-x').click();assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible());await p.locator('.citadel-system-dialog header button').click();}
    await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
-   await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});if(width===390)await p.screenshot({path:resolve(out,'shell-room-390.png')});
+   await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});if(width===390){
+    const trigger=p.getByRole('button',{name:'Все разделы игры'});
+    const close=p.getByRole('button',{name:'Закрыть разделы'});
+    await trigger.click();assert(await close.isVisible());
+    await close.click();await p.waitForFunction(()=>!history.state?.citadelMenu);
+    assert.equal(await trigger.getAttribute('aria-expanded'),'false');
+    assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
+    assert(await trigger.evaluate(button=>button===document.activeElement));
+    await trigger.click();await p.goBack();
+    assert.equal(await trigger.getAttribute('aria-expanded'),'false');
+    assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
+    await p.screenshot({path:resolve(out,'shell-room-390.png')});
+   }
    await shellNav(p,'Цитадель');assert(await p.locator('#citadel-castle').isVisible());
    await p.screenshot({path:resolve(out,'shell-game-'+width+'.png')});
    if(width===390){
