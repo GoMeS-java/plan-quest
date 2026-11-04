@@ -110,7 +110,56 @@ try {
 
 
 
- await check('fate forge stage II edits live goals and keeps the original records',async()=>{
+ await check('fate forge stage III replaces only opened aspects and preserves past points',async()=>{
+  const day='2027-04-16',seed=advancedSeed();
+  for(let n=1;n<=12;n++){
+    const key='2027-04-'+String(n).padStart(2,'0'),row=seed['days/'+key]||{q:[]};
+    row.q[3]=true;seed['days/'+key]=row;
+  }
+  seed['buys/citadel-forge-2']={kind:'citadel-room',currency:'abyss',room:'forge',level:2,cost:100,ts:2};
+  for(let n=17;n<=27;n++){
+    const time=new Date('2027-04-'+n+'T14:00:00+03:00').getTime();
+    seed['per/2027-04-'+n]={squat:[time],pushup:[time],squatR:[20],pushupR:[20]};
+  }
+  const {page:p,context}=await open({shell:true,seed,day,width:390});
+  try{
+    await castle(p);
+    await p.locator('[data-croom="forge"]').click();
+    const editor=p.locator('#fate-forge-dialog'),entry=p.getByRole('button',{name:'Наковальня · Открыть Кузницу судьбы'});
+    await entry.click();assert(await editor.locator('#fate-forge-aspects-tab').isDisabled());
+    await editor.getByRole('button',{name:'Закрыть Кузницу'}).click();
+    await p.waitForFunction(()=>!history.state?.fateForge);
+    await write(p,'buys/citadel-forge-3',{kind:'citadel-room',currency:'abyss',room:'forge',level:3,cost:100,ts:3});
+    await entry.click();await editor.locator('#fate-forge-aspects-tab').click();
+    const cooking=editor.locator('.goal').filter({hasText:'Заготовщик'});
+    await cooking.waitFor();
+    await cooking.screenshot({path:resolve(out,'forge-stage-iii-aspect.png')});
+    const before=await p.evaluate(()=>__qa.points());
+    await cooking.getByRole('button',{name:'Убрать или заменить'}).click();
+    await cooking.getByRole('button',{name:'Заменить',exact:true}).click();
+    await p.waitForFunction(()=>PlanSync._docs()['forge-tasks/aspect-n_cook']?.d?.replace===true);
+    await editor.getByRole('status').getByText('Бездна тебя услышала. Ожидай.').waitFor();
+    await editor.getByRole('status').screenshot({path:resolve(out,'forge-stage-iii-abyss.png')});
+    assert.deepEqual(await p.evaluate(()=>__qa.points()),before);
+    assert(!await editor.getByText('Ритм закалки',{exact:true}).count());
+    await editor.getByRole('button',{name:'Закрыть Кузницу'}).click();
+    await p.waitForFunction(()=>!history.state?.fateForge);
+    await p.clock.setFixedTime(new Date('2027-04-17T14:00:00+03:00'));
+    await p.evaluate(()=>__qa.render());await dismiss(p);
+    await shellNav(p,'Достижения');
+    const list=p.locator('#sklist');
+    assert(!await list.getByText(/Заготовщик|Ритм закалки/).count());
+    await p.locator('#trophy-x').click();
+    await p.clock.setFixedTime(new Date('2027-04-27T14:00:00+03:00'));
+    await p.evaluate(()=>__qa.render());await dismiss(p);
+    await shellNav(p,'Достижения');
+    const unlocked=list.getByText('Ритм закалки',{exact:true});
+    await unlocked.waitFor();
+    assert.match(await unlocked.locator('..').innerText(),/осколок за день/);
+  }finally{await context.close();}
+});
+
+await check('fate forge stage II edits live goals and keeps the original records',async()=>{
   const day='2027-04-16',seed=advancedSeed();
   seed['cfg/opening']={cash:4000000,card:0};
   const {page:p,context}=await open({shell:true,seed,day,width:390});

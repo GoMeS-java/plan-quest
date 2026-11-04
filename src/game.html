@@ -1090,7 +1090,7 @@ html,body{overflow-anchor:none}
 <script src="legends.js"></script>
 <script src="fate.js"></script>
 <script src="portrait.js"></script>
-<dialog id="fate-forge-dialog" aria-labelledby="fate-forge-title"><header><strong id="fate-forge-title">КУЗНИЦА СУДЬБЫ · I</strong><button id="fate-forge-close" type="button" aria-label="Закрыть Кузницу">✕</button></header><div class="citadel-system-content forge-editor"><nav class="row" aria-label="Стадии Кузницы"><button type="button" class="btn" id="fate-forge-tasks-tab" aria-pressed="true">I · Задания</button><button type="button" class="btn" id="fate-forge-goals-tab" aria-pressed="false">II · Путь</button></nav><p id="fate-forge-stage-note" class="hint">Редактор целей открывается после первого улучшения Мастерской.</p><div id="fate-forge-tasks"><label>Раздел <select id="fate-forge-group"><option value="daily">Основные</option><option value="weekly">Еженедельные</option><option value="periodic">Периодические</option></select></label><div id="fate-forge-list"></div><button class="btn" id="fate-forge-add" type="button">Добавить задание</button><form id="fate-forge-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Расписание <select name="schedule"><option value="daily">Каждый день</option><option value="alternate">Через день</option></select></label><button class="btn" type="submit">Сохранить</button><button class="btn" id="fate-forge-archive" type="button">Убрать из задач</button></form></div><div id="fate-forge-goals" hidden><div id="fate-forge-goal-list"></div><button id="fate-forge-goal-add" class="btn" type="button">Добавить цель</button><form id="fate-forge-goal-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Источник прогресса <select name="source"><option value="manual">Ручной ввод</option><option value="capital">Капитал из финансов</option><option value="weight">Вес из журнала</option><option value="english">Отметки английского</option></select></label><label>Целевое значение <input name="target" type="number" min="0.01" max="1000000000" step="0.01" required></label><p id="fate-forge-goal-preview" aria-live="polite"></p><button class="btn" type="submit">Сохранить цель</button></form></div><p id="fate-forge-feedback" role="status"></p></div></dialog>
+<dialog id="fate-forge-dialog" aria-labelledby="fate-forge-title"><header><strong id="fate-forge-title">КУЗНИЦА СУДЬБЫ · I</strong><button id="fate-forge-close" type="button" aria-label="Закрыть Кузницу">✕</button></header><div class="citadel-system-content forge-editor"><nav class="row" aria-label="Стадии Кузницы"><button type="button" class="btn" id="fate-forge-tasks-tab" aria-pressed="true">I · Задания</button><button type="button" class="btn" id="fate-forge-goals-tab" aria-pressed="false">II · Путь</button><button type="button" class="btn" id="fate-forge-aspects-tab" aria-pressed="false">III · Аспекты</button></nav><p id="fate-forge-stage-note" class="hint">Редактор целей открывается после первого улучшения Мастерской.</p><div id="fate-forge-tasks"><label>Раздел <select id="fate-forge-group"><option value="daily">Основные</option><option value="weekly">Еженедельные</option><option value="periodic">Периодические</option></select></label><div id="fate-forge-list"></div><button class="btn" id="fate-forge-add" type="button">Добавить задание</button><form id="fate-forge-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Расписание <select name="schedule"><option value="daily">Каждый день</option><option value="alternate">Через день</option></select></label><button class="btn" type="submit">Сохранить</button><button class="btn" id="fate-forge-archive" type="button">Убрать из задач</button></form></div><div id="fate-forge-goals" hidden><div id="fate-forge-goal-list"></div><button id="fate-forge-goal-add" class="btn" type="button">Добавить цель</button><form id="fate-forge-goal-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Источник прогресса <select name="source"><option value="manual">Ручной ввод</option><option value="capital">Капитал из финансов</option><option value="weight">Вес из журнала</option><option value="english">Отметки английского</option></select></label><label>Целевое значение <input name="target" type="number" min="0.01" max="1000000000" step="0.01" required></label><p id="fate-forge-goal-preview" aria-live="polite"></p><button class="btn" type="submit">Сохранить цель</button></form></div><div id="fate-forge-aspects" hidden><p class="hint">Здесь только открытые аспекты. При замене прежний бонус действует до конца дня.</p><div id="fate-forge-aspect-list"></div></div><p id="fate-forge-feedback" role="status"></p></div></dialog>
 
 <script src="realm-achievements.js"></script>
 <script src="shelter-items.js"></script>
@@ -1441,7 +1441,7 @@ html,body{overflow-anchor:none}
     out.n_home = byTh(st.spont, [12, 35, 80]);
     return out;
   }
-  function nlev(key) { return (lastGI && lastGI.nlev && lastGI.nlev[key]) || 0; }
+  function nlev(key,date) { return forgeAspectActive(key,date||dkey(new Date()))?(lastGI?.nlev?.[key]||0):0; }
   function spHeavyPts(L) { return L >= 3 ? 3 : 2; }
   var SK_DESC = {
     squat: 'Растёт от общего числа приседаний за всё время. С новой ступенью открывается подход побольше и даются осколки.',
@@ -2522,7 +2522,11 @@ html,body{overflow-anchor:none}
     var out = { slots: {}, pts: {}, ach: {}, ups: { squat: [], pushup: [] }, st: null };
     var spDone = {}, nl = {};
     S.spont.forEach(function (x) { if (x.done && x.date) (spDone[x.date] = spDone[x.date] || []).push(x); });
-    out.nups = {}; out.nlev = nl; out.trials = {};
+    out.nups = {}; out.nlev = nl; out.trials = {};out.forgeAspects={};
+    var aspectPaths=Object.keys(forgeAspectPaths).flatMap(function(key){
+      var row=forgeAspectRetirement(key);
+      return row&&row.replace?[{key:key,from:row.from,def:forgeAspectPaths[key],count:0}]:[];
+    });
     NSK.forEach(function (N) { out.nups[N.key] = []; nl[N.key] = 0; });
     function give(k, v) { if (v) out.pts[k] = (out.pts[k] || 0) + v; }
     var st = { steps: 0, maxDay: 0, sq: 0, pu: 0, reps: 0, wk: 0, perf: 0, perfRun: 0, perfBest: 0, earlyRun: 0, earlyBest: 0, combo: 0, kcalW: 0, stepW: 0, meets: 0, weigh: 0,
@@ -2587,19 +2591,19 @@ html,body{overflow-anchor:none}
       if (q.workout.length) st.wk++;
       var lvls = nskLevels(st);
       NSK.forEach(function (N) {
-        while (nl[N.key] < lvls[N.key]) { nl[N.key]++; out.nups[N.key].push({ lvl: nl[N.key], date: k }); }
+        while (nl[N.key] < lvls[N.key]) { nl[N.key]++; if(forgeAspectActive(N.key,k))out.nups[N.key].push({ lvl: nl[N.key], date: k }); }
       });
-      if (day.steps >= gl && nl.n_walk) {
+      if (day.steps >= gl && nl.n_walk && forgeAspectActive('n_walk',k)) {
         var mw = 0;
         for (var tw = 1; tw <= nl.n_walk; tw++) if (day.steps >= gl * (tw + 1)) mw = tw;
         give(k, mw);
       }
       var exd = day.ex || {};
-      if (dq[7] && exd.eng >= 2 && exd.eng <= nl.n_eng + 1) give(k, exd.eng - 1);
-      if (dq[3] && exd.cook >= 2 && exd.cook <= nl.n_cook + 1) give(k, exd.cook - 1);
+      if (dq[7] && exd.eng >= 2 && exd.eng <= nl.n_eng + 1 && forgeAspectActive('n_eng',k)) give(k, exd.eng - 1);
+      if (dq[3] && exd.cook >= 2 && exd.cook <= nl.n_cook + 1 && forgeAspectActive('n_cook',k)) give(k, exd.cook - 1);
       var sl = (spDone[k] || []).slice().sort(function (a, c) { return (a.ts || 0) - (c.ts || 0); });
-      var spCap = 2 + nl.n_home, spPts = 0;
-      for (var si = 0; si < Math.min(sl.length, spCap); si++) spPts += (sl[si].heavy && nl.n_home >= 1) ? spHeavyPts(nl.n_home) : 1;
+      var homeLevel=forgeAspectActive('n_home',k)?nl.n_home:0,spCap=2+homeLevel,spPts=0;
+      for (var si = 0; si < Math.min(sl.length, spCap); si++) spPts += (sl[si].heavy && homeLevel >= 1) ? spHeavyPts(homeLevel) : 1;
       give(k, spPts);
       var trT = trialOf(k);
       if (trT) {
@@ -2609,6 +2613,7 @@ html,body{overflow-anchor:none}
         else if (k < today) { st.trialFail++; if (trT.rank >= 2) st.trialFailHigh++; }
       }
       var perfect = dayCount(k, SI) >= reqTotal(k);
+      if(aspectPaths.length)give(k,forgeAspectAdvance(aspectPaths,out.forgeAspects,k,{q:q,walk:day.steps>=gl,perfect:perfect}));
       if (perfect && parseKey(k).getDay() === 0) st.sunPerfect++;
       if (perfect) { st.perf++; st.perfRun++; if (st.perfRun > st.perfBest) st.perfBest = st.perfRun; } else st.perfRun = 0;
       if (day.q && day.q[0]) { st.earlyRun++; if (st.earlyRun > st.earlyBest) st.earlyBest = st.earlyRun; } else st.earlyRun = 0;
@@ -3021,7 +3026,7 @@ html,body{overflow-anchor:none}
     if(!forgeAvailable()||forgeDialog.open)return;
     forgeOpener=document.activeElement;
     $('fate-forge-feedback').textContent='';
-    forgeRenderStage();forgeChoosePanel(false);
+    forgeRenderStage();forgeChoosePanel('tasks');
     forgeDialog.showModal();
     history.pushState(Object.assign({},history.state,{fateForge:true}),'');
   }
@@ -3123,7 +3128,7 @@ html,body{overflow-anchor:none}
     function qBtn(i) {
       var q = QDEF[i];
       var on = !!(day.q && day.q[i]);
-      if ((i === 7 && nlev('n_eng') >= 1) || (i === 3 && nlev('n_cook') >= 1)) {
+      if ((i === 7 && nlev('n_eng',k) >= 1) || (i === 3 && nlev('n_cook',k) >= 1)) {
         var tkey = i === 7 ? 'eng' : 'cook', tm = exv[tkey] || 1, mn = engMin(k);
         var ttl = forgeTitle('daily-'+i,k,i === 7 ? 'Английский, ' + mn * tm + ' минут' : (tm > 1 ? 'Приготовил еду ' + TIERC[tm] : q.t));
         var tb = questButton(ttl, tm > 1 ? 'выбрана усиленная норма' : q.s, '+' + tm, on, function () { setTier(i, tkey, on ? tm : 1); });
@@ -3139,7 +3144,7 @@ html,body{overflow-anchor:none}
     var SI = stepInfo();
     var sg = SI.goals[mondayKey(k)] || 5000;
     var st = day.steps == null ? 0 : day.steps;
-    var lw = nlev('n_walk'), mwt = 0, tierTxt = [];
+    var lw = nlev('n_walk',k), mwt = 0, tierTxt = [];
     for (var tw = 1; tw <= lw; tw++) { tierTxt.push(fmt(sg * (tw + 1)) + ' шагов: +' + (tw + 1)); if (st >= sg * (tw + 1)) mwt = tw; }
     list.appendChild(questButton(fmt(sg) + ' шагов', (viewBack ? 'за день ' : 'сегодня ') + fmt(st) + ', засчитывается само' + (lw ? '. Повышенные нормы: ' + tierTxt.join(', ') : ''), '+' + (st >= sg ? 1 + mwt : 1), st >= sg, null, true));
     if (k >= NEW_Q && forgeEnabled('daily-8',k)) qBtn(8);
@@ -3269,7 +3274,7 @@ html,body{overflow-anchor:none}
     });
     var td = S.days[k] || { q: [false, false, false, false], kcal: null }, tex = td.ex || {};
     [[7, 'eng', 'n_eng'], [3, 'cook', 'n_cook']].forEach(function (T) {
-      var lv = nlev(T[2]);
+      var lv = nlev(T[2],k);
       if (!lv || (T[0] === 7 && k < NEW_Q)) return;
       var mn = engMin(k);
       box.appendChild(el('div', 'hint', 'Усилить задачу «' + (T[0] === 7 ? 'Английский' : 'Еда на завтра') + '», по желанию: Заклятие выдаст больше осколков.'));
@@ -3654,21 +3659,116 @@ html,body{overflow-anchor:none}
   function forgeGoalText(goal,value){
     return forgeGoalNumber(value)+(forgeGoalUnits[goal.source]?' '+forgeGoalUnits[goal.source]:'');
   }
+  // Replacement definitions are only projected into the profile after discovery.
+  var forgeAspectPaths={
+    n_cook:{name:'Ритм закалки',condition:'Запиши приседания и отжимания в один день.',need:9,qualifies:function(c){return c.q.squat.length&&c.q.pushup.length;}},
+    n_eng:{name:'Путь силы',condition:'Выполни норму шагов и запиши подход упражнения в тот же день.',need:12,qualifies:function(c){return c.walk&&(c.q.squat.length||c.q.pushup.length);}},
+    n_walk:{name:'Твердая рука',condition:'Запиши по два подхода приседаний и отжиманий за день.',need:8,qualifies:function(c){return c.q.squat.length>=2&&c.q.pushup.length>=2;}},
+    n_home:{name:'Собранный день',condition:'Выполни все основные задания и запиши подход упражнения.',need:10,qualifies:function(c){return c.perfect&&(c.q.squat.length||c.q.pushup.length);}}
+  };
+  function forgeAspectRetirement(key){
+    var row=S.forge['aspect-'+key];
+    return row&&row.kind==='aspect'?row:null;
+  }
+  function forgeAspectActive(key,date){
+    var retirement=forgeAspectRetirement(key);
+    return !retirement||date<retirement.from;
+  }
+  function forgeAspectText(def){
+    return def.condition+' Награда: +1 осколок за день. Бонусы новых аспектов не суммируются.';
+  }
+  function forgeAspectAdvance(paths,opened,date,context){
+    var bonus=false;
+    paths.forEach(function(path){
+      if(date<path.from||!path.def.qualifies(context))return;
+      var earned=opened[path.key];
+      if(earned){if(date>earned)bonus=true;return;}
+      if(++path.count===path.def.need)opened[path.key]=date;
+    });
+    return bonus?1:0;
+  }
+  function forgeRenderAspects(){
+    var list=$('fate-forge-aspect-list');clear(list);
+    var shown=false,today=dkey(new Date());
+    SK_KEYS.forEach(function(key){
+      var ups=lastGI?.ups?.[key]||[];
+      if(!ups.length)return;
+      shown=true;
+      var latest=ups[ups.length-1],card=el('div','goal');
+      card.appendChild(el('b',null,SK[key].name+' '+SK_ROMAN[latest.lvl-1]));
+      card.appendChild(el('p','hint','Доступен подход по '+skillCap(latest.lvl)*10+' повторений. Базовая прокачка.'));
+      list.appendChild(card);
+    });
+    NSK.forEach(function(def){
+      var level=lastGI?.nlev?.[def.key]||0,retirement=forgeAspectRetirement(def.key);
+      if(!level||!forgeAspectActive(def.key,today))return;
+      shown=true;
+      var card=el('div','goal'),title=el('b',null,def.name+' '+SK_ROMAN[level-1]);
+      card.appendChild(title);card.appendChild(el('p','hint',def.desc(level)));
+      if(retirement){card.appendChild(el('p','hint','Изменение вступит в силу завтра.'));}
+      else{
+        var edit=el('button','btn','Убрать или заменить');edit.type='button';
+        edit.onclick=function(){
+          edit.hidden=true;
+          var actions=el('div','row');
+          [['Убрать',false],['Заменить',true]].forEach(function(option){
+            var b=el('button','btn',option[0]);b.type='button';
+            b.onclick=function(){forgeRetireAspect(def.key,option[1],actions);};
+            actions.appendChild(b);
+          });
+          var cancel=el('button','btn','Отмена');cancel.type='button';
+          cancel.onclick=function(){actions.remove();edit.hidden=false;edit.focus();};
+          actions.appendChild(cancel);card.appendChild(actions);
+          actions.firstChild.focus();
+        };
+        card.appendChild(edit);
+      }
+      list.appendChild(card);
+    });
+    Object.keys(lastGI?.forgeAspects||{}).forEach(function(key){
+      var def=forgeAspectPaths[key];shown=true;
+      var card=el('div','goal');card.appendChild(el('b',null,def.name));card.appendChild(el('p','hint',forgeAspectText(def)));list.appendChild(card);
+    });
+    if(!shown)list.appendChild(el('p','hint','Открытых аспектов пока нет.'));
+  }
+  function forgeRetireAspect(key,replace,actions){
+    if(!forgeAvailable()||citadelRoomLevel('forge')<3)return;
+    var path='forge-tasks/aspect-'+key,from=addDays(dkey(new Date()),1);
+    actions.querySelectorAll('button').forEach(function(b){b.disabled=true;});
+    enqueue(function(){return db.runTransaction(function(tx){
+      if(tx.get(path)||citadelRoomLevel('forge',tx.list('buys'))<3)return false;
+      var previousGI=lastGI,rank,level;
+      try{rank=purchasePoints(tx).L;level=lastGI?.nlev?.[key];}finally{lastGI=previousGI;}
+      if(rank<5||!level)return false;
+      tx.set(path,{kind:'aspect',from:from,replace:replace});return true;
+    });}).then(function(ok){
+      if(ok)forgeRenderAspects();
+      $('fate-forge-feedback').textContent=ok?(replace?'Бездна тебя услышала. Ожидай.':'Аспект убран. Его бонус перестанет действовать завтра.'):'Аспект уже изменился или недоступен.';
+    }).catch(function(){$('fate-forge-feedback').textContent='Не удалось сохранить изменение.';}).finally(function(){
+      actions.querySelectorAll('button').forEach(function(b){b.disabled=false;});
+    });
+  }
+
+  $('fate-forge-aspects-tab').onclick=function(){forgeChoosePanel('aspects');};
   function forgeRenderStage(){
     var level=citadelRoomLevel('forge'),unlocked=level>=2;
     $('fate-forge-title').textContent='КУЗНИЦА СУДЬБЫ · '+['I','II','III'][level-1];
     $('fate-forge-goals-tab').disabled=!unlocked;
+    $('fate-forge-aspects-tab').disabled=level<3;
     $('fate-forge-stage-note').hidden=unlocked;
-    if(!unlocked)forgeChoosePanel(false);
+    if(!unlocked)forgeChoosePanel('tasks');
   }
-  function forgeChoosePanel(goals){
-    if(goals&&citadelRoomLevel('forge')<2)return;
-    $('fate-forge-tasks').hidden=goals;
-    $('fate-forge-goals').hidden=!goals;
-    $('fate-forge-tasks-tab').setAttribute('aria-pressed',String(!goals));
-    $('fate-forge-goals-tab').setAttribute('aria-pressed',String(goals));
+  function forgeChoosePanel(panel){
+    var level=citadelRoomLevel('forge');
+    if(panel==='goals'&&level<2||panel==='aspects'&&level<3)return;
+    ['tasks','goals','aspects'].forEach(function(id){
+      $('fate-forge-'+id).hidden=id!==panel;
+      $('fate-forge-'+id+'-tab').setAttribute('aria-pressed',String(id===panel));
+    });
     $('fate-forge-feedback').textContent='';
-    if(goals)forgeRenderGoals();else forgeRender();
+    if(panel==='aspects')forgeRenderAspects();
+    else if(panel==='goals')forgeRenderGoals();
+    else forgeRender();
   }
   var forgeGoalDraft=null;
   function forgeRenderGoals(){
@@ -3725,8 +3825,8 @@ html,body{overflow-anchor:none}
       $('fate-forge-feedback').textContent=ok?'Цель сохранена. Шкала обновилась в «Пути».':'Цель изменилась. Открой её заново.';
     }).catch(function(){$('fate-forge-feedback').textContent='Не удалось сохранить цель.';}).finally(function(){button.disabled=false;});
   };
-  $('fate-forge-tasks-tab').onclick=function(){forgeChoosePanel(false);};
-  $('fate-forge-goals-tab').onclick=function(){forgeChoosePanel(true);};
+  $('fate-forge-tasks-tab').onclick=function(){forgeChoosePanel('tasks');};
+  $('fate-forge-goals-tab').onclick=function(){forgeChoosePanel('goals');};
   $('fate-forge-goal-add').onclick=function(){forgeEditGoal(null);};
   function forgeManualProgress(host,id,goal){
     var form=el('form','row'),input=el('input'),save=el('button','btn','Записать');
@@ -4257,6 +4357,9 @@ html,body{overflow-anchor:none}
         ev.push({ id: 's:' + N.key + ':' + u.lvl, date: u.date, kind: 'АСПЕКТ ПРОБУЖДЁН', big: N.name + ' ' + SK_ROMAN[u.lvl - 1], text: N.desc(u.lvl) });
       });
     });
+    Object.keys(lastGI.forgeAspects||{}).forEach(function(key){
+      var def=forgeAspectPaths[key];ev.push({id:'s:forge:'+key,date:lastGI.forgeAspects[key],kind:'АСПЕКТ ПРОБУЖДЁН',big:def.name,text:forgeAspectText(def)});
+    });
     return ev;
   }
   var acCopyText = '';
@@ -4371,7 +4474,7 @@ html,body{overflow-anchor:none}
   }
   function renderAch() {
     if (!lastGI) return;
-    var viewKey=JSON.stringify([lastGI.ach,lastGI.ups,lastGI.nups,S.look||cachedLook,S.legends,S.fate,S.realm,S.wardrobe,!!window.__COS_ALL]);
+    var viewKey=JSON.stringify([lastGI.ach,lastGI.ups,lastGI.nups,lastGI.forgeAspects,dkey(new Date()),Object.keys(forgeAspectPaths).map(forgeAspectRetirement),S.look||cachedLook,S.legends,S.fate,S.realm,S.wardrobe,!!window.__COS_ALL]);
     if(viewKey===achievementViewKey)return;
     achievementViewKey=viewKey;
     var box = $('alist'), sk = $('sklist'),opened=Array.from(box.querySelectorAll('[data-achievement] details[open]')).map(function(n){return n.parentElement.dataset.achievement;}),focus=document.activeElement,focusCard=focus&&focus.closest('[data-achievement]'),focusId=focusCard&&focusCard.dataset.achievement,focusSlot=focus&&focus.dataset.showcaseSlot;
@@ -4386,10 +4489,14 @@ html,body{overflow-anchor:none}
     });
     NSK.forEach(function (N) {
       var arr = lastGI.nups[N.key] || [];
-      if (!arr.length) return;
+      if (!arr.length||!forgeAspectActive(N.key,dkey(new Date()))) return;
       var u = arr[arr.length - 1];
       any = true;
       sk.appendChild(questButton(N.name + ' ' + SK_ROMAN[u.lvl - 1], N.desc(u.lvl) + ' Открыт ' + dshort(u.date) + '. Следующие ступени скрыты.', '✓', true, null, true));
+    });
+    Object.keys(lastGI.forgeAspects||{}).forEach(function(key){
+      var def=forgeAspectPaths[key];any=true;
+      sk.appendChild(questButton(def.name,forgeAspectText(def),'✓',true,null,true));
     });
     if (!any) sk.appendChild(el('div', 'hint', 'Скрытые Аспекты открываются сами, когда накопится достаточно или ты сделаешь рекорд.'));
     renderAchievementCollection(box);
