@@ -1,11 +1,12 @@
 name: Integrated Citadel smoke test
 on:
   push:
-    branches: [citadel-development-20261030, vkach-1-1-perestroyka]
+    branches: [main, citadel-development-20261030, vkach-1-1-perestroyka]
   pull_request:
     paths:
       - 'src/citadel*.js'
       - 'src/legends.js'
+      - 'src/shelter-items.js'
       - 'src/fate.js'
       - 'src/awakening.js'
       - 'src/citadel*.css'
@@ -53,11 +54,15 @@ jobs:
           for name in ('citadel.js', 'citadel-life.js', 'citadel-weather.js', 'sw.js'):
               assert Path('docs', name).is_file(), name
           game = Path('docs/index.html').read_text(encoding='utf-8')
-          for marker in ('id="citadel-castle"', 'id="citadel-avatar-canvas"', 'id="citadel-interior-hero"', 'function citadelMove(', 'function syncCitadelAvatar(', 'id="citadel-live-cash"', 'function citadelRenderDecor(', 'function citadelInspectObject(', 'id="citadel-decor-options"', 'function citadelRenderActivities(', 'function citadelNpcSpeak(', 'id="citadel-activity-actions"', 'function citadelSyncWeekly(', 'function citadelSyncDaily(', 'function citadelNavigate(', 'function citadelSyncTrial('):
+          for marker in ('id="citadel-castle"', 'id="citadel-avatar-canvas"', 'id="citadel-interior-hero"', 'function citadelMove(', 'function syncCitadelAvatar(', 'id="citadel-live-cash"', 'function citadelRenderRoomItems(', 'function citadelInspectObject(', 'id="shelter-collection"', 'function citadelRenderActivities(', 'function citadelNpcSpeak(', 'id="citadel-activity-actions"', 'function citadelSyncWeekly(', 'function citadelSyncDaily(', 'function citadelNavigate(', 'function citadelSyncTrial('):
               assert marker in game, marker
           assert '<script src="citadel-world.js"></script>' in game
           assert Path('docs/citadel-world.js').is_file()
           assert 'citadel-world.js' in Path('docs/sw.js').read_text()
+          assert '<script src="shelter-items.js"></script>' in game
+          assert Path('docs/shelter-items.js').is_file()
+          assert 'shelter-items.js' in Path('docs/sw.js').read_text()
+          assert 'id="citadel-decor-options"' not in game
           art = list(Path('src/assets/citadel').iterdir())
           assert len(art) >= 37
           assert {'roof.svg', 'abandoned.svg'}.issubset({asset.name for asset in art})
@@ -103,6 +108,7 @@ jobs:
           node --check docs/citadel-weather.js
           node --check docs/localdb.js
           node --check docs/awakening.js
+          node --check docs/shelter-items.js
           python - <<'PY'
           import re
           from pathlib import Path
