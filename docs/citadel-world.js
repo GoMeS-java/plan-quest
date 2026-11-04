@@ -2,7 +2,7 @@
 (function(root){
  'use strict';
  var floors=[['throne','observatory'],['rest','study'],['archive','forge'],['gatehouse','refectory'],['cloister','vault']];
- var ranks={throne:1,observatory:5,rest:1,study:1,archive:10,forge:15,gatehouse:1,refectory:5,cloister:8,vault:20};
+ var ranks={throne:1,observatory:5,rest:1,study:1,archive:10,forge:5,gatehouse:1,refectory:5,cloister:8,vault:20};
  var names={throne:'Тронный зал',observatory:'Обсерватория',rest:'Личные покои',study:'Кабинет',archive:'Архив',forge:'Мастерская',gatehouse:'Караульная',refectory:'Трапезная',cloister:'Крытая галерея',vault:'Казначейство'};
  var graph={};
  function link(a,b){(graph[a]||(graph[a]=[])).push(b);(graph[b]||(graph[b]=[])).push(a);}

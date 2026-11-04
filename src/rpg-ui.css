@@ -910,3 +910,16 @@ html[data-font="curse"] body.citadel-shell-active :is(.citadel-shell-title,.prof
 .witem.is-achievement-reward{border-color:#a58b61}.wardrobe-reward{font:9px/1.4 var(--font-body);color:#d5b57e;letter-spacing:.03em}
 
 #profile-learning-open{grid-column:1/-1}@media(min-width:600px){.profile-system-hub{grid-template-columns:repeat(3,minmax(0,1fr))}#profile-learning-open{grid-column:auto}}
+
+/* Fate Forge editor matches the Citadel panels. */
+#fate-forge-dialog{box-sizing:border-box;width:min(460px,calc(100% - 20px));max-height:calc(100dvh - 28px);padding:0;border:1px solid #91739b;border-radius:8px;background:#21182d;color:#f1dfed}
+#fate-forge-dialog::backdrop{background:#080510bb}
+#fate-forge-dialog header{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#30213b;color:#edce9c}
+#fate-forge-close{min-width:44px;min-height:44px;background:#3e2c4b;color:#f1dfed;border:1px solid #715a7b;border-radius:4px}
+.forge-editor{padding:12px}
+.forge-editor{display:grid;gap:10px}
+.forge-editor form,.forge-editor label,#fate-forge-list{display:grid;gap:6px;min-width:0}
+.forge-editor [hidden]{display:none!important}
+.forge-editor input,.forge-editor select,.forge-editor button{min-height:44px;max-width:100%;overflow-wrap:anywhere}
+.forge-editor input,.forge-editor select{padding:8px;background:#22192c;color:#f1dfed;border:1px solid #715a7b;border-radius:4px;font:16px system-ui,sans-serif}
+#fate-forge-feedback{min-height:1.4em;margin:0;color:#edce9c}

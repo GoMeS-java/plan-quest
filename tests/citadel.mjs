@@ -110,7 +110,56 @@ try {
 
 
 
- await check('shelter two offline profiles reconcile competing moves through simulated Sheets',async()=>{
+ await check('fate forge edits live quests and preserves existing completion history',async()=>{
+  const day='2027-04-16';
+  const {page:p,context}=await open({shell:true,seed:advancedSeed(),day,width:390});
+  try{
+    await castle(p);
+    const room=p.locator('[data-croom="forge"]');
+    assert.equal(await room.getAttribute('data-min-rank'),'5');
+    await room.click();
+    await p.getByRole('button',{name:'Наковальня · Открыть Кузницу судьбы'}).click();
+    const editor=p.locator('#fate-forge-dialog');
+    await editor.waitFor({state:'visible'});
+    const group=editor.locator('#fate-forge-group'),form=editor.locator('form');
+    await group.selectOption('periodic');
+    const periodic=editor.locator('#fate-forge-list button').last();
+    await periodic.click();
+    await form.locator('[name=title]').fill('Обычные отжимания');
+    await form.getByRole('button',{name:'Сохранить',exact:true}).click();
+    await p.waitForFunction(()=>!!PlanSync._docs()['forge-tasks/periodic-pushup']);
+    await group.selectOption('daily');
+    await editor.getByRole('button',{name:'Добавить задание'}).click();
+    await form.locator('[name=title]').fill('Зал через день');
+    await form.locator('[name=schedule]').selectOption('alternate');
+    await form.getByRole('button',{name:'Сохранить',exact:true}).click();
+    await p.waitForFunction(()=>Object.keys(PlanSync._docs()).some(k=>k.startsWith('forge-tasks/custom-')));
+    await group.selectOption('weekly');
+    await editor.getByRole('button',{name:'Добавить задание'}).click();
+    await form.locator('[name=title]').fill('Зал на этой неделе');
+    await form.getByRole('button',{name:'Сохранить',exact:true}).click();
+    await p.waitForFunction(()=>Object.values(PlanSync._docs()).some(row=>row.d?.kind==='weekly'&&row.d?.revisions?.some(rule=>rule.title==='Зал на этой неделе')));
+    await editor.getByRole('button',{name:'Закрыть Кузницу'}).click();
+    await editor.waitFor({state:'hidden'});
+    await p.waitForFunction(()=>!history.state?.fateForge);
+    await shellNav(p,'Задания');
+    const task=p.locator('#qlist button').filter({hasText:'Зал через день'});
+    await task.click();
+    const completed=await p.waitForFunction(date=>Object.keys(PlanSync._docs()['days/'+date]?.d.forgeDone||{}).length===1,day);
+    await completed.dispose();
+    await p.clock.setFixedTime(new Date('2027-04-17T14:00:00+03:00'));
+    await p.evaluate(()=>__qa.render());
+    assert.equal(await task.count(),0);
+    assert.equal(await p.locator('#plist button').filter({hasText:'Обычные отжимания'}).count(),1);
+    await p.locator('#d-yest').click();
+    assert.equal(await task.getAttribute('aria-pressed'),'true');
+    await shellNav(p,'Хроника');
+    await p.locator('#wlist button').filter({hasText:'Зал на этой неделе'}).click();
+    await p.waitForFunction(()=>Object.values(PlanSync._docs()['weeks/2027-04-12']?.d.forgeDone||{}).includes('2027-04-17'));
+  }finally{await context.close();}
+});
+
+await check('shelter two offline profiles reconcile competing moves through simulated Sheets',async()=>{
   const day='2027-09-15',path='cfg/shelter-items',key='cat';
   const seed={...landscapeSeed(),'cfg/rare':{z02:day},[path]:{owned:{[key]:1},placements:{[key]:{room:'rest',slot:'table',at:1}}}};
   for(const room of ['rest','study','archive'])seed['buys/citadel-'+room+'-2']={kind:'citadel-room',currency:'abyss',room,level:2,cost:100,ts:2};
