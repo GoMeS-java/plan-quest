@@ -13,15 +13,19 @@ const context={
   S:{look:{title:'known-title',theme:'existing-theme'},days:{}},cachedLook:null,
   lastGI:{ach:{earned1:'2026-10-20',earned2:'2026-10-21'}},
   LEG:[{id:'earned1',title:'Earned one'},{id:'hidden',title:'Secret'}],
-  ACH:[{id:'earned2',title:'Earned two'}],
+  ACH:[{id:'earned2',t:'Скрытая отметина',d:'Completed milestone'}],
+  ROOM_OF:{},cosOf:()=>'',
   db:{doc:()=>({set:next=>{writes++;Object.assign(record,structuredClone(next));}})},
   enqueue:fn=>fn(),$:()=>null,localStorage:{setItem:()=>{}}
 };
 vm.createContext(context);
-vm.runInContext(source.slice(begin,end),context);
+const collectionStart=source.indexOf('  function achievementStamp(');
+const collectionEnd=source.indexOf('  function achievementSigil(',collectionStart);
+vm.runInContext(source.slice(collectionStart,collectionEnd)+source.slice(begin,end),context);
 
 assert.equal(context.profileEarned().length,2,'only earned achievements are selectable');
 assert(!context.profileEarned().some(x=>x.id==='hidden'),'unearned achievement never appears');
+assert.equal(context.profileEarned().find(x=>x.id==='earned2').name,'Completed milestone');
 context.profileSaveShowcase(['earned1','hidden','earned1']);
 assert.deepEqual(Array.from(context.profileSelected()),['earned1','',''],'unearned and duplicate IDs rejected');
 assert.equal(record.title,'known-title','existing title preserved');

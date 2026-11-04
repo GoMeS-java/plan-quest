@@ -648,15 +648,25 @@
         return Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () { location.reload(); });
       }).catch(function(){reloading=false;setStatus('Обновление отложено: есть несохранённое изменение. Скачайте копию и повторите действие.','warn');});
     });
-    navigator.serviceWorker.register('sw.js').then(function (reg) {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
       swReg = reg;
-      function check() { if (reg.waiting && navigator.serviceWorker.controller) { updateReady = true; renderChip(); } }
-      check();
-      reg.addEventListener('updatefound', function () {
-        var nw = reg.installing;
-        if (nw) nw.addEventListener('statechange', function () { if (nw.state === 'installed') check(); });
-      });
-      document.addEventListener('visibilitychange', function () { if (!document.hidden) reg.update().catch(function () {}); });
+      function check() {
+        var ready = !!(reg.waiting && navigator.serviceWorker.controller);
+        if (ready !== updateReady) { updateReady = ready; renderChip(); }
+      }
+      function watchInstall() {
+        var worker = reg.installing;
+        if (worker) worker.addEventListener('statechange', check);
+        check();
+      }
+      function checkOnline() {
+        if (!document.hidden && navigator.onLine) reg.update().then(check).catch(function () {});
+      }
+      watchInstall();
+      reg.addEventListener('updatefound', watchInstall);
+      document.addEventListener('visibilitychange', checkOnline);
+      window.addEventListener('online', checkOnline);
+      if (navigator.serviceWorker.controller) checkOnline();
     }).catch(function () {});
   }
 

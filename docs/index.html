@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.0";window.APP_BUILD="2be638ca9a18";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.1";window.APP_BUILD="e11208ec57e1";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -866,7 +866,7 @@ html,body{overflow-anchor:none}
       <div class="profile-rank-path"><label for="profile-rank-meter" id="profile-rank-next">Путь к следующему рангу</label><progress id="profile-rank-meter" value="0" max="1"></progress></div>
       <div id="profile-equipment" class="profile-equipment" aria-label="Надетая экипировка"></div>
       <details class="profile-portrait" id="profile-portrait" open><summary>ПОРТРЕТ И ОБЛИК</summary><div class="profile-portrait-content"><figure class="profile-portrait-frame"><canvas id="profile-portrait-canvas" width="192" height="192" role="img" aria-label="Подробный портрет твоего героя"></canvas></figure><div class="profile-portrait-record"><p id="profile-portrait-caption"></p><dl><div><dt>Верх</dt><dd id="profile-portrait-top"></dd></div><div><dt>Верхняя одежда</dt><dd id="profile-portrait-outer"></dd></div><div><dt>Низ</dt><dd id="profile-portrait-bottom"></dd></div></dl><p class="hint">Портрет меняется вместе с одеждой и силуэтом героя.</p></div></div></details>
-      <section class="profile-development" aria-label="Развитие по записям"><div class="profile-section-title">РАЗВИТИЕ ГЕРОЯ</div><div class="profile-development-grid"><div><small>Пройдено шагов</small><b id="profile-total-steps">0</b></div><div><small>Приседания</small><b id="profile-total-squat">0</b></div><div><small>Отжимания на коленях</small><b id="profile-total-pushup">0</b></div><div><small>Дней с тренировкой</small><b id="profile-total-workouts">0</b></div></div><p class="hint">По записям в заданиях и хронике до сегодняшнего дня.</p></section>
+      <section class="profile-development" aria-label="Развитие по записям"><div class="profile-section-title">РАЗВИТИЕ ГЕРОЯ</div><div class="profile-development-grid"><div><small>Пройдено шагов</small><b id="profile-total-steps">0</b></div><div><small>Приседания</small><b id="profile-total-squat">0</b></div><div><small>Отжимания на коленях</small><b id="profile-total-pushup">0</b></div><div><small>Подходы упражнений</small><b id="profile-total-sets">0</b></div></div><p class="hint">По записям в заданиях и хронике до сегодняшнего дня.</p></section>
       <div class="profile-section-title">ИЗБРАННЫЕ ДОСТИЖЕНИЯ <small>3 места</small></div>
       <div id="profile-showcase" class="profile-showcase" aria-label="Три избранных достижения"></div>
       <div id="profile-picker" class="profile-picker" hidden><div class="profile-picker-head"><b>ВЫБРАТЬ ДОСТИЖЕНИЕ</b><button type="button" id="profile-picker-close">✕</button></div><div id="profile-achievements" class="profile-achievements"></div></div>
@@ -1012,7 +1012,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.0</b><span>Сборка 2be638ca9a18</span></div>
+    <div class="release-stamp"><b>Версия 1.1</b><span>Сборка e11208ec57e1</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -1094,7 +1094,7 @@ html,body{overflow-anchor:none}
 <script src="realm-achievements.js"></script>
 <script src="shelter-items.js"></script>
 <dialog id="citadel-mystery" aria-labelledby="citadel-mystery-title" aria-describedby="citadel-mystery-text"><h2 id="citadel-mystery-title">Неизведанная комната</h2><p id="citadel-mystery-text"></p><form method="dialog"><button autofocus>Понятно</button></form></dialog>
-<script>window.APP_VERSION = "1.0";
+<script>window.APP_VERSION = "1.1";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -3660,8 +3660,7 @@ html,body{overflow-anchor:none}
   var wardrobeSaving=false;
   var profilePickSlot=-1;
   function profileEarned(){
-    if(!lastGI||!lastGI.ach)return [];
-    return LEG.concat(ACH).filter(function(a){return !!lastGI.ach[a.id];}).map(function(a){return {id:a.id,name:a.title||a.t||'Полученное достижение'};}).concat(typeof realmOwned==='function'?realmOwned().map(function(d){return {id:d.id,name:d.name};}):[]);
+    return achievementOwnedRows();
   }
   function profileSelected(){
     var look=(S.look&&typeof S.look==='object')?S.look:(cachedLook||{});
@@ -3688,7 +3687,7 @@ html,body{overflow-anchor:none}
     var records=bodyMeasurements(),latest=records.length?records[records.length-1]:null;
     $('profile-portrait-caption').textContent=latest?'Облик по записи от '+latest.date.split('-').reverse().join('.'):'Текущий облик героя';
     var totals=lastGI&&lastGI.st||{};
-    [['steps','steps'],['squat','sq'],['pushup','pu'],['workouts','wk']].forEach(function(row){var value=Number(totals[row[1]]);$('profile-total-'+row[0]).textContent=(Number.isFinite(value)&&value>0?Math.floor(value):0).toLocaleString('ru-RU');});
+    [['steps','steps'],['squat','sq'],['pushup','pu'],['sets','sets']].forEach(function(row){var value=Number(totals[row[1]]);$('profile-total-'+row[0]).textContent=(Number.isFinite(value)&&value>0?Math.floor(value):0).toLocaleString('ru-RU');});
     var week=$('profile-week'),today=dkey(new Date()),total=0;clear(week);
     for(var i=6;i>=0;i--){var key=addDays(today,-i),record=S.days[key]||{},active=activeIdx(key),done=active.filter(function(n){return (record.q||[])[n]===true;}).length;total+=done;
       var day=el('div','profile-day'+(key===today?' is-today':'')),label=parseKey(key).toLocaleDateString('ru-RU',{weekday:'short'}),count=el('span','profile-day-count',done+' / '+active.length),bar=el('i','profile-day-bar');
@@ -4035,7 +4034,7 @@ html,body{overflow-anchor:none}
     var dates=lastGI&&lastGI.ach||{},rows=[];
     [[ACH,'mark'],[LEG,'superrare']].forEach(function(group){group[0].forEach(function(def){
       if(!Object.prototype.hasOwnProperty.call(dates,def.id)||!dates[def.id])return;
-      rows.push({id:def.id,kind:group[1],name:def.title||def.t||def.d||'Полученная отметина',description:def.d||'',date:achievementStamp(dates[def.id]),points:Number(def.pts)||0,cos:group[1]==='superrare'?def.cos:cosOf(def.id),title:def.title||'',room:group[1]==='superrare'?(ROOM_OF[def.id]||''):''});
+      rows.push({id:def.id,kind:group[1],name:def.title||(def.t==='Скрытая отметина'?def.d:def.t)||def.d||'Полученная отметина',description:def.d||'',date:achievementStamp(dates[def.id]),points:Number(def.pts)||0,cos:group[1]==='superrare'?def.cos:cosOf(def.id),title:def.title||'',room:group[1]==='superrare'?(ROOM_OF[def.id]||''):''});
     });});
     if(typeof realmOwned==='function')realmOwned().forEach(function(d){rows.push({id:d.id,kind:d.kind,name:d.name,description:'Заклятие сохранило итог твоего пути в Перестройке.',date:dkey(new Date(d.at)),points:0,cos:d.cos[0]||'',cosmetics:d.cos,clothes:d.clothes,title:d.title,room:''});});
     return rows.sort(function(a,b){return b.date.localeCompare(a.date)||a.id.localeCompare(b.id);});
@@ -4075,7 +4074,7 @@ html,body{overflow-anchor:none}
       var emblem=el('canvas','achievement-emblem');emblem.setAttribute('aria-hidden','true');achievementSigil(emblem,row);card.appendChild(emblem);
       card.appendChild(el('span','achievement-rarity',row.kind==='superrare'?'СУПЕРРЕДКАЯ':'ОТМЕТИНА'));card.appendChild(el('h3',null,row.name));card.appendChild(el('time','achievement-date',row.date?'Получено '+row.date.split('-').reverse().join('.'):'Дата получения не записана'));
       var selected=chosen.map(function(id,i){return id===row.id?i+1:0;}).filter(Boolean);if(selected.length)card.appendChild(el('span','achievement-featured','На витрине · место '+selected[0]));
-      var details=el('details','achievement-card-details');details.appendChild(el('summary',null,'ПОДРОБНЕЕ'));details.appendChild(el('p',null,row.description));
+      var details=el('details','achievement-card-details');details.appendChild(el('summary',null,'ПОДРОБНЕЕ'));if(row.description&&row.description!==row.name)details.appendChild(el('p',null,row.description));
       var rewards=[];if(row.points)rewards.push('+'+row.points+' осколков');if(row.title)rewards.push('Титул «'+row.title+'»');if(row.id!=='z33'&&row.cos&&COS[row.cos])rewards.push('Оформление «'+COS[row.cos].n+'»');if(row.id!=='z33'&&row.room&&ROOM_ITEMS[row.room])rewards.push('Предмет «'+ROOM_ITEMS[row.room].n+'»');
       if(row.cosmetics)row.cosmetics.slice(1).forEach(function(id){if(COS[id])rewards.push('Оформление «'+COS[id].n+'»');});if(row.clothes){var garment=allItems().find(function(it){return it.id===row.clothes;});if(garment)rewards.push('Одежда «'+garment.name+'»');}
       if(rewards.length)details.appendChild(el('p','achievement-rewards','Получено: '+rewards.join(' · ')));
