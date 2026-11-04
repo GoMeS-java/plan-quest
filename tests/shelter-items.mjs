@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import '../src/shelter-items.js';
+
+const engine = globalThis.VkachShelter;
+const id = 'clock', other = 'mirror';
+const room = 'rest', slot = 'wall';
+const empty = {future:{keep:true}};
+assert.equal(engine.place(empty,id,room,slot,1,null,100),null);
+const earned = engine.grant(empty,[id,other],100);
+assert.deepEqual(engine.grant(earned,[id,id],150),earned);
+assert.equal(engine.place(earned,id,room,'table',3,null,110),null);
+assert.equal(engine.place(earned,'cat',room,'table',1,null,110),null);
+assert.equal(engine.anchor('cat',room,'table',1),null);
+assert.ok(engine.anchor('cat',room,'table',2));
+const placed = engine.place(earned,id,room,slot,1,null,110);
+assert.equal(engine.active(placed,room,1).length,1);
+assert.equal(engine.place(placed,other,room,slot,1,null,115),null);
+const replaced = engine.place(placed,other,room,slot,1,id,115);
+assert.equal(engine.occupant(replaced,room,slot),other);
+assert.equal(replaced.placements[id].room,null);
+assert.ok(engine.owns(replaced,id));
+const moved = engine.place(replaced,other,'study',slot,3,null,120);
+assert.equal(engine.active(moved,room,3).length,0);
+assert.equal(engine.active(moved,'study',3).length,1);
+const removed = engine.place(moved,other,null,null,0,null,125);
+assert.deepEqual(engine.merge(removed,placed),removed);
+assert.deepEqual(engine.merge(placed,removed),removed);
+const concurrent = engine.place(earned,other,room,slot,1,null,112);
+assert.deepEqual(engine.merge(placed,concurrent),engine.merge(concurrent,placed));
+assert.equal(engine.occupant(engine.merge(placed,concurrent),room,slot),other);
+assert.deepEqual(engine.merge(earned,{owned:{futureProp:200},placements:{futureProp:{room:'future',slot:'future',at:200,extra:true}}}).placements.futureProp,{room:'future',slot:'future',at:200,extra:true});
+console.log('PASS shelter receipts, constraints, placement, concurrency and restore');
+

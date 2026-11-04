@@ -17,7 +17,7 @@
  function obstacles(room,level){return (level>1?furniture:ruins)[room]||[];}
  function clamp(p){return {x:Math.max(62,Math.min(418,p.x)),y:Math.max(228,Math.min(306,p.y))};}
  function inside(p,b){return p.x>b[0]&&p.x<b[2]&&p.y>b[1]&&p.y<b[3];}
- function boxes(room,level){return obstacles(room,level).map(function(b){return [b[0]-6,b[1]-4,b[2]+6,b[3]+4];});}
+ function boxes(room,level,props){return obstacles(room,level).concat(props||[]).map(function(b){return [b[0]-6,b[1]-4,b[2]+6,b[3]+4];});}
  function nearest(point,bs){
   var p=clamp(point),best=null;
   if(!bs.some(function(b){return inside(p,b);}))return p;
@@ -39,8 +39,8 @@
    return hi<=0||lo>=1;
   });
  }
- function route(room,level,from,to){
-  var bs=boxes(room,level),a=nearest(from,bs),b=nearest(to,bs),nodes=[a,b];
+ function route(room,level,from,to,props){
+  var bs=boxes(room,level,props),a=nearest(from,bs),b=nearest(to,bs),nodes=[a,b];
   bs.forEach(function(r){[[r[0]-1,r[1]-1],[r[2]+1,r[1]-1],[r[0]-1,r[3]+1],[r[2]+1,r[3]+1]].forEach(function(v){var p=clamp({x:v[0],y:v[1]});if(!bs.some(function(t){return inside(p,t);}))nodes.push(p);});});
   var dist=nodes.map(function(){return Infinity;}),prev=[],done=[];dist[0]=0;
   for(var n=0;n<nodes.length;n++){
@@ -53,5 +53,5 @@
   }
   var path=[nodes[end]],i=end;while(i!==0){i=prev[i];path.unshift(nodes[i]);}return path;
  }
- root.CitadelSpace=Object.freeze({obstacles:obstacles,route:route,nearest:function(room,level,p){return nearest(p,boxes(room,level));},clear:function(room,level,a,b){return clear(a,b,boxes(room,level));}});
+ root.CitadelSpace=Object.freeze({obstacles:obstacles,route:route,nearest:function(room,level,p,props){return nearest(p,boxes(room,level,props));},clear:function(room,level,a,b){return clear(a,b,boxes(room,level));}});
 })(typeof globalThis!=='undefined'?globalThis:this);
