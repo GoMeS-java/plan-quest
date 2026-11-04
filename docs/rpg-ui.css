@@ -923,3 +923,10 @@ html[data-font="curse"] body.citadel-shell-active :is(.citadel-shell-title,.prof
 .forge-editor input,.forge-editor select,.forge-editor button{min-height:44px;max-width:100%;overflow-wrap:anywhere}
 .forge-editor input,.forge-editor select{padding:8px;background:#22192c;color:#f1dfed;border:1px solid #715a7b;border-radius:4px;font:16px system-ui,sans-serif}
 #fate-forge-feedback{min-height:1.4em;margin:0;color:#edce9c}
+
+#fate-forge-tasks,#fate-forge-goals,#fate-forge-goal-list{display:grid;gap:8px;min-width:0}
+#fate-forge-dialog nav [aria-pressed="true"]{background:#50375d;border-color:#c19aca}
+#fate-forge-goal-preview{margin:0;color:#edce9c}
+.forge-goal-meter{display:block;width:100%;height:12px;accent-color:#ba91ce}
+#forge-study-manual form,#forge-custom-goals form{margin-top:8px}
+#forge-study-manual input,#forge-custom-goals input{min-width:0;max-width:100%;flex:1}

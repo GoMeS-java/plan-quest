@@ -1,5 +1,5 @@
 /* Service worker: версия кэша = хэш файлов (подставляет build.py). */
-var VERSION = 'a465c5618b';
+var VERSION = '612108439f';
 var CACHE_PREFIX = 'plan-shell-' + encodeURIComponent(self.registration.scope) + '-';
 var CACHE = CACHE_PREFIX + VERSION;
 var FONT_CACHE = CACHE_PREFIX + 'fonts';
@@ -16,7 +16,7 @@ self.addEventListener('activate', function (e) {
 });
 self.addEventListener('message', function (e) {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
-  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('6792d0eab33a');
+  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('707c2012a2cb');
 });
 
 self.addEventListener('fetch', function (e) {

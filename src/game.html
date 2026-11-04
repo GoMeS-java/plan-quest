@@ -825,23 +825,23 @@ html,body{overflow-anchor:none}
   <section class="panel" id="goals" data-g="a">
     <h2>ПУТЬ НА ПОЛГОДА</h2>
     <div class="goal">
-      <div class="goal-head"><b>Капитал, 10 млн ₽</b><span class="pct" id="pct-money">0%</span></div>
+      <div class="goal-head"><b id="forge-money-title">Капитал, 10 млн ₽</b><span class="pct" id="pct-money">0%</span></div>
       <div class="bar" id="bar-money" aria-hidden="true"></div>
-      <div class="hint">Накоплено <span id="cur-money"></span> из 10 000 000 ₽</div>
+      <div class="hint">Накоплено <span id="cur-money"></span> из <span id="forge-money-target">10 000 000 ₽</span></div>
       <div class="hint" id="money-next"></div>
       <div class="need">Чтобы успеть к 19.04.2027, нужно откладывать <b id="need-money"></b> ₽ в месяц.</div>
       <div class="hint">Считается как свободные деньги плюс то, что тебе должны.</div>
     </div>
     <div class="goal">
-      <div class="goal-head"><b>Вес 120 кг</b><span class="pct" id="pct-weight">0%</span></div>
+      <div class="goal-head"><b id="forge-weight-title">Вес 120 кг</b><span class="pct" id="pct-weight">0%</span></div>
       <div class="bar" id="bar-weight" aria-hidden="true"></div>
-      <div class="hint">Сейчас <span id="cur-weight"></span> кг, старт 165 кг, цель 120 кг</div>
-      <div class="need">Нужный темп: <b id="need-weight"></b> кг в неделю. Контрольные точки: 160, 150, 140, 130, 120 кг. <span id="w-next"></span></div>
+      <div class="hint">Сейчас <span id="cur-weight"></span> кг, старт <span id="forge-weight-start">165 кг</span>, цель <span id="forge-weight-target">120 кг</span></div>
+      <div class="need">Нужный темп: <b id="need-weight"></b> кг в неделю. Контрольные точки: <span id="forge-weight-milestones"></span> <span id="w-next"></span></div>
     </div>
     <div class="goal">
-      <div class="goal-head"><b>Английский</b><span class="pct" id="pct-eng">0%</span></div>
+      <div class="goal-head"><b id="forge-study-title">Английский</b><span class="pct" id="pct-eng">0%</span></div>
       <div class="bar" id="bar-eng" aria-hidden="true"></div>
-      <div class="hint" id="eng-line"></div>
+      <div class="hint" id="eng-line"></div><div id="forge-study-manual"></div>
     </div>
     <div class="goal">
       <div class="goal-head"><b>Время</b><span class="pct" id="pct-time">0%</span></div>
@@ -849,6 +849,7 @@ html,body{overflow-anchor:none}
       <div class="hint">Прошло <span id="days-gone"></span> из 182 дней, срок 19.04.2027</div>
     </div>
     <div class="note">Проценты считаются от старта 19.10.2026.</div>
+    <div id="forge-custom-goals"></div>
     <h2>ГЛОБАЛЬНЫЙ ПУТЬ И ШАГИ</h2>
     <div id="gg-list" style="display:flex;flex-direction:column;gap:10px"></div>
     <div class="row"><input id="gg-name" type="text" placeholder="Новая глобальная цель"><button class="btn go" id="gg-add" type="button">ДОБАВИТЬ</button></div>
@@ -1089,7 +1090,7 @@ html,body{overflow-anchor:none}
 <script src="legends.js"></script>
 <script src="fate.js"></script>
 <script src="portrait.js"></script>
-<dialog id="fate-forge-dialog" aria-labelledby="fate-forge-title"><header><strong id="fate-forge-title">КУЗНИЦА СУДЬБЫ · I</strong><button id="fate-forge-close" type="button" aria-label="Закрыть Кузницу">✕</button></header><div class="citadel-system-content forge-editor"><label>Раздел <select id="fate-forge-group"><option value="daily">Основные</option><option value="weekly">Еженедельные</option><option value="periodic">Периодические</option></select></label><div id="fate-forge-list"></div><button class="btn" id="fate-forge-add" type="button">Добавить задание</button><form id="fate-forge-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Расписание <select name="schedule"><option value="daily">Каждый день</option><option value="alternate">Через день</option></select></label><button class="btn" type="submit">Сохранить</button><button class="btn" id="fate-forge-archive" type="button">Убрать из задач</button></form><p id="fate-forge-feedback" role="status"></p></div></dialog>
+<dialog id="fate-forge-dialog" aria-labelledby="fate-forge-title"><header><strong id="fate-forge-title">КУЗНИЦА СУДЬБЫ · I</strong><button id="fate-forge-close" type="button" aria-label="Закрыть Кузницу">✕</button></header><div class="citadel-system-content forge-editor"><nav class="row" aria-label="Стадии Кузницы"><button type="button" class="btn" id="fate-forge-tasks-tab" aria-pressed="true">I · Задания</button><button type="button" class="btn" id="fate-forge-goals-tab" aria-pressed="false">II · Путь</button></nav><p id="fate-forge-stage-note" class="hint">Редактор целей открывается после первого улучшения Мастерской.</p><div id="fate-forge-tasks"><label>Раздел <select id="fate-forge-group"><option value="daily">Основные</option><option value="weekly">Еженедельные</option><option value="periodic">Периодические</option></select></label><div id="fate-forge-list"></div><button class="btn" id="fate-forge-add" type="button">Добавить задание</button><form id="fate-forge-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Расписание <select name="schedule"><option value="daily">Каждый день</option><option value="alternate">Через день</option></select></label><button class="btn" type="submit">Сохранить</button><button class="btn" id="fate-forge-archive" type="button">Убрать из задач</button></form></div><div id="fate-forge-goals" hidden><div id="fate-forge-goal-list"></div><button id="fate-forge-goal-add" class="btn" type="button">Добавить цель</button><form id="fate-forge-goal-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Источник прогресса <select name="source"><option value="manual">Ручной ввод</option><option value="capital">Капитал из финансов</option><option value="weight">Вес из журнала</option><option value="english">Отметки английского</option></select></label><label>Целевое значение <input name="target" type="number" min="0.01" max="1000000000" step="0.01" required></label><p id="fate-forge-goal-preview" aria-live="polite"></p><button class="btn" type="submit">Сохранить цель</button></form></div><p id="fate-forge-feedback" role="status"></p></div></dialog>
 
 <script src="realm-achievements.js"></script>
 <script src="shelter-items.js"></script>
@@ -3020,7 +3021,7 @@ html,body{overflow-anchor:none}
     if(!forgeAvailable()||forgeDialog.open)return;
     forgeOpener=document.activeElement;
     $('fate-forge-feedback').textContent='';
-    forgeRender();
+    forgeRenderStage();forgeChoosePanel(false);
     forgeDialog.showModal();
     history.pushState(Object.assign({},history.state,{fateForge:true}),'');
   }
@@ -3620,45 +3621,188 @@ html,body{overflow-anchor:none}
     }
     box.appendChild(svg);
   }
-  function renderGoals() {
-    var money = 0;
-    if (loaded && S.opening) {
-      var b = balances();
-      money = b.cash + b.card + listSum('comm') + listSum('subs') - oweActive() + listSum('debts', 'owed');
+  var forgeGoalDefaults={
+    'goal-money':{title:'Капитал',source:'capital',target:10000000,start:0},
+    'goal-weight':{title:'Вес',source:'weight',target:120,start:165},
+    'goal-study':{title:'Английский',source:'english',target:180,start:0}
+  };
+  var forgeGoalUnits={capital:'₽',weight:'кг',english:'занятий',manual:''};
+  function forgeGoal(id){
+    return S.forge[id]&&S.forge[id].kind==='goal'?S.forge[id]:forgeGoalDefaults[id];
+  }
+  function forgeCapital(){
+    if(!loaded||!S.opening)return 0;
+    var b=balances();
+    return b.cash+b.card+listSum('comm')+listSum('subs')-oweActive()+listSum('debts','owed');
+  }
+  function forgeEnglish(){
+    return Object.keys(S.days).filter(function(k){return k>=NEW_Q&&S.days[k]?.q?.[7];}).length;
+  }
+  function forgeGoalValue(goal){
+    if(goal.source==='capital')return Math.max(0,forgeCapital());
+    if(goal.source==='weight')return currentWeight();
+    if(goal.source==='english')return forgeEnglish();
+    return Number(goal.value)||0;
+  }
+  function forgeGoalRatio(goal,value){
+    if(goal.target===goal.start)return value===goal.target?1:0;
+    return (value-goal.start)/(goal.target-goal.start);
+  }
+  function forgeGoalNumber(value){
+    return Number(value).toLocaleString('ru-RU',{maximumFractionDigits:2});
+  }
+  function forgeGoalText(goal,value){
+    return forgeGoalNumber(value)+(forgeGoalUnits[goal.source]?' '+forgeGoalUnits[goal.source]:'');
+  }
+  function forgeRenderStage(){
+    var level=citadelRoomLevel('forge'),unlocked=level>=2;
+    $('fate-forge-title').textContent='КУЗНИЦА СУДЬБЫ · '+['I','II','III'][level-1];
+    $('fate-forge-goals-tab').disabled=!unlocked;
+    $('fate-forge-stage-note').hidden=unlocked;
+    if(!unlocked)forgeChoosePanel(false);
+  }
+  function forgeChoosePanel(goals){
+    if(goals&&citadelRoomLevel('forge')<2)return;
+    $('fate-forge-tasks').hidden=goals;
+    $('fate-forge-goals').hidden=!goals;
+    $('fate-forge-tasks-tab').setAttribute('aria-pressed',String(!goals));
+    $('fate-forge-goals-tab').setAttribute('aria-pressed',String(goals));
+    $('fate-forge-feedback').textContent='';
+    if(goals)forgeRenderGoals();else forgeRender();
+  }
+  var forgeGoalDraft=null;
+  function forgeRenderGoals(){
+    var list=$('fate-forge-goal-list');clear(list);
+    $('fate-forge-goal-form').hidden=true;
+    var ids=Object.keys(forgeGoalDefaults).concat(Object.keys(S.forge).filter(function(id){return id.startsWith('custom-goal-')&&S.forge[id].kind==='goal';}));
+    ids.forEach(function(id){
+      var goal=forgeGoal(id),button=el('button','btn',goal.title+' · '+forgeGoalText(goal,goal.target));
+      button.type='button';button.onclick=function(){forgeEditGoal(id);};list.appendChild(button);
+    });
+  }
+  function forgeEditGoal(id){
+    var form=$('fate-forge-goal-form'),goal=id?forgeGoal(id):{title:'',source:'manual',target:20};
+    forgeGoalDraft={id:id,previous:id?S.forge[id]:null};
+    form.hidden=false;
+    form.elements.title.value=goal.title;
+    form.elements.target.value=goal.target;
+    form.elements.source.value=goal.source;
+    form.elements.source.disabled=id==='goal-money'||id==='goal-weight';
+    form.elements.source.onchange=forgeGoalPreview;
+    form.elements.target.oninput=forgeGoalPreview;
+    forgeGoalPreview();form.elements.title.focus();
+  }
+  function forgeGoalPreview(){
+    var form=$('fate-forge-goal-form'),draft=forgeGoalDraft,old=draft.id&&forgeGoal(draft.id);
+    var source=form.elements.source.value,target=form.elements.target.valueAsNumber;
+    var goal={source:source,target:target,start:old&&old.source===source?old.start:source==='weight'?currentWeight():0,value:old&&old.source===source?old.value:0};
+    var value=forgeGoalValue(goal);
+    $('fate-forge-goal-preview').textContent=Number.isFinite(target)?forgeGoalText(goal,value)+' → '+forgeGoalText(goal,target)+' · '+pc(forgeGoalRatio(goal,value)):'';
+  }
+  $('fate-forge-goal-form').onsubmit=function(e){
+    e.preventDefault();
+    if(!forgeAvailable()||citadelRoomLevel('forge')<2||!forgeGoalDraft)return;
+    var form=this,draft=forgeGoalDraft,source=form.elements.source.value,target=form.elements.target.valueAsNumber,title=form.elements.title.value.trim();
+    if(!title||!Number.isFinite(target)||target<=0||!Object.hasOwn(forgeGoalUnits,source))return;
+    if(source==='weight'&&(target<30.1||target>399.9)){
+      $('fate-forge-feedback').textContent='Укажи вес от 30,1 до 399,9 кг.';return;
     }
+    var id=draft.id||'custom-goal-'+crypto.randomUUID(),old=forgeGoal(id);
+    var path='forge-tasks/'+id,button=form.querySelector('button[type="submit"]');
+    button.disabled=true;
+    enqueue(function(){return db.runTransaction(function(tx){
+      var previousGI=lastGI,rank;
+      try{rank=purchasePoints(tx).L;}finally{lastGI=previousGI;}
+      if(rank<5||citadelRoomLevel('forge',tx.list('buys'))<2)return false;
+      var stored=tx.get(path)||null;
+      if(JSON.stringify(stored)!==JSON.stringify(draft.previous||null))return false;
+      var start=old&&old.source===source?old.start:source==='weight'?currentWeight():0;
+      var value=old&&old.source===source?Number(old.value)||0:0;
+      tx.set(path,Object.assign({},stored,{kind:'goal',title:title,source:source,target:target,start:start,value:value}));
+      return true;
+    });}).then(function(ok){
+      if(ok)forgeRenderGoals();
+      $('fate-forge-feedback').textContent=ok?'Цель сохранена. Шкала обновилась в «Пути».':'Цель изменилась. Открой её заново.';
+    }).catch(function(){$('fate-forge-feedback').textContent='Не удалось сохранить цель.';}).finally(function(){button.disabled=false;});
+  };
+  $('fate-forge-tasks-tab').onclick=function(){forgeChoosePanel(false);};
+  $('fate-forge-goals-tab').onclick=function(){forgeChoosePanel(true);};
+  $('fate-forge-goal-add').onclick=function(){forgeEditGoal(null);};
+  function forgeManualProgress(host,id,goal){
+    var form=el('form','row'),input=el('input'),save=el('button','btn','Записать');
+    input.type='number';input.min='0';input.max='1000000000';input.step='0.01';input.required=true;
+    input.value=String(forgeGoalValue(goal));input.setAttribute('aria-label','Текущее значение: '+goal.title);
+    save.type='submit';form.appendChild(input);form.appendChild(save);host.appendChild(form);
+    form.onsubmit=function(e){
+      e.preventDefault();var value=input.valueAsNumber,previous=forgeGoalValue(goal);
+      if(!Number.isFinite(value)||value<0||value>1000000000||value===previous)return;
+      save.disabled=true;
+      enqueue(function(){return db.runTransaction(function(tx){
+        var path='forge-tasks/'+id,saved=tx.get(path);
+        if(!saved||saved.source!=='manual'||(Number(saved.value)||0)!==previous)return false;
+        tx.set(path,Object.assign({},saved,{value:value}));return true;
+      });}).then(function(ok){if(!ok)toast('Значение уже изменилось. Открой цель заново.');}).catch(function(){}).finally(function(){save.disabled=false;});
+    };
+  }
+  function forgeRenderCustomGoals(){
+    var host=$('forge-custom-goals'),ids=Object.keys(S.forge).filter(function(id){return id.startsWith('custom-goal-')&&S.forge[id].kind==='goal';});
+    var signature=JSON.stringify(ids.map(function(id){var goal=forgeGoal(id);return [id,goal,forgeGoalValue(goal)];}));
+    if(host.dataset.signature===signature)return;host.dataset.signature=signature;clear(host);
+    ids.forEach(function(id){
+      var goal=forgeGoal(id),value=forgeGoalValue(goal),ratio=forgeGoalRatio(goal,value);
+      var card=el('div','goal'),head=el('div','goal-head'),bar=el('progress','forge-goal-meter');
+      head.appendChild(el('b',null,goal.title));head.appendChild(el('span','pct',pc(ratio)));
+      bar.max=1;bar.value=Math.max(0,Math.min(1,ratio));bar.setAttribute('aria-label',goal.title);
+      card.appendChild(head);card.appendChild(bar);card.appendChild(el('p','hint',forgeGoalText(goal,value)+' / '+forgeGoalText(goal,goal.target)));
+      if(goal.source==='manual')forgeManualProgress(card,id,goal);
+      host.appendChild(card);
+    });
+  }
+
+  function renderGoals() {
+    var money=forgeCapital(),moneyGoal=forgeGoal('goal-money'),weightGoal=forgeGoal('goal-weight'),studyGoal=forgeGoal('goal-study');
     var gone = Math.max(0, Math.min(TOTAL_DAYS, Math.floor((Date.now() - START.getTime()) / 86400000)));
     var left = TOTAL_DAYS - gone;
-    var rm = Math.max(0, money) / 10000000;
+    var rm = Math.max(0, money) / moneyGoal.target;
+    $('forge-money-title').textContent=S.forge['goal-money']?moneyGoal.title+', '+forgeGoalText(moneyGoal,moneyGoal.target):'Капитал, 10 млн ₽';
+    $('forge-money-target').textContent=forgeGoalNumber(moneyGoal.target)+' ₽';
     $('cur-money').textContent = fmt(Math.max(0, money)) + ' ₽';
     $('pct-money').textContent = pc(rm);
     fillBar('bar-money', rm);
     (function () {
-      var m = Math.max(0, money), nxm = Math.floor(m / 1000000) + 1;
-      $('money-next').textContent = nxm <= 10 ? 'Следующая ступень: ' + nxm + ' млн ₽, осталось ' + fmt(nxm * 1000000 - m) + ' ₽.' : 'Все ступени пройдены.';
-      var ed = 0, ek = Object.keys(S.days);
-      ek.forEach(function (kk) { if (kk >= NEW_Q && S.days[kk] && S.days[kk].q && S.days[kk].q[7]) ed++; });
-      var steps = [10, 30, 60, 100, 180], nxe = null;
+      var m=Math.max(0,money),next=Math.min(moneyGoal.target,(Math.floor(m/1000000)+1)*1000000);
+      $('money-next').textContent=m<next?'Следующая ступень: '+forgeGoalText(moneyGoal,next)+', осталось '+fmt(next-m)+' ₽.':'Все ступени пройдены.';
+      var ed=forgeGoalValue(studyGoal);
+      var steps=S.forge['goal-study']?[studyGoal.target]:[10,30,60,100,180],nxe=null;
       for (var zi = 0; zi < steps.length; zi++) if (ed < steps[zi]) { nxe = steps[zi]; break; }
-      var tgt = nxe || 180;
-      $('pct-eng').textContent = pc(Math.min(1, ed / tgt));
-      fillBar('bar-eng', Math.min(1, ed / tgt));
-      $('eng-line').textContent = 'Занятий: ' + ed + (nxe ? '. Следующая ступень: ' + nxe + ', осталось ' + (nxe - ed) + '.' : '. Все ступени пройдены.');
+      var tgt=nxe||studyGoal.target,ratio=S.forge['goal-study']?forgeGoalRatio(studyGoal,ed):ed/tgt;
+      $('forge-study-title').textContent=studyGoal.title;
+      $('pct-eng').textContent=pc(ratio);fillBar('bar-eng',ratio);
+      $('eng-line').textContent=S.forge['goal-study']?forgeGoalText(studyGoal,ed)+' / '+forgeGoalText(studyGoal,studyGoal.target):
+        'Занятий: '+ed+(nxe?'. Следующая ступень: '+nxe+', осталось '+(nxe-ed)+'.':'. Все ступени пройдены.');
+      var manual=$('forge-study-manual'),key=JSON.stringify(studyGoal);
+      if(manual.dataset.signature!==key){manual.dataset.signature=key;clear(manual);if(studyGoal.source==='manual')forgeManualProgress(manual,'goal-study',studyGoal);}
     })();
-    $('need-money').textContent = left > 0 ? fmt(Math.max(0, 10000000 - money) / (left / 30.4)) : '0';
+    $('need-money').textContent = left > 0 ? fmt(Math.max(0, moneyGoal.target - money) / (left / 30.4)) : '0';
     var wt = currentWeight();
-    var rw = (165 - wt) / 45;
+    var rw=forgeGoalRatio(weightGoal,wt);
+    $('forge-weight-title').textContent=weightGoal.title+' '+forgeGoalText(weightGoal,weightGoal.target);
+    $('forge-weight-start').textContent=forgeGoalText(weightGoal,weightGoal.start);
+    $('forge-weight-target').textContent=forgeGoalText(weightGoal,weightGoal.target);
     $('cur-weight').textContent = String(wt).replace('.', ',');
     $('pct-weight').textContent = pc(rw);
     fillBar('bar-weight', rw);
     (function () {
-      var pts = [160, 150, 140, 130, 120], nx = null;
-      for (var i = 0; i < pts.length; i++) if (wt > pts[i]) { nx = pts[i]; break; }
-      $('w-next').textContent = nx ? 'Следующая: ' + nx + ' кг, осталось ' + (wt - nx).toFixed(1).replace('.', ',') + ' кг.' : 'Все точки пройдены.';
+      var down=weightGoal.target<weightGoal.start;
+      var pts=[160,150,140,130].filter(function(point){return down&&point>weightGoal.target;}).concat(weightGoal.target);
+      var nx=pts.find(function(point){return down?wt>point:wt<point;});
+      $('forge-weight-milestones').textContent=pts.join(', ')+' кг.';
+      $('w-next').textContent=nx?'Следующая: '+nx+' кг, осталось '+Math.abs(wt-nx).toFixed(1).replace('.', ',')+' кг.':'Все точки пройдены.';
     })();
-    $('need-weight').textContent = left > 0 ? (Math.max(0, wt - 120) / (left / 7)).toFixed(1).replace('.', ',') : '0';
+    $('need-weight').textContent = left > 0 ? ((rw>=1?0:Math.abs(wt-weightGoal.target)) / (left / 7)).toFixed(1).replace('.', ',') : '0';
     $('days-gone').textContent = gone;
     $('pct-time').textContent = pc(gone / TOTAL_DAYS);
-    fillBar('bar-time', gone / TOTAL_DAYS);
+    fillBar('bar-time', gone / TOTAL_DAYS);forgeRenderCustomGoals();
 
     var wl = $('l-weight');
     clear(wl);

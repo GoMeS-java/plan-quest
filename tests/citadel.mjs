@@ -110,7 +110,55 @@ try {
 
 
 
- await check('fate forge edits live quests and preserves existing completion history',async()=>{
+ await check('fate forge stage II edits live goals and keeps the original records',async()=>{
+  const day='2027-04-16',seed=advancedSeed();
+  seed['cfg/opening']={cash:4000000,card:0};
+  const {page:p,context}=await open({shell:true,seed,day,width:390});
+  try{
+    await castle(p);
+    await p.locator('[data-croom="forge"]').click();
+    const editor=p.locator('#fate-forge-dialog'),entry=p.getByRole('button',{name:'Наковальня · Открыть Кузницу судьбы'});
+    await entry.click();
+    assert(await editor.locator('#fate-forge-goals-tab').isDisabled());
+    await editor.screenshot({path:resolve(out,'forge-stage-i-tasks.png')});
+    await editor.getByRole('button',{name:'Закрыть Кузницу'}).click();
+    await p.waitForFunction(()=>!history.state?.fateForge);
+    await write(p,'buys/citadel-forge-2',{kind:'citadel-room',currency:'abyss',room:'forge',level:2,cost:100,ts:2});
+    await entry.click();
+    await editor.locator('#fate-forge-goals-tab').click();
+    await editor.getByRole('button',{name:/Капитал/}).click();
+    const form=editor.locator('#fate-forge-goal-form');
+    await form.locator('[name=target]').fill('7000000');
+    assert.match(await form.locator('#fate-forge-goal-preview').innerText(),/57,1%/);
+    await editor.screenshot({path:resolve(out,'forge-stage-ii-capital-editor.png')});
+    const before=await docs(p);
+    await form.getByRole('button',{name:'Сохранить цель'}).click();
+    await p.waitForFunction(()=>PlanSync._docs()['forge-tasks/goal-money']?.d?.target===7000000);
+    await editor.getByRole('button',{name:'Добавить цель'}).click();
+    await form.locator('[name=title]').fill('Регулярные тренировки');
+    await form.locator('[name=target]').fill('20');
+    await form.getByRole('button',{name:'Сохранить цель'}).click();
+    await p.waitForFunction(()=>Object.keys(PlanSync._docs()).some(key=>key.startsWith('forge-tasks/custom-goal-')));
+    await editor.getByRole('button',{name:'Закрыть Кузницу'}).click();
+    await p.waitForFunction(()=>!history.state?.fateForge);
+    await shellNav(p,'Путь');
+    const path=p.locator('.citadel-system-dialog #goals');
+    assert.match(await path.locator('#pct-money').innerText(),/57,1%/);
+    const custom=path.locator('#forge-custom-goals .goal');
+    await custom.getByRole('spinbutton').fill('5');
+    await custom.getByRole('button',{name:'Записать'}).click();
+    await p.waitForFunction(()=>document.querySelector('#forge-custom-goals progress')?.value===.25);
+    await path.locator('#forge-money-title').locator('../..').screenshot({path:resolve(out,'forge-stage-ii-capital-progress.png')});
+    await custom.screenshot({path:resolve(out,'forge-stage-ii-custom-progress.png')});
+    const after=await docs(p);
+    for(const key of Object.keys(before).filter(key=>key==='cfg/opening'||/^(tx|weights|days)\//.test(key)))assert.deepEqual(after[key],before[key]);
+    await p.reload();
+    await p.waitForFunction(()=>PlanSync._docs()['forge-tasks/goal-money']?.d?.target===7000000);
+    assert(Object.values(await docs(p)).some(record=>record.d?.title==='Регулярные тренировки'&&record.d.value===5));
+  }finally{await context.close();}
+});
+
+await check('fate forge edits live quests and preserves existing completion history',async()=>{
   const day='2027-04-16';
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day,width:390});
   try{
@@ -121,7 +169,7 @@ try {
     await p.getByRole('button',{name:'Наковальня · Открыть Кузницу судьбы'}).click();
     const editor=p.locator('#fate-forge-dialog');
     await editor.waitFor({state:'visible'});
-    const group=editor.locator('#fate-forge-group'),form=editor.locator('form');
+    const group=editor.locator('#fate-forge-group'),form=editor.locator('#fate-forge-form');
     await group.selectOption('periodic');
     const periodic=editor.locator('#fate-forge-list button').last();
     await periodic.click();
