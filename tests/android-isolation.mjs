@@ -172,7 +172,7 @@ try{
  const prodCamera='{"left":87,"top":144,"zoom":1.4}',prodView='{"version":1,"section":"wardrobe","scroll":90}';
  await presentation.route('https://**/*',route=>route.fulfill({body:'',contentType:'text/css'}));
  await presentation.addInitScript(({prodCamera,prodView})=>{localStorage.setItem('plan.citadel.camera.v1',prodCamera);localStorage.setItem('plan.citadel.view.v1',prodView);localStorage.setItem('plan.citadel.selectedRoom.v1','vault');localStorage.setItem('plan.android-test.awakening.v1',JSON.stringify({version:1,status:'skipped',step:0}));},{prodCamera,prodView});
- const ui=await presentation.newPage();ui.on('pageerror',e=>errors.push(String(e)));await ui.goto(url+'/android-test/');await ui.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
+ const ui=await presentation.newPage();await ui.addLocatorHandler(ui.locator('#achup:not([hidden])'),()=>ui.locator('#ac-ok').click(),{noWaitAfter:true});ui.on('pageerror',e=>errors.push(String(e)));await ui.goto(url+'/android-test/');await ui.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
  assert(!await ui.locator('.citadel-system-dialog').isVisible(),'test app must not restore production section');
  await ui.locator('.citadel-shell-camera button').getByText('+',{exact:true}).click();await ui.locator('.citadel-shell-dock [data-section="wardrobe"]').click();await ui.locator('#profile-hero').waitFor({state:'visible'});
  await ui.evaluate(()=>window.dispatchEvent(new Event('pagehide')));
