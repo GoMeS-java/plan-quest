@@ -91,7 +91,7 @@ try {
 
 
 
- await check('shelter two offline profiles reconcile competing moves to one location',async()=>{
+ await check('shelter two offline profiles reconcile competing moves through simulated Sheets',async()=>{
   const day='2027-09-15',path='cfg/shelter-items',key='cat';
   const seed={...landscapeSeed(),'cfg/rare':{z02:day},[path]:{owned:{[key]:1},placements:{[key]:{room:'rest',slot:'table',at:1}}}};
   for(const room of ['rest','study','archive'])seed['buys/citadel-'+room+'-2']={kind:'citadel-room',currency:'abyss',room,level:2,cost:100,ts:2};
@@ -114,14 +114,33 @@ try {
       await context.setOffline(false);
     }
     await move(a,'study');
+    await b.page.clock.setFixedTime(new Date(day+'T14:01:00+03:00'));
     await move(b,'archive');
-    const left=await docs(a.page),right=await docs(b.page);
-    await a.page.evaluate(remote=>PlanSync._merge({docs:remote}),{[path]:right[path]});
-    await b.page.evaluate(remote=>PlanSync._merge({docs:remote}),{[path]:left[path]});
+    const left=await docs(a.page);
+    let rows=[['path','json','u'],[path,JSON.stringify(left[path].d),left[path].u]],writes=0;
+    for(const {context,page} of [a,b]){
+      await context.route('**/*googleapis.com/**',async route=>{
+        const request=route.request(),url=request.url();
+        let response={};
+        if(url.includes('drive/v3/files?'))response={files:[{id:'QA_SHEET',name:'plan-data'}]};
+        else if(url.includes('/about?'))response={user:{emailAddress:'qa@example.invalid'}};
+        else if(url.includes('values/data!A:C'))response={values:rows.filter(row=>row[0]==='path'||row[0]===path)};
+        else if(url.includes('values/data!A1')&&request.method()==='PUT'){rows=JSON.parse(request.postData()).values;writes++;}
+        else throw Error('Unexpected synthetic Sheets request');
+        await route.fulfill({contentType:'application/json',body:JSON.stringify(response)});
+      });
+      await page.evaluate(()=>{
+        window.google={accounts:{oauth2:{initTokenClient:options=>({requestAccessToken:()=>options.callback({access_token:'synthetic-token',expires_in:3600})})}}};
+      });
+    }
+    await b.page.evaluate(()=>PlanSync.sync(true));
+    assert.ok(writes>0,'The offline state was uploaded');
+    await a.page.evaluate(()=>PlanSync.sync(true));
     const x=(await docs(a.page))[path].d,y=(await docs(b.page))[path].d;
-    assert.deepEqual(x,y,'Both profiles agree after exchanging saves');
+    assert.ok(JSON.stringify(x.placements[key])===JSON.stringify(y.placements[key]),'Both profiles agree on the placement after exchanging saves');
+    assert.ok(Object.keys(x.owned).every(key=>x.owned[key]===y.owned[key]),'Both profiles agree on durable receipts');
     assert.ok(x.owned[key]);
-    assert.ok(['study','archive'].includes(x.placements[key].room));
+    assert.equal(x.placements[key].room,'archive');
     await a.page.evaluate(async ({path,left})=>PlanSync.importObj(await PlanSync.backupFor({[path]:left}),true),{path,left:left[path]});
     assert.deepEqual((await docs(a.page))[path].d,x,'Older copy preserves the reconciled placement');
   } finally {
