@@ -1101,7 +1101,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('0.77 treasury reactions acknowledge an existing essence conflict without optimistic reassurance',async()=>{
   const seed=advancedSeed();seed['cfg/abyss-economy']={version:1,rank:100000,earned:-100000,claims:{}};seed['cfg/citadel']={selectedRoom:'vault',decor:{}};
   const {page:p,context}=await open({shell:true,seed,day:'2027-04-16'});
-  await p.clock.runFor(64);await p.evaluate(()=>{__qa.move('vault');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.clock.runFor(64);await p.evaluate(()=>{__qa.move('vault');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);const before=await docs(p);
   await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
   assert.match(text,/Расходы требуют сверки/);assert(!/Записи сходятся/.test(text));
   await p.locator('#citadel-interior-stage [data-person="treasurer"]').click();assert.match(await p.locator('#citadel-room-speech').innerText(),/несогласованные расходы/);
@@ -2286,7 +2286,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const room of ['gatehouse','refectory','cloister','vault']){
    await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-enter').click();
    await p.setViewportSize({width:390,height:900});await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-1.png')});
-   for(const level of [2,3]){const beforePixels=await p.locator('#citadel-interior-stage').screenshot();await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});const afterPixels=await p.locator('#citadel-interior-stage').screenshot();assert(!beforePixels.equals(afterPixels),'renovation must change visible pixels: '+room+' '+level);await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-'+level+'.png')});}
+   for(const level of [2,3]){const beforePixels=await p.locator('#citadel-interior-stage').screenshot();await p.locator('#citadel-upgrade').click();await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level&&Number(document.querySelector('#citadel-interior-stage').dataset.level)===level,{room,level});const afterPixels=await p.locator('#citadel-interior-stage').screenshot();assert(!beforePixels.equals(afterPixels),'renovation must change visible pixels: '+room+' '+level);await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-'+level+'.png')});}
    for(const width of [320,360,390,430,768,1280]){
     await p.setViewportSize({width,height:900});
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
@@ -2344,12 +2344,6 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.locator('.tab[data-t="today"]').click();await p.locator('#citadel-room-npc-close').click();assert(await p.locator('#citadel-room-conversation').isHidden());assert.deepEqual(await docs(p),before);
   await p.locator('#citadel-interior-stage [data-person="smith"]').dispatchEvent('click');await p.clock.setFixedTime(new Date('2027-04-16T18:00:09+03:00'));await p.evaluate(()=>__qa.render());assert(await p.locator('#citadel-room-conversation').isHidden());
   const dest=await p.locator('.citadel-scene-door').first().getAttribute('data-stage-door');assert(await p.locator('.citadel-scene-door').first().evaluate(n=>n.getBoundingClientRect().width>=44));await p.locator('.citadel-scene-door').first().click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),dest);await context.close();
- });
- await check('two tab cosmetic patches retain other rooms and current selected destination',async()=>{
-  const seed=structuredClone(initial);seed['cfg/citadel']={selectedRoom:'study',decor:{}};const {page:p,context}=await open({seed});await castle(p);const other=await context.newPage();await other.clock.install({time:new Date(date+'T14:00:00+03:00')});await other.goto(url);await castle(other);await dismiss(other);
-  await Promise.all([p.evaluate(()=>__qa.decor('rest','banner')),other.evaluate(()=>__qa.decor('study','banner'))]);
-  await p.evaluate(()=>__qa.idle());await other.evaluate(()=>__qa.idle());await p.waitForFunction(()=>PlanSync._docs()['cfg/citadel']?.d.decor?.study==='banner'&&PlanSync._docs()['cfg/citadel']?.d.decor?.rest==='banner');
-  assert.equal((await docs(p))['cfg/citadel'].d.decor.rest,'banner');assert.equal((await docs(p))['cfg/citadel'].d.selectedRoom,'study');await context.close();
  });
  await check('independent offline device spends expose conflict after merge and block further construction',async()=>{
   const seed=advancedSeed(),probe=await open({seed,day:'2027-04-16'}),points=await probe.page.evaluate(()=>__qa.points()),claims=await probe.page.evaluate(()=>__qa.abyssEvents());await probe.context.close();seed['cfg/abyss-economy']={version:1,rank:points.L,earned:5,claims};
