@@ -110,7 +110,55 @@ try {
 
 
 
- await check('fate forge stage III replaces only opened aspects and preserves past points',async()=>{
+ await check('fate forge discoveries stay private and earned backgrounds survive restore',async()=>{
+  const id='custom-00000000-0000-4000-8000-000000000002',day='2027-09-15';
+  const path='cfg/forge-discoveries',seed=landscapeSeed();
+  seed['forge-tasks/'+id]={kind:'daily',revisions:[{from:'2027-04-01',anchor:'2027-04-01',schedule:'alternate',title:'Зал через день',archived:false}]};
+  const {page:p,context}=await open({shell:true,seed,day,width:390});
+  try{
+    await shellNav(p,'Достижения');
+    assert.equal(await p.locator('[data-achievement^="forge-custom-"]').count(),0);
+    assert.equal((await docs(p))[path],undefined);
+    await p.locator('#trophy-x').click();
+    const old=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
+    await p.evaluate(async id=>{
+      await PlanDB.runTransaction(tx=>{
+        for(let n=0;n<150;n+=2){
+          const date=new Date(Date.UTC(2027,3,1+n)).toISOString().slice(0,10);
+          const path='days/'+date,record=tx.get(path)||{};
+          tx.set(path,{...record,forgeDone:{...record.forgeDone,[id]:true}});
+        }
+      });
+    },id);
+    await p.waitForFunction(()=>VkachForgeAwards.owned(PlanSync._docs()['cfg/forge-discoveries']?.d).some(row=>row.background));
+    await dismiss(p);
+    const awarded=await p.evaluate(()=>VkachForgeAwards.owned(PlanSync._docs()['cfg/forge-discoveries'].d));
+    assert.equal(awarded.length,3);
+    const rare=awarded.find(row=>row.background);
+    await shellNav(p,'Достижения');
+    const card=p.locator('[data-achievement="'+rare.id+'"]');
+    await card.locator('summary').click();
+    await card.screenshot({path:resolve(out,'forge-earned-superrare.png')});
+    await p.locator('#trophy-x').click();
+    await shellNav(p,'Настройки');
+    const option=p.locator('[data-look-id="'+rare.background+'"]');
+    await option.evaluate(button=>button.closest('details').open=true);
+    await option.click();
+    await p.waitForFunction(()=>document.documentElement.hasAttribute('data-forge-landscape'));
+    const landscape=await p.evaluate(()=>document.documentElement.style.getPropertyValue('--realm-landscape'));
+    assert(landscape.includes('data:image/svg+xml'));
+    const sky=p.locator('.citadel-sky'),bounds=await sky.boundingBox();
+    await p.screenshot({path:resolve(out,'forge-earned-landscape.png'),clip:{x:0,y:Math.max(0,bounds.y),width:390,height:Math.min(bounds.height,844-Math.max(0,bounds.y))}});
+    await p.reload();
+    await p.waitForFunction(()=>document.documentElement.hasAttribute('data-forge-landscape'));
+    assert.equal(await p.evaluate(()=>document.documentElement.style.getPropertyValue('--realm-landscape')),landscape);
+    await p.evaluate(async copy=>PlanSync.importObj(copy,true),old);
+    await p.waitForFunction(()=>VkachForgeAwards.owned(PlanSync._docs()['cfg/forge-discoveries']?.d).length===3);
+    assert.deepEqual(await p.evaluate(()=>VkachForgeAwards.owned(PlanSync._docs()['cfg/forge-discoveries'].d)),awarded);
+  }finally{await context.close();}
+});
+
+await check('fate forge stage III replaces only opened aspects and preserves past points',async()=>{
   const day='2027-04-16',seed=advancedSeed();
   for(let n=1;n<=12;n++){
     const key='2027-04-'+String(n).padStart(2,'0'),row=seed['days/'+key]||{q:[]};

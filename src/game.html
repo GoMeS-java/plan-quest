@@ -1094,6 +1094,8 @@ html,body{overflow-anchor:none}
 
 <script src="realm-achievements.js"></script>
 <script src="shelter-items.js"></script>
+<script src="forge-awards.js"></script>
+<script src="forge-art.js"></script>
 <dialog id="citadel-mystery" aria-labelledby="citadel-mystery-title" aria-describedby="citadel-mystery-text"><h2 id="citadel-mystery-title">Неизведанная комната</h2><p id="citadel-mystery-text"></p><form method="dialog"><button autofocus>Понятно</button></form></dialog>
 <script>window.APP_VERSION = "__VER__";
 (function () {
@@ -1366,7 +1368,7 @@ html,body{overflow-anchor:none}
 
   // ---- state --------------------------------------------------------
   var S = { forge:Object.create(null), realm:null, rare: {}, look: null, opening: null, wardrobe: [], outfit: null, tx: [], items: [], jar: [], days: {}, per: {}, weeks: {}, weights: [], buys: [], cart: null, spont: [], trial: {}, citadel: null, abyss: null };
-  var db = null, loaded = false, pending = 24;
+  var db = null, loaded = false, pending = 25;
   var chain = Promise.resolve(), pendingSaveError = null;
   function enqueue(fn) {
     var task=chain.then(fn);
@@ -2087,6 +2089,7 @@ html,body{overflow-anchor:none}
     Object.keys(lastGI.ach).forEach(function (id) { var c = cosOf(id); if (c) u[c] = true; });
     if (lastGI.ach.z33) ['th_abyss', 'b_abyss', 'fr_abyss', 'au_abyss'].forEach(function (id) { u[id] = true; });
     realmOwned().forEach(function(d){d.cos.forEach(function(id){u[id]=true;});});
+    forgeAwardCosmetics.forEach(function(id){u[id]=true;});
     return u;
   }
   var premTimer = null;
@@ -2133,6 +2136,10 @@ html,body{overflow-anchor:none}
     // Keep the same saved look ID, so old backups and unlocks need no migration.
     root.setAttribute('data-citadel-bg', ok(look.bg, 'bg') ? COS[look.bg].key : '');
     root.toggleAttribute('data-realm-landscape', !!lookLandscape(root.getAttribute('data-citadel-bg')));
+    var forgeBg=ok(look.bg,'bg')&&Number.isInteger(COS[look.bg].forgeSeed);
+    root.toggleAttribute('data-forge-landscape',!!forgeBg);
+    if(forgeBg)root.style.setProperty('--realm-landscape','url("'+VkachForgeArt.svg(COS[look.bg].forgeSeed)+'")');
+    else root.style.removeProperty('--realm-landscape');
     var sky = document.querySelector('.citadel-sky');
     if (sky && !sky.querySelector('.citadel-realm-detail')) {
       var detail = document.createElement('span'); detail.className = 'citadel-realm-detail'; detail.setAttribute('aria-hidden', 'true'); sky.appendChild(detail);
@@ -2390,6 +2397,7 @@ html,body{overflow-anchor:none}
     ];
   }
   function lookLandscape(key) {
+    if(key.startsWith('fg-')&&Number.isInteger(COS[key]?.forgeSeed))return VkachForgeArt.svg(COS[key].forgeSeed);
     return ['rebuilt','stillnight','forest', 'beach', 'cave', 'winter', 'space', 'aurora', 'watch', 'abyss', 'dawn', 'sunrise', 'sunset', 'city', 'rain', 'storm', 'peaks', 'library', 'attic', 'chamber'].indexOf(key) !== -1 ? 'assets/citadel/realm-' + key + '.svg' : '';
   }
   function auraPixels(key) {
@@ -4423,6 +4431,9 @@ html,body{overflow-anchor:none}
       rows.push({id:def.id,kind:group[1],name:def.title||(def.t==='Скрытая отметина'?def.d:def.t)||def.d||'Полученная отметина',description:def.d||'',date:achievementStamp(dates[def.id]),points:Number(def.pts)||0,cos:group[1]==='superrare'?def.cos:cosOf(def.id),title:def.title||'',room:group[1]==='superrare'?(ROOM_OF[def.id]||''):''});
     });});
     if(typeof realmOwned==='function')realmOwned().forEach(function(d){rows.push({id:d.id,kind:d.kind,name:d.name,description:'Заклятие сохранило итог твоего пути в Перестройке.',date:dkey(new Date(d.at)),points:0,cos:d.cos[0]||'',cosmetics:d.cos,clothes:d.clothes,title:d.title,room:''});});
+    if(typeof forgeOwned==='function')forgeOwned().forEach(function(row){
+      rows.push({id:row.id,kind:row.kind,name:row.name,date:row.date,description:'Путь Кузницы · '+row.task,points:0,cos:row.background});
+    });
     return rows.sort(function(a,b){return b.date.localeCompare(a.date)||a.id.localeCompare(b.id);});
   }
   function achievementSigil(canvas,row){
@@ -4458,12 +4469,18 @@ html,body{overflow-anchor:none}
     var chosen=profileSelected();rows.forEach(function(row){
       var card=el('article','achievement-card');card.dataset.achievement=row.id;card.dataset.rarity=row.kind;
       var emblem=el('canvas','achievement-emblem');emblem.setAttribute('aria-hidden','true');achievementSigil(emblem,row);card.appendChild(emblem);
-      card.appendChild(el('span','achievement-rarity',row.kind==='superrare'?'СУПЕРРЕДКАЯ':'ОТМЕТИНА'));card.appendChild(el('h3',null,row.name));card.appendChild(el('time','achievement-date',row.date?'Получено '+row.date.split('-').reverse().join('.'):'Дата получения не записана'));
+      card.appendChild(el('span','achievement-rarity',row.kind==='superrare'?'СУПЕРРЕДКАЯ':row.kind==='rare'?'РЕДКАЯ':'ОТМЕТИНА'));card.appendChild(el('h3',null,row.name));card.appendChild(el('time','achievement-date',row.date?'Получено '+row.date.split('-').reverse().join('.'):'Дата получения не записана'));
       var selected=chosen.map(function(id,i){return id===row.id?i+1:0;}).filter(Boolean);if(selected.length)card.appendChild(el('span','achievement-featured','На витрине · место '+selected[0]));
       var details=el('details','achievement-card-details');details.appendChild(el('summary',null,'ПОДРОБНЕЕ'));if(row.description&&row.description!==row.name)details.appendChild(el('p',null,row.description));
       var rewards=[];if(row.points)rewards.push('+'+row.points+' осколков');if(row.title)rewards.push('Титул «'+row.title+'»');if(row.id!=='z33'&&row.cos&&COS[row.cos])rewards.push('Оформление «'+COS[row.cos].n+'»');if(row.id!=='z33'&&row.room&&ROOM_ITEMS[row.room])rewards.push('Предмет «'+ROOM_ITEMS[row.room].n+'»');
       if(row.cosmetics)row.cosmetics.slice(1).forEach(function(id){if(COS[id])rewards.push('Оформление «'+COS[id].n+'»');});if(row.clothes){var garment=allItems().find(function(it){return it.id===row.clothes;});if(garment)rewards.push('Одежда «'+garment.name+'»');}
       if(rewards.length)details.appendChild(el('p','achievement-rewards','Получено: '+rewards.join(' · ')));
+      if(row.cos&&Number.isInteger(COS[row.cos]?.forgeSeed)){
+        var landscape=el('img','forge-earned-preview');
+        landscape.src=VkachForgeArt.svg(COS[row.cos].forgeSeed);
+        landscape.alt=COS[row.cos].n;
+        details.appendChild(landscape);
+      }
       var slots=el('div','achievement-showcase-actions');slots.setAttribute('aria-label','Выбрать место в витрине');[0,1,2].forEach(function(index){var b=el('button',null,'Место '+(index+1));b.type='button';b.dataset.showcaseSlot=String(index);b.setAttribute('aria-pressed',String(chosen[index]===row.id));b.onclick=function(){var next=profileSelected().map(function(id){return id===row.id?'':id;});next[index]=profileSelected()[index]===row.id?'':row.id;profileSaveShowcase(next);};slots.appendChild(b);});details.appendChild(slots);card.appendChild(details);grid.appendChild(card);
     });
     var images=el('section','achievement-images');images.id='achievement-images';box.appendChild(images);renderLegendCollection(images);
@@ -4474,7 +4491,7 @@ html,body{overflow-anchor:none}
   }
   function renderAch() {
     if (!lastGI) return;
-    var viewKey=JSON.stringify([lastGI.ach,lastGI.ups,lastGI.nups,lastGI.forgeAspects,dkey(new Date()),Object.keys(forgeAspectPaths).map(forgeAspectRetirement),S.look||cachedLook,S.legends,S.fate,S.realm,S.wardrobe,!!window.__COS_ALL]);
+    var viewKey=JSON.stringify([lastGI.ach,lastGI.ups,lastGI.nups,lastGI.forgeAspects,dkey(new Date()),Object.keys(forgeAspectPaths).map(forgeAspectRetirement),S.look||cachedLook,S.legends,S.fate,S.realm,S.forgeAwards,S.wardrobe,!!window.__COS_ALL]);
     if(viewKey===achievementViewKey)return;
     achievementViewKey=viewKey;
     var box = $('alist'), sk = $('sklist'),opened=Array.from(box.querySelectorAll('[data-achievement] details[open]')).map(function(n){return n.parentElement.dataset.achievement;}),focus=document.activeElement,focusCard=focus&&focus.closest('[data-achievement]'),focusId=focusCard&&focusCard.dataset.achievement,focusSlot=focus&&focus.dataset.showcaseSlot;
@@ -5200,6 +5217,39 @@ function citadelSyncWeekly(){if(!loaded)return;var mk=mondayKey(dkey(new Date())
 function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisibility(p.L);if(!citadelRoomOpen(citadelSelected,p.L)){citadelSelected='rest';$('citadel-interior').hidden=true;citadelMove('rest');}citadelNpcObserve();$('citadel-summary').textContent='РАНГ '+p.L+' · '+p.P+' ◇ · '+p.avail+' ✧';var weights=bodyMeasurements();var last=weights.length?Number(weights[weights.length-1].kg):null;$('citadel-live-rank').textContent='РАНГ '+p.L;$('citadel-live-body').textContent=last===null?'ТЕЛО: НЕТ ЗАПИСЕЙ':'ВЕС '+last+' КГ';$('citadel-live-points').textContent='ОСКОЛКИ '+p.P;var b=S.opening?balances():null;$('citadel-live-cash').textContent=b?'БАЛАНС '+fmtM(b.cash+b.card)+' ₽':'ФИНАНСЫ: НЕТ ДАННЫХ';var equipped=outfitIds();$('citadel-live-gear').textContent='ОБОЛОЧКА: '+(equipped.outer==='none'?'БЕЗ ПЛАЩА':'ЭКИПИРОВАНА');citadelProgressView();syncCitadelAvatar();syncCitadelResidents(p.L);citadelRenderActivities();citadelRenderBuilding();citadelRoomJournal();if(!$('citadel-interior').hidden){citadelRenderRoomItems();citadelRenderExits();}syncCitadelTime();citadelSyncTrial();citadelSyncWeekly();citadelSyncDaily();if($('citadel-home').open){var current=document.querySelector('[data-croom="'+citadelSelected+'"]');if(current&&p.L<Number(current.getAttribute('data-min-rank')||1))citadelMove('rest');else if(current&&current.getAttribute('aria-pressed')!=='true')citadelMove(citadelSelected);}if(window.__citadelShell)window.__citadelShell.refresh();}
   var fateSignature='',fateBusy=false,fateQueued={},fateAssemblyTimer=null;
   var realmBusy=false,realmSignature='',realmFailed=false;
+  var forgeAwardBusy=false,forgeAwardSignature='',forgeAwardCosmetics=[];
+  function forgeOwned(){return VkachForgeAwards.owned(S.forgeAwards);}
+  function forgeRewardName(row){return 'Перевал · '+row.task;}
+  function forgeRegisterBackgrounds(){
+    forgeAwardCosmetics.forEach(function(id){delete COS[id];});
+    forgeAwardCosmetics=[];
+    forgeOwned().forEach(function(row){
+      if(!row.background)return;
+      COS[row.background]={cat:'bg',key:row.background,n:forgeRewardName(row),forgeSeed:row.seed};
+      forgeAwardCosmetics.push(row.background);
+    });
+  }
+  function forgeAwardsSync(){
+    if(!loaded||forgeAwardBusy||!Object.keys(S.forge).some(function(id){return id.startsWith('custom-')&&S.forge[id].kind!=='goal';})&&!forgeOwned().some(function(row){return !row.presented;}))return;
+    var docs=PlanSync._docs(),today=dkey(new Date());
+    var keys=Object.keys(docs).filter(function(key){return /^(forge-tasks|days|weeks)\//.test(key)||key===VkachForgeAwards.path;});
+    var signature=JSON.stringify([today,keys.map(function(key){return [key,docs[key].u];})]);
+    if(signature===forgeAwardSignature)return;
+    forgeAwardSignature=signature;
+    var snapshot={
+      get:function(path){return docs[path]?.d;},
+      list:function(collection){var prefix=collection+'/';return keys.filter(function(key){return key.startsWith(prefix)&&docs[key].d;}).map(function(key){return {...docs[key].d,id:key.slice(prefix.length)};});}
+    };
+    if(!VkachForgeAwards.needs(snapshot,today))return;
+    forgeAwardBusy=true;
+    enqueue(function(){return db.runTransaction(function(tx){return VkachForgeAwards.claim(tx,today);});}).then(function(rows){
+      rows.forEach(function(row){
+        achQueue.push({id:'a:forge:'+row.id,kind:row.kind==='superrare'?'СУПЕРРЕДКАЯ ОТМЕТИНА':row.kind==='rare'?'РЕДКАЯ ОТМЕТИНА':'ОТМЕТИНА',big:row.name,text:'Заклятие заметило твой путь в задании «'+row.task+'».'+(row.background?' Получен фон «'+forgeRewardName(row)+'».':'')});
+      });
+      if(rows.length)showNextAch();
+    }).catch(function(){forgeAwardSignature='';}).finally(function(){forgeAwardBusy=false;});
+  }
+
   function realmOwned(){return window.VkachRealm?VkachRealm.owned(S.realm):[];}
   function realmInputSignature(){if(!window.PlanSync)return '';var records=PlanSync._docs();return JSON.stringify(Object.keys(records).filter(function(k){return /^(days|spont|buys|weights|wardrobe)\//.test(k)||['cfg/look','cfg/outfit','cfg/citadel'].includes(k);}).sort().map(function(k){return [k,records[k].d];}));}
   function realmIdle(){return !realmBusy&&(realmFailed||realmSignature===realmInputSignature());}
@@ -5346,7 +5396,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
 
 function renderAllInner() {
-    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync();
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync(); forgeAwardsSync();
   }
 
   function renderHourglass() {
@@ -5797,6 +5847,7 @@ function renderAllInner() {
     }, function (e) { dbErr(e); });
   }
   function subscribe() {
+    db.doc(VkachForgeAwards.path).onSnapshot(function(sn){S.forgeAwards=sn.exists?sn.data():null;forgeRegisterBackgrounds();firstDone('forge-awards');requestProfileRender();},dbErr);
     watchCollection('forge-tasks',function(rows){S.forge=Object.create(null);rows.forEach(function(row){S.forge[row.id]=row;});});
     db.doc(VkachShelter.path).onSnapshot(function(sn){S.shelter=sn.exists?sn.data():null;firstDone('shelter');requestProfileRender();},dbErr);
     db.doc('cfg/realm-achievements').onSnapshot(function(sn){S.realm=sn.exists?sn.data():null;firstDone('realm');requestProfileRender();},dbErr);

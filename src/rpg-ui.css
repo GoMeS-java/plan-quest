@@ -934,3 +934,7 @@ html[data-font="curse"] body.citadel-shell-active :is(.citadel-shell-title,.prof
 #fate-forge-aspects,#fate-forge-aspect-list{display:grid;gap:8px;min-width:0}
 #fate-forge-aspect-list .goal{margin:0;padding:10px;border-color:#624a70}
 #fate-forge-aspect-list .goal p{margin:6px 0;line-height:1.45}
+
+:root[data-forge-landscape],[data-realm-preview^="fg-"]{--realm-life-a:url('assets/citadel/realm-peaks-life-1.svg');--realm-motion-a:realmMist;--realm-speed-a:18s}
+
+.forge-earned-preview{display:block;width:100%;margin:8px 0;border:1px solid #786083;border-radius:5px;image-rendering:pixelated}
