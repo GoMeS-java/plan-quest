@@ -91,7 +91,46 @@ try {
 
 
 
- await check('shelter collection previews, persists and restores receipts without spending',async()=>{
+ await check('shelter two offline profiles reconcile competing moves to one location',async()=>{
+  const day='2027-09-15',path='cfg/shelter-items',key='cat';
+  const seed={...landscapeSeed(),'cfg/rare':{z02:day},[path]:{owned:{[key]:1},placements:{[key]:{room:'rest',slot:'table',at:1}}}};
+  for(const room of ['rest','study','archive'])seed['buys/citadel-'+room+'-2']={kind:'citadel-room',currency:'abyss',room,level:2,cost:100,ts:2};
+  const a=await open({shell:true,seed,day,width:320});
+  const b=await open({shell:true,seed,day,width:390});
+  try {
+    async function move({page,context},room) {
+      await castle(page);
+      await page.locator('[data-croom="'+room+'"]').click();
+      await page.locator('#citadel-interior').waitFor({state:'visible'});
+      await page.locator('#shelter-collection summary').click();
+      await page.locator('#shelter-list button').filter({hasText:/кот/i}).first().click();
+      await page.getByRole('button',{name:'Примерить · На столе'}).click();
+      await context.setOffline(true);
+      await page.getByRole('button',{name:'Подтвердить',exact:true}).click();
+      await page.waitForFunction(({path,key,room})=>PlanSync._docs()[path]?.d.placements[key]?.room===room,{path,key,room});
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+      await page.locator('#shelter-layer button:not(.shelter-preview)').click();
+      assert(await page.locator('#shelter-detail p').first().isVisible());
+      await context.setOffline(false);
+    }
+    await move(a,'study');
+    await move(b,'archive');
+    const left=await docs(a.page),right=await docs(b.page);
+    await a.page.evaluate(remote=>PlanSync._merge({docs:remote}),{[path]:right[path]});
+    await b.page.evaluate(remote=>PlanSync._merge({docs:remote}),{[path]:left[path]});
+    const x=(await docs(a.page))[path].d,y=(await docs(b.page))[path].d;
+    assert.deepEqual(x,y,'Both profiles agree after exchanging saves');
+    assert.ok(x.owned[key]);
+    assert.ok(['study','archive'].includes(x.placements[key].room));
+    await a.page.evaluate(async ({path,left})=>PlanSync.importObj(await PlanSync.backupFor({[path]:left}),true),{path,left:left[path]});
+    assert.deepEqual((await docs(a.page))[path].d,x,'Older copy preserves the reconciled placement');
+  } finally {
+    await a.context.close();
+    await b.context.close();
+  }
+});
+
+await check('shelter collection previews, persists and restores receipts without spending',async()=>{
   const day='2027-09-15';
   const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day});
   try {
