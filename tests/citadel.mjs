@@ -110,7 +110,59 @@ try {
 
 
 
- await check('fate forge discoveries stay private and earned backgrounds survive restore',async()=>{
+ await check('fate forge earned landscape variants fit rooms and divergent receipts converge',async()=>{
+  const day='2027-09-15',path='cfg/forge-discoveries';
+  const receiptIds=[2,3,4,5,6,7,8,9,10,11,12].map(i=>'forge-custom-00000000-0000-4000-8000-'+String(i).padStart(12,'0')+'-3');
+  const a=await open({shell:true,seed:landscapeSeed(),day,width:390});
+  const b=await open({shell:true,seed:landscapeSeed(),day,width:390});
+  try{
+    const chosen=await a.page.evaluate(({receiptIds,day})=>{
+      const unlocked=Object.fromEntries(receiptIds.map(id=>[id,{date:day,task:'Тестовая прогулка',presented:true}]));
+      const palette=new Map();
+      VkachForgeAwards.owned({unlocked}).filter(row=>row.background).forEach(row=>palette.set(row.seed%3,row.id));
+      return [...palette.values()];
+    },{receiptIds,day});
+    assert.equal(chosen.length,3);
+    const records=Object.fromEntries(chosen.map((id,i)=>[id,{date:day,task:'Тестовый маршрут '+(i+1),presented:true}]));
+    const left={unlocked:Object.fromEntries(chosen.slice(0,2).map(id=>[id,records[id]]))};
+    const right={unlocked:Object.fromEntries(chosen.slice(1).map(id=>[id,records[id]]))};
+    await write(a.page,path,left);await write(b.page,path,right);
+    const da=(await docs(a.page))[path],db=(await docs(b.page))[path];
+    await a.page.evaluate(({path,row})=>PlanSync._merge({docs:{[path]:row}}),{path,row:db});
+    await b.page.evaluate(({path,row})=>PlanSync._merge({docs:{[path]:row}}),{path,row:da});
+    const merged=(await docs(a.page))[path].d;
+    assert.deepEqual(merged,(await docs(b.page))[path].d);
+    const p=a.page,art=await p.evaluate(ledger=>VkachForgeAwards.owned(ledger),merged);
+    assert.equal(art.length,3);
+    const visuals=new Set();
+    for(const [index,reward] of art.entries()){
+      await shellNav(p,'Настройки');
+      const option=p.locator('[data-look-id="'+reward.background+'"]');
+      await option.evaluate(button=>button.closest('details').open=true);
+      if(index===0)await option.locator('.look-landscape').screenshot({path:resolve(out,'forge-12-collection.png')});
+      await option.click();await p.waitForFunction(key=>document.documentElement.getAttribute('data-citadel-bg')===key,reward.background);
+      const background=await p.evaluate(()=>document.documentElement.style.getPropertyValue('--realm-landscape'));
+      assert(!visuals.has(background));visuals.add(background);
+      const sky=p.locator('.citadel-sky'),bounds=await sky.boundingBox();
+      await p.screenshot({path:resolve(out,'forge-12-sky-'+(index+1)+'.png'),clip:{x:0,y:Math.max(0,bounds.y),width:390,height:Math.min(bounds.height,844-Math.max(0,bounds.y))}});
+      await p.locator('[data-croom="rest"]').click();
+      const stage=p.locator('#citadel-interior-stage');
+      await stage.waitFor();
+      const windowStyle=await stage.locator('.citadel-daylight').evaluate(n=>{
+        const style=getComputedStyle(n,'::after');return {background:style.backgroundImage,mask:style.maskImage};
+      });
+      assert.match(windowStyle.background,/data:image\/svg\+xml/);
+      assert.notEqual(windowStyle.mask,'none');
+      await stage.screenshot({path:resolve(out,'forge-12-room-'+(index+1)+'.png')});
+      await p.getByRole('button',{name:'Закрыть интерьер'}).click();
+    }
+    await p.reload();
+    await p.waitForFunction(()=>document.documentElement.hasAttribute('data-forge-landscape'));
+    assert.deepEqual((await docs(p))[path].d,merged);
+  }finally{await a.context.close();await b.context.close();}
+});
+
+await check('fate forge discoveries stay private and earned backgrounds survive restore',async()=>{
   const id='custom-00000000-0000-4000-8000-000000000002',day='2027-09-15';
   const path='cfg/forge-discoveries',seed=landscapeSeed();
   seed['forge-tasks/'+id]={kind:'daily',revisions:[{from:'2027-04-01',anchor:'2027-04-01',schedule:'alternate',title:'Зал через день',archived:false}]};
@@ -158,7 +210,7 @@ try {
   }finally{await context.close();}
 });
 
-await check('fate forge stage III replaces only opened aspects and preserves past points',async()=>{
+await check('fate forge full path preserves records from task setup through aspect replacement and discovery',async()=>{
   const day='2027-04-16',seed=advancedSeed();
   for(let n=1;n<=12;n++){
     const key='2027-04-'+String(n).padStart(2,'0'),row=seed['days/'+key]||{q:[]};
@@ -175,6 +227,19 @@ await check('fate forge stage III replaces only opened aspects and preserves pas
     await p.locator('[data-croom="forge"]').click();
     const editor=p.locator('#fate-forge-dialog'),entry=p.getByRole('button',{name:'Наковальня · Открыть Кузницу судьбы'});
     await entry.click();assert(await editor.locator('#fate-forge-aspects-tab').isDisabled());
+    await editor.getByRole('button',{name:'Добавить задание'}).click();
+    const taskForm=editor.locator('#fate-forge-form');
+    await taskForm.locator('[name=title]').fill('Тренировки на своём пути');
+    await taskForm.locator('[name=schedule]').selectOption('alternate');
+    await taskForm.getByRole('button',{name:'Сохранить',exact:true}).click();
+    await p.waitForFunction(()=>Object.keys(PlanSync._docs()).some(key=>key.startsWith('forge-tasks/custom-')));
+    const taskKey=Object.keys(await docs(p)).find(key=>key.startsWith('forge-tasks/custom-'));
+    await editor.locator('#fate-forge-goals-tab').click();
+    await editor.getByRole('button',{name:/Капитал/}).click();
+    const goalForm=editor.locator('#fate-forge-goal-form');
+    await goalForm.locator('[name=target]').fill('7000000');
+    await goalForm.getByRole('button',{name:'Сохранить цель'}).click();
+    await p.waitForFunction(()=>PlanSync._docs()['forge-tasks/goal-money']?.d?.target===7000000);
     await editor.getByRole('button',{name:'Закрыть Кузницу'}).click();
     await p.waitForFunction(()=>!history.state?.fateForge);
     await write(p,'buys/citadel-forge-3',{kind:'citadel-room',currency:'abyss',room:'forge',level:3,cost:100,ts:3});
@@ -204,6 +269,20 @@ await check('fate forge stage III replaces only opened aspects and preserves pas
     const unlocked=list.getByText('Ритм закалки',{exact:true});
     await unlocked.waitFor();
     assert.match(await unlocked.locator('..').innerText(),/осколок за день/);
+    await p.locator('#trophy-x').click();
+    const id=taskKey.split('/')[1];
+    await p.evaluate(async id=>{
+      await PlanDB.runTransaction(tx=>{
+        for(const date of ['2027-04-16','2027-04-18','2027-04-20','2027-04-22']){
+          const path='days/'+date,row=tx.get(path)||{};
+          tx.set(path,{...row,forgeDone:{...row.forgeDone,[id]:true}});
+        }
+      });
+    },id);
+    await p.waitForFunction(id=>VkachForgeAwards.owned(PlanSync._docs()['cfg/forge-discoveries']?.d).some(row=>row.id.startsWith('forge-'+id+'-')),id);
+    const final=await docs(p);
+    assert.equal(final['forge-tasks/goal-money'].d.target,7000000);
+    assert.equal(final['forge-tasks/aspect-n_cook'].d.replace,true);
   }finally{await context.close();}
 });
 
@@ -2826,8 +2905,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   return expected;
  }
- await check('0.73 through 1.0 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
-  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778'],['1.0','7317a00710f8d2c95a91f2cd9a34b862ad1b690f']]){
+ await check('0.73 through 1.1 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
+  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778'],['1.0','7317a00710f8d2c95a91f2cd9a34b862ad1b690f'],['1.1','2c1ff84']]){
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
@@ -2836,7 +2915,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2026-10-30T14:00:00+03:00')});
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&PlanSync._docs()['cfg/abyss-economy']?.d?.rank>=1);await dismiss(p);
   assert.equal(await p.evaluate(()=>APP_VERSION),oldVersion);assert.notEqual(await p.evaluate(()=>APP_BUILD),expectedBuild);await p.evaluate(()=>PlanSync.beforeUpdate());const before=await docs(p);
-  servedOverrides.clear();if(oldVersion==='1.0')await p.reload();else await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
+  servedOverrides.clear();if(['1.0','1.1'].includes(oldVersion))await p.reload();else await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
   await shellMenu(p);await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();
   await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),currentVersion);
   const migrated=await docs(p);assert.deepEqual(migrated,expectedEconomyUpgrade(before,migrated),'only the existing rank-seeding migration may change economy metadata');assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);

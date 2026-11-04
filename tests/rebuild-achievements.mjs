@@ -17,4 +17,6 @@ const future=transaction({...records,'buys/citadel-rest-2':{kind:'citadel-room',
 const source=readFileSync('src/game.html','utf8'),worker=readFileSync('docs/sw.js','utf8');for(const d of earned)for(const id of d.cos)assert(source.includes('COS.'+id+' ='),'every earned cosmetic has a definition');assert(worker.includes('realm-achievements.js'));assert(!/авито|avito/i.test(source),'retired feature has no live UI, handler or watcher');
 console.log('PASS rebuild discoveries: durable facts, no click farming, atomic reward paths, one-time receipts, retained ownership, malformed dates and cached assets');
 
-const oldStyles=execFileSync('git',['show','c032ddb:src/rpg-ui.css'],{encoding:'utf8'}).replace('.citadel-finance-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))','.citadel-finance-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))');assert(readFileSync('src/rpg-ui.css','utf8').split('\n.profile-system-hub')[0].trim()===oldStyles.trim(),'approved scenery, light, frames, auras and portrait styles stay unchanged');
+const approved=execFileSync('git',['show','2c1ff84:src/rpg-ui.css'],{encoding:'utf8'});
+const base=css=>css.split('\n.profile-system-hub')[0].trim();
+assert.equal(base(readFileSync('src/rpg-ui.css','utf8')),base(approved),'approved 1.1 scenery, light, frames, auras, portrait and menu styles stay unchanged');
