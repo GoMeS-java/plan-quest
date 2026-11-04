@@ -1071,7 +1071,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    await p.setViewportSize({width,height});
    for(const room of rooms){
-    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);await waitForIdle(p);
+    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);
     const before=await docs(p),action=p.locator('[data-room-moment]');
     assert(await action.isVisible());assert(await action.evaluate(n=>n.getBoundingClientRect().height>=44));
     await action.click();const text=await p.locator('#citadel-object-status').innerText();assert(text.length>40);
