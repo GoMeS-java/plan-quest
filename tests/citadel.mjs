@@ -42,7 +42,13 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));try{await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');}catch(e){console.log('Initial profile diagnostic',await page.evaluate(()=>({title:document.title,rank:document.querySelector('#citadel-live-rank')?.textContent,readiness:window.__qa?.readiness?.()})).catch(()=>({pageUnavailable:true})),errors);throw e;}
  if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await page.evaluate(()=>__qa.idle());await page.waitForFunction(()=>__qa.cosmeticsIdle());await page.evaluate(()=>__qa.idle());}
- if(shell)await page.addLocatorHandler(page.locator('#achup[data-qa-realm-notice="true"]:not([hidden])'),()=>page.evaluate(()=>document.querySelector('#ac-ok').click()));
+ if(shell){
+   const notice='#achup[data-qa-realm-notice="true"]:not([hidden])';
+   await page.addLocatorHandler(page.locator(notice),()=>page.evaluate(selector=>{
+     // Dismissing one notice can display the next immediately in the same dialog.
+     for(let i=0;i<64&&document.querySelector(selector);i++)document.querySelector('#ac-ok').click();
+   },notice));
+ }
  if(!shell)await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first(),()=>dismiss(page));
  await dismiss(page);return {page,context,session};
 }
