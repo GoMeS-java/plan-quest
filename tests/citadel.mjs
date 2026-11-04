@@ -41,7 +41,7 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
  await context.addInitScript(({seed,legacy,day,failUpgrade,shell,fresh})=>{if(!shell)localStorage.setItem('plan.shell.classic.v1','1');if(!localStorage.getItem('qa-init')){const docs=Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]));if(!fresh)localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs}));for(const [k,v]of Object.entries(legacy))localStorage.setItem(k,v);localStorage.setItem('qa-init','1');}localStorage.setItem('wsum',day.slice(0,7)+'-26');localStorage.setItem('msum',day.slice(0,7));localStorage.setItem('trialSeen',day);if(failUpgrade&&!localStorage.getItem('qa-upgrade-failed')){localStorage.setItem('qa-upgrade-failed','1');window.__originalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.pre-update.v1')throw new DOMException('Synthetic full','QuotaExceededError');return window.__originalSetItem.call(this,k,v);};}},{seed,legacy,day,failUpgrade,shell,fresh});
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));try{await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');}catch(e){console.log('Initial profile diagnostic',await page.evaluate(()=>({title:document.title,rank:document.querySelector('#citadel-live-rank')?.textContent,readiness:window.__qa?.readiness?.()})).catch(()=>({pageUnavailable:true})),errors);throw e;}
- if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await page.evaluate(()=>__qa.idle());await page.waitForFunction(()=>__qa.cosmeticsIdle());}
+ if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await page.evaluate(()=>__qa.idle());await page.waitForFunction(()=>__qa.cosmeticsIdle());await page.evaluate(()=>__qa.idle());}
  if(shell)await page.addLocatorHandler(page.locator('#achup[data-qa-realm-notice="true"]:not([hidden])'),()=>page.evaluate(()=>document.querySelector('#ac-ok').click()));
  if(!shell)await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first(),()=>dismiss(page));
  await dismiss(page);return {page,context,session};
@@ -91,7 +91,58 @@ try {
 
 
 
- await check('1.1 profile is the single system hub and finance has three reachable tabs',async()=>{
+ await check('shelter collection previews, persists and restores receipts without spending',async()=>{
+  const day='2027-09-15';
+  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day});
+  try {
+    const old=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
+    await write(p,'cfg/rare',{z02:day});
+    await p.waitForFunction(()=>!!PlanSync._docs()['cfg/shelter-items']?.d?.owned?.cat);
+    await dismiss(p);
+    await castle(p);
+    await p.locator('[data-croom="rest"]').click();
+    await p.locator('#citadel-interior').waitFor({state:'visible'});
+    const award=await docs(p);
+    await p.locator('#shelter-collection summary').click();
+    const choose=async()=>p.locator('#shelter-list button').filter({hasText:/кот/i}).first().click();
+    await choose();
+    await p.locator('#shelter-detail').getByText('Место появится после восстановления.').waitFor();
+    await write(p,'buys/citadel-rest-2',{kind:'citadel-room',currency:'abyss',room:'rest',level:2,cost:100,ts:1798804800000});
+    const before=await docs(p);
+    await p.getByRole('button',{name:'Примерить · На столе'}).click();
+    await p.locator('#shelter-layer .shelter-preview').waitFor();
+    assert.deepEqual((await docs(p))['cfg/shelter-items'],before['cfg/shelter-items']);
+    await p.goBack();
+    await p.locator('#shelter-layer .shelter-preview').waitFor({state:'detached'});
+    await p.getByRole('button',{name:'Примерить · На столе'}).click();
+    await context.setOffline(true);
+    await p.getByRole('button',{name:'Подтвердить',exact:true}).click();
+    await p.waitForFunction(()=>PlanSync._docs()['cfg/shelter-items']?.d?.placements?.cat?.room==='rest');
+    await p.locator('#shelter-layer button:not(.shelter-preview)').waitFor();
+    const sprite=p.locator('#shelter-layer button:not(.shelter-preview)');
+    await sprite.click();
+    await p.locator('#shelter-detail strong').waitFor();
+    const after=await docs(p);
+    assert.deepEqual(Object.fromEntries(Object.entries(after).filter(([key])=>key.startsWith('buys/'))),Object.fromEntries(Object.entries(before).filter(([key])=>key.startsWith('buys/'))));
+    assert.deepEqual(after['cfg/shelter-items'].d.owned,award['cfg/shelter-items'].d.owned);
+    await context.setOffline(false);
+    await write(p,'buys/citadel-rest-3',{kind:'citadel-room',currency:'abyss',room:'rest',level:3,cost:100,ts:1798804800001});
+    await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='3');
+    await sprite.waitFor();
+    await p.reload();
+    await p.waitForFunction(()=>PlanSync._docs()['cfg/shelter-items']?.d?.placements?.cat?.room==='rest');
+    await p.evaluate(async copy=>PlanSync.importObj(copy,true),old);
+    await p.waitForFunction(()=>PlanSync._docs()['cfg/shelter-items']?.d?.owned?.cat);
+    assert.equal((await docs(p))['cfg/shelter-items'].d.placements.cat.room,'rest');
+    await p.evaluate(async () => PlanSync._merge({docs:{'cfg/shelter-items':{u:Date.now()+1000,d:{owned:{futureProp:1},placements:{}}}}}));
+    await p.waitForFunction(()=>!!PlanSync._docs()['cfg/shelter-items']?.d?.owned?.futureProp);
+    const merged=(await docs(p))['cfg/shelter-items'].d;
+    assert.ok(merged.owned.cat);
+    assert.equal(merged.placements.cat.room,'rest');
+  } finally {await context.close();}
+});
+
+await check('1.1 profile is the single system hub and finance has three reachable tabs',async()=>{
   const {page:p,context}=await open({shell:true});await shellNav(p,'Профиль');assert.equal(await p.locator('.profile-system-hub button').count(),3);await p.locator('#profile-settings-open').click();assert(await p.locator('#setup').isVisible());await p.locator('#setup-x').click();assert(await p.locator('#profile-settings-open').evaluate(n=>n===document.activeElement));await p.locator('#profile-achievements-open').click();assert(await p.locator('#trophy').isVisible());await p.locator('#trophy-x').click();
   if(process.env.SYSTEM_CAPTURE)await p.locator('.profile-system-hub').screenshot({path:resolve(out,'systems-profile-hub.png')});
   await shellNav(p,'Финансы');const nav=p.locator('.citadel-finance-nav');assert.deepEqual(await nav.locator('button').allTextContents(),['Траты','Деньги','Колесо']);await nav.locator('[data-finance="spend"]').click();await nav.locator('[data-finance="spend"]').focus();await p.keyboard.press('ArrowLeft');assert.equal(await nav.locator('[aria-selected="true"]').getAttribute('data-finance'),'wheel');await p.keyboard.press('ArrowRight');assert.equal(await nav.locator('[aria-selected="true"]').getAttribute('data-finance'),'spend');

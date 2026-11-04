@@ -731,7 +731,7 @@ html,body{overflow-anchor:none}
 <div class="citadel-floor-label">ВХОДНОЙ ЯРУС <span>0</span></div><div class="citadel-floor"><button type="button" class="citadel-room citadel-gatehouse" data-croom="gatehouse" data-min-rank="1"><span class="citadel-window"></span><span class="citadel-sconce" aria-hidden="true"></span><span class="citadel-prop citadel-prop-gate"></span><span class="citadel-room-name">КАРАУЛЬНАЯ</span></button><button type="button" class="citadel-room citadel-refectory is-locked" data-croom="refectory" data-min-rank="5"><span class="citadel-window"></span><span class="citadel-sconce" aria-hidden="true"></span><span class="citadel-prop citadel-prop-table"></span><span class="citadel-room-name">Неизведанная комната</span><i class="citadel-lock">ЗАКРЫТО</i></button></div><div class="citadel-corridor" data-cnode="hall-3"><span>↔ ВЕСТИБЮЛЬ</span><i class="citadel-stairs" aria-hidden="true"></i><span>↕ ЛЕСТНИЦА</span></div><div class="citadel-floor-label">ПОДЗЕМНЫЙ ЯРУС <span>−I</span></div><div class="citadel-floor"><button type="button" class="citadel-room citadel-cloister is-locked" data-croom="cloister" data-min-rank="8"><span class="citadel-window"></span><span class="citadel-sconce" aria-hidden="true"></span><span class="citadel-prop citadel-prop-garden"></span><span class="citadel-room-name">Неизведанная комната</span><i class="citadel-lock">ЗАКРЫТО</i></button><button type="button" class="citadel-room citadel-vault is-locked" data-croom="vault" data-min-rank="20"><span class="citadel-window"></span><span class="citadel-sconce" aria-hidden="true"></span><span class="citadel-prop citadel-prop-chest"></span><span class="citadel-room-name">Неизведанная комната</span><i class="citadel-lock">ЗАКРЫТО</i></button></div><div class="citadel-corridor" data-cnode="hall-4"><span>↔ ПОДЗЕМНЫЙ ПЕРЕХОД</span><i class="citadel-stairs" aria-hidden="true"></i><span>↕ ЛЕСТНИЦА</span></div>
 <div class="citadel-avatar" id="citadel-avatar" aria-label="Твой персонаж из Заклятия"><canvas id="citadel-avatar-canvas" width="32" height="52" aria-hidden="true"></canvas><span class="citadel-avatar-shadow"></span></div></div>
 <div class="citadel-scene-tools"><button type="button" id="citadel-fullscreen" aria-pressed="false">⛶ РАЗВЕРНУТЬ ЗАМОК</button><button type="button" id="citadel-focus">◎ К ГЕРОЮ</button></div><div class="citadel-controls"><button type="button" id="citadel-prev">← НАЗАД</button><span id="citadel-location">ЛИЧНЫЕ ПОКОИ</span><button type="button" id="citadel-next">ВПЕРЁД →</button></div>
-<div class="citadel-interior" id="citadel-interior" hidden><div class="citadel-interior-top"><strong id="citadel-interior-title">ЛИЧНЫЕ ПОКОИ</strong><span id="citadel-room-condition" class="room-condition"></span><button type="button" id="citadel-interior-close" aria-label="Закрыть интерьер">✕</button></div><div class="citadel-interior-stage" id="citadel-interior-stage" data-room="rest"><span class="citadel-motes" aria-hidden="true"></span><span class="citadel-interior-upgrade" id="citadel-upgrade-label" aria-hidden="true"></span><span class="citadel-interior-window"></span><span class="citadel-interior-rug" aria-hidden="true"></span><span class="citadel-interior-hearth" aria-hidden="true"></span><span class="citadel-interior-furniture"></span><span class="citadel-interior-detail" aria-hidden="true"></span><span class="citadel-interior-renovation" aria-hidden="true"></span><span class="citadel-finish-detail" aria-hidden="true"></span><span class="citadel-interior-decoration" id="citadel-interior-decoration" aria-hidden="true"></span><span class="citadel-interior-object" id="citadel-interior-object" role="button" tabindex="0" aria-label="Осмотреть предмет комнаты"></span><span id="citadel-walk-target" class="citadel-walk-target" aria-hidden="true" hidden></span><canvas id="citadel-interior-hero" width="32" height="52" aria-label="Твой персонаж"></canvas></div><div id="citadel-room-actions" role="group" class="citadel-room-actions" aria-label="Действия в комнате"></div><p class="citadel-walk-hint">Нажми на пол, чтобы пройти. Стрелки работают, когда комната в фокусе.</p><aside id="citadel-room-conversation" class="citadel-room-conversation" role="region" aria-label="Разговор с жителем" tabindex="-1" hidden><p id="citadel-room-speech"></p><button type="button" id="citadel-room-npc-action"></button><button type="button" id="citadel-room-npc-close">ЗАВЕРШИТЬ РАЗГОВОР</button></aside><nav class="citadel-exits" id="citadel-exits" aria-label="Переходы из комнаты"></nav><p class="citadel-interior-caption" id="citadel-interior-caption">Твой облик из Заклятия</p><p class="citadel-object-status" id="citadel-object-status" role="status">Нажми на светящийся предмет, чтобы осмотреть его.</p><section class="citadel-building" aria-label="Улучшение комнаты"><div class="citadel-weekly-title"><strong>ОБУСТРОЙСТВО</strong><span id="citadel-building-level"></span></div><p id="citadel-building-current"></p><p id="citadel-building-balance"></p><p id="citadel-building-next"></p><button type="button" id="citadel-upgrade"></button><p id="citadel-building-feedback" role="status"></p><p class="hint">Улучшение меняет архитектуру и обстановку комнаты. Достигнутое сохраняется в твоём пути.</p></section><section class="citadel-room-board"><strong>ЗАПИСИ КОМНАТЫ</strong><p id="citadel-room-journal"></p><button type="button" class="citadel-jump" id="citadel-room-journal-open">ОТКРЫТЬ ЗАДАНИЯ</button></section><div class="citadel-decor-panel"><strong>ОФОРМЛЕНИЕ КОМНАТЫ</strong><div class="citadel-decor-options" id="citadel-decor-options"></div><p id="citadel-decor-status" class="citadel-decor-status">Украшения косметические и не расходуют игровую валюту.</p></div></div><div class="citadel-interior-action"><button type="button" id="citadel-enter">ОСМОТРЕТЬ КОМНАТУ</button></div><section class="citadel-trial" id="citadel-trial" aria-live="polite" hidden><div class="citadel-trial-heading"><strong>⚔ ИСПЫТАНИЕ ЗАКЛЯТИЯ</strong><span id="citadel-trial-state"></span><span id="citadel-trial-clock" class="citadel-trial-clock" hidden></span></div><p id="citadel-trial-description"></p><div class="citadel-trial-metrics" id="citadel-trial-metrics"></div><p id="citadel-trial-stakes"></p><button type="button" id="citadel-trial-open">ПЕРЕЙТИ К ИСПЫТАНИЮ</button><p class="citadel-trial-note">Отметь выполнение в заданиях Заклятия.</p></section><section class="citadel-daily" aria-label="Ежедневный путь"><div class="citadel-weekly-title"><strong>СЕГОДНЯШНИЙ ПУТЬ</strong><span id="citadel-daily-count"></span></div><div id="citadel-daily-list"></div><details class="citadel-daily-journal"><summary>ЖУРНАЛ ЕЖЕДНЕВНЫХ ЗАДАНИЙ</summary><div id="citadel-daily-details"></div></details><button class="citadel-jump" type="button" data-citadel-tab="today">ОТКРЫТЬ ЗАДАНИЯ</button></section><section class="citadel-weekly" aria-label="Еженедельные задачи"><div class="citadel-weekly-title"><strong>НЕДЕЛЬНЫЙ ПУТЬ</strong><span id="citadel-weekly-count"></span></div><div id="citadel-weekly-list"></div><button class="citadel-jump" type="button" data-citadel-tab="week">ОТКРЫТЬ НЕДЕЛЮ</button><p class="citadel-weekly-note">Задания, отметки и награды общие для всего Заклятия.</p></section><div class="citadel-worldline"><span id="citadel-time">ВРЕМЯ ЦИТАДЕЛИ</span><span id="citadel-population">ЖИТЕЛИ: 0</span></div><div id="citadel-residents" class="citadel-residents" aria-label="Жители Цитадели"></div><p id="citadel-npc-dialogue" class="citadel-npc-dialogue" role="status" aria-live="polite"></p><div id="citadel-npc-actions" class="citadel-npc-actions"></div><div class="citadel-activity"><div class="citadel-activity-head"><strong>ЖИЗНЬ ЦИТАДЕЛИ</strong><span id="citadel-activity-rank">РАНГ 1</span></div><p id="citadel-activity-text">Твои доступные занятия появятся после загрузки игры.</p><div id="citadel-activity-actions" class="citadel-activity-actions"></div><p id="citadel-activity-feedback" class="citadel-activity-feedback" role="status"></p></div><div id="citadel-room-info" class="citadel-room-info" role="status">Нажми на открытую комнату, чтобы переместиться. Персонаж использует текущую внешность из игры.</div><p class="hint">Это часть твоего убежища. Персонаж, его экипировка и характеристики остаются из основной игры. Улучшай комнаты за Эссенцию Бездны; ядра души остаются для Воспоминаний.</p></div></details>
+<div class="citadel-interior" id="citadel-interior" hidden><div class="citadel-interior-top"><strong id="citadel-interior-title">ЛИЧНЫЕ ПОКОИ</strong><span id="citadel-room-condition" class="room-condition"></span><button type="button" id="citadel-interior-close" aria-label="Закрыть интерьер">✕</button></div><div class="citadel-interior-stage" id="citadel-interior-stage" data-room="rest"><div id="shelter-layer"></div><span class="citadel-motes" aria-hidden="true"></span><span class="citadel-interior-upgrade" id="citadel-upgrade-label" aria-hidden="true"></span><span class="citadel-interior-window"></span><span class="citadel-interior-rug" aria-hidden="true"></span><span class="citadel-interior-hearth" aria-hidden="true"></span><span class="citadel-interior-furniture"></span><span class="citadel-interior-detail" aria-hidden="true"></span><span class="citadel-interior-renovation" aria-hidden="true"></span><span class="citadel-finish-detail" aria-hidden="true"></span><span class="citadel-interior-decoration" id="citadel-interior-decoration" aria-hidden="true"></span><span class="citadel-interior-object" id="citadel-interior-object" role="button" tabindex="0" aria-label="Осмотреть предмет комнаты"></span><span id="citadel-walk-target" class="citadel-walk-target" aria-hidden="true" hidden></span><canvas id="citadel-interior-hero" width="32" height="52" aria-label="Твой персонаж"></canvas></div><details id="shelter-collection" class="shelter-collection"><summary>Предметы Убежища</summary><div id="shelter-list"></div><div id="shelter-detail" tabindex="-1"></div><p id="shelter-feedback" role="status"></p></details><div id="citadel-room-actions" role="group" class="citadel-room-actions" aria-label="Действия в комнате"></div><p class="citadel-walk-hint">Нажми на пол, чтобы пройти. Стрелки работают, когда комната в фокусе.</p><aside id="citadel-room-conversation" class="citadel-room-conversation" role="region" aria-label="Разговор с жителем" tabindex="-1" hidden><p id="citadel-room-speech"></p><button type="button" id="citadel-room-npc-action"></button><button type="button" id="citadel-room-npc-close">ЗАВЕРШИТЬ РАЗГОВОР</button></aside><nav class="citadel-exits" id="citadel-exits" aria-label="Переходы из комнаты"></nav><p class="citadel-interior-caption" id="citadel-interior-caption">Твой облик из Заклятия</p><p class="citadel-object-status" id="citadel-object-status" role="status">Нажми на светящийся предмет, чтобы осмотреть его.</p><section class="citadel-building" aria-label="Улучшение комнаты"><div class="citadel-weekly-title"><strong>ОБУСТРОЙСТВО</strong><span id="citadel-building-level"></span></div><p id="citadel-building-current"></p><p id="citadel-building-balance"></p><p id="citadel-building-next"></p><button type="button" id="citadel-upgrade"></button><p id="citadel-building-feedback" role="status"></p><p class="hint">Улучшение меняет архитектуру и обстановку комнаты. Достигнутое сохраняется в твоём пути.</p></section><section class="citadel-room-board"><strong>ЗАПИСИ КОМНАТЫ</strong><p id="citadel-room-journal"></p><button type="button" class="citadel-jump" id="citadel-room-journal-open">ОТКРЫТЬ ЗАДАНИЯ</button></section><div class="citadel-decor-panel"><strong>ОФОРМЛЕНИЕ КОМНАТЫ</strong><div class="citadel-decor-options" id="citadel-decor-options"></div><p id="citadel-decor-status" class="citadel-decor-status">Украшения косметические и не расходуют игровую валюту.</p></div></div><div class="citadel-interior-action"><button type="button" id="citadel-enter">ОСМОТРЕТЬ КОМНАТУ</button></div><section class="citadel-trial" id="citadel-trial" aria-live="polite" hidden><div class="citadel-trial-heading"><strong>⚔ ИСПЫТАНИЕ ЗАКЛЯТИЯ</strong><span id="citadel-trial-state"></span><span id="citadel-trial-clock" class="citadel-trial-clock" hidden></span></div><p id="citadel-trial-description"></p><div class="citadel-trial-metrics" id="citadel-trial-metrics"></div><p id="citadel-trial-stakes"></p><button type="button" id="citadel-trial-open">ПЕРЕЙТИ К ИСПЫТАНИЮ</button><p class="citadel-trial-note">Отметь выполнение в заданиях Заклятия.</p></section><section class="citadel-daily" aria-label="Ежедневный путь"><div class="citadel-weekly-title"><strong>СЕГОДНЯШНИЙ ПУТЬ</strong><span id="citadel-daily-count"></span></div><div id="citadel-daily-list"></div><details class="citadel-daily-journal"><summary>ЖУРНАЛ ЕЖЕДНЕВНЫХ ЗАДАНИЙ</summary><div id="citadel-daily-details"></div></details><button class="citadel-jump" type="button" data-citadel-tab="today">ОТКРЫТЬ ЗАДАНИЯ</button></section><section class="citadel-weekly" aria-label="Еженедельные задачи"><div class="citadel-weekly-title"><strong>НЕДЕЛЬНЫЙ ПУТЬ</strong><span id="citadel-weekly-count"></span></div><div id="citadel-weekly-list"></div><button class="citadel-jump" type="button" data-citadel-tab="week">ОТКРЫТЬ НЕДЕЛЮ</button><p class="citadel-weekly-note">Задания, отметки и награды общие для всего Заклятия.</p></section><div class="citadel-worldline"><span id="citadel-time">ВРЕМЯ ЦИТАДЕЛИ</span><span id="citadel-population">ЖИТЕЛИ: 0</span></div><div id="citadel-residents" class="citadel-residents" aria-label="Жители Цитадели"></div><p id="citadel-npc-dialogue" class="citadel-npc-dialogue" role="status" aria-live="polite"></p><div id="citadel-npc-actions" class="citadel-npc-actions"></div><div class="citadel-activity"><div class="citadel-activity-head"><strong>ЖИЗНЬ ЦИТАДЕЛИ</strong><span id="citadel-activity-rank">РАНГ 1</span></div><p id="citadel-activity-text">Твои доступные занятия появятся после загрузки игры.</p><div id="citadel-activity-actions" class="citadel-activity-actions"></div><p id="citadel-activity-feedback" class="citadel-activity-feedback" role="status"></p></div><div id="citadel-room-info" class="citadel-room-info" role="status">Нажми на открытую комнату, чтобы переместиться. Персонаж использует текущую внешность из игры.</div><p class="hint">Это часть твоего убежища. Персонаж, его экипировка и характеристики остаются из основной игры. Улучшай комнаты за Эссенцию Бездны; ядра души остаются для Воспоминаний.</p></div></details>
   <div class="points">
     <div class="points-row">
       <div class="big"><span class="coin"></span><span id="pts">…</span> <small id="goal">/ 40</small></div>
@@ -1090,6 +1090,7 @@ html,body{overflow-anchor:none}
 <script src="fate.js"></script>
 <script src="portrait.js"></script>
 <script src="realm-achievements.js"></script>
+<script src="shelter-items.js"></script>
 <dialog id="citadel-mystery" aria-labelledby="citadel-mystery-title" aria-describedby="citadel-mystery-text"><h2 id="citadel-mystery-title">Неизведанная комната</h2><p id="citadel-mystery-text"></p><form method="dialog"><button autofocus>Понятно</button></form></dialog>
 <script>window.APP_VERSION = "__VER__";
 (function () {
@@ -1362,7 +1363,7 @@ html,body{overflow-anchor:none}
 
   // ---- state --------------------------------------------------------
   var S = { realm:null, rare: {}, look: null, opening: null, wardrobe: [], outfit: null, tx: [], items: [], jar: [], days: {}, per: {}, weeks: {}, weights: [], buys: [], cart: null, spont: [], trial: {}, citadel: null, abyss: null };
-  var db = null, loaded = false, pending = 22;
+  var db = null, loaded = false, pending = 23;
   var chain = Promise.resolve(), pendingSaveError = null;
   function enqueue(fn) {
     var task=chain.then(fn);
@@ -1805,6 +1806,240 @@ html,body{overflow-anchor:none}
     LEG.forEach(function (G) { var k = ROOM_OF[G.id]; if (k && (lastGI.ach[G.id] || window.__ROOM_ALL)) out.push({ id: G.id, key: k, it: ROOM_ITEMS[k] }); });
     return out;
   }
+  var shelterAwarding = false, shelterSaving = false, shelterSelected = '', shelterPreview = null;
+  var shelterView = '', shelterScene = '';
+  var shelterActions = {
+    clock:['Прислушаться','Из-за стены слышно ровное тиканье.'],
+    cat:['Позвать','Кот приоткрывает глаз и снова устраивается поудобнее.'],
+    mirror:['Заглянуть','В стекле на мгновение отражается далёкий огонь.'],
+    globe:['Повернуть','Под пальцами проходят горные хребты и синяя полоса моря.'],
+    lantern:['Поднести руку','Огонёк дрожит за холодным стеклом.']
+  };
+  var shelterStories = {
+    clock:'Мастер оставил часы в Убежище, чтобы отсчитывать время до возвращения хозяина.',
+    cat:'Однажды кот сам нашёл дорогу к очагу и с тех пор считает Убежище своим домом.',
+    dart:'На ободе мишени остались зарубки от вечерних состязаний стражи.',
+    mirror:'Стекло пережило падение старой башни. Раму собрали из уцелевших обломков.',
+    bag:'Швы помнят пыль дорог, по которым в Цитадель приносили первые припасы.',
+    garland:'Её развесили в первую ночь, когда в Убежище снова зажёгся свет.',
+    trophy:'Его поставили у очага, чтобы победу могли разделить все, кто ждал возвращения.',
+    pennant:'Этот вымпел сняли с дозорной башни перед первым снегом.',
+    kettle:'Его медный бок отполирован руками тех, кто грел воду для ночных дозорных.',
+    medal:'Надпись на обороте истёрлась, но лента всё ещё держит цвет.',
+    scale:'Хранитель проверял на этих весах каждую меру, отправленную в кладовую.',
+    lamp:'Стекло закоптилось с той стороны, где смотритель любил прикрывать огонь ладонью.',
+    safe:'На тяжёлой дверце видны следы старых ключей. Самый глубокий оставил хозяин.',
+    globe:'Между морями и горами осталась тонкая линия старого маршрута.',
+    rug:'Узор на краю повторяет каменные арки, под которыми его ткали.',
+    owl:'В сумерках её силуэт можно принять за живую птицу на карнизе.',
+    banner:'Ткань сохранила выцветшую полосу от солнца над крепостной стеной.',
+    bolt:'На металле остались неровные грани от последнего удара кузнеца.',
+    tapestry:'Ткач вплёл в нижнюю кромку силуэты комнат, знакомых ему с детства.',
+    shelf:'На полках сохранились светлые прямоугольники от давно снятых томов.',
+    desk:'Под столешницей остались пробные штрихи человека, который пером чертил планы.',
+    monitors:'На стекле видны блики комнаты, где за этими экранами когда-то следили за путём.',
+    pc:'На боковой панели остались царапины от переезда в Убежище.',
+    poster1:'Угол листа загнут там, где его прижимали к сырой стене.',
+    poster2:'Бумага потемнела по краям. Под рамой краски остались яркими.',
+    poster3:'Лист спасли из промокшей папки и высушили у очага.',
+    gate:'Камни этой рамы привезли с места, где тропа впервые коснулась Бездны.',
+    shard:'Осколок сохраняет холод даже в комнате рядом с огнём.',
+    darkmirror:'Полированная поверхность ловит движение у края рамы.',
+    chains:'Последнее звено выковано иначе: его заменили уже после возвращения в крепость.',
+    lantern:'Под стеклом мерцает огонёк, каким проводники отмечали безопасный путь.',
+    abyssobelisk:'Грани покрыты старыми насечками. В косом свете они образуют карту.'
+  };
+  function shelterEarned() {
+    return LEG.filter(function (g) { return Object.hasOwn(ROOM_OF,g.id) && lastGI?.ach[g.id]; })
+      .map(function (g) { return ROOM_OF[g.id]; });
+  }
+  function shelterSync() {
+    if (!loaded || shelterAwarding) return;
+    var current = VkachShelter.state(S.shelter);
+    if (!shelterEarned().some(function (key) { return !VkachShelter.owns(current,key); })) return;
+    shelterAwarding = true;
+    enqueue(function () {
+      return db.runTransaction(function (tx) {
+        var original = S, previousGI = lastGI, keys;
+        try {
+          S = {...S, rare:tx.get('cfg/rare') || {}};
+          purchasePoints(tx);
+          keys = shelterEarned();
+        } finally { S = original; lastGI = previousGI; }
+        var saved = VkachShelter.state(tx.get(VkachShelter.path));
+        var fresh = keys.filter(function (key) { return !VkachShelter.owns(saved,key); });
+        if (fresh.length) tx.set(VkachShelter.path,VkachShelter.grant(saved,fresh,Date.now()));
+        return fresh.length;
+      });
+    }).then(function (count) {
+      if (count) toast('Пополнение в коллекции «Предметы Убежища»');
+    }).catch(function () {}).finally(function () { shelterAwarding = false; });
+  }
+  function shelterArt(key) {
+    var it = ROOM_ITEMS[key];
+    if (!it.cls) {
+      if (!it.svg && !Array.isArray(it.f)) return el('span','hint','◇');
+      var art = roomEl(it);
+      art.style.cssText = '';
+      if (it.svg) art.firstChild.style.inset = '0';
+      return art;
+    }
+    var forms = {
+      hs:[[2,12,20,10,'#685278'],[4,14,16,5,'#b08bb2'],[9,19,5,2,'#edc780']],
+      hd:[[1,8,22,4,'#b18c69'],[3,12,3,11,'#654638'],[18,12,3,11,'#654638'],[7,12,10,4,'#875d4e']],
+      hm:[[1,5,10,9,'#3c3449'],[13,5,10,9,'#3c3449'],[2,6,8,6,'#8b789a'],[14,6,8,6,'#647d94'],[5,14,2,4,'#bdacbd'],[17,14,2,4,'#bdacbd']],
+      hp:[[6,3,13,20,'#37303f'],[7,4,9,17,'#584965'],[9,7,5,1,'#8c7597'],[10,12,2,2,'#cfae79'],[8,22,3,2,'#201b29'],[15,22,3,2,'#201b29']]
+    };
+    return roomEl({w:24,h:24,k:1,slot:'',f:[forms[it.cls] || forms.hs]});
+  }
+  function shelterFootprints(room, level) {
+    return VkachShelter.active(S.shelter,room,level).flatMap(function ([key,row]) {
+      if (row.slot !== 'floor' || key === 'rug' || !ROOM_ITEMS[key]) return [];
+      var point = VkachShelter.anchor(key,room,row.slot,level);
+      return [[point.x-16,point.y-8,point.x+16,point.y+2]];
+    });
+  }
+  function shelterVisual(key, point, slot, preview) {
+    var sprite = el('button','shelter-prop');
+    sprite.type = 'button';
+    sprite.dataset.slot = slot;
+    sprite.style.left = point.x/4.8+'%';
+    sprite.style.top = point.y/3.2+'%';
+    var it = ROOM_ITEMS[key];
+    var ratio = (it.w || 24)/(it.h || 24);
+    var cap = {wall:42,table:24,pedestal:24,floor:40,arch:54}[slot];
+    var width = Math.min(cap, cap*ratio), height = width/ratio;
+    sprite.style.width = width/4.8+'%';
+    sprite.style.height = height/3.2+'%';
+    if (key === 'rug') sprite.classList.add('shelter-rug');
+    sprite.classList.toggle('shelter-preview',preview);
+    sprite.classList.toggle('shelter-inspected',!preview && key === shelterSelected && $('shelter-collection').open);
+    sprite.setAttribute('aria-label',it.n);
+    sprite.disabled = preview;
+    sprite.appendChild(shelterArt(key));
+    sprite.onclick = function (event) {
+      event.stopPropagation();
+      shelterSelected = key;
+      shelterPreview = null;
+      $('shelter-collection').open = true;
+      shelterRender();
+      $('shelter-detail').focus({preventScroll:true});
+    };
+    return sprite;
+  }
+  function shelterButton(host, name, action, disabled) {
+    var button = el('button','citadel-decor-option',name);
+    button.type = 'button';
+    button.disabled = !!disabled;
+    button.onclick = action;
+    host.appendChild(button);
+    return button;
+  }
+  function shelterWrite(key, target) {
+    if (shelterSaving) return;
+    shelterSaving = true;
+    shelterRender();
+    enqueue(function () {
+      return db.runTransaction(function (tx) {
+        var saved = tx.get(VkachShelter.path);
+        if (target && !CitadelWorld.available(target.room,purchasePoints(tx).L)) return false;
+        var level = target ? citadelRoomLevel(target.room,tx.list('buys')) : 0;
+        var next = VkachShelter.place(saved,key,target?.room || null,target?.slot || null,level,target?.expected || null,Date.now());
+        if (!next) return false;
+        tx.set(VkachShelter.path,next);
+        return true;
+      });
+    }).then(function (ok) {
+      if (ok) shelterPreview = null;
+      $('shelter-feedback').textContent = ok ? (target ? 'Предмет размещён.' : 'Предмет возвращён в коллекцию.') : 'Обстановка изменилась. Выбери место заново.';
+      if (!ok) shelterPreview = null;
+    },function () {
+      $('shelter-feedback').textContent = 'Не удалось сохранить. Повтори попытку.';
+    }).finally(function () { shelterSaving = false; shelterRender(); });
+  }
+  function shelterCancel() {
+    shelterPreview = null;
+    shelterRender();
+  }
+  function shelterRender() {
+    var stage = $('citadel-interior-stage'), room = stage.dataset.room, level = citadelRoomLevel(room);
+    var panel = $('shelter-collection'), layer = $('shelter-layer');
+    if (shelterPreview && (shelterPreview.room !== room || !panel.open)) shelterPreview = null;
+    var saved = VkachShelter.state(S.shelter);
+    var entries = Object.keys(saved.owned).filter(function (key) { return Object.hasOwn(shelterStories,key) && ROOM_ITEMS[key] && VkachShelter.owns(saved,key); });
+    var visible = VkachShelter.active(saved,room,level);
+    var scene = JSON.stringify([room,level,visible,shelterSelected,panel.open,shelterPreview]);
+    if (scene !== shelterScene) {
+      shelterScene = scene;
+      clear(layer);
+      visible.forEach(function ([key,row]) {
+        if (!entries.includes(key) || (shelterPreview && (key === shelterSelected || row.slot === shelterPreview.slot))) return;
+        layer.appendChild(shelterVisual(key,VkachShelter.anchor(key,room,row.slot,level),row.slot,false));
+      });
+      if (shelterPreview && entries.includes(shelterSelected)) {
+        var slot = shelterPreview.slot, point = VkachShelter.anchor(shelterSelected,room,slot,level);
+        if (point) layer.appendChild(shelterVisual(shelterSelected,point,slot,true));
+      }
+    }
+    if (!panel.open) return;
+    if (!entries.includes(shelterSelected)) shelterSelected = '';
+    var view = JSON.stringify([room,level,entries,saved.placements,shelterSelected,shelterPreview,shelterSaving]);
+    if (view === shelterView) return;
+    shelterView = view;
+    var list = $('shelter-list'), detail = $('shelter-detail');
+    clear(list); clear(detail);
+    if (!entries.length) list.appendChild(el('p','hint','Коллекция пока пуста.'));
+    entries.forEach(function (key) {
+      var button = shelterButton(list,ROOM_ITEMS[key].n,function () {
+        shelterSelected = key; shelterPreview = null;
+        $('shelter-feedback').textContent = '';
+        shelterRender();
+        detail.focus({preventScroll:true});
+      },shelterSaving);
+      button.setAttribute('aria-pressed',String(key === shelterSelected));
+    });
+    if (!shelterSelected) return;
+    var key = shelterSelected, row = saved.placements[key], story = shelterStories[key];
+    var icon = el('span','shelter-icon'); icon.setAttribute('aria-hidden','true');
+    icon.appendChild(shelterArt(key)); detail.appendChild(icon);
+    detail.appendChild(el('strong','',ROOM_ITEMS[key].n));
+    detail.appendChild(el('p','',story));
+    var rooms = Object.keys(CitadelWorld.names).filter(function (candidate) {
+      return citadelRoomOpen(candidate) && VkachShelter.slots(key,candidate,3).length;
+    });
+    if (rooms.length) detail.appendChild(el('p','hint','Подходящие открытые комнаты: '+rooms.map(function (candidate) { return citadelPublicName(candidate); }).join(', ')+'.'));
+    var action = shelterActions[key];
+    if (action && !shelterPreview) shelterButton(detail,action[0],function () { $('shelter-feedback').textContent = action[1]; },shelterSaving);
+    detail.appendChild(el('p','hint',row?.room && Object.hasOwn(CitadelWorld.names,row.room) ? 'Размещён: '+citadelPublicName(row.room) : 'В коллекции'));
+    if (shelterPreview) {
+      var prior = shelterPreview.expected;
+      var replace = prior && prior !== key && Object.hasOwn(shelterStories,prior);
+      if (replace) detail.appendChild(el('p','hint',ROOM_ITEMS[prior].n+' вернётся в коллекцию.'));
+      shelterButton(detail,replace?'Заменить':'Подтвердить',function () { shelterWrite(key,shelterPreview); },shelterSaving);
+      shelterButton(detail,'Отмена',shelterCancel,shelterSaving);
+      return;
+    }
+    var slots = VkachShelter.slots(key,room,level);
+    if (!slots.length) detail.appendChild(el('p','hint',VkachShelter.slots(key,room,3).length ? 'Место появится после восстановления.' : 'Для этого предмета подойдёт другая комната.'));
+    slots.forEach(function (slot) {
+      if (row?.room === room && row.slot === slot) return;
+      var point = VkachShelter.anchor(key,room,slot,level);
+      shelterButton(detail,'Примерить · '+point.label,function () {
+        shelterPreview = {room:room,slot:slot,expected:VkachShelter.occupant(saved,room,slot)};
+        shelterRender();
+        stage.scrollIntoView({block:'nearest',behavior:'auto'});
+      },shelterSaving);
+    });
+    if (row?.room) shelterButton(detail,'Убрать в коллекцию',function () { shelterWrite(key,null); },shelterSaving);
+  }
+  $('shelter-collection').addEventListener('toggle',function () { shelterRender(); });
+  window.addEventListener('keydown',function (event) {
+    if (event.key === 'Escape' && shelterPreview && !$('citadel-interior').hidden) {
+      event.preventDefault();
+      shelterCancel();
+    }
+  });
+
   function roomHidden() {
     var l = (S.look && typeof S.look === 'object') ? S.look : (cachedLook || {});
     var o = {}; String(l.rmoff || '').split(',').forEach(function (x) { if (x) o[x] = true; });
@@ -4139,7 +4374,7 @@ function citadelRenderBuilding() {
 function citadelDecorKey(room){return 'plan.citadel.decor.v1.'+room;}
 function citadelGetDecor(room){try{var value=S.citadel?(S.citadel.decor||{})[room]:localStorage.getItem(citadelDecorKey(room));return citadelDecorChoices.some(function(c){return c.id===value;})?value:'none';}catch(e){return 'none';}}
 function citadelSetDecor(room,id){if(!citadelRoomOpen(room))return;var item=citadelDecorChoices.find(function(c){return c.id===id;});if(!loaded||!item||citadelRooms.indexOf(room)<0||pointsInfo().L<item.rank)return;var decor={};decor[room]=id;citadelSave({decor:decor});citadelRenderDecor();}
-function citadelRenderDecor(){if(!citadelRoomOpen(citadelSelected))return;legendDecorate();var room=citadelSelected,rank=pointsInfo().L,selected=citadelGetDecor(room),item=citadelDecorChoices.find(function(c){return c.id===selected;});if(item&&rank<item.rank)selected='none';var decor=$('citadel-interior-decoration');if(decor)decor.dataset.decor=selected;var host=$('citadel-decor-options');if(!host)return;host.textContent='';citadelDecorChoices.forEach(function(choice){var button=document.createElement('button');button.type='button';button.disabled=rank<choice.rank;button.className='citadel-decor-option'+(choice.id===selected?' is-active':'');button.textContent=choice.name+(rank<choice.rank?' · ранг '+choice.rank:'');button.setAttribute('aria-pressed',choice.id===selected?'true':'false');button.addEventListener('click',function(){citadelSetDecor(room,choice.id);});host.appendChild(button);});$('citadel-decor-status').textContent='Оформление: '+(citadelDecorChoices.find(function(c){return c.id===selected;})||citadelDecorChoices[0]).name+'. Не расходует ресурсы.';}
+function citadelRenderDecor(){if(!citadelRoomOpen(citadelSelected))return;legendDecorate();shelterRender();var room=citadelSelected,rank=pointsInfo().L,selected=citadelGetDecor(room),item=citadelDecorChoices.find(function(c){return c.id===selected;});if(item&&rank<item.rank)selected='none';var decor=$('citadel-interior-decoration');if(decor)decor.dataset.decor=selected;var host=$('citadel-decor-options');if(!host)return;host.textContent='';citadelDecorChoices.forEach(function(choice){var button=document.createElement('button');button.type='button';button.disabled=rank<choice.rank;button.className='citadel-decor-option'+(choice.id===selected?' is-active':'');button.textContent=choice.name+(rank<choice.rank?' · ранг '+choice.rank:'');button.setAttribute('aria-pressed',choice.id===selected?'true':'false');button.addEventListener('click',function(){citadelSetDecor(room,choice.id);});host.appendChild(button);});$('citadel-decor-status').textContent='Оформление: '+(citadelDecorChoices.find(function(c){return c.id===selected;})||citadelDecorChoices[0]).name+'. Не расходует ресурсы.';}
 var citadelObjects={gatehouse:['Засов ворот','Кованые створки закрывают проход от холодного ветра. Дозорный проверяет их каждый день.'],refectory:['Длинный стол','К вечеру здесь собираются жители Цитадели.'],cloister:['Каменная арка','Под сводом растёт мох. Сквозь решётку падает свет внешнего двора.'],vault:['Книга казны','Ядра души общие со Воспоминаниями. Все расходы записаны в истории покупок.'],throne:['Древний трон','Камень помнит каждого, кто решался на нём сидеть.'],observatory:['Звёздная линза','Сквозь мутное стекло видны созвездия, которых нет на обычном небе.'],rest:['Старая кровать','Место, где даже кошмары ненадолго теряют власть.'],study:['Книга записей','На страницах отражается путь, который ты проходишь в реальности.'],archive:['Стеллаж воспоминаний','Время не трогает эти страницы.'],forge:['Горн','Угли ждут часа, когда мастерская пробудится.']};
 // Interior motion is presentation state; it never awards or writes progress.
 var citadelWalkPositions={},citadelWalkAnimation=null;
@@ -4169,7 +4404,8 @@ function citadelWalkTo(x,y,animate){
  });});
  spots.sort(function(a,b){return a.d-b.d;});if(spots.length){x=spots[0].x;y=spots[0].y;}
  var from={left:getComputedStyle(hero).left,bottom:getComputedStyle(hero).bottom};
- var plane=CitadelSpace.route(citadelSelected,citadelRoomLevel(citadelSelected),{x:(parseFloat(from.left)+hw/2)/w*480,y:(1-parseFloat(from.bottom)/h)*320},{x:x*480,y:(1-y)*320});
+ var level=citadelRoomLevel(citadelSelected);
+ var plane=CitadelSpace.route(citadelSelected,level,{x:(parseFloat(from.left)+hw/2)/w*480,y:(1-parseFloat(from.bottom)/h)*320},{x:x*480,y:(1-y)*320},shelterFootprints(citadelSelected,level));
  var destination=plane[plane.length-1];x=destination.x/480;y=1-destination.y/320;
  citadelStopWalk();citadelWalkPositions[citadelSelected]={x:x,y:y};
  var left=Math.round(w*x-hero.offsetWidth/2),bottom=Math.round(stage.clientHeight*y);
@@ -4462,7 +4698,7 @@ function citadelPositionInteriorResidents(){
   var work={forge:[.35,.105],archive:[.42,.105],gatehouse:[.61,.105],vault:[.49,.055]},anchor=n.dataset.mode==='work'&&work[stage.dataset.room];
   var candidates=(anchor?[anchor]:[]).concat([[.32,.035],[.68,.035],[.22,.035],[.78,.035],[.4,.035],[.6,.035],[.5,.035]]),placed=false;
   for(var k=0;k<candidates.length;k++){
-   var point=CitadelSpace.nearest(stage.dataset.room,Number(stage.dataset.level),{x:candidates[k][0]*480,y:(1-candidates[k][1])*320}),x=point.x/480,y=1-point.y/320;
+   var point=CitadelSpace.nearest(stage.dataset.room,Number(stage.dataset.level),{x:candidates[k][0]*480,y:(1-candidates[k][1])*320},shelterFootprints(stage.dataset.room,Number(stage.dataset.level))),x=point.x/480,y=1-point.y/320;
    n.style.left='calc('+x*100+'% - '+n.offsetWidth/2+'px)';n.style.bottom=y*100+'%';
    n.dataset.floorX=String(point.x);n.dataset.floorY=String(point.y);
    var b=n.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2,hit={left:cx-22,right:cx+22,top:cy-22,bottom:cy+22};
@@ -4715,7 +4951,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
 
 function renderAllInner() {
-    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync();
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync();
   }
 
   function renderHourglass() {
@@ -5166,6 +5402,7 @@ function renderAllInner() {
     }, function (e) { dbErr(e); });
   }
   function subscribe() {
+    db.doc(VkachShelter.path).onSnapshot(function(sn){S.shelter=sn.exists?sn.data():null;firstDone('shelter');requestProfileRender();},dbErr);
     db.doc('cfg/realm-achievements').onSnapshot(function(sn){S.realm=sn.exists?sn.data():null;firstDone('realm');requestProfileRender();},dbErr);
     db.doc('cfg/fate').onSnapshot(function(sn){S.fate=sn.exists?sn.data():null;firstDone('fate');requestProfileRender();},dbErr);
     db.doc('cfg/legends').onSnapshot(function(sn){S.legends=sn.exists?sn.data():null;firstDone('legends');requestProfileRender();},dbErr);
@@ -5468,8 +5705,8 @@ function renderAllInner() {
     window.addEventListener('resize',scheduleViewport);if(window.visualViewport){visualViewport.addEventListener('resize',scheduleViewport);visualViewport.addEventListener('scroll',scheduleViewport);}document.addEventListener('focusin',scheduleViewport);document.addEventListener('focusout',scheduleViewport);window.addEventListener('pageshow',scheduleViewport);scheduleViewport();
     new ResizeObserver(function(){measureShell();scheduleCaptions();}).observe(header);
     new MutationObserver(function(){measureShell();if(home.dataset.uiView==='overview')requestAnimationFrame(function(){cameraSize();viewport.scrollTo(lastCamera.left,lastCamera.top);cameraCaptions();});}).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
-    window.addEventListener('popstate',function(){if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open)return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
+    window.addEventListener('popstate',function(){if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open)return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
     function updateShellStatus(){if(!loaded)return;restoreView();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}
     new MutationObserver(updateShellStatus).observe($('citadel-live-rank'),{childList:true,characterData:true,subtree:true});

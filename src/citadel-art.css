@@ -482,3 +482,29 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
  background:url("assets/citadel/rest-restoration-3.svg") center/100% 100% no-repeat,url("assets/citadel/rest-restoration-2.svg") center/100% 100% no-repeat!important;
  image-rendering:auto!important
 }
+
+/* Earned shelter props share the scene plane and leave the floor controls available. */
+#shelter-layer{position:absolute;inset:0;z-index:4;pointer-events:none}
+.shelter-prop{position:absolute;translate:-50% -100%;border:0;padding:0;background:none;pointer-events:auto;isolation:isolate;filter:drop-shadow(1px 2px 2px #0a0714bd)}
+.shelter-prop .rmi,.shelter-icon .rmi{inset:0;width:100%;height:100%;animation:none}
+.shelter-prop[data-slot="floor"]::before,.shelter-prop[data-slot="pedestal"]::before,.shelter-prop[data-slot="table"]::before{content:'';position:absolute;left:3%;right:3%;bottom:-4%;height:13%;border-radius:50%;background:#090712a8;z-index:-1}
+.shelter-prop[data-slot="pedestal"]::after{content:'';position:absolute;left:15%;right:15%;top:100%;height:22%;background:linear-gradient(#a5989c 0 15%,#615667 15% 80%,#413747 80%);z-index:-1}
+.shelter-prop.shelter-preview{pointer-events:none;outline:1px dashed #f5dca2;outline-offset:3px}
+.shelter-collection{margin:8px 0;border:1px solid #685774;border-radius:5px;background:#241d2d;color:#e6d6e7;font-size:13px}
+.shelter-collection summary{min-height:44px;padding:13px 10px;cursor:pointer;color:#f1d8ac}
+#shelter-list,#shelter-detail{padding:0 10px;overflow-wrap:anywhere}
+#shelter-list,#shelter-detail{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#shelter-detail p,#shelter-feedback{flex-basis:100%;margin:3px 0;line-height:1.45}
+#shelter-feedback{padding:0 10px}
+#shelter-feedback:empty,#shelter-detail:empty{display:none}
+#shelter-detail:not(:empty){margin:10px 0;padding-bottom:6px}
+.shelter-collection .citadel-decor-option{min-height:44px;padding:6px 10px;font-size:12px;max-width:100%}
+.shelter-collection button[aria-pressed="true"]{border-color:#e2bb7e;background:#49354e;color:#ffe7bc}
+.shelter-icon{position:relative;width:28px;height:28px}
+@media(prefers-reduced-motion:reduce){.shelter-prop .rmi i,.shelter-icon .rmi i{animation:none}}
+.shelter-prop.shelter-inspected:focus-visible,.shelter-prop.shelter-inspected:hover{outline:1px solid #e9ca95;outline-offset:2px}
+.citadel-interior-stage[data-level="1"] .shelter-prop .rmi{filter:brightness(.74) saturate(.83)}
+.citadel-interior-stage[data-phase="НОЧЬ"] .shelter-prop .rmi{filter:brightness(.82) saturate(.88)}
+#shelter-layer{z-index:auto}
+.shelter-prop{z-index:7}
+.shelter-prop.shelter-rug{z-index:4}
