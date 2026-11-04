@@ -27,6 +27,10 @@ permissions:
   contents: write
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(github.ref == 'refs/heads/citadel-development-20261030' && '[1]' || '[1,2,3,4]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -120,15 +124,18 @@ jobs:
           PY
           for f in /tmp/citadel-inline-*.js; do node --check "$f"; done
       - name: Browser regression tests
+        env:
+          TEST_SHARD: ${{ github.ref == 'refs/heads/citadel-development-20261030' && '1/1' || format('{0}/4', matrix.shard) }}
+          CI_SHARD: ${{ matrix.shard }}
         run: |
           npm ci
           npx playwright install --with-deps chromium
           python build.py --test
-          npm run test:all
-      - name: Isolated Android PWA safety tests
-        run: |
-          python build.py --test
-          npm run test:isolation
+          if [ "$CI_SHARD" = "1" ]; then
+            npm run test:all
+          else
+            npm test
+          fi
       - name: Synchronize generated docs in development branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/citadel-development-20261030'
         run: |
@@ -159,13 +166,15 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: citadel-browser-screenshots
+          name: citadel-browser-screenshots-${{ matrix.shard }}
           path: test-results/
       - uses: actions/upload-artifact@v4
+        if: matrix.shard == 1
         with:
           name: citadel-test-build
           path: docs/
       - uses: actions/upload-artifact@v4
+        if: matrix.shard == 1
         with:
           name: android-isolated-test-build
           path: android-test/

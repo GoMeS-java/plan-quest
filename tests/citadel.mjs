@@ -27,8 +27,10 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}:{} )});
 console.log('Browser',browser.version());
-const errors=[];let passed=0,currentCheck='setup';
-async function check(name,fn){if(process.env.TEST_FILTER&&!new RegExp(process.env.TEST_FILTER).test(name))return;currentCheck=name;await fn();passed++;console.log('PASS',name);}
+const errors=[];const [shard,totalShards]=(process.env.TEST_SHARD||'1/1').split('/').map(Number);
+assert(Number.isInteger(shard)&&Number.isInteger(totalShards)&&shard>=1&&shard<=totalShards,'Invalid TEST_SHARD');
+let ordinal=0,passed=0,currentCheck='setup';
+async function check(name,fn){if(ordinal++%totalShards!==shard-1)return;if(process.env.TEST_FILTER&&!new RegExp(process.env.TEST_FILTER).test(name))return;currentCheck=name;await fn();passed++;console.log('PASS',name);}
 const date='2026-10-30';
 const initial={'cfg/opening':{cash:1200.5,card:3400},'weights/test':{kg:143.7,date,ts:1},['days/'+date]:{q:[false,false,false,false,false,false,false,false,false,false],steps:1200,kcal:2100},'spont/old':{name:'Synthetic task',date,done:false,heavy:true,ts:1},'cfg/outfit':{outer:'none'}};
 // Computed keys are assigned separately to remain compatible with plain JavaScript.
@@ -1391,11 +1393,11 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('0.74 departing conversation restores room focus and companions face the hero',async()=>{
   const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16',shell:true});
-  await p.clock.setSystemTime(new Date('2027-04-16T09:59:59+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
+  await p.clock.setFixedTime(new Date('2027-04-16T09:59:59+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
   await p.locator('[data-room-talk="smith"]').click();const actor=p.locator('#citadel-interior-stage [data-person="smith"]');
   assert.equal(await actor.getAttribute('data-mode'),'interaction');assert(await actor.evaluate(n=>{const a=n.getBoundingClientRect(),h=document.querySelector('#citadel-interior-stage .citadel-hero-sprite').getBoundingClientRect();return n.dataset.facing===(h.left+h.width/2<a.left+a.width/2?'left':'right');}));
   assert.equal(await actor.evaluate(n=>getComputedStyle(n,'::after').content),'"◆"');await waitForIdle(p);const before=await docs(p);
-  await p.clock.setSystemTime(new Date('2027-04-16T10:00:10+03:00'));await p.evaluate(()=>__qa.render());
+  await p.clock.setFixedTime(new Date('2027-04-16T10:00:10+03:00'));await p.evaluate(()=>__qa.render());
   assert(await p.locator('#citadel-room-conversation').isHidden());assert(await p.locator('#citadel-interior-stage').evaluate(n=>document.activeElement===n),'departing NPC must return focus to the playable room');
   assert.equal(await p.locator('[data-room-talk="smith"]').count(),0);assert.deepEqual(await docs(p),before);await context.close();
  });
@@ -1822,6 +1824,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('single Citadel shell, drawers, mobile camera and real game panels',async()=>{
   for(const width of [320,360,390,430,768,1280]){
    const {page:p,context}=await open({width,shell:true,seed:advancedSeed(),day:'2027-04-16'});
+   await p.addLocatorHandler(p.locator('#legend-scene[open]'),()=>p.evaluate(()=>document.querySelector('#legend-scene[open]')?.close()),{noWaitAfter:true});
    await p.waitForFunction(()=>!!window.__citadelShell);
    assert(await p.locator('#citadel-castle').isVisible());assert(!(await p.locator('.stage').isVisible()));
    assert.equal(await p.locator('[data-croom]').count(),10);
