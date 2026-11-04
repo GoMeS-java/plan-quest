@@ -41,7 +41,7 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
  await context.addInitScript(({seed,legacy,day,failUpgrade,shell,fresh})=>{if(!shell)localStorage.setItem('plan.shell.classic.v1','1');if(!localStorage.getItem('qa-init')){const docs=Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]));if(!fresh)localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs}));for(const [k,v]of Object.entries(legacy))localStorage.setItem(k,v);localStorage.setItem('qa-init','1');}localStorage.setItem('wsum',day.slice(0,7)+'-26');localStorage.setItem('msum',day.slice(0,7));localStorage.setItem('trialSeen',day);if(failUpgrade&&!localStorage.getItem('qa-upgrade-failed')){localStorage.setItem('qa-upgrade-failed','1');window.__originalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.pre-update.v1')throw new DOMException('Synthetic full','QuotaExceededError');return window.__originalSetItem.call(this,k,v);};}},{seed,legacy,day,failUpgrade,shell,fresh});
  await context.route('**/*',async route=>{const u=route.request().url();if(u===url+'/'||u===url+'/__baseline')return route.fulfill({contentType:'text/html',body:instrument(base?baseline:game)});if(!u.startsWith(url))return route.fulfill({status:200,body:'',contentType:'text/css'});return route.continue();});
  await page.goto(url+(base?'/__baseline':'/'));try{await page.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');}catch(e){console.log('Initial profile diagnostic',await page.evaluate(()=>({title:document.title,rank:document.querySelector('#citadel-live-rank')?.textContent,readiness:window.__qa?.readiness?.()})).catch(()=>({pageUnavailable:true})),errors);throw e;}
- if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await page.evaluate(()=>__qa.idle());await page.waitForFunction(()=>__qa.cosmeticsIdle());await page.evaluate(()=>__qa.idle());}
+ if(!base&&!failUpgrade){try{await page.waitForFunction(()=>window.__qa?.S.abyss?.version===1&&__qa.S.abyss.rank>=__qa.points().L);}catch(e){if(slowCPU)console.log('CPU startup diagnostic',await page.evaluate(()=>({ready:__qa.loading(),rank:__qa.points().L,economyRank:__qa.S.abyss?.rank,transactions:__qa.S.tx.length,weights:__qa.S.weights.length,tasks:__qa.S.spont.length,renders:window.__qaRenderCount})),errors);throw e;}await waitForIdle(page);await page.waitForFunction(()=>__qa.cosmeticsIdle());await waitForIdle(page);}
  if(shell){
    const notice='#achup[data-qa-realm-notice="true"]:not([hidden])';
    await page.addLocatorHandler(page.locator(notice),()=>page.evaluate(selector=>{
@@ -51,6 +51,15 @@ async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={
  }
  if(!shell)await page.addLocatorHandler(page.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first(),()=>dismiss(page),{noWaitAfter:true});
  await dismiss(page);return {page,context,session};
+}
+async function waitForIdle(page) {
+ const completion=await page.evaluateHandle(()=>{
+  const ticket={done:false};
+  __qa.idle().then(()=>{ticket.done=true;});
+  return ticket;
+ });
+ try{await page.waitForFunction(ticket=>ticket.done,completion);}
+ finally{await completion.dispose();}
 }
 async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();if(!document.getElementById('achup')?.hidden)document.getElementById('ac-ok')?.click();for(const id of ['lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await p.clock.runFor(30).catch(()=>{});await p.waitForTimeout(15);if(!await p.locator('#legend-scene[open]').count()&&await p.locator('#achup').isHidden()&&await p.locator('#lvup').isHidden())return;}}
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));if(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-shell'))){if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').first().click();if(await p.locator('#citadel-home').getAttribute('data-ui-view')!=='overview')await p.locator('[data-room-view="overview"]').click();}}
@@ -89,7 +98,7 @@ function landscapeSeed(){
  return seed;
 }
 async function achievementPreview(p,name){
- await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());
+ await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());
  await p.evaluate(()=>{window.__achievementShot=[];document.querySelectorAll('.achievement-card h3,.achievement-card-details>p,.achievement-history button,.legend-replay').forEach(n=>{__achievementShot.push([n,n.textContent]);n.textContent=n.matches('h3,button')?'Полученная отметина':n.classList.contains('achievement-rewards')?'Полученные награды скрыты в демонстрации.':'Описание скрыто в демонстрации.';});var note=document.createElement('p');note.id='achievement-shot-note';note.className='hint';note.textContent='Демонстрация: названия, условия и награды скрыты.';document.querySelector('#trophy .shead').after(note);});
  try{await p.screenshot({path:resolve(out,name)});}finally{await p.evaluate(()=>{for(const [n,text]of window.__achievementShot||[])if(n.isConnected)n.textContent=text;document.querySelector('#achievement-shot-note')?.remove();delete window.__achievementShot;});}
 }
@@ -226,16 +235,16 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(let i=0;i<12;i++){const d=new Date('2026-10-19T12:00Z');d.setUTCDate(d.getUTCDate()+i*7);seed['weights/r'+i]={kg:150-i/10,date:d.toISOString().slice(0,10),ts:i};seed['spont/r'+i]={done:true,heavy:true,date:'2027-09-15',name:'Synthetic real task',ts:i};}
   seed['cfg/citadel']={selectedRoom:'rest',decor:{rest:'banner',study:'lantern',forge:'crystal'}};seed['wardrobe/custom']={slot:'top',name:'Synthetic garment',shape:'knit',c:{base:'#6947ab',alt:'#9872c9',shade:'#402b70'}};seed['cfg/outfit']={top:'custom',bottom:'pants_brown',outer:'coat_camel'};
   const {page:p,context}=await open({shell:true,seed,day:'2027-09-15'});await p.waitForFunction(()=>__qa.realm.idle());let owned=await p.evaluate(()=>__qa.realm.owned());assert(owned.some(d=>d.kind==='superrare'));assert(owned.some(d=>d.clothes));assert(owned.every(d=>d.presented));
-  await p.evaluate(async()=>{const ids=Array.from(document.querySelectorAll('#achievement-grid [data-achievement]'),n=>n.dataset.achievement).filter(id=>!id.startsWith('rebuild')).slice(0,3);await PlanDB.doc('cfg/look').set({showcase:ids,title:ids[0],bg:'b_forest',aura:'au_soft',frame:'fr_gold',future:'preserve'});});await p.waitForFunction(()=>__qa.realm.idle());await p.evaluate(()=>__qa.idle());await dismiss(p);await shellNav(p,'Достижения');owned=await p.evaluate(()=>__qa.realm.owned());assert(await p.evaluate(rows=>rows.every(d=>!!document.querySelector('[data-achievement="'+d.id+'"]')),owned));
+  await p.evaluate(async()=>{const ids=Array.from(document.querySelectorAll('#achievement-grid [data-achievement]'),n=>n.dataset.achievement).filter(id=>!id.startsWith('rebuild')).slice(0,3);await PlanDB.doc('cfg/look').set({showcase:ids,title:ids[0],bg:'b_forest',aura:'au_soft',frame:'fr_gold',future:'preserve'});});await p.waitForFunction(()=>__qa.realm.idle());await waitForIdle(p);await dismiss(p);await shellNav(p,'Достижения');owned=await p.evaluate(()=>__qa.realm.owned());assert(await p.evaluate(rows=>rows.every(d=>!!document.querySelector('[data-achievement="'+d.id+'"]')),owned));
   const snapshot=await docs(p),inventory=Object.keys(snapshot).filter(k=>k.startsWith('wardrobe/'));assert(inventory.length>1);assert(owned.filter(d=>d.clothes).every(d=>snapshot['wardrobe/'+d.clothes]));
-  await p.reload();await p.waitForFunction(()=>__qa.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.deepEqual(await p.evaluate(()=>__qa.realm.owned()),owned);const after=await docs(p);assert.deepEqual(Object.keys(after).filter(k=>k.startsWith('wardrobe/')),inventory);assert.equal(after['cfg/look'].d.future,'preserve');
-  await shellNav(p,'Профиль');await p.locator('#profile-gear-open').click();for(const row of owned.filter(d=>d.clothes)){const id=row.clothes,slot=snapshot['wardrobe/'+id].d.slot;assert(await p.locator('.witem[data-item="'+id+'"] .wardrobe-reward').count());await p.locator('.witem[data-item="'+id+'"]').click();await p.evaluate(()=>__qa.idle());assert.equal((await docs(p))['cfg/outfit'].d[slot],id);assert.equal(await p.locator('#profile-portrait-'+slot).textContent(),snapshot['wardrobe/'+id].d.name);}await context.close();
+  await p.reload();await p.waitForFunction(()=>__qa.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.deepEqual(await p.evaluate(()=>__qa.realm.owned()),owned);const after=await docs(p);assert.deepEqual(Object.keys(after).filter(k=>k.startsWith('wardrobe/')),inventory);assert.equal(after['cfg/look'].d.future,'preserve');
+  await shellNav(p,'Профиль');await p.locator('#profile-gear-open').click();for(const row of owned.filter(d=>d.clothes)){const id=row.clothes,slot=snapshot['wardrobe/'+id].d.slot;assert(await p.locator('.witem[data-item="'+id+'"] .wardrobe-reward').count());await p.locator('.witem[data-item="'+id+'"]').click();await waitForIdle(p);assert.equal((await docs(p))['cfg/outfit'].d[slot],id);assert.equal(await p.locator('#profile-portrait-'+slot).textContent(),snapshot['wardrobe/'+id].d.name);}await context.close();
  });
  await check('1.1 failed award persistence grants nothing and retry has one receipt and no currency mutation',async()=>{
   const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await p.evaluate(()=>window.__qaPauseRealm=true);const before=await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()}));await write(p,'buys/citadel-rest-2',{kind:'citadel-room',currency:'abyss',room:'rest',level:2,cost:100,ts:1798804800000});
   await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};window.__qaPauseRealm=false;try{__qa.realm.sync();await __qa.idle();}finally{Storage.prototype.setItem=original;}});assert.equal(await p.evaluate(()=>__qa.realm.owned().length),0);assert(!(await docs(p))['cfg/realm-achievements']);
-  await p.evaluate(()=>__qa.realm.sync());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.realm.owned().length>0&&__qa.realm.idle());assert.equal(await p.evaluate(()=>__qa.realm.owned().length),1);assert.deepEqual(await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()})),before);
-  const saved=(await docs(p))['cfg/realm-achievements'];await p.evaluate(()=>{__qa.realm.sync();__qa.render();});await p.evaluate(()=>__qa.idle());assert.deepEqual((await docs(p))['cfg/realm-achievements'],saved);await context.close();
+  await p.evaluate(()=>__qa.realm.sync());await waitForIdle(p);await p.waitForFunction(()=>__qa.realm.owned().length>0&&__qa.realm.idle());assert.equal(await p.evaluate(()=>__qa.realm.owned().length),1);assert.deepEqual(await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()})),before);
+  const saved=(await docs(p))['cfg/realm-achievements'];await p.evaluate(()=>{__qa.realm.sync();__qa.render();});await waitForIdle(p);assert.deepEqual((await docs(p))['cfg/realm-achievements'],saved);await context.close();
  });
  await check('1.1 rebuild discoveries and presentation receipts survive older backup restore',async()=>{
   const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});const old=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));await write(p,'buys/citadel-rest-2',{kind:'citadel-room',currency:'abyss',room:'rest',level:2,cost:100,ts:1798804800000});await p.waitForFunction(()=>__qa.realm.owned().length>0&&__qa.realm.idle());const earned=await p.evaluate(()=>__qa.realm.owned());await p.evaluate(async copy=>PlanSync.importObj(copy,true),old);await p.waitForFunction(()=>__qa.realm.idle());assert.deepEqual(await p.evaluate(()=>__qa.realm.owned()),earned);assert(earned.every(d=>d.presented));await context.close();
@@ -252,13 +261,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   assert.equal(new Set(images).size,5);await write(p,'cfg/outfit',{top:'knit_beige',bottom:'pants_brown',outer:'none'});const wide=await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL());await write(p,'weights/test',{kg:110,date,ts:2});const slim=await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL());assert.notEqual(slim,wide);await write(p,'weights/test',{kg:160,date,ts:3});assert.equal(await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL()),wide);
   await write(p,'wardrobe/custom',{slot:'top',name:'Тестовый свитер',shape:'knit',c:{base:'#6947ab',alt:'#9872c9',shade:'#402b70'}});await write(p,'cfg/outfit',{top:'custom',bottom:'pants_black',outer:'none'});const custom=await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL());assert.notEqual(custom,wide);assert.equal(await p.locator('#profile-portrait-top').textContent(),'Тестовый свитер');
-  await p.reload();await p.waitForFunction(()=>__qa.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);await shellNav(p,'Профиль');assert.equal(await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL()),custom);await p.evaluate(async()=>{await PlanDB.doc('wardrobe/custom').delete();});await p.waitForFunction(()=>document.querySelector('#profile-portrait-top').textContent==='Бежевый свитер');await context.close();
+  await p.reload();await p.waitForFunction(()=>__qa.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);await shellNav(p,'Профиль');assert.equal(await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL()),custom);await p.evaluate(async()=>{await PlanDB.doc('wardrobe/custom').delete();});await p.waitForFunction(()=>document.querySelector('#profile-portrait-top').textContent==='Бежевый свитер');await context.close();
  });
  await check('1.1 detailed portrait keeps durable equipment after rejected save and follows external appearance updates',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...initial,'cfg/outfit':{top:'knit_beige',bottom:'pants_brown',outer:'none'}}});await shellNav(p,'Профиль');const before=await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL());
   await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{await __qa.equip('outer','coat_camel');await __qa.idle();}finally{Storage.prototype.setItem=original;}});assert.equal(await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL()),before);assert.equal(await p.locator('#profile-portrait-outer').textContent(),'Без верхней одежды');
   await p.evaluate(async()=>{await __qa.equip('outer','coat_camel');await __qa.idle();});assert.notEqual(await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL()),before);
-  const other=await context.newPage();await other.clock.install({time:new Date(date+'T14:00:00+03:00')});await other.goto(url);await other.waitForFunction(()=>__qa.loading());await other.evaluate(()=>__qa.idle());await other.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(other);await other.evaluate(async()=>{await __qa.equip('outer','none');await __qa.idle();});await p.waitForFunction(()=>document.querySelector('#profile-portrait-outer').textContent==='Без верхней одежды');assert.equal(await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL()),before);await context.close();
+  const other=await context.newPage();await other.clock.install({time:new Date(date+'T14:00:00+03:00')});await other.goto(url);await other.waitForFunction(()=>__qa.loading());await waitForIdle(other);await other.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(other);await other.evaluate(async()=>{await __qa.equip('outer','none');await __qa.idle();});await p.waitForFunction(()=>document.querySelector('#profile-portrait-outer').textContent==='Без верхней одежды');assert.equal(await p.locator('#profile-portrait-canvas').evaluate(n=>n.toDataURL()),before);await context.close();
  });
  await check('1.1 RPG development reflects existing activity totals and portrait fits narrow screens without added controls',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await shellNav(p,'Профиль');
@@ -269,23 +278,23 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await context.close();
  });
  await check('1.1 interface selected palette reaches RPG controls',async()=>{
-  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await p.evaluate(()=>{__qa.appearance.fixture();__qa.appearance.look('theme','th_abyss');});await p.evaluate(()=>__qa.idle());
+  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await p.evaluate(()=>{__qa.appearance.fixture();__qa.appearance.look('theme','th_abyss');});await waitForIdle(p);
   const colors=await p.evaluate(()=>({root:getComputedStyle(document.documentElement).getPropertyValue('--gold').trim(),body:getComputedStyle(document.body).getPropertyValue('--gold').trim()}));assert.equal(colors.body,colors.root,'selected palette must reach RPG UI rather than remain behind its body defaults');await context.close();
  });
 
  await check('1.1 titles preview shared equipment and support select remove auto reload and external updates',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Профиль');await p.locator('#profile-title-open').click();
   const titles=await p.evaluate(()=>__qa.appearance.titles());assert(titles.length>1);const id=titles[0].id;const selected=p.locator('#profile-titles [data-title-id="'+id+'"]');assert(await selected.locator('canvas').evaluate(n=>n.toDataURL()===document.querySelector('#hero').toDataURL()));
-  await selected.click();await p.evaluate(()=>__qa.idle());assert.equal(await p.locator('#profile-title').textContent(),titles[0].title);assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');assert.equal(await p.locator('#profile-title-open').getAttribute('aria-expanded'),'false');assert(await p.locator('#profile-title-open').evaluate(n=>n===document.activeElement));
-  await p.reload();await p.waitForFunction(()=>__qa.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);await shellNav(p,'Профиль');assert.equal(await p.locator('#profile-title').textContent(),titles[0].title);
-  await p.locator('#profile-title-open').click();await p.locator('#profile-titles [data-title-id="__none__"]').click();await p.evaluate(()=>__qa.idle());assert.equal(await p.locator('#profile-title').textContent(),'СПЯЩИЙ');assert.equal(await p.locator('.nametag').textContent(),'СПЯЩИЙ');
+  await selected.click();await waitForIdle(p);assert.equal(await p.locator('#profile-title').textContent(),titles[0].title);assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');assert.equal(await p.locator('#profile-title-open').getAttribute('aria-expanded'),'false');assert(await p.locator('#profile-title-open').evaluate(n=>n===document.activeElement));
+  await p.reload();await p.waitForFunction(()=>__qa.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);await shellNav(p,'Профиль');assert.equal(await p.locator('#profile-title').textContent(),titles[0].title);
+  await p.locator('#profile-title-open').click();await p.locator('#profile-titles [data-title-id="__none__"]').click();await waitForIdle(p);assert.equal(await p.locator('#profile-title').textContent(),'СПЯЩИЙ');assert.equal(await p.locator('.nametag').textContent(),'СПЯЩИЙ');
   const look=(await docs(p))['cfg/look'].d;await write(p,'cfg/look',{...look,title:titles[1].id});await shellNav(p,'Профиль');assert.equal(await p.locator('#profile-title').textContent(),titles[1].title);
-  await p.locator('#profile-title-open').click();await p.locator('#profile-titles [data-title-id=""]').click();await p.evaluate(()=>__qa.idle());assert.equal(await p.locator('#profile-title').textContent(),titles.at(-1).title);assert.equal(await p.locator('.nametag').textContent(),titles.at(-1).title);await context.close();
+  await p.locator('#profile-title-open').click();await p.locator('#profile-titles [data-title-id=""]').click();await waitForIdle(p);assert.equal(await p.locator('#profile-title').textContent(),titles.at(-1).title);assert.equal(await p.locator('.nametag').textContent(),titles.at(-1).title);await context.close();
  });
  await check('1.1 title failure rolls back both projections retry succeeds and locked choices remain absent',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{title:'__none__',futureField:'preserve'}},day:'2027-09-15'});const titles=await p.evaluate(()=>__qa.appearance.titles());await shellNav(p,'Профиль');await p.locator('#profile-title-open').click();const id=titles[0].id;
-  await p.evaluate(()=>{window.__titleStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __titleStorage.call(this,k,v);};});await p.locator('#profile-titles [data-title-id="'+id+'"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>document.querySelector('#profile-title').textContent==='СПЯЩИЙ');assert.equal((await docs(p))['cfg/look'].d.title,'__none__');assert.equal(await p.locator('.nametag').textContent(),'СПЯЩИЙ');
-  await p.evaluate(()=>Storage.prototype.setItem=__titleStorage);await p.locator('#profile-title-open').click();await p.locator('#profile-titles [data-title-id="'+id+'"]').click();await p.evaluate(()=>__qa.idle());assert.equal((await docs(p))['cfg/look'].d.title,id);await context.close();
+  await p.evaluate(()=>{window.__titleStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __titleStorage.call(this,k,v);};});await p.locator('#profile-titles [data-title-id="'+id+'"]').click();await waitForIdle(p);await p.waitForFunction(()=>document.querySelector('#profile-title').textContent==='СПЯЩИЙ');assert.equal((await docs(p))['cfg/look'].d.title,'__none__');assert.equal(await p.locator('.nametag').textContent(),'СПЯЩИЙ');
+  await p.evaluate(()=>Storage.prototype.setItem=__titleStorage);await p.locator('#profile-title-open').click();await p.locator('#profile-titles [data-title-id="'+id+'"]').click();await waitForIdle(p);assert.equal((await docs(p))['cfg/look'].d.title,id);await context.close();
   const locked=await open({shell:true,seed:{...initial,'cfg/look':{title:id}}});await shellNav(locked.page,'Профиль');await locked.page.locator('#profile-title-open').click();assert.equal(await locked.page.locator('#profile-titles [data-title-id="'+id+'"]').count(),0);assert.equal(await locked.page.locator('#profile-title').textContent(),'СПЯЩИЙ');assert.equal(await locked.page.locator('#profile-titles .title-choice').count(),2);await locked.context.close();
  });
  await check('1.1 interface every existing miniature previews without writes and applies replaces and clears',async()=>{
@@ -305,17 +314,17 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const after=await docs(p);for(const d of [before,after]){delete d['cfg/look'];delete d['cfg/citadel'];}assert.deepEqual(after,before);await context.close();
  });
  await check('1.1 interface and title collections fit Android and preserve keyboard focus after refresh',async()=>{
-  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await p.evaluate(()=>__qa.appearance.fixture());await shellNav(p,'Настройки');await p.evaluate(()=>__qa.render());const sec=p.locator('[data-look-category="font"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="fo_wide"]').click();await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.activeElement.dataset.lookId),'fo_wide');await p.evaluate(()=>__qa.render());assert.equal(await p.evaluate(()=>document.activeElement.dataset.lookId),'fo_wide');
+  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await p.evaluate(()=>__qa.appearance.fixture());await shellNav(p,'Настройки');await p.evaluate(()=>__qa.render());const sec=p.locator('[data-look-category="font"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="fo_wide"]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.activeElement.dataset.lookId),'fo_wide');await p.evaluate(()=>__qa.render());assert.equal(await p.evaluate(()=>document.activeElement.dataset.lookId),'fo_wide');
   for(const width of [320,360,390,430,844,1280]){await p.setViewportSize({width,height:width===844?390:900});await p.clock.runFor(60);assert(await p.locator('#looklist').evaluate(n=>n.scrollWidth<=n.clientWidth+1));assert(await p.locator('.interface-choice').evaluateAll(ns=>ns.filter(n=>n.checkVisibility()).every(n=>n.getBoundingClientRect().width>=44&&n.getBoundingClientRect().height>=44)));}
   await p.locator('#setup-x').click();await shellNav(p,'Профиль');await p.locator('#profile-title-open').click();for(const width of [320,390,844]){await p.setViewportSize({width,height:width===844?390:900});await p.clock.runFor(60);assert(await p.locator('#profile-titles').evaluate(n=>n.scrollWidth<=n.clientWidth+1));}
   const choice=p.locator('#profile-titles [data-title-id="__none__"]');await choice.focus();await p.evaluate(()=>__qa.render());assert.equal(await p.evaluate(()=>document.activeElement.dataset.titleId),'__none__');await context.close();
  });
  await check('1.1 owned interface choice survives failure reload and another tab without altering sibling appearance',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{title:'__none__',futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="theme"]');await sec.evaluate(n=>n.closest('details').open=true);const id=await sec.locator('[data-look-id]:not([data-look-id=""])').first().getAttribute('data-look-id');
-  await p.evaluate(()=>{window.__interfaceStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __interfaceStorage.call(this,k,v);};});await sec.locator('[data-look-id="'+id+'"]').click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(60);assert.equal(await p.locator('html').getAttribute('data-interface-theme'),null);assert.equal((await docs(p))['cfg/look'].d.theme||'','');
-  await p.evaluate(()=>Storage.prototype.setItem=__interfaceStorage);await sec.locator('[data-look-id="'+id+'"]').click();await p.evaluate(()=>__qa.idle());assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');assert.equal((await docs(p))['cfg/look'].d.title,'__none__');
-  await p.reload();await p.waitForFunction(()=>__qa.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.locator('html').getAttribute('data-interface-theme'),'');
-  const other=await context.newPage();await other.clock.install({time:new Date('2027-09-15T14:00:00+03:00')});await other.goto(url);await other.waitForFunction(()=>__qa.loading());await other.evaluate(()=>__qa.idle());await other.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(other);await other.evaluate(async()=>{__qa.appearance.look('theme','');await __qa.idle();});await p.waitForFunction(()=>!document.documentElement.hasAttribute('data-interface-theme'));assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
+  await p.evaluate(()=>{window.__interfaceStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __interfaceStorage.call(this,k,v);};});await sec.locator('[data-look-id="'+id+'"]').click();await waitForIdle(p);await p.waitForTimeout(60);assert.equal(await p.locator('html').getAttribute('data-interface-theme'),null);assert.equal((await docs(p))['cfg/look'].d.theme||'','');
+  await p.evaluate(()=>Storage.prototype.setItem=__interfaceStorage);await sec.locator('[data-look-id="'+id+'"]').click();await waitForIdle(p);assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');assert.equal((await docs(p))['cfg/look'].d.title,'__none__');
+  await p.reload();await p.waitForFunction(()=>__qa.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.locator('html').getAttribute('data-interface-theme'),'');
+  const other=await context.newPage();await other.clock.install({time:new Date('2027-09-15T14:00:00+03:00')});await other.goto(url);await other.waitForFunction(()=>__qa.loading());await waitForIdle(other);await other.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(other);await other.evaluate(async()=>{__qa.appearance.look('theme','');await __qa.idle();});await p.waitForFunction(()=>!document.documentElement.hasAttribute('data-interface-theme'));assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
  });
  await check('1.1 title and interface visual examples conceal undiscovered labels',async()=>{
   if(!process.env.APPEARANCE_CAPTURE)return;
@@ -369,34 +378,34 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const day='2027-09-15',seed={...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter',aura:'au_cold',futureField:'preserve'}};const {page:p,context}=await open({shell:true,seed,day});await p.emulateMedia({reducedMotion:'no-preference'});const before=await docs(p),variants=await p.evaluate(()=>__qa.frameVisualFixture()),hero=await p.locator('#hero').evaluate(n=>n.toDataURL());let n=0;
   for(const row of variants){
    await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);const choice=sec.locator('[data-look-id="'+row.id+'"]');assert.equal(await choice.locator('.frame-preview').count(),1);assert(await choice.locator('canvas').evaluate(n=>n.toDataURL()===document.querySelector('#hero').toDataURL()));assert((await choice.locator('.frame-preview').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('realm-winter.svg'));assert((await choice.locator('.shared-aura-layer').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('aura-cold.svg'));
-   await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученная рамка';});await choice.hover();assert.equal(await choice.locator('.reward-frame').evaluate(n=>getComputedStyle(n,'::after').animationPlayState),'running','the focused preview animates its border');await choice.screenshot({path:resolve(out,'v11-frame-'+String(++n).padStart(2,'0')+'-preview.png')});await choice.click();await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),row.key);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'cold');
+   await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученная рамка';});await choice.hover();assert.equal(await choice.locator('.reward-frame').evaluate(n=>getComputedStyle(n,'::after').animationPlayState),'running','the focused preview animates its border');await choice.screenshot({path:resolve(out,'v11-frame-'+String(++n).padStart(2,'0')+'-preview.png')});await choice.click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),row.key);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'cold');
    await p.locator('#setup-x').click();await shellNav(p,'Профиль');await p.locator('#profile-title').evaluate(n=>n.textContent='СПЯЩИЙ');const card=p.locator('.profile-stage'),border=card.locator(':scope>.reward-frame');const style=await border.evaluate(n=>({art:getComputedStyle(n,'::before').borderImageSource,light:getComputedStyle(n,'::after').borderImageSource,pointer:getComputedStyle(n).pointerEvents}));assert(style.art.includes('frame-'+row.key+'.svg'));assert(style.light.includes('frame-'+row.key+'-light.svg'));assert.equal(style.pointer,'none');assert((await card.evaluate(n=>getComputedStyle(n).backgroundImage)).includes('realm-winter.svg'));assert.equal(await p.locator('#profile-hero').evaluate(n=>n.toDataURL()),hero,'frame cannot recolor or redraw the shared hero');
    await card.screenshot({path:resolve(out,'v11-frame-'+String(n).padStart(2,'0')+'-profile.png')});
    if(['gold','wood','ice','vitrage'].includes(row.key)){const opacity=[];for(let f=0;f<12;f++){await p.waitForTimeout(500);opacity.push(await border.evaluate(n=>Number(getComputedStyle(n,'::after').opacity)));await card.screenshot({path:resolve(out,'v11-frame-live-'+row.key+'-'+f+'.png')});}assert(Math.max(...opacity)-Math.min(...opacity)>.15,'subtle frame light is actually animated');}
   }
   await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await p.locator('.profile-stage>.reward-frame').evaluate(n=>getComputedStyle(n,'::after').animationName),'none');const count=await p.locator('.profile-stage>.reward-frame').count();await p.evaluate(()=>{__qa.render();__qa.render();});assert.equal(await p.locator('.profile-stage>.reward-frame').count(),count);
-  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),'');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-frame')),false);assert.equal(await p.locator('.profile-stage>.reward-frame').evaluate(n=>getComputedStyle(n).display),'none');assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'cold');
+  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),'');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-frame')),false);assert.equal(await p.locator('.profile-stage>.reward-frame').evaluate(n=>getComputedStyle(n).display),'none');assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'cold');
   const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'frame presentation cannot grant rewards or change gameplay');await context.close();
  });
  await check('1.1 reward frames still fit the original sanctuary and keep controls accessible',async()=>{
-  const {page:p,context}=await open({seed:landscapeSeed(),day:'2027-09-15'});await p.removeLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first());await p.evaluate(()=>__qa.frameVisualFixture());await p.locator('#gear').click();const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="fr_gold"]').click();await p.evaluate(()=>__qa.idle());await p.locator('#setup-x').click();const stage=p.locator('.stage');await stage.waitFor({state:'visible'});
+  const {page:p,context}=await open({seed:landscapeSeed(),day:'2027-09-15'});await p.removeLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first());await p.evaluate(()=>__qa.frameVisualFixture());await p.locator('#gear').click();const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="fr_gold"]').click();await waitForIdle(p);await p.locator('#setup-x').click();const stage=p.locator('.stage');await stage.waitFor({state:'visible'});
   const sample=await stage.evaluate(n=>{const r=n.getBoundingClientRect(),hero=n.querySelector('#hero').getBoundingClientRect(),frame=n.querySelector(':scope>.reward-frame');return {art:getComputedStyle(frame,'::before').borderImageSource,pointer:getComputedStyle(frame).pointerEvents,animation:getComputedStyle(n).animationName,safe:hero.left>=r.left+16&&hero.right<=r.right-16&&hero.top>=r.top+16&&hero.bottom<=r.bottom-16,control:Number(getComputedStyle(n.querySelector('.wopen')).zIndex),frame:Number(getComputedStyle(frame).zIndex)};});assert(sample.art.includes('frame-gold.svg'));assert.equal(sample.pointer,'none');assert.equal(sample.animation,'none','the border never recolors the whole scene');assert(sample.safe);assert(sample.control>sample.frame);await stage.locator('.nametag').evaluateAll(ns=>ns.forEach(n=>n.textContent='СПЯЩИЙ'));await stage.screenshot({path:resolve(out,'v11-frame-sanctuary.png')});await context.close();
  });
  await check('1.1 earned frame persists with equipment and unknown appearance fields',async()=>{
-  const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{aura:'au_warm',futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);const choice=sec.locator('.frame-choice').first(),id=await choice.getAttribute('data-look-id');await choice.click();await p.evaluate(()=>__qa.idle());const key=await p.evaluate(()=>document.documentElement.dataset.rewardFrame);assert(key);await p.locator('#setup-x').click();await shellNav(p,'Профиль');await p.locator('#profile-gear-open').click();const coat=p.locator('#wd-outer .witem:not([data-item="none"])').first(),outfit=await coat.getAttribute('data-item');await coat.click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(id=>__qa.S.outfit.outer===id,outfit);assert(await p.locator('.frame-preview canvas').evaluateAll(ns=>ns.every(n=>n.toDataURL()===document.querySelector('#hero').toDataURL())));
-  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),key);const saved=(await docs(p))['cfg/look'].d;assert.equal(saved.frame,id);assert.equal(saved.aura,'au_warm');assert.equal(saved.futureField,'preserve');await context.close();
+  const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{aura:'au_warm',futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);const choice=sec.locator('.frame-choice').first(),id=await choice.getAttribute('data-look-id');await choice.click();await waitForIdle(p);const key=await p.evaluate(()=>document.documentElement.dataset.rewardFrame);assert(key);await p.locator('#setup-x').click();await shellNav(p,'Профиль');await p.locator('#profile-gear-open').click();const coat=p.locator('#wd-outer .witem:not([data-item="none"])').first(),outfit=await coat.getAttribute('data-item');await coat.click();await waitForIdle(p);await p.waitForFunction(id=>__qa.S.outfit.outer===id,outfit);assert(await p.locator('.frame-preview canvas').evaluateAll(ns=>ns.every(n=>n.toDataURL()===document.querySelector('#hero').toDataURL())));
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),key);const saved=(await docs(p))['cfg/look'].d;assert.equal(saved.frame,id);assert.equal(saved.aura,'au_warm');assert.equal(saved.futureField,'preserve');await context.close();
  });
  await check('1.1 frame art has a transparent center and protects controls at Android widths',async()=>{
   const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});const rows=await p.evaluate(()=>__qa.frameVisualFixture());
   for(const row of rows){const clear=await p.evaluate(async key=>{for(const suffix of ['', '-light']){const img=new Image();img.src='assets/citadel/frame-'+key+suffix+'.svg';await img.decode();const c=document.createElement('canvas');c.width=c.height=120;const x=c.getContext('2d');x.drawImage(img,0,0,120,120);const d=x.getImageData(0,0,120,120).data;let visible=0;for(let yy=0;yy<120;yy++)for(let xx=0;xx<120;xx++){const a=d[(yy*120+xx)*4+3];if(xx>=20&&xx<100&&yy>=20&&yy<100&&a)return false;if(a)visible++;}if(!visible)return false;}return true;},row.key);assert(clear,'frame layers cannot cover the central portrait');}
-  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('.frame-choice').first().click();await p.evaluate(()=>__qa.idle());
+  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('.frame-choice').first().click();await waitForIdle(p);
   for(const width of [320,360,390,430,844,1280]){await p.setViewportSize({width,height:width===844?390:900});await p.clock.runFor(80);assert(await sec.evaluate(n=>n.scrollWidth<=n.clientWidth+1));assert(await sec.locator('.frame-choice').evaluateAll(ns=>ns.every(n=>n.getBoundingClientRect().width>=44&&n.getBoundingClientRect().height>=44)));}
   await p.locator('#setup-x').click();await shellNav(p,'Профиль');for(const width of [320,430,844,1280]){await p.setViewportSize({width,height:width===844?390:900});await p.clock.runFor(80);const safe=await p.locator('.profile-stage').evaluate(n=>{const r=n.getBoundingClientRect(),h=n.querySelector('#profile-hero').getBoundingClientRect(),title=n.querySelector('.profile-title').getBoundingClientRect();return n.scrollWidth<=n.clientWidth+1&&h.left>=r.left+16&&h.right<=r.right-16&&title.top>=r.top+16;});assert(safe,'portrait and title stay inside the frame');if(width===320){await p.locator('#profile-title').evaluate(n=>n.textContent='СПЯЩИЙ');await p.locator('.profile-stage').screenshot({path:resolve(out,'v11-frame-mobile-320.png')});}}
   await context.close();
  });
  await check('1.1 frame selection rolls back failed storage and locked frames stay hidden',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);const id=await sec.locator('.frame-choice').first().getAttribute('data-look-id');
-  await p.evaluate(()=>{window.__frameStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __frameStorage.call(this,k,v);};});await sec.locator('[data-look-id="'+id+'"]').click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(80);assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),'');assert.equal((await docs(p))['cfg/look'].d.frame||'','');await p.evaluate(()=>Storage.prototype.setItem=window.__frameStorage);await sec.locator('[data-look-id="'+id+'"]').click();await p.evaluate(()=>__qa.idle());assert.equal((await docs(p))['cfg/look'].d.frame,id);assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
+  await p.evaluate(()=>{window.__frameStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __frameStorage.call(this,k,v);};});await sec.locator('[data-look-id="'+id+'"]').click();await waitForIdle(p);await p.waitForTimeout(80);assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),'');assert.equal((await docs(p))['cfg/look'].d.frame||'','');await p.evaluate(()=>Storage.prototype.setItem=window.__frameStorage);await sec.locator('[data-look-id="'+id+'"]').click();await waitForIdle(p);assert.equal((await docs(p))['cfg/look'].d.frame,id);assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
   const locked=await open({shell:true,seed:{...initial,'cfg/look':{frame:'fr_gold'}}});assert.equal(await locked.page.evaluate(()=>document.documentElement.dataset.rewardFrame),'');assert.equal(await locked.page.locator('.frame-preview').count(),0);assert.equal(await locked.page.locator('.profile-stage>.reward-frame').evaluate(n=>getComputedStyle(n).display),'none');await locked.context.close();
  });
 
@@ -406,7 +415,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);const choice=sec.locator('[data-look-id="'+row.id+'"]');assert.equal(await choice.locator('.aura-preview canvas').count(),1);
    assert(await choice.locator('canvas').evaluate(n=>n.toDataURL()===document.querySelector('#hero').toDataURL()),'preview uses the equipped shared hero');
    const art=await choice.locator('.shared-aura-layer').evaluate(n=>getComputedStyle(n).backgroundImage);if(row.key==='soft')assert.equal(art,'none');else assert(art.includes('aura-'+row.key+'.svg'));
-   await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученная аура';});await choice.screenshot({path:resolve(out,'v11-aura-'+String(++n).padStart(2,'0')+'-preview.png')});await choice.click();await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),row.key);
+   await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученная аура';});await choice.screenshot({path:resolve(out,'v11-aura-'+String(++n).padStart(2,'0')+'-preview.png')});await choice.click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),row.key);
    await p.locator('#setup-x').click();await shellNav(p,'Профиль');await p.locator('#profile-title').evaluate(n=>n.textContent='СПЯЩИЙ');const card=p.locator('.profile-stage'),layer=card.locator('.shared-aura-layer');
    if(row.key==='soft'){assert.equal(await layer.evaluate(n=>getComputedStyle(n).display),'none');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-aura')),false);assert.deepEqual(await p.locator('#profile-hero').evaluate(n=>[n.clientWidth,n.clientHeight]),[112,182]);}
    else{assert.equal(await layer.evaluate(n=>getComputedStyle(n).display),'block');assert((await layer.evaluate(n=>getComputedStyle(n).backgroundImage)).includes('aura-'+row.key+'.svg'));}
@@ -414,15 +423,15 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    if(['flame','cold','nebula','orbit'].includes(row.key)){let first,last,changed=false;for(let f=0;f<8;f++){await p.waitForTimeout(270);last=await card.screenshot({path:resolve(out,'v11-aura-live-'+row.key+'-'+f+'.png')});if(!first)first=last;else changed=changed||!first.equals(last);}assert(changed,'aura frames visibly animate');}
   }
   await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await p.locator('.profile-hero-anchor .shared-aura-layer').evaluate(n=>getComputedStyle(n).animationName),'none');const count=await p.locator('.citadel-hero-sprite>.shared-aura-layer').count();await p.evaluate(()=>{__qa.render();__qa.render();});assert.equal(await p.locator('.citadel-hero-sprite>.shared-aura-layer').count(),count);
-  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-aura')),false);
+  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-aura')),false);
   const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'presentation cannot grant achievements or resources');await context.close();
  });
  await check('1.1 earned pixel aura follows movement and equipment and survives reload without losing preferences',async()=>{
-  const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="au_warm"]').click();await p.evaluate(()=>__qa.idle());await p.locator('#setup-x').click();await castle(p);await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});
+  const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="au_warm"]').click();await waitForIdle(p);await p.locator('#setup-x').click();await castle(p);await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});
   const stage=p.locator('#citadel-interior-stage'),b=await stage.boundingBox();await stage.click({position:{x:b.width*.8,y:b.height*.93}});assert.equal(await stage.getAttribute('data-moving'),'true');const attachment=await stage.locator('.citadel-hero-sprite').evaluate(n=>{const a=n.getBoundingClientRect(),b=n.querySelector('.shared-aura-layer').getBoundingClientRect();return {center:Math.abs(a.x+a.width/2-b.x-b.width/2),scale:b.width/a.width,pointer:getComputedStyle(n.querySelector('.shared-aura-layer')).pointerEvents};});assert(attachment.center<1);assert(Math.abs(attachment.scale-2)<.01);assert.equal(attachment.pointer,'none');
   for(let f=0;f<8;f++){await p.waitForTimeout(180);await stage.screenshot({path:resolve(out,'v11-aura-moving-'+f+'.png')});}
-  await p.emulateMedia({reducedMotion:'reduce'});await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.moving==='false');await shellNav(p,'Профиль');await p.locator('#profile-gear-open').click();const old=await p.locator('#hero').evaluate(n=>n.toDataURL());const coat=p.locator('#wd-outer .witem:not([data-item="none"])').first(),id=await coat.getAttribute('data-item');await coat.click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(id=>__qa.S.outfit.outer===id,id);assert.notEqual(await p.locator('#hero').evaluate(n=>n.toDataURL()),old);assert(await p.locator('.aura-preview canvas').evaluateAll(ns=>ns.every(n=>n.toDataURL()===document.querySelector('#hero').toDataURL())));
-  assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'warm');await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'warm');const look=(await docs(p))['cfg/look'].d;assert.equal(look.aura,'au_warm');assert.equal(look.futureField,'preserve');await context.close();
+  await p.emulateMedia({reducedMotion:'reduce'});await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.moving==='false');await shellNav(p,'Профиль');await p.locator('#profile-gear-open').click();const old=await p.locator('#hero').evaluate(n=>n.toDataURL());const coat=p.locator('#wd-outer .witem:not([data-item="none"])').first(),id=await coat.getAttribute('data-item');await coat.click();await waitForIdle(p);await p.waitForFunction(id=>__qa.S.outfit.outer===id,id);assert.notEqual(await p.locator('#hero').evaluate(n=>n.toDataURL()),old);assert(await p.locator('.aura-preview canvas').evaluateAll(ns=>ns.every(n=>n.toDataURL()===document.querySelector('#hero').toDataURL())));
+  assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'warm');await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'warm');const look=(await docs(p))['cfg/look'].d;assert.equal(look.aura,'au_warm');assert.equal(look.futureField,'preserve');await context.close();
  });
  await check('1.1 aura atlases keep face and equipment clear and choices fit all Android widths',async()=>{
   const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});const variants=await p.evaluate(()=>__qa.auraVisualFixture());
@@ -433,8 +442,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('1.1 pixel aura rejects failed storage, retries and never exposes a locked choice',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);
-  await p.evaluate(()=>{window.__auraStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __auraStorage.call(this,key,value);};});await sec.locator('[data-look-id="au_warm"]').click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(80);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'');assert.equal((await docs(p))['cfg/look'].d.aura||'','');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-aura')),false);
-  await p.evaluate(()=>Storage.prototype.setItem=window.__auraStorage);await sec.locator('[data-look-id="au_warm"]').click();await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'warm');assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
+  await p.evaluate(()=>{window.__auraStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __auraStorage.call(this,key,value);};});await sec.locator('[data-look-id="au_warm"]').click();await waitForIdle(p);await p.waitForTimeout(80);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'');assert.equal((await docs(p))['cfg/look'].d.aura||'','');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-aura')),false);
+  await p.evaluate(()=>Storage.prototype.setItem=window.__auraStorage);await sec.locator('[data-look-id="au_warm"]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'warm');assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
   const locked=await open({shell:true,seed:{...initial,'cfg/look':{aura:'au_warm'}}});assert.equal(await locked.page.evaluate(()=>document.documentElement.dataset.aura),'');assert.equal(await locked.page.locator('.aura-preview').count(),0);assert.equal(await locked.page.locator('#citadel-interior-stage .shared-aura-layer').evaluate(n=>getComputedStyle(n).display),'none');await locked.context.close();
  });
 
@@ -445,7 +454,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);const choice=sec.locator('[data-look-id="'+row.id+'"]');
    assert.equal(await choice.locator('.look-landscape').count(),1);await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученный фон';});
    if(row.key==='winter')assert.equal(await choice.locator('.citadel-realm-detail').evaluate(n=>getComputedStyle(n,'::before').backgroundImage),'none','winter preview must not inherit another selected environment lights');
-   await choice.screenshot({path:resolve(out,'v11-all-background-'+String(++n).padStart(2,'0')+'-preview.png')});await choice.click();await p.clock.runFor(80);await p.evaluate(()=>__qa.idle());
+   await choice.screenshot({path:resolve(out,'v11-all-background-'+String(++n).padStart(2,'0')+'-preview.png')});await choice.click();await p.clock.runFor(80);await waitForIdle(p);
    assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),row.key);assert(await p.locator('.citadel-sky').evaluate((el,key)=>getComputedStyle(el).backgroundImage.includes('realm-'+key+'.svg'),row.key));
    if(row.key!=='winter'){
     const details=await p.locator('.citadel-sky>.citadel-realm-detail').evaluate(n=>({art:getComputedStyle(n,'::before').backgroundImage,name:getComputedStyle(n,'::before').animationName,pointer:getComputedStyle(n).pointerEvents}));assert(details.art.includes('realm-'+row.key+'-life-1.svg'));assert.notEqual(details.name,'none');assert.equal(details.pointer,'none');
@@ -476,7 +485,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('1.1 earned winter taiga has quiet roof snow, window blizzard and frost with reduced motion',async()=>{
   const day='2027-09-15',seed={...landscapeSeed(),'cfg/rare':{z02:day}};const {page:p,context}=await open({shell:true,seed,day,width:1280,height:940,mobile:false});
-  await p.emulateMedia({reducedMotion:'no-preference'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="b_winter"]').click();await p.clock.runFor(80);await p.evaluate(()=>__qa.idle());await castle(p);
+  await p.emulateMedia({reducedMotion:'no-preference'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="b_winter"]').click();await p.clock.runFor(80);await waitForIdle(p);await castle(p);
   const sky=p.locator('.citadel-sky');assert((await sky.evaluate(n=>getComputedStyle(n).backgroundImage)).includes('realm-winter.svg'));
   const outside=await p.locator('.citadel-realm-particles').evaluate(n=>({name:getComputedStyle(n).animationName,duration:getComputedStyle(n).animationDuration,snow:getComputedStyle(n,'::before').backgroundImage}));assert.equal(outside.name,'citadelQuietSnow');assert.equal(outside.duration,'18s');assert(outside.snow.includes('snow-roof.svg'));
   await sky.screenshot({path:resolve(out,'v11-winter-castle-desktop.png')});
@@ -487,7 +496,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(let frame=0;frame<8;frame++){await p.waitForTimeout(180);await stage.screenshot({path:resolve(out,'v11-winter-room-frame-'+frame+'.png')});}
   await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await weather.evaluate(n=>getComputedStyle(n).animationName),'none');assert.equal(await p.locator('.citadel-realm-particles').evaluate(n=>getComputedStyle(n).animationName),'none');
   await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('#citadel-home').evaluate(n=>n.classList.add('citadel-suspended'));assert.equal(await weather.evaluate(n=>getComputedStyle(n).animationPlayState),'paused');await p.locator('#citadel-home').evaluate(n=>n.classList.remove('citadel-suspended'));
-  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'winter');await context.close();
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'winter');await context.close();
  });
  await check('1.1 winter frost and blizzard stay in real apertures across rooms and Android widths',async()=>{
   const day='2027-09-15';const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter'}},day});const before=await docs(p);
@@ -497,7 +506,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   await p.evaluate(()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();});
   for(const width of [320,360,390,430,844,1280]){await p.setViewportSize({width,height:width===844?390:900});await p.clock.runFor(80);assert(await p.locator('#citadel-interior-stage').evaluate(n=>n.scrollWidth<=n.clientWidth+1));if(width===390)await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'v11-winter-room-mobile.png')});}
-  await p.evaluate(()=>__qa.idle());const after=await docs(p);for(const data of [before,after])delete data['cfg/citadel'];assert.deepEqual(after,before,'weather rendering is read only');await context.close();
+  await waitForIdle(p);const after=await docs(p);for(const data of [before,after])delete data['cfg/citadel'];assert.deepEqual(after,before,'weather rendering is read only');await context.close();
  });
 
  await check('1.1 earned landscape previews apply to sky and real apertures, persist and remove without gameplay writes',async()=>{
@@ -506,16 +515,16 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);
    const choice=sec.locator('[data-look-id="b_'+key+'"]');assert.equal(await choice.count(),1,'existing progress owns this fixture variant');assert(await choice.locator('.look-landscape').evaluate(n=>getComputedStyle(n).backgroundImage.includes('realm-')));
    await choice.evaluate(n=>{for(const t of n.childNodes)if(t.nodeType===3)t.textContent='Полученный фон';});await choice.screenshot({path:resolve(out,'v11-landscape-'+key+'-preview.png')});
-   await choice.click();await p.evaluate(()=>__qa.idle());await p.clock.runFor(80);await p.waitForFunction(k=>document.documentElement.dataset.citadelBg===k,key);await castle(p);
+   await choice.click();await waitForIdle(p);await p.clock.runFor(80);await p.waitForFunction(k=>document.documentElement.dataset.citadelBg===k,key);await castle(p);
    assert(await p.locator('.citadel-sky').evaluate((n,k)=>getComputedStyle(n).backgroundImage.includes('realm-'+k+'.svg'),key));
    await p.screenshot({path:resolve(out,'v11-landscape-'+key+'-390.png')});
    await p.locator('[data-croom="rest"]').click();await p.clock.runFor(80);await p.locator('#citadel-interior').waitFor({state:'visible'});
    const layer=await p.locator('#citadel-interior-stage .citadel-daylight').evaluate(n=>({mask:getComputedStyle(n,'::after').maskImage,art:getComputedStyle(n,'::after').backgroundImage,pointer:getComputedStyle(n,'::after').pointerEvents}));
    assert(layer.mask.includes('rest-windows-1.svg'));assert(layer.art.includes('realm-'+key+'.svg'));assert.equal(layer.pointer,'none');
    await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'v11-landscape-'+key+'-room-390.png')});
-   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),key);
+   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),key);
   }
-  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'');assert(!(await p.locator('.citadel-sky').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('realm-'));
+  await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'');assert(!(await p.locator('.citadel-sky').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('realm-'));
   const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'selection changes no openings, resources, achievements or progress');await context.close();
  });
  await check('1.1 landscape choices fit mobile and desktop and forged locked selections expose no previews',async()=>{
@@ -531,8 +540,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('1.1 landscape selection rolls back after storage failure and retry preserves sibling appearance',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve',showcase:['','','']}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);
   await p.evaluate(()=>{window.__landscapeStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __landscapeStorage.call(this,key,value);};});
-  await sec.locator('[data-look-id="b_forest"]').click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(80);assert.equal((await docs(p))['cfg/look'].d.bg||'','');assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'','failed selection must not remain applied');assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('look')).bg||''),'');
-  await p.evaluate(()=>Storage.prototype.setItem=window.__landscapeStorage);await dismiss(p);await shellNav(p,'Настройки');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="b_forest"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>document.documentElement.dataset.citadelBg==='forest');const saved=(await docs(p))['cfg/look'].d;assert.equal(saved.bg,'b_forest');assert.equal(saved.futureField,'preserve');assert.deepEqual(saved.showcase,['','','']);await context.close();
+  await sec.locator('[data-look-id="b_forest"]').click();await waitForIdle(p);await p.waitForTimeout(80);assert.equal((await docs(p))['cfg/look'].d.bg||'','');assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'','failed selection must not remain applied');assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('look')).bg||''),'');
+  await p.evaluate(()=>Storage.prototype.setItem=window.__landscapeStorage);await dismiss(p);await shellNav(p,'Настройки');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="b_forest"]').click();await waitForIdle(p);await p.waitForFunction(()=>document.documentElement.dataset.citadelBg==='forest');const saved=(await docs(p))['cfg/look'].d;assert.equal(saved.bg,'b_forest');assert.equal(saved.futureField,'preserve');assert.deepEqual(saved.showcase,['','','']);await context.close();
  });
 
  await check('1.1 RPG achievement collection keeps unopened definitions and counts out of the interface',async()=>{
@@ -548,9 +557,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.locator('#trophy').evaluate(n=>n.scrollTop=0);await achievementPreview(p,'v11-achievements-cards-390.png');
   const rare=p.locator('[data-achievement-filter="superrare"]');if(await rare.count()){await rare.click();assert.equal(await p.locator('.achievement-card[data-rarity="mark"]:visible').count(),0);assert(await p.locator('.achievement-card[data-rarity="superrare"]:visible').count()>0);assert.equal(await p.locator('.achievement-card[data-rarity="superrare"]').first().evaluate(n=>getComputedStyle(n,'::after').animationName),'none');await achievementPreview(p,'v11-achievements-rare-390.png');await p.locator('[data-achievement-filter="marks"]').click();}
   const card=p.locator('.achievement-card').first(),id=await card.getAttribute('data-achievement');await card.locator('summary').click();assert(await card.locator('.achievement-card-details').evaluate(n=>n.open));
-  const canvas=await card.locator('canvas').evaluate(n=>n.toDataURL());assert(canvas.length>100);await card.locator('[data-showcase-slot="1"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase?.[1]===id,id);
+  const canvas=await card.locator('canvas').evaluate(n=>n.toDataURL());assert(canvas.length>100);await card.locator('[data-showcase-slot="1"]').click();await waitForIdle(p);await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase?.[1]===id,id);
   assert.equal(await card.locator('[data-showcase-slot="1"]').getAttribute('aria-pressed'),'true');assert(await card.locator('details').evaluate(n=>n.open),'detail survives preference save');assert.equal(await p.locator('#profile-showcase .profile-award').count(),3);
-  await card.locator('[data-showcase-slot="2"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase?.[2]===id,id);assert.equal((await docs(p))['cfg/look'].d.showcase.filter(v=>v===id).length,1,'an achievement occupies only one chosen slot');
+  await card.locator('[data-showcase-slot="2"]').click();await waitForIdle(p);await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase?.[2]===id,id);assert.equal((await docs(p))['cfg/look'].d.showcase.filter(v=>v===id).length,1,'an achievement occupies only one chosen slot');
   await achievementPreview(p,'v11-achievements-detail-390.png');
   await p.locator('[data-achievement-filter="history"]').click();assert.equal(await p.locator('#achievement-history button').count(),count);const dates=await p.locator('#achievement-history time[datetime]').evaluateAll(ns=>ns.map(n=>n.dateTime));assert.deepEqual(dates,dates.slice().sort().reverse());
   await p.locator('#trophy').evaluate(n=>n.scrollTop=0);await achievementPreview(p,'v11-achievements-history-390.png');await p.locator('#achievement-history button').first().click();assert(await p.locator('.achievement-card').first().locator('details').evaluate(n=>n.open));
@@ -568,9 +577,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('1.1 achievement showcase rejects failed storage without a false selected badge and can retry',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...advancedSeed(),'cfg/look':{showcase:['','',''],futureField:'preserve'}},day:'2027-04-16'});await shellNav(p,'Достижения');await p.locator('[data-achievement-filter="marks"]').click();const card=p.locator('.achievement-card').first(),id=await card.getAttribute('data-achievement');await card.locator('summary').click();
   await p.evaluate(()=>{window.__showcaseStorage=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return __showcaseStorage.call(this,key,value);};});
-  await card.locator('[data-showcase-slot="0"]').click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(80);
+  await card.locator('[data-showcase-slot="0"]').click();await waitForIdle(p);await p.waitForTimeout(80);
   assert.equal((await docs(p))['cfg/look'].d.showcase[0],'');assert.equal(await card.locator('[data-showcase-slot="0"]').getAttribute('aria-pressed'),'false','failed save must not look committed');
-  await p.evaluate(()=>{Storage.prototype.setItem=window.__showcaseStorage;});await card.locator('[data-showcase-slot="0"]').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase[0]===id,id);assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
+  await p.evaluate(()=>{Storage.prototype.setItem=window.__showcaseStorage;});await card.locator('[data-showcase-slot="0"]').click();await waitForIdle(p);await p.waitForFunction(id=>PlanSync._docs()['cfg/look']?.d.showcase[0]===id,id);assert.equal((await docs(p))['cfg/look'].d.futureField,'preserve');await context.close();
  });
 
  await check('1.1 Android nested settings remain interactive above profile and Back unwinds to room',async()=>{
@@ -578,7 +587,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const category=p.locator('#profile-collections button:not(:disabled)').first();await category.click();await p.waitForFunction(()=>!document.querySelector('#setup').hidden);
   assert(await p.locator('#setup').evaluate(n=>n.parentElement.matches('.citadel-system-dialog')),'nested settings must be inside the native top layer');
   await p.locator('#fx-shake').selectOption('off');assert.equal(await p.locator('#fx-shake').inputValue(),'off');
-  await p.goBack();await p.waitForFunction(()=>document.querySelector('#setup').hidden);await p.evaluate(()=>__qa.idle());await p.evaluate(()=>__qa.render());assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible());assert(await category.evaluate(n=>n===document.activeElement),'focus returns to the category and survives a queued refresh');
+  await p.goBack();await p.waitForFunction(()=>document.querySelector('#setup').hidden);await waitForIdle(p);await p.evaluate(()=>__qa.render());assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible());assert(await category.evaluate(n=>n===document.activeElement),'focus returns to the category and survives a queued refresh');
   await category.click();await p.locator('#data-management').click();const menu=p.locator('.pl-menu');await menu.waitFor({state:'visible'});assert(await menu.evaluate(n=>!!n.closest('.citadel-system-dialog')),'backup controls share the active top layer');await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-android-nested-backup.png')});
   const downloadEvent=p.waitForEvent('download');await menu.getByRole('button',{name:'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ',exact:true}).click();const backup=await downloadEvent;assert(backup.suggestedFilename().endsWith('.json'));
   p.once('dialog',d=>d.accept());const chooserEvent=p.waitForEvent('filechooser');await menu.getByRole('button',{name:'ВОССТАНОВИТЬ КОПИЮ ИЗ ФАЙЛА',exact:true}).click();const chooser=await chooserEvent;await chooser.setFiles([]);
@@ -617,7 +626,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const room of ['rest','forge','vault','observatory','cloister']){
    await p.evaluate(async room=>{__qa.move(room);document.querySelector('#citadel-enter').click();await __qa.upgrade(room,1);await __qa.idle();await __qa.upgrade(room,2);await __qa.idle();},room);
   }
-  await p.waitForFunction(()=>__qa.cosmeticsIdle());await p.evaluate(()=>__qa.idle());
+  await p.waitForFunction(()=>__qa.cosmeticsIdle());await waitForIdle(p);
   const before=await docs(p);
   for(const hour of [14,1]){
    await p.clock.setSystemTime(new Date('2027-04-16T'+String(hour).padStart(2,'0')+':00:00+03:00'));await p.evaluate(()=>__qa.render());await dismiss(p);
@@ -632,7 +641,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,`v11-light-${room}-${hour===14?'day':'night'}.png`)});
    }
   }
-  await p.evaluate(()=>__qa.idle());const after=await docs(p);
+  await waitForIdle(p);const after=await docs(p);
   assert.deepEqual(after['cfg/citadel']?.d,before['cfg/citadel']?.d,'final selected room and decoration remain unchanged');
   delete before['cfg/citadel'];delete after['cfg/citadel'];assert.deepEqual(after,before,'time and atmosphere do not change gameplay records');
   await p.evaluate(()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();});
@@ -675,17 +684,17 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const spacing=await p.locator('#citadel-interior-stage').evaluate((n,key)=>{const a=n.querySelector('[data-person="'+key+'"]'),h=n.querySelector('.citadel-hero-sprite'),ar=a.getBoundingClientRect(),hr=h.getBoundingClientRect();return Math.abs(ar.left+ar.width/2-hr.left-hr.width/2)/n.clientWidth;},key);assert(spacing>.04,'hero approaches beside the resident');
    await p.locator('#citadel-room-npc-close').click();
   }
-  await p.evaluate(()=>__qa.idle());const after=await docs(p);delete after['cfg/citadel'];assert.deepEqual(after,before,'resident geometry does not alter schedules or progress');await context.close();
+  await waitForIdle(p);const after=await docs(p);delete after['cfg/citadel'];assert.deepEqual(after,before,'resident geometry does not alter schedules or progress');await context.close();
  });
 
  await check('1.1 earned aura selection is shared by profile and Citadel and survives reload',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});
   await shellNav(p,'Настройки');const auras=p.locator('#looklist .looksec').filter({has:p.locator('b').filter({hasText:/^АУРА ПЕРСОНАЖА$/})});
-  await auras.locator('button.chip').nth(1).click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>!!document.documentElement.dataset.aura);
+  await auras.locator('button.chip').nth(1).click();await waitForIdle(p);await p.waitForFunction(()=>!!document.documentElement.dataset.aura);
   const choice=await p.evaluate(()=>document.documentElement.dataset.aura),before=await docs(p);await p.locator('#setup-x').click();await shellNav(p,'Профиль');
   const filters=await p.evaluate(()=>[document.querySelector('#profile-hero'),document.querySelector('.citadel-interior-stage .citadel-hero-sprite')].map(n=>getComputedStyle(n).filter));assert.equal(filters[0],filters[1]);assert(!filters[0].includes('rgba(0, 0, 0, 0)'),'selected earned aura is visible in both views');
   await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-profile-aura-mobile.png')});
-  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),choice);
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),choice);
   const after=await docs(p);assert.equal(after['cfg/citadel']?.d.selectedRoom||'rest',before['cfg/citadel']?.d.selectedRoom||'rest');assert.deepEqual(after['cfg/citadel']?.d.decor||{},before['cfg/citadel']?.d.decor||{});delete before['cfg/citadel'];delete after['cfg/citadel'];assert.deepEqual(after,before,'appearance reload cannot grant or spend gameplay resources');await context.close();
   const locked=await open({shell:true,seed:{...initial,'cfg/look':{aura:'au_warm'}}});assert.equal(await locked.page.evaluate(()=>document.documentElement.dataset.aura),'','unearned selection remains unavailable');await locked.context.close();
  });
@@ -693,7 +702,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('1.1 restored room responses animate visible light once and respect reduced motion',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.locator('[data-croom="rest"]').click();
   for(const tier of [2,3]){
-   await p.evaluate(tier=>__qa.upgrade('rest',tier-1),tier);await p.waitForFunction(tier=>document.querySelector('#citadel-interior-stage').dataset.level===String(tier),tier);await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());const before=await docs(p);
+   await p.evaluate(tier=>__qa.upgrade('rest',tier-1),tier);await p.waitForFunction(tier=>document.querySelector('#citadel-interior-stage').dataset.level===String(tier),tier);await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());const before=await docs(p);
    await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('[data-room-inspect]').click();await p.locator('[data-room-inspect]').click();
    const response=await p.locator('#citadel-interior-stage').evaluate(n=>{const light=n.querySelector('.citadel-room-light'),old=n.querySelector('.citadel-interior-renovation');return {visible:getComputedStyle(light).display!=='none',light:light.getAnimations().filter(a=>!a.animationName).length,hidden:old.getAnimations().filter(a=>!a.animationName).length};});assert(response.visible);assert.equal(response.light,1);assert.equal(response.hidden,0);
    await p.emulateMedia({reducedMotion:'reduce'});await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-stage .citadel-room-light').evaluate(n=>n.getAnimations().filter(a=>!a.animationName).length),0);assert.deepEqual(await docs(p),before,'visual response cannot charge resources');
@@ -722,19 +731,19 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const room of roomIds){
    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);
    for(const level of [1,2,3]){
-    if(level>1){await p.evaluate(({room,level})=>__qa.upgrade(room,level-1),{room,level});await p.evaluate(()=>__qa.idle());}
+    if(level>1){await p.evaluate(({room,level})=>__qa.upgrade(room,level-1),{room,level});await waitForIdle(p);}
     await p.waitForFunction(level=>document.querySelector('#citadel-interior-stage').dataset.level===String(level),level);
     assert((await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n,'::before').backgroundImage)).includes(room+'-interior-'+level+'.svg'),'actual scene must use its own room and stage');
     await p.locator('#citadel-interior-object').click();
     assert.equal(await p.locator('#citadel-interior-object').getAttribute('data-inspected'),'true');
     await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,`v11-room-${room}-level-${level}.png`)});
-    if(level>1){const saved=await docs(p);await p.evaluate(({room,level})=>__qa.upgrade(room,level-1),{room,level});await p.evaluate(()=>__qa.idle());assert.deepEqual(await docs(p),saved,'same upgrade must not charge twice');}
+    if(level>1){const saved=await docs(p);await p.evaluate(({room,level})=>__qa.upgrade(room,level-1),{room,level});await waitForIdle(p);assert.deepEqual(await docs(p),saved,'same upgrade must not charge twice');}
    }
   }
   const after=await docs(p);
   for(const key of Object.keys(before).filter(k=>/^(tx|weights|days|per|spont|habits|goals)\//.test(k)))assert.deepEqual(after[key],before[key],key+' preserved');
   assert.equal(Object.keys(after).filter(k=>k.startsWith('buys/citadel-')).length,20);
-  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);
   assert.deepEqual((await docs(p))['buys/citadel-vault-3'],after['buys/citadel-vault-3']);
   await context.close();
  });
@@ -793,7 +802,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await p.locator('[data-coach="next"]').click();
   }
   assert(await p.locator('#awakening-coach').isHidden());
-  await p.evaluate(()=>__qa.idle());assert.deepEqual(await docs(p),before,'tour must not write game records or award progress');
+  await waitForIdle(p);assert.deepEqual(await docs(p),before,'tour must not write game records or award progress');
   await p.reload();await p.waitForFunction(()=>__qa.loading());assert(await p.locator('#awakening-coach').isHidden());await context.close();
  });
  await check('1.0 Awakening pause, reload, resume, Back, skip and replay preserve the checkpoint and economy',async()=>{
@@ -931,21 +940,21 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const seed=structuredClone(initial);for(let n=0;n<4;n++){const k='2026-10-'+(19+n);seed['days/'+k]={q:Array(10).fill(false),steps:12000};}
   const {page:p,context}=await open({shell:true,seed});
   await p.waitForFunction(()=>VkachFate.discovered(__qa.S.fate).some(d=>!d.complete));
-  await p.waitForFunction(()=>VkachFate.pending(__qa.S.fate).length===0);await p.evaluate(()=>__qa.idle());await dismiss(p);
+  await p.waitForFunction(()=>VkachFate.pending(__qa.S.fate).length===0);await waitForIdle(p);await dismiss(p);
   const before=await docs(p);await p.evaluate(()=>document.querySelector('#trophy-btn').click());assert(await p.locator('.fate-entry').count()>0);
   const safe=await p.evaluate(()=>{const entries=VkachFate.discovered(__qa.S.fate),text=document.querySelector('#alist').textContent;return entries.every(d=>d.complete||d.name==='Неизвестный образ'&&d.object==='Незавершённый образ')&&!/\d+\s*\/\s*\d+|%|осталось|услови/i.test(document.querySelector('.fate-entry').textContent);});assert(safe);
-  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await p.evaluate(()=>__qa.idle());assert.equal(JSON.stringify((await docs(p))['cfg/fate'].d),JSON.stringify(before['cfg/fate'].d));assert(await p.locator('#legend-scene').isHidden());await context.close();
+  await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);assert.equal(JSON.stringify((await docs(p))['cfg/fate'].d),JSON.stringify(before['cfg/fate'].d));assert(await p.locator('#legend-scene').isHidden());await context.close();
  });
  await check('0.79 receipt claims are atomic across two tabs and failed storage has no award',async()=>{
   const {page:p,context}=await open({shell:true});const b=await context.newPage();await b.goto(url);await b.waitForFunction(()=>window.__qa?.loading());await dismiss(b);
   const result=await p.evaluate(async()=>{const achievements=Object.fromEntries(Array.from({length:120},(_,n)=>['x'+String(n+1).padStart(2,'0'),true]));const original=Storage.prototype.setItem;let failed=false;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{await PlanDB.runTransaction(tx=>VkachFate.reconcile(tx,achievements,Date.now()));}catch{failed=true;}finally{Storage.prototype.setItem=original;}const untouched=!PlanSync._docs()['cfg/fate'];await PlanDB.runTransaction(tx=>VkachFate.reconcile(tx,achievements,Date.now()));return {failed,untouched};});assert.deepEqual(result,{failed:true,untouched:true});
-  await p.waitForFunction(()=>VkachFate.pending(__qa.S.fate).length===0);await b.waitForFunction(()=>VkachFate.pending(__qa.S.fate).length===0);await p.evaluate(()=>__qa.idle());await b.evaluate(()=>__qa.idle());
+  await p.waitForFunction(()=>VkachFate.pending(__qa.S.fate).length===0);await b.waitForFunction(()=>VkachFate.pending(__qa.S.fate).length===0);await waitForIdle(p);await waitForIdle(b);
   const received=await p.evaluate(()=>VkachFate.discovered(__qa.S.fate).map(d=>d.id));for(const id of received){const claims=await Promise.all([p,b].map(page=>page.evaluate(id=>PlanDB.runTransaction(tx=>VkachFate.claim(tx,id)),id)));assert(claims.every(c=>c===null));}
   await context.close();
  });
  await check('0.79 restore old backups and divergent devices retain discovery receipts without changing other data',async()=>{
   const {page:p,context}=await open({shell:true});const old=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
-  await p.evaluate(async()=>{const ach=Object.fromEntries(Array.from({length:120},(_,n)=>['x'+String(n+1).padStart(2,'0'),true]));await PlanDB.runTransaction(tx=>VkachFate.reconcile(tx,ach,Date.now()));});await p.waitForFunction(()=>VkachFate.pending(__qa.S.fate).length===0);await p.evaluate(()=>__qa.idle());await dismiss(p);
+  await p.evaluate(async()=>{const ach=Object.fromEntries(Array.from({length:120},(_,n)=>['x'+String(n+1).padStart(2,'0'),true]));await PlanDB.runTransaction(tx=>VkachFate.reconcile(tx,ach,Date.now()));});await p.waitForFunction(()=>VkachFate.pending(__qa.S.fate).length===0);await waitForIdle(p);await dismiss(p);
   const before=(await docs(p))['cfg/fate'].d;await p.evaluate(copy=>PlanSync.importObj(copy,true),old);await p.waitForTimeout(60);assert.deepEqual((await docs(p))['cfg/fate'].d,before);
   const divergent=structuredClone((await docs(p))['cfg/fate']);for(const r of Object.values(divergent.d.entries))for(const piece of Object.values(r.pieces))piece.presented=false;divergent.u+=1000;
   await p.evaluate(record=>PlanSync.importObj({v:1,docs:{'cfg/fate':record}}),divergent);await p.waitForTimeout(60);assert.deepEqual((await docs(p))['cfg/fate'].d,before);
@@ -974,9 +983,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('.fate-entry').getByRole('button',{name:'ОСМОТРЕТЬ ОБРАЗ'}).click();const first=await p.locator('#legend-scene canvas').first().evaluate(n=>n.toDataURL());
   assert(await p.locator('.fate-shard').isVisible());assert(await p.locator('.fate-assembly').evaluate(n=>{const r=n.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}));await p.screenshot({path:resolve(out,'fate-partial-scene.png')});await p.clock.runFor(1700);const next=await p.locator('#legend-scene canvas').first().evaluate(n=>n.toDataURL());assert.notEqual(first,next);assert.equal(await p.locator('#legend-scene').getAttribute('data-assembled'),'true');
-  await p.locator('#legend-scene button').click();await p.clock.runFor(450);await p.evaluate(()=>__qa.idle());assert.equal(await p.evaluate(()=>window.__qaAudioCalls),0);assert.deepEqual(await docs(p),before);
-  await p.locator('.fate-entry').getByRole('button',{name:'УБРАТЬ ИЗ ЦИТАДЕЛИ'}).click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(40);assert.equal((await docs(p))['cfg/fate'].d.active,'');
-  await p.locator('.fate-entry').getByRole('button',{name:'ОСТАВИТЬ В ЦИТАДЕЛИ'}).click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(40);assert(await p.locator('#citadel-avatar-canvas').evaluate(n=>n.classList.contains('legend-hero')));
+  await p.locator('#legend-scene button').click();await p.clock.runFor(450);await waitForIdle(p);assert.equal(await p.evaluate(()=>window.__qaAudioCalls),0);assert.deepEqual(await docs(p),before);
+  await p.locator('.fate-entry').getByRole('button',{name:'УБРАТЬ ИЗ ЦИТАДЕЛИ'}).click();await waitForIdle(p);await p.waitForTimeout(40);assert.equal((await docs(p))['cfg/fate'].d.active,'');
+  await p.locator('.fate-entry').getByRole('button',{name:'ОСТАВИТЬ В ЦИТАДЕЛИ'}).click();await waitForIdle(p);await p.waitForTimeout(40);assert(await p.locator('#citadel-avatar-canvas').evaluate(n=>n.classList.contains('legend-hero')));
   await context.close();
  });
 
@@ -988,7 +997,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    try{await deliver();}catch{failed=true;}finally{Storage.prototype.setItem=original;}
    const untouched=!PlanSync._docs()['cfg/legends'];const awarded=await deliver(),again=await deliver();return {failed,untouched,hasAward:awarded.length>0,repeated:again.length};
   });assert.deepEqual(result,{failed:true,untouched:true,hasAward:true,repeated:0});
-  await p.waitForTimeout(80);await p.evaluate(()=>__qa.idle());await dismiss(p);const earned=(await docs(p))['cfg/legends'].d;
+  await p.waitForTimeout(80);await waitForIdle(p);await dismiss(p);const earned=(await docs(p))['cfg/legends'].d;
   for(const [path,record]of Object.entries(before))assert.deepEqual((await docs(p))[path].d,record.d);
   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);assert.deepEqual((await docs(p))['cfg/legends'].d,earned);await context.close();
  });
@@ -1001,9 +1010,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await p.locator('#legend-scene').getAttribute('data-motion'),'reduce');
   await p.goBack();assert(await p.locator('#legend-scene').isHidden());assert(await p.locator('#trophy').isVisible());
   assert.deepEqual(await docs(p),before);
-  await p.locator('.legend-entry').getByRole('button',{name:'УБРАТЬ ОФОРМЛЕНИЕ'}).click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(50);
+  await p.locator('.legend-entry').getByRole('button',{name:'УБРАТЬ ОФОРМЛЕНИЕ'}).click();await waitForIdle(p);await p.waitForTimeout(50);
   assert.equal((await docs(p))['cfg/legends'].d.active,'');
-  await p.locator('.legend-entry').getByRole('button',{name:'ПРИМЕНИТЬ ОФОРМЛЕНИЕ'}).click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(50);
+  await p.locator('.legend-entry').getByRole('button',{name:'ПРИМЕНИТЬ ОФОРМЛЕНИЕ'}).click();await waitForIdle(p);await p.waitForTimeout(50);
   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);
   assert.equal((await docs(p))['cfg/legends'].d.active,'echo01');assert(await p.locator('#citadel-avatar-canvas').evaluate(n=>n.classList.contains('legend-hero')));
   for(const [path,record]of Object.entries(before))if(path!=='cfg/legends')assert.deepEqual((await docs(p))[path].d,record.d);
@@ -1060,7 +1069,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    await p.setViewportSize({width,height});
    for(const room of rooms){
-    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);await p.evaluate(()=>__qa.idle());
+    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);await waitForIdle(p);
     const before=await docs(p),action=p.locator('[data-room-moment]');
     assert(await action.isVisible());assert(await action.evaluate(n=>n.getBoundingClientRect().height>=44));
     await action.click();const text=await p.locator('#citadel-object-status').innerText();assert(text.length>40);
@@ -1074,7 +1083,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('0.77 room actions do not expose locked rooms and new cues do not weaken black masks',async()=>{
   const {page:p,context}=await open({shell:true,width:320});
-  await p.locator('[data-croom="study"]').click();await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.locator('[data-croom="study"]').click();await waitForIdle(p);const before=await docs(p);
   await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
   assert(!/Обсерватория|Мастерская|Казначейство|летопис/i.test(text));assert.deepEqual(await docs(p),before);
   await p.evaluate(()=>__qa.move('vault'));assert(await p.locator('#citadel-mystery').isVisible());
@@ -1084,7 +1093,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('0.77 occupations, nearby responses and treasury dialogue follow real public state',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});
-  await p.evaluate(()=>{__qa.move('forge');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await p.evaluate(()=>{__qa.move('forge');document.querySelector('#citadel-enter').click();});await waitForIdle(p);const before=await docs(p);
   const smith=p.locator('#citadel-interior-stage [data-person="smith"]');assert.equal(await smith.getAttribute('data-occupation'),'craft');
   assert(await smith.locator('.citadel-occupation-prop').isVisible());await p.locator('[data-room-moment]').click();
   assert.match(await p.locator('#citadel-object-status').innerText(),/Кузнец/);
@@ -1101,7 +1110,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('0.77 treasury reactions acknowledge an existing essence conflict without optimistic reassurance',async()=>{
   const seed=advancedSeed();seed['cfg/abyss-economy']={version:1,rank:100000,earned:-100000,claims:{}};seed['cfg/citadel']={selectedRoom:'vault',decor:{}};
   const {page:p,context}=await open({shell:true,seed,day:'2027-04-16'});
-  await p.clock.runFor(64);await p.evaluate(()=>{__qa.move('vault');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);const before=await docs(p);
+  await p.clock.runFor(64);await p.evaluate(()=>{__qa.move('vault');document.querySelector('#citadel-enter').click();});await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);const before=await docs(p);
   await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
   assert.match(text,/Расходы требуют сверки/);assert(!/Записи сходятся/.test(text));
   await p.locator('#citadel-interior-stage [data-person="treasurer"]').click();assert.match(await p.locator('#citadel-room-speech').innerText(),/несогласованные расходы/);
@@ -1121,7 +1130,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('0.77 progress source links and equipped badges navigate existing panels without awards',async()=>{
   for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    const {page:p,context}=await open({width,height,shell:true});await shellDrawer(p,'left');
-   await p.locator('.citadel-progress-sources summary').click();await p.evaluate(()=>__qa.idle());const before=await docs(p);
+   await p.locator('.citadel-progress-sources summary').click();await waitForIdle(p);const before=await docs(p);
    assert(await p.locator('.citadel-progress-sources').evaluate(n=>n.scrollWidth<=n.clientWidth));
    for(const tab of ['today','week','diet','money']){
     if(tab!=='today')await shellDrawer(p,'left');
@@ -1147,7 +1156,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('0.76 mystery dialog preserves selection, charges nothing and supports Back on Android sizes',async()=>{
   for(const [width,height] of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
-   const {page:p,context}=await open({width,height,shell:true});await p.clock.runFor(64);await p.evaluate(()=>__qa.idle());
+   const {page:p,context}=await open({width,height,shell:true});await p.clock.runFor(64);await waitForIdle(p);
    const before=await docs(p),selected=await p.locator('[data-croom][aria-pressed="true"]').getAttribute('data-croom');
    await p.locator('[data-croom="archive"]').dispatchEvent('click');assert(await p.locator('#citadel-mystery').isVisible());
    assert.match(await p.locator('#citadel-mystery').innerText(),/Неизведанная комната/);assert(!/Архив|стеллаж|летопис/i.test(await p.locator('#citadel-mystery').innerText()));
@@ -1161,7 +1170,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('0.76 reload during mystery dialog clears history marker and keeps keyboard and Back usable',async()=>{
   const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}}};
-  const {page:p,context}=await open({shell:true,seed});await p.clock.runFor(64);await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  const {page:p,context}=await open({shell:true,seed});await p.clock.runFor(64);await waitForIdle(p);const before=await docs(p);
   await p.locator('[data-croom="archive"]').focus();await p.keyboard.press('Enter');await p.locator('#citadel-mystery').waitFor({state:'visible'});
   assert.equal(await p.evaluate(()=>history.state.citadelMystery),true);
   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);await p.clock.runFor(64);
@@ -1188,7 +1197,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await p.locator('[data-croom="archive"]').evaluate(n=>n._reveal?.effect?.getTiming().duration),650);
   await p.clock.runFor(800);await p.locator('[data-croom="archive"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
   assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');
-  assert.equal(await p.locator('.is-locked').count(),0);await p.evaluate(()=>__qa.idle());
+  assert.equal(await p.locator('.is-locked').count(),0);await waitForIdle(p);
   const after=await docs(p);assert.deepEqual(after['buys/citadel-archive-2'],before['buys/citadel-archive-2']);assert.equal(Object.keys(after).filter(k=>k.startsWith('buys/')).length,1);
   await p.reload();await p.waitForFunction(()=>document.querySelector('[data-croom="archive"]').dataset.revealed==='true');await dismiss(p);
   assert.equal(await p.locator('[data-croom="archive"]').evaluate(n=>!!n._reveal),false);await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');await context.close();
@@ -1235,13 +1244,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const after=await p.evaluate(()=>({points:__qa.points(),seq:__qa.progressSequence(),meter:document.querySelector('#citadel-rank-meter').value}));
   assert.equal(after.seq,1);assert.equal(after.meter,after.points.P);
   await p.evaluate(()=>__qa.render());assert.equal(await p.evaluate(()=>__qa.progressSequence()),1);
-  await p.reload();await p.waitForFunction(()=>__qa?.loading());await p.evaluate(()=>__qa.idle());await dismiss(p);
+  await p.reload();await p.waitForFunction(()=>__qa?.loading());await waitForIdle(p);await dismiss(p);
   assert.equal(await p.evaluate(()=>__qa.progressSequence()),0);assert.equal(await p.locator('#daily-progress-feedback').innerText(),'');
   assert.deepEqual(await p.evaluate(()=>__qa.points()),after.points);
   assert.deepEqual((await docs(p))['days/'+date],committed['days/'+date]);await context.close();
  });
  await check('0.75 failed daily and equipment writes never acknowledge success or change inventory',async()=>{
-  const {page:p,context}=await open();await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  const {page:p,context}=await open();await waitForIdle(p);const before=await docs(p);
   await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};try{const cur=__qa.S.days['2026-10-30'],q=cur.q.slice();q[0]=true;await __qa.writeDay('2026-10-30',cur,{q});await __qa.equip('outer','coat');}finally{Storage.prototype.setItem=original;}});
   assert.equal(await p.evaluate(()=>__qa.progressSequence()),0);assert.match(await p.locator('#wardrobe-status').innerText(),/не сохранена/);
   const after=await docs(p);assert.deepEqual(after['days/'+date],before['days/'+date]);assert.deepEqual(after['cfg/outfit'],before['cfg/outfit']);await context.close();
@@ -1288,7 +1297,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    const {page:p,context}=await open({width,height,shell:true});await shellDrawer(p,'left');
    assert(await p.locator('#citadel-rank-meter').isVisible());const b=await p.locator('#citadel-hero-progress').boundingBox();assert(b.width>50&&b.x>=0&&b.x+b.width<=width);
-   await p.evaluate(()=>{__qa.move('study');document.querySelector('#citadel-enter').click();});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+   await p.evaluate(()=>{__qa.move('study');document.querySelector('#citadel-enter').click();});await waitForIdle(p);const before=await docs(p);
    await p.locator('#citadel-interior-object').evaluate(n=>n.click());assert.match(await p.locator('#citadel-object-status').innerText(),/В книге дня:/);
    for(let i=0;i<8;i++)await p.locator('#citadel-interior-object').evaluate(n=>n.click());assert.deepEqual(await docs(p),before);
    assert.equal(await p.locator('#citadel-interior-stage').evaluate(n=>n.querySelector('.citadel-interior-furniture').getAnimations().length),0,'reduced motion has no object effect');
@@ -1325,7 +1334,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
  });
  await check('0.74 final interrupted walking freezes position and faces the actual next target',async()=>{
-  const {page:p,context}=await open({shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  const {page:p,context}=await open({shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});await waitForIdle(p);const before=await docs(p);
   // Freeze the finite WAAPI walk at a deterministic point, then redirect to a
   // target between the current position and the old destination.
   const state=await p.evaluate(()=>{
@@ -1346,7 +1355,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.emulateMedia({reducedMotion:'reduce'});assert.deepEqual(await docs(p),before);await context.close();
  });
  await check('0.74 final room light follows tiers and civil time without intercepting actions or writing progress',async()=>{
-  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16',shell:true});await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16',shell:true});await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await waitForIdle(p);const before=await docs(p);
   assert.equal(await p.locator('.citadel-room-light').count(),11);assert.equal(await p.locator('#citadel-interior-stage .citadel-room-light').evaluate(n=>getComputedStyle(n).pointerEvents),'none');
   const day=await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n).getPropertyValue('--window-color'));
   await p.clock.setSystemTime(new Date('2027-04-16T23:02:00+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-phase'),'НОЧЬ');assert.notEqual(await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n).getPropertyValue('--window-color')),day);
@@ -1373,7 +1382,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert(await card.evaluate((n,old)=>n===old&&document.activeElement===n,original),'another errand must not replace the focused card');
   await p.clock.setSystemTime(new Date('2027-04-16T14:16:15+03:00'));await p.evaluate(()=>__qa.render());
   await p.locator('[data-croom="observatory"]').click();await p.locator('#citadel-enter').click();const actor=p.locator('#citadel-interior-stage [data-person="guardian"]');await actor.focus();const sprite=await actor.elementHandle();
-  await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  await waitForIdle(p);const before=await docs(p);
   await p.clock.setSystemTime(new Date('2027-04-16T14:16:19+03:00'));await p.evaluate(()=>__qa.render());
   assert(await actor.evaluate((n,old)=>n===old&&document.activeElement===n,sprite),'a stationary actor must retain focus and animation identity');
   const inspect=p.locator('[data-room-inspect]');await inspect.focus();const control=await inspect.elementHandle();
@@ -1385,14 +1394,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.clock.setSystemTime(new Date('2027-04-16T09:59:59+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
   await p.locator('[data-room-talk="smith"]').click();const actor=p.locator('#citadel-interior-stage [data-person="smith"]');
   assert.equal(await actor.getAttribute('data-mode'),'interaction');assert(await actor.evaluate(n=>{const a=n.getBoundingClientRect(),h=document.querySelector('#citadel-interior-stage .citadel-hero-sprite').getBoundingClientRect();return n.dataset.facing===(h.left+h.width/2<a.left+a.width/2?'left':'right');}));
-  assert.equal(await actor.evaluate(n=>getComputedStyle(n,'::after').content),'"◆"');await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  assert.equal(await actor.evaluate(n=>getComputedStyle(n,'::after').content),'"◆"');await waitForIdle(p);const before=await docs(p);
   await p.clock.setSystemTime(new Date('2027-04-16T10:00:10+03:00'));await p.evaluate(()=>__qa.render());
   assert(await p.locator('#citadel-room-conversation').isHidden());assert(await p.locator('#citadel-interior-stage').evaluate(n=>document.activeElement===n),'departing NPC must return focus to the playable room');
   assert.equal(await p.locator('[data-room-talk="smith"]').count(),0);assert.deepEqual(await docs(p),before);await context.close();
  });
  await check('0.74 inspected objects give consistent touch and keyboard feedback without save writes',async()=>{
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
-   const {page:p,context}=await open({width,height,mobile:true,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.evaluate(()=>__qa.idle());const before=await docs(p);
+   const {page:p,context}=await open({width,height,mobile:true,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await waitForIdle(p);const before=await docs(p);
    const object=p.locator('#citadel-interior-object');await object.focus();await p.keyboard.press('Enter');assert.equal(await object.getAttribute('data-inspected'),'true');assert.match(await p.locator('#citadel-object-status').innerText(),/Старая кровать/);assert.equal(await object.evaluate(n=>getComputedStyle(n,'::before').animationName),'none');
    await p.keyboard.press('Space');await p.locator('[data-room-inspect]').click();assert.deepEqual(await docs(p),before);
    if(width===390)await p.screenshot({path:resolve(out,'android-074-object-390.png')});
@@ -1418,7 +1427,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('0.73 interior walking, inspection and stable doors work at Android widths without progress writes',async()=>{
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
-   const {page:p,context}=await open({width,height,mobile:true,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.evaluate(()=>__qa.idle());
+   const {page:p,context}=await open({width,height,mobile:true,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await waitForIdle(p);
    const before=await docs(p),stage=p.locator('#citadel-interior-stage'),hero=stage.locator('.citadel-hero-sprite');const box=await stage.boundingBox(),first=await hero.boundingBox();
    await stage.click({position:{x:box.width*.8,y:box.height*.93}});const walked=await hero.boundingBox();assert(walked.x>first.x,'a floor tap must move the actual sprite');
    await stage.focus();await p.keyboard.press('ArrowLeft');assert((await hero.boundingBox()).x<walked.x);
@@ -1434,7 +1443,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('0.73 nearby resident actions follow schedules and Android Back closes conversation before room',async()=>{
   const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16',shell:true});
   await p.clock.setSystemTime(new Date('2027-04-16T18:02:00+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="refectory"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
-  assert.equal(await p.locator('[data-room-talk]').count(),4);await p.evaluate(()=>__qa.idle());const before=await docs(p);
+  assert.equal(await p.locator('[data-room-talk]').count(),4);await waitForIdle(p);const before=await docs(p);
   await p.locator('[data-room-talk="smith"]').click();assert(await p.locator('#citadel-room-conversation').isVisible());assert.match(await p.locator('#citadel-room-speech').innerText(),/Кузнец/);assert(await p.locator('#citadel-room-npc-action').evaluate(n=>{var b=n.getBoundingClientRect(),hit=document.elementFromPoint(b.left+b.width/2,b.top+b.height/2);return hit===n||n.contains(hit);}),'conversation action must be reachable above the Android dock');
   const hero=await p.locator('#citadel-interior-stage .citadel-hero-sprite').boundingBox();
   for(const npc of await p.locator('#citadel-interior-stage .citadel-person,#citadel-interior-stage .citadel-scene-door,#citadel-interior-stage .citadel-scene-door small').all()){const b=await npc.boundingBox();assert(hero.x+hero.width<=b.x||hero.x>=b.x+b.width||hero.y+hero.height<=b.y||hero.y>=b.y+b.height,'hero must stop clear of residents, doors and labels');}
@@ -1458,7 +1467,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const before=await p.evaluate(()=>__qa.balance());
    await p.locator('#amt').fill('125,45');await p.locator('#what').fill('Synthetic long expense '.repeat(12));await p.locator('#tx-date').fill('2026-10-29');await p.locator('#cat').selectOption({label:'Продукты'});
    await p.evaluate(()=>{document.querySelector('#add').click();document.querySelector('#add').click();});
-   await p.waitForFunction(()=>__qa.S.tx.length===1);await p.evaluate(()=>__qa.idle());
+   await p.waitForFunction(()=>__qa.S.tx.length===1);await waitForIdle(p);
    const record=(await p.evaluate(()=>__qa.S.tx))[0];assert.equal(record.amt,125.45);assert.equal(record.date,'2026-10-29');assert.equal(await p.locator('#amt').inputValue(),'');
    assert.deepEqual(await p.evaluate(()=>__qa.balance()),{cash:1075.05,card:3400});
    await p.locator('#log [data-txid="'+record.id+'"] button[aria-label="Изменить операцию"]').click();
@@ -1482,7 +1491,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.length===1);const id=(await p.evaluate(()=>__qa.S.tx))[0].id;
   await p.locator('#log button[aria-label="Изменить операцию"]').click();await p.locator('#amt').fill('20,25');
   await p.evaluate(async id=>{const db=window.PlanDB;await db.doc('tx/'+id).update({amt:99.99,futureField:'preserved'});},id);await p.waitForFunction(()=>__qa.S.tx[0].amt===99.99);
-  await p.locator('#add').click();await p.evaluate(()=>__qa.idle());assert.equal((await docs(p))['tx/'+id].d.amt,99.99);assert.equal(await p.locator('#amt').inputValue(),'20,25');assert.match(await p.locator('#tx-status').innerText(),/изменилась/);
+  await p.locator('#add').click();await waitForIdle(p);assert.equal((await docs(p))['tx/'+id].d.amt,99.99);assert.equal(await p.locator('#amt').inputValue(),'20,25');assert.match(await p.locator('#tx-status').innerText(),/изменилась/);
   await p.locator('#tx-cancel').click();await p.locator('#log button[aria-label="Изменить операцию"]').click();await p.locator('#amt').fill('15,25');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx[0].amt===15.25);assert.equal((await docs(p))['tx/'+id].d.futureField,'preserved');
   await context.close();
  });
@@ -1554,7 +1563,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await session.send('HeapProfiler.collectGarbage');const initialMetrics=await session.send('Performance.getMetrics');
   const baseline=await p.evaluate(()=>document.querySelectorAll('*').length);
   for(let n=0;n<8;n++){await p.locator('#citadel-exits [data-travel="study"]').click();await p.locator('#citadel-exits [data-travel="rest"]').click();}
-  await p.evaluate(()=>__qa.idle());assert.equal((await p.evaluate(()=>__qa.S.tx)).length,1000);assert.equal((await p.evaluate(()=>__qa.S.weights)).length,501);assert.equal((await p.evaluate(()=>__qa.S.spont)).length,301);
+  await waitForIdle(p);assert.equal((await p.evaluate(()=>__qa.S.tx)).length,1000);assert.equal((await p.evaluate(()=>__qa.S.weights)).length,501);assert.equal((await p.evaluate(()=>__qa.S.spont)).length,301);
   const nodes=await p.evaluate(()=>document.querySelectorAll('*').length);assert(nodes<=baseline+8,'round trips must not accumulate room controls or sprites');
   await session.send('HeapProfiler.collectGarbage');const finalMetrics=await session.send('Performance.getMetrics');
   function metric(m,key){return m.metrics.find(x=>x.name===key)?.value;}
@@ -1597,7 +1606,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    for(const tab of order)await tab.evaluate(first=>{window.__operation=__qa.markProgress(first?'syntheticFirst':'syntheticSecond');window.__operation.catch(()=>{});},tab===p);
    await holder.evaluate(()=>window.__release());
    assert.deepEqual(await Promise.all([p,other].map(tab=>tab.evaluate(()=>window.__operation))),[true,true]);
-   await p.evaluate(()=>{__qa.toggleMeet();const day=__qa.S.days['2026-10-30'];return __qa.writeDay('2026-10-30',day,{steps:4321});});await p.evaluate(()=>__qa.idle());
+   await p.evaluate(()=>{__qa.toggleMeet();const day=__qa.S.days['2026-10-30'];return __qa.writeDay('2026-10-30',day,{steps:4321});});await waitForIdle(p);
    await Promise.all([p,other].map(tab=>tab.waitForFunction(()=>{const d=JSON.parse(localStorage.getItem('plan.store.v1')).docs;return d['cfg/rare'].d.syntheticFirst&&d['cfg/rare'].d.syntheticSecond&&d['weeks/2026-10-26'].d.meet&&d['days/2026-10-30'].d.steps===4321;})));
    const before=(await docs(p))['cfg/rare'];
    assert.deepEqual(await Promise.all([p,other].map(tab=>tab.evaluate(()=>__qa.markProgress('syntheticFirst')))),[false,false]);
@@ -1616,7 +1625,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('0.72 repeated completion and date changes keep durable history without duplicate resources',async()=>{
   const {page:p,context}=await open();
-  async function completion(done){await p.evaluate(async done=>{const db=window.PlanDB;await db.doc('days/2026-10-30').update({q:Array(10).fill(done),steps:12000,kcal:2100});},done);await p.clock.runFor(900);await p.evaluate(()=>__qa.idle());}
+  async function completion(done){await p.evaluate(async done=>{const db=window.PlanDB;await db.doc('days/2026-10-30').update({q:Array(10).fill(done),steps:12000,kcal:2100});},done);await p.clock.runFor(900);await waitForIdle(p);}
   await completion(true);const earned=await p.evaluate(()=>__qa.S.abyss.earned);await completion(false);await completion(true);assert.equal(await p.evaluate(()=>__qa.S.abyss.earned),earned);
   await p.clock.setSystemTime(new Date('2026-10-31T00:01:00+03:00'));await p.clock.runFor(1100);assert.equal(await p.locator('#tx-date').inputValue(),'2026-10-31');
   await p.locator('#amt').evaluate(n=>n.value='9,99');await p.locator('#what').evaluate(n=>n.value='Synthetic unfinished draft');
@@ -1629,7 +1638,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const {page:p,context}=await open({shell:true,seed});await shellNav(p,'Тело');
   await p.locator('#body-goal').evaluate(n=>n.closest('details').open=true);
   await p.locator('#body-goal').fill('130');await p.locator('#body-goal-save').click();await p.waitForFunction(()=>__qa.S.bodyAppearance?.goal===130);
-  const before=await p.evaluate(()=>__qa.shape());await p.locator('#in-weight').fill('145');await p.locator('#w-add').click();await p.waitForFunction(()=>__qa.S.weights.some(w=>w.kg===145));await p.evaluate(()=>__qa.idle());
+  const before=await p.evaluate(()=>__qa.shape());await p.locator('#in-weight').fill('145');await p.locator('#w-add').click();await p.waitForFunction(()=>__qa.S.weights.some(w=>w.kg===145));await waitForIdle(p);
   assert((await p.evaluate(()=>__qa.shape()))<before);
   const saved=await docs(p);assert.deepEqual(saved['weights/test'].d,seed['weights/test']);assert.deepEqual(saved['weights/start'].d,seed['weights/start']);
   const shape=await p.evaluate(()=>__qa.shape());await p.reload();await p.waitForFunction(()=>window.__qa?.S.bodyAppearance?.goal===130&&__qa.S.weights.some(w=>w.kg===145));await dismiss(p);assert.equal(await p.evaluate(()=>__qa.shape()),shape);
@@ -1763,7 +1772,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const geometry=await shellGeometry();
    const economy=await p.evaluate(()=>({balance:__qa.balance(),abyss:JSON.parse(JSON.stringify(__qa.S.abyss)),buys:JSON.parse(JSON.stringify(__qa.S.buys))}));
    for(const room of ['study','rest','vault','study']){
-    await p.evaluate(id=>__qa.move(id),room);await p.evaluate(()=>__qa.idle());await p.clock.runFor(64);
+    await p.evaluate(id=>__qa.move(id),room);await waitForIdle(p);await p.clock.runFor(64);
     for(let repeat=0;repeat<3;repeat++){
      const expected=await viewport.evaluate((v,id)=>{const r=document.querySelector('[data-croom="'+id+'"]').getBoundingClientRect(),b=v.getBoundingClientRect();return {left:Math.max(0,Math.min(v.scrollWidth-v.clientWidth,v.scrollLeft+r.left-b.left-v.clientLeft+(r.width-v.clientWidth)/2)),top:Math.max(0,Math.min(v.scrollHeight-v.clientHeight,v.scrollTop+r.top-b.top-v.clientTop+(r.height-v.clientHeight)/2))};},room);
      await camera.getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(64);
@@ -1914,7 +1923,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    assert(await p.locator('#qh').evaluate(n=>{const r=n.getBoundingClientRect(),h=document.querySelector('.citadel-system-dialog>header').getBoundingClientRect();return r.top>=h.bottom;}),'quest heading must be below dialog header');
    assert(await p.locator('#qlist .q').first().evaluate(n=>{const r=n.getBoundingClientRect();return r.height>=44&&r.height<140&&parseFloat(getComputedStyle(n.querySelector('.t b')).fontSize)<=16;}));
    assert(await p.locator('.citadel-system-content').evaluate(n=>n.scrollWidth<=n.clientWidth));
-   await p.locator('#qlist button.q').first().click();await p.evaluate(()=>__qa.idle());await dismiss(p);
+   await p.locator('#qlist button.q').first().click();await waitForIdle(p);await dismiss(p);
    const saved=await docs(p);
    assert(await p.locator('#qlist button.q').first().getAttribute('aria-pressed')==='true');
    if(width===390)await p.screenshot({path:resolve(out,'android-067-tasks-390.png')});
@@ -1959,7 +1968,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    assert(await p.evaluate(src=>new Promise(r=>{const im=new Image();im.onload=()=>r(im.naturalWidth>0);im.onerror=()=>r(false);im.src=src;}),'assets/citadel/'+room+'-interior-1.svg'));
    await p.screenshot({path:resolve(out,'android-067-'+room+'-state0.png')});
    await p.locator('[data-room-view="upgrades"]').click();
-   for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});assert.equal(await p.locator('#citadel-room-condition').innerText(),level===2?'Восстановленная':'Роскошная');await p.screenshot({path:resolve(out,'android-067-'+room+'-state'+(level-1)+'.png')});}
+   for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await waitForIdle(p);await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});assert.equal(await p.locator('#citadel-room-condition').innerText(),level===2?'Восстановленная':'Роскошная');await p.screenshot({path:resolve(out,'android-067-'+room+'-state'+(level-1)+'.png')});}
   }
   const paid=await docs(p);assert.equal(Object.keys(paid).filter(k=>/^buys\/citadel-/.test(k)).length,20);
   await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&window.__qa&&__qa.roomLevel('vault')===3);await dismiss(p);
@@ -2015,7 +2024,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     assert(await p.locator('.finance-form').evaluate(n=>Array.from(n.children).filter(c=>!c.hidden).every(c=>c.getBoundingClientRect().height>=44&&c.scrollWidth<=c.clientWidth+1)));
     if(width===390)await p.screenshot({path:resolve(out,'android-068-money-'+(populated?'filled':'empty')+'-390.png')});
     if(populated){
-     await p.locator('#amt').fill('37.25');await p.locator('#acc').selectOption('card');await p.locator('#kind').selectOption('out');await p.locator('#cat').selectOption({label:'Продукты'});await p.locator('#what').fill('Synthetic browser purchase');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await p.evaluate(()=>__qa.idle());await dismiss(p);
+     await p.locator('#amt').fill('37.25');await p.locator('#acc').selectOption('card');await p.locator('#kind').selectOption('out');await p.locator('#cat').selectOption({label:'Продукты'});await p.locator('#what').fill('Synthetic browser purchase');await p.locator('#add').click();await p.waitForFunction(()=>__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await waitForIdle(p);await dismiss(p);
      const paid=await docs(p),balance=await p.evaluate(()=>__qa.balance());assert.equal(balance.cash,originalBalance.cash);assert.equal(balance.card,originalBalance.card-37.25);
      await p.reload();await p.waitForFunction(()=>!!window.__qa&&!!__qa.S.opening&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …'&&__qa.S.tx.some(t=>t.what==='Synthetic browser purchase'));await dismiss(p);await shellNav(p,'Финансы');assert.deepEqual(await p.evaluate(()=>__qa.balance()),balance);
      const reloaded=await docs(p);for(const[key,value]of Object.entries(paid))if(key.startsWith('tx/')||key==='cfg/opening')assert.deepEqual(reloaded[key],value);
@@ -2132,7 +2141,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('rapid quest taps and trial counters retain every write',async()=>{
   const {page:p,context}=await open();await p.evaluate(()=>{const b=document.querySelectorAll('#qlist button');b[0].click();b[1].click();});await p.waitForFunction(()=>{const d=PlanSync._docs()['days/2026-10-30'];return d&&d.d.q[0]&&d.d.q[2];});const saved=await docs(p);assert(saved['days/'+date].d.q[0]&&saved['days/'+date].d.q[2],'rapid daily writes must preserve both marks');
   const scheduled=await p.evaluate(()=>{for(let n=1;n<=90;n++){const d=new Date(2026,10,n),k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),t=__qa.trial(k);if(t&&t.sq)return {k,t};}});await context.close();assert(scheduled);
-  const b=await open({day:scheduled.k});await b.page.evaluate(()=>{const plus=[...document.querySelectorAll('#trialbox button')].find(b=>b.textContent==='+10');plus.click();plus.click();});await b.page.evaluate(()=>__qa.idle());await b.page.waitForFunction(k=>PlanSync._docs()['trial/'+k]?.d.sq===20,scheduled.k);assert.equal((await docs(b.page))['trial/'+scheduled.k].d.sq,20);await b.context.close();
+  const b=await open({day:scheduled.k});await b.page.evaluate(()=>{const plus=[...document.querySelectorAll('#trialbox button')].find(b=>b.textContent==='+10');plus.click();plus.click();});await waitForIdle(b.page);await b.page.waitForFunction(k=>PlanSync._docs()['trial/'+k]?.d.sq===20,scheduled.k);assert.equal((await docs(b.page))['trial/'+scheduled.k].d.sq,20);await b.context.close();
  });
  await check('midnight refresh keeps current-day mirror and quest screen aligned',async()=>{
   const {page:p,context}=await open();await castle(p);await p.clock.fastForward(11*3600000);assert.match(await p.locator('#citadel-daily-count').innerText(),/0 \/ 7/);assert.equal(await p.locator('#steps').inputValue(),'');await context.close();
@@ -2157,12 +2166,12 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);
   await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-enter').click();
   const before=await docs(p),points=await p.evaluate(()=>__qa.points()),essence=before['cfg/abyss-economy'].d.earned;
-  await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());
+  await p.locator('#citadel-upgrade').click();await waitForIdle(p);
   await p.waitForFunction(()=>__qa.roomLevel('rest')===2);
   assert.equal((await docs(p))['buys/citadel-rest-2'].d.cost,5);
-  await p.evaluate(()=>{__qa.upgrade('rest',1);__qa.upgrade('rest',1);});await p.evaluate(()=>__qa.idle());
+  await p.evaluate(()=>{__qa.upgrade('rest',1);__qa.upgrade('rest',1);});await waitForIdle(p);
   assert.equal(await p.evaluate(()=>__qa.points().avail),points.avail);
-  await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.roomLevel('rest')===3);
+  await p.locator('#citadel-upgrade').click();await waitForIdle(p);await p.waitForFunction(()=>__qa.roomLevel('rest')===3);
   const after=await docs(p),now=await p.evaluate(()=>__qa.points());
   assert.deepEqual({...now,avail:points.avail},points,'construction must preserve shop cores');
   assert.equal(now.avail,points.avail);
@@ -2175,11 +2184,11 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  await check('rank, funds and failed durable storage block construction without partial charge',async()=>{
   const low=await open();await castle(low.page);await low.page.locator('#citadel-enter').click();assert(await low.page.locator('#citadel-upgrade').isDisabled());
-  const before=await docs(low.page);await low.page.evaluate(()=>__qa.upgrade('rest',1));await low.page.evaluate(()=>__qa.idle());assert.deepEqual(await docs(low.page),before);await low.context.close();
+  const before=await docs(low.page);await low.page.evaluate(()=>__qa.upgrade('rest',1));await waitForIdle(low.page);assert.deepEqual(await docs(low.page),before);await low.context.close();
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);await p.locator('#citadel-enter').click();const original=await docs(p);
   await p.evaluate(()=>{window.__realSet=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic storage full','QuotaExceededError');return window.__realSet.call(this,k,v);};});
-  await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());assert.deepEqual(await docs(p),original,'failed persistence must not grant a room or charge');assert.match(await p.locator('#toast').innerText(),/Изменение не сохранено/);
-  await p.evaluate(()=>{Storage.prototype.setItem=window.__realSet;});await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(()=>__qa.roomLevel('rest')===2);await context.close();
+  await p.locator('#citadel-upgrade').click();await waitForIdle(p);assert.deepEqual(await docs(p),original,'failed persistence must not grant a room or charge');assert.match(await p.locator('#toast').innerText(),/Изменение не сохранено/);
+  await p.evaluate(()=>{Storage.prototype.setItem=window.__realSet;});await p.locator('#citadel-upgrade').click();await waitForIdle(p);await p.waitForFunction(()=>__qa.roomLevel('rest')===2);await context.close();
  });
  await check('concurrent tabs share last essence and shop cores remain independent',async()=>{
   const seed=advancedSeed(),probe=await open({seed,day:'2027-04-16'}),points=await probe.page.evaluate(()=>__qa.points()),claims=await probe.page.evaluate(()=>__qa.abyssEvents());await probe.context.close();
@@ -2221,7 +2230,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const room of ['throne','observatory','rest','study','archive','forge']){
    await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-enter').click();
    await p.setViewportSize({width:390,height:900});await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-1.png')});
-   for(const level of [2,3]){const beforePixels=await p.locator('#citadel-interior-stage').screenshot();await p.locator('#citadel-upgrade').click();await p.evaluate(()=>__qa.idle());await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});const afterPixels=await p.locator('#citadel-interior-stage').screenshot();assert(!beforePixels.equals(afterPixels),'renovation must change visible pixels: '+room+' '+level);await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-'+level+'.png')});}
+   for(const level of [2,3]){const beforePixels=await p.locator('#citadel-interior-stage').screenshot();await p.locator('#citadel-upgrade').click();await waitForIdle(p);await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});const afterPixels=await p.locator('#citadel-interior-stage').screenshot();assert(!beforePixels.equals(afterPixels),'renovation must change visible pixels: '+room+' '+level);await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'graphics-room-'+room+'-level-'+level+'.png')});}
    for(const width of [320,360,390,430,768,1280]){
     await p.setViewportSize({width,height:900});
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
@@ -2273,7 +2282,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert((await p.locator('#citadel-exits [data-travel]').count())>=3);
   await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');
   assert.equal(await p.locator('#citadel-avatar').getAttribute('data-route'),'gatehouse hall-3 hall-2 archive');
-  await p.evaluate(()=>__qa.idle());await p.reload();await castle(p);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('aria-pressed'),'true');
+  await waitForIdle(p);await p.reload();await castle(p);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('aria-pressed'),'true');
   await context.close();
  });
  await check('a new player can return from the gatehouse through stairs past locked rooms',async()=>{
@@ -2359,7 +2368,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const speak=async name=>{await p.locator('#citadel-residents button').filter({hasText:name}).click();return p.locator('#citadel-npc-dialogue').innerText();};
   const first=await speak('Хранительница');const second=await speak('Хранительница');assert.notEqual(first,second,'explicit conversations should vary');
   await p.evaluate(()=>__qa.render());assert.equal(await p.locator('#citadel-npc-dialogue').innerText(),second,'idle renders must not rotate speech');
-  await p.locator('#qlist button.q').first().click();await p.evaluate(()=>__qa.idle());await p.waitForTimeout(70);await dismiss(p);
+  await p.locator('#qlist button.q').first().click();await waitForIdle(p);await p.waitForTimeout(70);await dismiss(p);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/ещё одно дело завершено/);
   const changed=structuredClone((await docs(p))['days/'+day].d);changed.q[7]=true;await write(p,'days/'+day,changed);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Недельные записи продвинулись/);
@@ -2409,7 +2418,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const room of ['throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'])for(const level of [2,3])seed['buys/citadel-'+room+'-'+level]={kind:'citadel-room',currency:'abyss',room,level,item:'citadel-'+room+'-'+level,cost:level===2?5:12,ts:1};
   const {page:p,context}=await open({seed,day:'2027-04-16',legacy:{fxset:JSON.stringify({shake:'off',flash:'weak',sound:'off'})}});
   await write(p,'cfg/body-appearance',{goal:100});await write(p,'cfg/future-compatible',{unknown:{nested:['retained',42]}});
-  await p.evaluate(()=>__qa.idle());const before=await docs(p),shape=await p.evaluate(()=>__qa.shape());
+  await waitForIdle(p);const before=await docs(p),shape=await p.evaluate(()=>__qa.shape());
   const copy=await p.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
   assert.equal(copy.v,2);assert.equal(copy.format,'vkach-backup');assert.match(copy.integrity.value,/^[a-f0-9]{64}$/);assert(Number.isFinite(Date.parse(copy.createdAt)));
   assert.deepEqual(copy.docs,before);assert.deepEqual(copy.docs['cfg/effects'].d,{shake:'off',flash:'weak',sound:'off'});
