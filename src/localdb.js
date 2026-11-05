@@ -166,9 +166,10 @@
   }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
   // Discovery receipts are monotonic; preference follows the selected snapshot.
-  var discoveryPaths = ['cfg/fate','cfg/legends','cfg/realm-achievements','cfg/shelter-items','cfg/forge-discoveries'];
+  var discoveryPaths = ['cfg/fate','cfg/legends','cfg/realm-achievements','cfg/shelter-items','cfg/forge-discoveries','cfg/chains-discoveries'];
   function retainDiscovery(path, local, incoming) {
     if(!local && !incoming)return null;
+    if(path==='cfg/chains-discoveries')return window.VkachChains.mergeAwards(local,incoming);
     var engine=path==='cfg/forge-discoveries'?window.VkachForgeAwards:path==='cfg/shelter-items'?window.VkachShelter:path==='cfg/fate'?window.VkachFate:path==='cfg/realm-achievements'?window.VkachRealm:window.VkachLegends;
     if(!engine||!engine.merge)throw new Error('Discovery engine unavailable');
     return engine.merge(local,incoming);
@@ -191,7 +192,8 @@
         }
         // This is detection, not a distributed transaction. Device clock skew
         // and concurrent full-sheet uploads still require manual verification.
-        if (options.detect && l && !same(l.d, r.d) &&
+        // Rebuildable monthly Will reports are projections of the synced events.
+        if (options.detect && !p.startsWith('chains-ledger/') && l && !same(l.d, r.d) &&
             (l.u === r.u || (l.u > (meta.lastSync || 0) && r.u > (meta.lastSync || 0))) &&
             !(meta.accepted && meta.accepted[p] === JSON.stringify(r))) conflicts.push(p);
         if (!l || r.u > l.u) { next[p] = clone(r); changedLocal = true; }

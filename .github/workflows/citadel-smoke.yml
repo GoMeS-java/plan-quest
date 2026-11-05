@@ -8,6 +8,7 @@ on:
       - 'src/legends.js'
       - 'src/shelter-items.js'
       - 'src/fate.js'
+      - 'src/chains*'
       - 'src/awakening.js'
       - 'src/citadel*.css'
       - 'src/rpg-ui.css'
@@ -113,6 +114,8 @@ jobs:
           node --check docs/localdb.js
           node --check docs/awakening.js
           node --check docs/shelter-items.js
+          node --check docs/chains.js
+          node --check docs/chains-ui.js
           python - <<'PY'
           import re
           from pathlib import Path

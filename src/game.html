@@ -689,6 +689,7 @@ html,body{overflow-anchor:none}
 .citadel-castle[data-phase="ДЕНЬ"] .citadel-window{background:linear-gradient(130deg,#dbbfaa,#8299ad 55%,#8e819c)!important;box-shadow:0 0 15px #d1b5a840,inset 0 0 12px #dbbec9}.citadel-castle[data-phase="УТРО"] .citadel-window{background:linear-gradient(135deg,#d49b8f,#9e7693 55%,#665779)!important}.citadel-interior-stage[data-phase="ДЕНЬ"] .citadel-interior-window{box-shadow:25px 45px 30px 20px #e6cbbf30,inset 0 0 18px #a4b9d755}
 </style>
 <link rel="stylesheet" href="citadel-art.css">
+<link rel="stylesheet" href="chains.css">
 <link rel="stylesheet" href="rpg-ui.css">
 
 <div class="app">
@@ -721,7 +722,7 @@ html,body{overflow-anchor:none}
     <div id="ttimer" hidden></div>
   </div>
 
-  <details class="citadel-integrated" id="citadel-home"><summary>♜ ЦИТАДЕЛЬ <span id="citadel-summary">ТВОЁ УБЕЖИЩЕ</span></summary><div class="citadel-inside"><div class="citadel-roadmap"><div class="citadel-roadmap-top"><strong>ЦИТАДЕЛЬ СПЯЩЕГО</strong><span>ТВОЙ ДОМ</span></div><div class="citadel-roadmap-current">Исследуй комнаты, общайся с жителями и следи за своим путём.</div></div><div class="citadel-vitals"><span id="citadel-live-rank">РАНГ …</span><span id="citadel-live-body">ТЕЛО …</span><span id="citadel-live-points">ОСКОЛКИ …</span><span id="citadel-live-cash">ФИНАНСЫ …</span><span id="citadel-live-gear">ЭКИПИРОВКА …</span></div><div class="hero-progress" id="citadel-hero-progress"><span id="citadel-rank-progress"></span><progress id="citadel-rank-meter" max="1" value="0" aria-label="Осколки до следующего ранга"></progress><p id="citadel-progress-feedback" role="status" aria-live="polite">Дела дня развивают героя по существующим правилам.</p><details class="citadel-progress-sources"><summary>Как дела развивают героя</summary><p>Задания, привычки и активность отражаются в осколках и ранге по прежним правилам. Недельные записи и взвешивания учитываются в общем пути.</p><p>Внешность следует записям веса, одежда — выбранной «Оболочке». Ранг открывает Цитадель; её обустройство оплачивается Эссенцией Бездны. Ядра души остаются для «Воспоминаний».</p><p>Финансы показывают настоящие остатки и расходы. Просмотр записей и осмотр комнат не дают наград.</p><nav aria-label="Открыть записи прогресса"><button type="button" data-progress-tab="today">Дела и привычки</button><button type="button" data-progress-tab="week">Неделя</button><button type="button" data-progress-tab="diet">Вес</button><button type="button" data-progress-tab="money">Финансы</button></nav></details></div><nav class="citadel-art-nav" aria-label="Разделы Цитадели"><button type="button" data-art-view="overview" aria-pressed="true">♜ Обзор</button><button type="button" data-art-view="room" aria-pressed="false">⌂ Комната</button><button type="button" data-art-view="upgrades" aria-pressed="false">⚒ Улучшить</button><button type="button" data-art-view="people" aria-pressed="false">♟ Жители</button></nav><div class="citadel-castle" id="citadel-castle" aria-label="Разрез Цитадели"><div class="citadel-sky"><span class="citadel-battlements" aria-hidden="true"></span><span class="citadel-moon" aria-hidden="true"></span><i></i><i></i><i></i><div class="citadel-skyline">ЦИТАДЕЛЬ СПЯЩЕГО</div></div>
+  <details class="citadel-integrated" id="citadel-home"><summary>♜ ЦИТАДЕЛЬ <span id="citadel-summary">ТВОЁ УБЕЖИЩЕ</span></summary><div class="citadel-inside"><div class="citadel-roadmap"><div class="citadel-roadmap-top"><strong>ЦИТАДЕЛЬ СПЯЩЕГО</strong><span>ТВОЙ ДОМ</span></div><div class="citadel-roadmap-current">Исследуй комнаты, общайся с жителями и следи за своим путём.</div></div><div class="citadel-vitals"><span id="citadel-live-rank">РАНГ …</span><span id="citadel-live-body">ТЕЛО …</span><span id="citadel-live-points">ОСКОЛКИ …</span><span id="citadel-live-cash">ФИНАНСЫ …</span><span id="citadel-live-gear">ЭКИПИРОВКА …</span></div><div class="hero-progress" id="citadel-hero-progress"><span id="citadel-rank-progress"></span><progress id="citadel-rank-meter" max="1" value="0" aria-label="Осколки до следующего ранга"></progress><p id="citadel-progress-feedback" role="status" aria-live="polite">Дела дня развивают героя по существующим правилам.</p><details class="citadel-progress-sources"><summary>Как дела развивают героя</summary><p>Задания, привычки и активность отражаются в осколках и ранге по прежним правилам. Недельные записи и взвешивания учитываются в общем пути.</p><p>Внешность следует записям веса, одежда — выбранной «Оболочке». Ранг открывает Цитадель; её обустройство оплачивается Эссенцией Бездны. Ядра души остаются для «Воспоминаний».</p><p>Финансы показывают настоящие остатки и расходы. Просмотр записей и осмотр комнат не дают наград.</p><nav aria-label="Открыть записи прогресса"><button type="button" data-progress-tab="today">Дела и привычки</button><button type="button" data-progress-tab="week">Неделя</button><button type="button" data-progress-tab="diet">Вес</button><button type="button" data-progress-tab="money">Финансы</button></nav></details></div><nav class="citadel-art-nav" aria-label="Разделы Цитадели"><button type="button" data-art-view="overview" aria-pressed="true">♜ Обзор</button><button type="button" data-art-view="room" aria-pressed="false">⌂ Комната</button><button type="button" data-art-view="upgrades" aria-pressed="false">⚒ Улучшить</button><button type="button" data-art-view="people" aria-pressed="false">♟ Жители</button></nav><div class="citadel-castle" id="citadel-castle" aria-label="Разрез Цитадели"><div class="citadel-sky"><span class="citadel-battlements" aria-hidden="true"></span><span class="citadel-moon" aria-hidden="true"></span><i></i><i></i><i></i><div class="citadel-skyline">ЦИТАДЕЛЬ СПЯЩЕГО</div><button id="fate-hourglass" type="button" aria-label="Песочные часы судьбы"></button></div>
 <div class="citadel-floor-label">ВЕРХНИЙ ЯРУС <span>III</span></div><div class="citadel-floor"><button type="button" class="citadel-room citadel-throne" data-croom="throne"><span class="citadel-window"></span><span class="citadel-sconce" aria-hidden="true"></span><span class="citadel-prop citadel-prop-throne"></span><span class="citadel-room-name">ТРОННЫЙ ЗАЛ</span></button><button type="button" class="citadel-room citadel-observatory is-locked" data-croom="observatory" data-min-rank="5"><span class="citadel-window"></span><span class="citadel-prop citadel-prop-scope"></span><span class="citadel-room-name">Неизведанная комната</span><i class="citadel-lock">ЗАКРЫТО</i><span class="citadel-sconce" aria-hidden="true"></span></button></div>
 <div class="citadel-corridor" data-cnode="hall-0"><span>↔ ВЕРХНЯЯ ГАЛЕРЕЯ</span><i class="citadel-stairs" aria-hidden="true"></i><span>↕ ЛЕСТНИЦА</span></div>
 <div class="citadel-floor-label">СРЕДНИЙ ЯРУС <span>II</span></div><div class="citadel-floor"><button type="button" class="citadel-room citadel-rest" data-croom="rest"><span class="citadel-window"></span><span class="citadel-prop citadel-prop-bed"></span><span class="citadel-room-name">ЛИЧНЫЕ ПОКОИ</span><span class="citadel-sconce" aria-hidden="true"></span></button><button type="button" class="citadel-room citadel-study" data-croom="study"><span class="citadel-window"></span><span class="citadel-prop citadel-prop-books"></span><span class="citadel-room-name">КАБИНЕТ</span><span class="citadel-sconce" aria-hidden="true"></span></button></div>
@@ -752,6 +753,7 @@ html,body{overflow-anchor:none}
   </div>
 
   <section class="panel active" id="today" data-g="a"><p class="hero-feedback" id="daily-progress-feedback" role="status" aria-live="polite"></p>
+    <section id="chains-daily" class="goal chains-card" hidden></section>
     <div class="daysw" id="daysw">
       <button type="button" id="d-today" aria-pressed="true">СЕГОДНЯ</button>
       <button type="button" id="d-yest" aria-pressed="false">ВЧЕРА</button>
@@ -829,7 +831,7 @@ html,body{overflow-anchor:none}
       <div class="bar" id="bar-money" aria-hidden="true"></div>
       <div class="hint">Накоплено <span id="cur-money"></span> из <span id="forge-money-target">10 000 000 ₽</span></div>
       <div class="hint" id="money-next"></div>
-      <div class="need">Чтобы успеть к 19.04.2027, нужно откладывать <b id="need-money"></b> ₽ в месяц.</div>
+      <div class="need">Чтобы успеть к 06.05.2027, нужно откладывать <b id="need-money"></b> ₽ в месяц.</div>
       <div class="hint">Считается как свободные деньги плюс то, что тебе должны.</div>
     </div>
     <div class="goal">
@@ -846,9 +848,10 @@ html,body{overflow-anchor:none}
     <div class="goal">
       <div class="goal-head"><b>Время</b><span class="pct" id="pct-time">0%</span></div>
       <div class="bar time" id="bar-time" aria-hidden="true"></div>
-      <div class="hint">Прошло <span id="days-gone"></span> из 182 дней, срок 19.04.2027</div>
+      <div class="hint">Прошло <span id="days-gone"></span> из 181 дня, срок 06.05.2027</div>
     </div>
-    <div class="note">Проценты считаются от старта 19.10.2026.</div>
+    <div class="note">Отсчёт с 06.11.2026 по московскому времени.</div>
+    <section id="chains-goal" class="goal chains-card" hidden></section>
     <div id="forge-custom-goals"></div>
     <h2>ГЛОБАЛЬНЫЙ ПУТЬ И ШАГИ</h2>
     <div id="gg-list" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -868,6 +871,7 @@ html,body{overflow-anchor:none}
       <section class="profile-development" aria-label="Развитие по записям"><div class="profile-section-title">РАЗВИТИЕ ГЕРОЯ</div><div class="profile-development-grid"><div><small>Пройдено шагов</small><b id="profile-total-steps">0</b></div><div><small>Приседания</small><b id="profile-total-squat">0</b></div><div><small>Отжимания на коленях</small><b id="profile-total-pushup">0</b></div><div><small>Подходы упражнений</small><b id="profile-total-sets">0</b></div></div><p class="hint">По записям в заданиях и хронике до сегодняшнего дня.</p></section>
       <div class="profile-section-title">ИЗБРАННЫЕ ДОСТИЖЕНИЯ <small>3 места</small></div>
       <div id="profile-showcase" class="profile-showcase" aria-label="Три избранных достижения"></div>
+      <section id="chains-profile" class="goal chains-card" hidden></section>
       <div id="profile-picker" class="profile-picker" hidden><div class="profile-picker-head"><b>ВЫБРАТЬ ДОСТИЖЕНИЕ</b><button type="button" id="profile-picker-close">✕</button></div><div id="profile-achievements" class="profile-achievements"></div></div>
       <div class="profile-section-title">СТАТИСТИКА ПУТИ</div>
       <div class="profile-stats profile-history"><div><small>Дней с записями</small><b id="profile-days">—</b></div><div><small>Отметок заданий</small><b id="profile-checks">—</b></div><div><small>Получено достижений</small><b id="profile-ach-count">—</b></div></div>
@@ -996,6 +1000,7 @@ html,body{overflow-anchor:none}
 <div class="setup" id="setup" hidden role="dialog" aria-modal="true" aria-label="Настройки">
   <div class="sbox">
     <div class="shead"><b>НАСТРОЙКИ</b><button class="gear" id="setup-x" type="button" aria-label="Закрыть">&#10005;</button></div>
+    <button type="button" class="btn" id="chains-settings-open">Настройки «Разрыва оков»</button>
     <h2>ОБУЧЕНИЕ</h2><p class="hint">Заклятие проведёт тебя по настоящим разделам. Можно остановиться в любой момент.</p><div class="row"><button class="btn" id="awakening-start" type="button">НАЧАТЬ ОБУЧЕНИЕ</button><button class="btn alt" id="awakening-restart" type="button" hidden>ПРОЙТИ ЗАНОВО</button><button class="btn alt" id="awakening-update-start" type="button">НОВОЕ ОФОРМЛЕНИЕ</button></div>
     <button class="btn" id="data-management" type="button">ДАННЫЕ И РЕЗЕРВНЫЕ КОПИИ</button>
     <h2>ЭФФЕКТЫ</h2>
@@ -1012,7 +1017,7 @@ html,body{overflow-anchor:none}
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
     <div class="release-stamp"><b>Версия __VER__</b><span>Сборка __BUILD__</span></div>
-    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
+    <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.3</b> · Разрыв оков: дневник, аспект Воли и Песочные часы судьбы на крыше Цитадели.<br><b>1.2</b> · Кузница судьбы: настройка заданий, целей и открытых аспектов.<br><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
       <div class="hint"><b>0.53</b> · 30.10 · Тайна новой отметины усилена; награда осколками убрана</div>
@@ -1096,6 +1101,8 @@ html,body{overflow-anchor:none}
 <script src="shelter-items.js"></script>
 <script src="forge-awards.js"></script>
 <script src="forge-art.js"></script>
+<script src="chains.js"></script>
+<script src="chains-ui.js"></script>
 <dialog id="citadel-mystery" aria-labelledby="citadel-mystery-title" aria-describedby="citadel-mystery-text"><h2 id="citadel-mystery-title">Неизведанная комната</h2><p id="citadel-mystery-text"></p><form method="dialog"><button autofocus>Понятно</button></form></dialog>
 <script>window.APP_VERSION = "__VER__";
 (function () {
@@ -1375,7 +1382,6 @@ html,body{overflow-anchor:none}
     chain=task.catch(function(e){pendingSaveError=e;dbErr(e);});
     return task;
   }
-  var START = new Date(2026, 9, 19), TOTAL_DAYS = 182;
   var QDEF = [
     { t: 'Встал до 10:00', s: 'будильник не нужен, если проснулся сам' },
     { t: 'Обед не меньше 20 минут', s: 'можно с видео, но медленно' },
@@ -2356,6 +2362,7 @@ html,body{overflow-anchor:none}
       if(A.title)out.push({id:A.id,title:A.title,date:lastGI.ach[A.id],kind:group[1]});
     });});
     if(typeof realmOwned==='function')realmOwned().forEach(function(d){out.push({id:d.id,title:d.title,date:dkey(new Date(d.at)),kind:d.kind});});
+    if(typeof VkachChainsUI!=='undefined')VkachChainsUI.owned().forEach(function(row){if(row.title)out.push(row);});
     out.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});return out;
   }
   function titleChoice(list,look){
@@ -3115,6 +3122,7 @@ html,body{overflow-anchor:none}
   $('fate-forge-archive').onclick=function(){forgeSave(true);};
 
   function renderToday() {
+    $('chains-daily').toggleAttribute('data-other-day', viewBack !== 0);
     var k = curKey();
     $('d-today').setAttribute('aria-pressed', viewBack === 0 ? 'true' : 'false');
     $('d-yest').setAttribute('aria-pressed', viewBack === 1 ? 'true' : 'false');
@@ -3869,8 +3877,7 @@ html,body{overflow-anchor:none}
 
   function renderGoals() {
     var money=forgeCapital(),moneyGoal=forgeGoal('goal-money'),weightGoal=forgeGoal('goal-weight'),studyGoal=forgeGoal('goal-study');
-    var gone = Math.max(0, Math.min(TOTAL_DAYS, Math.floor((Date.now() - START.getTime()) / 86400000)));
-    var left = TOTAL_DAYS - gone;
+    var time = VkachChains.clock(), gone = time.gone, left = time.left;
     var rm = Math.max(0, money) / moneyGoal.target;
     $('forge-money-title').textContent=S.forge['goal-money']?moneyGoal.title+', '+forgeGoalText(moneyGoal,moneyGoal.target):'Капитал, 10 млн ₽';
     $('forge-money-target').textContent=forgeGoalNumber(moneyGoal.target)+' ₽';
@@ -3909,8 +3916,8 @@ html,body{overflow-anchor:none}
     })();
     $('need-weight').textContent = left > 0 ? ((rw>=1?0:Math.abs(wt-weightGoal.target)) / (left / 7)).toFixed(1).replace('.', ',') : '0';
     $('days-gone').textContent = gone;
-    $('pct-time').textContent = pc(gone / TOTAL_DAYS);
-    fillBar('bar-time', gone / TOTAL_DAYS);forgeRenderCustomGoals();
+    $('pct-time').textContent = pc(time.ratio);
+    fillBar('bar-time', time.ratio);forgeRenderCustomGoals();
 
     var wl = $('l-weight');
     clear(wl);
@@ -4434,6 +4441,7 @@ html,body{overflow-anchor:none}
     if(typeof forgeOwned==='function')forgeOwned().forEach(function(row){
       rows.push({id:row.id,kind:row.kind,name:row.name,date:row.date,description:'Путь Кузницы · '+row.task,points:0,cos:row.background});
     });
+    if(typeof VkachChainsUI!=='undefined')VkachChainsUI.owned().forEach(function(row){rows.push(row);});
     return rows.sort(function(a,b){return b.date.localeCompare(a.date)||a.id.localeCompare(b.id);});
   }
   function achievementSigil(canvas,row){
@@ -4491,12 +4499,13 @@ html,body{overflow-anchor:none}
   }
   function renderAch() {
     if (!lastGI) return;
-    var viewKey=JSON.stringify([lastGI.ach,lastGI.ups,lastGI.nups,lastGI.forgeAspects,dkey(new Date()),Object.keys(forgeAspectPaths).map(forgeAspectRetirement),S.look||cachedLook,S.legends,S.fate,S.realm,S.forgeAwards,S.wardrobe,!!window.__COS_ALL]);
+    var viewKey=JSON.stringify([lastGI.ach,lastGI.ups,lastGI.nups,lastGI.forgeAspects,dkey(new Date()),Object.keys(forgeAspectPaths).map(forgeAspectRetirement),S.look||cachedLook,S.legends,S.fate,S.realm,S.forgeAwards,VkachChainsUI.owned(),S.wardrobe,!!window.__COS_ALL]);
     if(viewKey===achievementViewKey)return;
     achievementViewKey=viewKey;
     var box = $('alist'), sk = $('sklist'),opened=Array.from(box.querySelectorAll('[data-achievement] details[open]')).map(function(n){return n.parentElement.dataset.achievement;}),focus=document.activeElement,focusCard=focus&&focus.closest('[data-achievement]'),focusId=focusCard&&focusCard.dataset.achievement,focusSlot=focus&&focus.dataset.showcaseSlot;
     clear(box); clear(sk);
-    var any = false;
+    var any = VkachChains.today() >= VkachChains.start;
+    if(any)sk.appendChild(VkachChainsUI.aspectButton());
     SK_KEYS.forEach(function (key) {
       var arr = lastGI.ups[key];
       if (!arr.length) return;
@@ -4916,7 +4925,7 @@ document.querySelectorAll('[data-art-view]').forEach(function(button){button.add
  if(target)target.scrollIntoView({block:'start',behavior:'auto'});requestAnimationFrame(function(){citadelPosition();citadelPositionResidents();});
  });});
 window.addEventListener('popstate',function(e){if(legendDialog&&legendDialog.open||legendReturning)return;if($('citadel-home').classList.contains('citadel-shell'))return;if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(history.state,'');e.stopImmediatePropagation();return;}if(!$('citadel-interior').hidden){$('citadel-interior').hidden=true;}var section=$('citadel-home');if(section.classList.contains('citadel-expanded')){section.classList.remove('citadel-expanded');document.body.classList.remove('citadel-modal-open');$('citadel-fullscreen').setAttribute('aria-pressed','false');$('citadel-fullscreen').textContent='⛶ РАЗВЕРНУТЬ ЗАМОК';requestAnimationFrame(citadelPosition);}});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!e.defaultPrevented&&!citadelNpcSelected&&$('citadel-home').classList.contains('citadel-expanded')){$('citadel-fullscreen').click();}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!e.defaultPrevented&&!citadelNpcSelected&&!document.querySelector('dialog.chains-dialog[open]')&&$('citadel-home').classList.contains('citadel-expanded')){$('citadel-fullscreen').click();}});
 function citadelStep(direction){var index=citadelRooms.indexOf(citadelSelected),level=loaded?pointsInfo().L:1;for(var k=1;k<=citadelRooms.length;k++){var id=citadelRooms[(index+direction*k+citadelRooms.length*2)%citadelRooms.length],btn=document.querySelector('[data-croom="'+id+'"]');if(level>=Number(btn.getAttribute('data-min-rank')||1)){citadelMove(id);return;}}}
 $('citadel-prev').addEventListener('click',function(){citadelStep(-1);});$('citadel-next').addEventListener('click',function(){citadelStep(1);});
 var citadelActivityData={
@@ -5400,17 +5409,14 @@ function renderAllInner() {
   }
 
   function renderHourglass() {
-    var hg = $('hg');
-    if (!hg) return;
-    var gone = Math.max(0, Math.min(TOTAL_DAYS, Math.floor((Date.now() - START.getTime()) / 86400000)));
-    var left = TOTAL_DAYS - gone, f = gone / TOTAL_DAYS;
-    hg.style.setProperty('--t', Math.max(3, Math.round((1 - f) * 100)) + '%');
-    hg.style.setProperty('--b', Math.max(4, Math.round(f * 100)) + '%');
-    hg.style.setProperty('--hg-c', f < 0.4 ? '#86c05e' : f < 0.75 ? '#e8b13c' : '#ef6a5a');
-    hg.classList.toggle('run', left > 0);
-    $('hg-d').textContent = left + ' ДН';
-    hg.setAttribute('aria-label', 'Осталось ' + left + ' из ' + TOTAL_DAYS + ' дней, срок 19.04.2027');
-    hg.title = 'Осталось ' + left + ' из ' + TOTAL_DAYS + ' дней';
+    var hg = $('hg'), time = VkachChains.clock();
+    hg.style.setProperty('--t', (1 - time.ratio) * 100 + '%');
+    hg.style.setProperty('--b', time.ratio * 100 + '%');
+    hg.style.setProperty('--hg-c', VkachChainsUI.sandColor(time.ratio));
+    hg.classList.toggle('run', !time.complete && time.ratio > 0);
+    $('hg-d').textContent = time.left + ' ДН';
+    hg.setAttribute('aria-label', 'Осталось ' + time.left + ' из ' + time.total + ' дней, срок 06.05.2027');
+    hg.title = hg.getAttribute('aria-label');
   }
   function capitalNow() {
     if (!loaded || !S.opening) return null;
@@ -5499,9 +5505,8 @@ function renderAllInner() {
       if (d >= NEW_Q && day.q && day.q[7]) en++;
       if (dayCount(d, SI) >= reqTotal(d)) pf++;
     }
-    var gone = Math.floor((Date.now() - START.getTime()) / 86400000);
-    var left = Math.max(0, TOTAL_DAYS - gone);
-    var lines = ['Осталось дней: ' + left + ' из ' + TOTAL_DAYS];
+    var time = VkachChains.clock();
+    var lines = ['Осталось дней: ' + time.left + ' из ' + time.total];
     var cap = capitalNow();
     lines.push('Пришло ' + fmt(inc) + ' ₽, потрачено ' + fmt(out) + ' ₽, разница ' + (inc - out >= 0 ? '+' : '−') + fmt(Math.abs(inc - out)) + ' ₽.' + (cap == null ? '' : ' Капитал сейчас ' + fmt(Math.max(0, cap)) + ' ₽.'));
     if (S.weights.length) {
@@ -5516,8 +5521,8 @@ function renderAllInner() {
     if (to >= NEW_Q) lines.push('Английский: ' + en + ' из 7 дней.');
     lines.push('Идеальных дней: ' + pf + ' из 7.');
     try { localStorage.setItem('wsum', wk); } catch (e) {}
-    var wn = Math.floor(gone / 7);
-    achQueue.push({ id: 'ws:' + wk, date: today, kind: 'ОТЧЁТ ЗА НЕДЕЛЮ', big: 'Спящий, прошла неделя ' + wn + ' из ' + Math.round(TOTAL_DAYS / 7), text: lines.join('\n') });
+    var wn = time.complete ? Math.ceil(time.total / 7) : Math.floor(time.gone / 7);
+    achQueue.push({ id: 'ws:' + wk, date: today, kind: 'ОТЧЁТ ЗА НЕДЕЛЮ', big: wn ? 'Спящий, прошла неделя ' + wn + ' из ' + Math.ceil(time.total / 7) : 'Спящий, вот итоги недели', text: lines.join('\n') });
     showNextAch();
   }
   function renderGlobal() {
@@ -5847,6 +5852,7 @@ function renderAllInner() {
     }, function (e) { dbErr(e); });
   }
   function subscribe() {
+    VkachChainsUI.connect(db, enqueue, requestProfileRender, toast);
     db.doc(VkachForgeAwards.path).onSnapshot(function(sn){S.forgeAwards=sn.exists?sn.data():null;forgeRegisterBackgrounds();firstDone('forge-awards');requestProfileRender();},dbErr);
     watchCollection('forge-tasks',function(rows){S.forge=Object.create(null);rows.forEach(function(row){S.forge[row.id]=row;});});
     db.doc(VkachShelter.path).onSnapshot(function(sn){S.shelter=sn.exists?sn.data():null;firstDone('shelter');requestProfileRender();},dbErr);
@@ -6081,7 +6087,7 @@ function renderAllInner() {
     }
     navGroup('ПУТЬ И ПРОГРЕСС',[['week','Хроника'],['diet','Тело'],['goals','Путь']]);
     navGroup('КАЗНА И ДЕЛА',[['money','Финансы']]);
-    var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);
+    var dock=document.createElement('nav');dock.className='citadel-shell-dock';dock.setAttribute('aria-label','Быстрые действия');home.appendChild(dock);VkachChainsUI.mountQuick(home,dock);
     [['overview','Цитадель'],['today','Задания'],['wardrobe','Профиль'],['shop','Память']].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[1];b.dataset.section=item[0];if(item[0]==='shop')b.setAttribute('aria-label','Воспоминания');b.onclick=function(){nav.querySelector('[data-section="'+item[0]+'"]').click();};dock.appendChild(b);});
     var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.setAttribute('aria-controls','citadel-shell-nav');dockMenu.setAttribute('aria-expanded','false');dockMenu.onclick=function(){toggleMenu(dockMenu);};dock.appendChild(dockMenu);
     var shade=document.createElement('div');shade.className='citadel-shell-shade';home.appendChild(shade);shade.onclick=closeDrawer;
@@ -6142,7 +6148,7 @@ function renderAllInner() {
     [['−',function(){cameraZoom(zoom-.2);}],['Общий вид',function(){zoom=Math.max(.4,viewport.clientWidth/baseWidth);cameraSize();cameraScroll(0,0);}],['+',function(){cameraZoom(zoom+.2);}],['К комнате',focusRoom]].forEach(function(item){var b=document.createElement('button');b.type='button';b.textContent=item[0];b.onclick=item[1];camera.appendChild(b);});
     var savedCamera=null;try{var sc=JSON.parse(localStorage.getItem(cameraKey)||'null');if(sc&&Number.isFinite(sc.zoom)&&Number.isFinite(sc.left)&&Number.isFinite(sc.top))savedCamera={zoom:Math.max(.4,Math.min(2,sc.zoom)),left:Math.max(0,sc.left),top:Math.max(0,sc.top)};}catch(e){}
     if(savedCamera&&Number.isFinite(savedCamera.zoom))zoom=Math.max(.4,Math.min(2,savedCamera.zoom));
-    cameraSize();function restoreCamera(){requestAnimationFrame(function(){cameraSize();if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);else viewport.scrollTo(0,0);lastCamera={left:viewport.scrollLeft,top:viewport.scrollTop};citadelPosition();cameraCaptions();});}restoreCamera();window.addEventListener('load',restoreCamera,{once:true});
+    cameraSize();function restoreCamera(){requestAnimationFrame(function(){cameraSize();if(savedCamera)viewport.scrollTo(savedCamera.left||0,savedCamera.top||0);else{var end=$('fate-hourglass').getBoundingClientRect().right,edge=viewport.getBoundingClientRect().right;viewport.scrollTo(Math.max(0,end-edge+6),0);}lastCamera={left:viewport.scrollLeft,top:viewport.scrollTop};citadelPosition();cameraCaptions();});}restoreCamera();window.addEventListener('load',restoreCamera,{once:true});
     var saveCamera=0;function flushCamera(){clearTimeout(saveCamera);saveCamera=0;try{localStorage.setItem(cameraKey,JSON.stringify({left:lastCamera.left,top:lastCamera.top,zoom:zoom}));}catch(e){}}
     function persistCamera(){clearTimeout(saveCamera);saveCamera=setTimeout(flushCamera,300);}
     var sectionLabels={today:'Задания',week:'Хроника',diet:'Тело',goals:'Путь',money:'Финансы',spend:'Траты',wheel:'Колесо',wardrobe:'Профиль',shop:'Воспоминания'};
@@ -6176,7 +6182,7 @@ function renderAllInner() {
     new ResizeObserver(function(){measureShell();scheduleCaptions();}).observe(header);
     new MutationObserver(function(){measureShell();if(home.dataset.uiView==='overview')requestAnimationFrame(function(){cameraSize();viewport.scrollTo(lastCamera.left,lastCamera.top);cameraCaptions();});}).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
     window.addEventListener('popstate',function(){if(menuReturning){menuReturning=false;return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open)return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
     function updateShellStatus(){if(!loaded)return;restoreView();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}
     new MutationObserver(updateShellStatus).observe($('citadel-live-rank'),{childList:true,characterData:true,subtree:true});
