@@ -82,3 +82,6 @@
     padding-bottom: 8px;
   }
 }
+
+.chains-task-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+#chains-daily .chains-task-actions .btn { flex: 0 0 auto; width: auto; margin-right: 0; }

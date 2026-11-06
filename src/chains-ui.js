@@ -59,20 +59,19 @@
     return { dialog, content };
   }
   const settingsTitle = 'Настройки испытания';
-  let db, enqueue, events = [], plans = [], body = [], prefs = {}, data, currentDate;
+  let db, enqueue, events = [], prefs = {}, data, currentDate, refreshHero;
   let quick, quickPanel, quickCount, undo, undoTimer, undoId, stat, statDate, statsBody, statsSummary;
-  let settings, will, watch, clockDetail, clockSeen, clockPending;
-  let renderQueued = false, announce;
-  const paths = { events: model.collection, plans: model.plans, body: model.body, ledger: model.ledgerCollection };
+  let settings, watch, clockDetail, clockSeen, clockPending;
+  let renderQueued = false;
   function requestRender() {
     if (renderQueued) return;
     renderQueued = true;
     Promise.resolve().then(() => { renderQueued = false; render(); });
   }
-  function connect(database, queue, onAwards, notify) {
+  function connect(database, queue, onProgress) {
     db = database;
     enqueue = queue;
-    announce = notify;
+    refreshHero = onProgress;
     $('chains-settings-open').onclick = openSettings;
     db.doc('cfg/fate-clock').onSnapshot(snapshot => {
       const seen = !!snapshot.data()?.finished;
@@ -80,21 +79,21 @@
     });
     db.doc(model.awardsPath).onSnapshot(snapshot => {
       const next = snapshot.data() || {};
-      if (JSON.stringify(awards) !== JSON.stringify(next)) { awards = next; onAwards(); }
+      if (JSON.stringify(awards) !== JSON.stringify(next)) { awards = next; requestRender(); refreshHero(); }
     });
-    const signatures = {};
-    for (const key of Object.keys(paths)) {
-      db.collection(paths[key]).onSnapshot(snapshot => {
-        const rows = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-        const signature = JSON.stringify(rows);
-        if (signature === signatures[key]) return;
-        signatures[key] = signature;
-        if (key === 'events') events = rows;
-        if (key === 'plans') plans = rows;
-        if (key === 'body') body = rows;
-        requestRender();
-      });
-    }
+    let eventSignature;
+    db.collection(model.collection).onSnapshot(snapshot => {
+      const rows = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      const signature = JSON.stringify(rows);
+      if (signature === eventSignature) return;
+      eventSignature = signature;
+      const previous = progressData?.byDay;
+      events = rows;
+      data = undefined;
+      const next = getProgress().byDay;
+      requestRender();
+      if (JSON.stringify(previous) !== JSON.stringify(next)) refreshHero();
+    });
     db.doc(model.prefs).onSnapshot(snapshot => {
       const next = snapshot.data() || {};
       if (JSON.stringify(next) !== JSON.stringify(prefs)) { prefs = next; requestRender(); }
@@ -166,8 +165,7 @@
   function render() {
     updateClock();
     if (!db || !$('chains-daily')) return;
-    currentDate = model.today();
-    data = model.summarize(events, plans, body, currentDate);
+    const progression = getProgress();
     const active = currentDate >= model.start;
     const row = data.days[currentDate], n = row?.count || 0, limit = model.limit(currentDate);
     if (quick) {
@@ -180,15 +178,21 @@
     const daily = $('chains-daily'), goal = $('chains-goal'), profile = $('chains-profile');
     for (const section of [daily, goal, profile]) section.hidden = !active;
     if (!active) return;
-    const status = !observed(row) ? 'День пока не подтверждён' : n > limit ? 'Лимит превышен · предварительно −4 Воли' : 'В пределах лимита · предварительно +1 Воли';
-    const aspect = $('chains-aspect');
-    if (aspect) aspect.textContent = 'Воля · ' + data.will;
+    const status = !observed(row) ? 'День пока не подтверждён' : n > limit ? 'Лимит превышен · награды за день нет' : 'В пределах лимита';
+    const reward = progression.aspect && n === 0 ? model.dayReward + 1 : model.dayReward;
     const dailyUndo = button('Отменить', undoLast);
     dailyUndo.id = 'chains-daily-undo';
     dailyUndo.hidden = !undoId;
+    const confirm = button('Подтвердить ноль', () => {
+      const date = model.today();
+      addEvent('confirm', date, {}, 'confirm-' + date).catch(() => {});
+    });
+    confirm.hidden = !!observed(row);
+    const actions = create('div', undefined, 'row chains-task-actions');
+    actions.append(button('+ Сигарета', () => addSmoke(model.today())), confirm, button('Дневник и исправления', openStats), dailyUndo);
     daily.replaceChildren(create('strong', 'Разрыв оков'), create('p', 'Неделя ' + model.week(currentDate) + ' · Сегодня ' + n + ' / ' + limit),
       progress(n, limit, 'Сигареты сегодня'), create('p', status, n > limit ? 'chains-over' : 'hint'),
-      button('+ Сигарета', () => addSmoke(model.today())), button('Дневник и исправления', openStats), dailyUndo);
+      create('p', '+' + reward + ' осколок' + (reward === 1 ? '' : 'а') + ' за закрытый день в пределах лимита · +' + model.weekReward + ' за неделю в пределах лимита', 'hint'), actions);
     const pct = Math.round((15 - limit) / 15 * 100);
     goal.replaceChildren(create('strong', 'Снизить количество сигарет до нуля'),
       create('p', 'План · ' + pct + '% · лимит ' + limit + ' из исходных 15'),
@@ -198,45 +202,38 @@
       chart(14), create('p', 'Янтарный — план · Фиолетовый — факт', 'hint'), button('История и график', openStats));
     profile.dataset.stage = data.stage;
     const profileActions = create('div', undefined, 'chains-profile-actions');
-    profileActions.append(button('Статистика', openStats), button('Аспект «Воля»', openWill));
-    profile.replaceChildren(create('strong', 'Разрыв оков'), create('p', 'Сегодня ' + n + ' / ' + limit + ' · Неделя ' + model.week(currentDate) + ' · Воля ' + data.will),
+    profileActions.append(button('Статистика', openStats));
+    profile.replaceChildren(create('strong', 'Разрыв оков'), create('p', 'Сегодня ' + n + ' / ' + limit + ' · Неделя ' + model.week(currentDate)),
       create('p', ['Оковы', 'Преодоление', 'Освобождение'][data.stage - 1] + ' · Успешных дней ' + data.success),
       profileActions);
     if (stat?.dialog.open) renderStats();
-    if (will?.dialog.open) renderWill();
     syncProgress();
   }
 
-  let awards = {}, awarding = false;
-  function ledgerChanges(snapshot, data) {
-    const next = model.ledgerByMonth(data);
-    const previous = Object.fromEntries(snapshot.map(({ id, ...row }) => [id, row]));
-    return [...new Set([...Object.keys(next), ...Object.keys(previous)])]
-      .filter(month => JSON.stringify(next[month]) !== JSON.stringify(previous[month]))
-      .map(month => [model.ledgerCollection + '/' + month, next[month]]);
+  let awards = {}, awarding = false, progressData;
+  function getProgress() {
+    const date = model.today();
+    if (!data || date !== currentDate || progressData.ledger !== awards) {
+      const rolledOver = !!currentDate && date !== currentDate;
+      currentDate = date;
+      data = model.summarize(events, date);
+      progressData = { ...model.progression(data, awards, date), ledger: awards };
+      if (rolledOver) { requestRender(); refreshHero?.(); }
+    }
+    return progressData;
   }
   function syncProgress() {
-    if (awarding) return;
-    const prefix = model.ledgerCollection + '/';
-    const stored = Object.entries(root.PlanSync._docs()).filter(([path, record]) => path.startsWith(prefix) && record.d)
-      .map(([path, record]) => ({ ...record.d, id: path.slice(prefix.length) }));
-    if (!model.pendingAwards(data, currentDate, awards).length && !ledgerChanges(stored, data).length) return;
+    if (awarding || !model.pendingAwards(data, currentDate, awards).length) return;
     awarding = true;
     enqueue(() => db.runTransaction(tx => {
       const date = model.today();
       const existing = tx.get(model.awardsPath) || {};
-      const latest = model.summarize(tx.list(model.collection), tx.list(model.plans), tx.list(model.body), date);
-      for (const [path, month] of ledgerChanges(tx.list(model.ledgerCollection), latest)) {
-        if (month) tx.set(path, month);
-        else tx.delete(path);
-      }
+      const latest = model.summarize(tx.list(model.collection), date);
       const earned = model.pendingAwards(latest, date, existing);
       if (earned.length) tx.set(model.awardsPath, { ...existing, ...Object.fromEntries(earned.map(id => [id, date])) });
-      return earned.length > 0;
-    })).then(earned => {
+    })).then(() => {
       awarding = false;
-      if (earned) announce('Заклятие запомнило твой путь. Открой достижения.');
-      requestRender();
+      if (model.pendingAwards(data, currentDate, awards).length) setTimeout(requestRender, 0);
     }, () => { awarding = false; });
   }
 
@@ -291,7 +288,7 @@
       statDate.onchange = renderStats;
       picker.append(statDate);
       statsBody = create('div');
-      stat.content.append(statsSummary, picker, statsBody, button(settingsTitle, openSettings), button('Аспект «Воля»', openWill));
+      stat.content.append(statsSummary, picker, statsBody, button(settingsTitle, openSettings));
     }
     statDate.max = statDate.value = model.today();
     renderStats();
@@ -324,8 +321,10 @@
     if (!model.validDate(date) || date < model.start || date > currentDate) { statsBody.replaceChildren(); return; }
     const entry = data.days[date], n = entry?.count || 0;
     statsBody.replaceChildren(create('p', (observed(entry) ? n : 'Нет записи') + ' · Лимит ' + model.limit(date)));
-    const settled = data.journal.find(row => row.id === 'smoking:' + date);
-    if (settled) statsBody.append(create('p', 'Дневной итог · ' + signed(settled.value) + ' Воли', settled.value < 0 ? 'chains-over' : 'hint'));
+    if (date < currentDate && observed(entry)) {
+      const passed = data.completed.includes(date);
+      statsBody.append(create('p', passed ? 'День закрыт в пределах лимита' : 'День закрыт с превышением', passed ? 'hint' : 'chains-over'));
+    }
     if (date === currentDate) statsBody.append(button('+ Сигарета', () => addSmoke(date)));
     if (!n && !entry?.confirmed) statsBody.append(button('Подтвердить 0 сигарет', () => addEvent('confirm', date, {}, 'confirm-' + date).catch(() => {})));
     if (entry?.confirmed) statsBody.append(button('Снять подтверждение нуля', () => voidEvent('confirm-' + date).catch(() => {})));
@@ -375,86 +374,6 @@
     settings.dialog.showModal();
   }
 
-  const sourceLabel = { nutrition: 'Питание', activity: 'Активность', smoking: 'Дневной итог', 'smoking-week': 'Неделя без превышений', 'body-week': 'Неделя по плану тела' };
-  function openWill() {
-    if (!will) {
-      will = makeDialog('chains-will', 'Аспект «Воля»');
-      will.date = create('input');
-      will.date.type = 'date'; will.date.min = model.start; will.date.onchange = renderWill;
-    }
-    will.date.max = will.date.value = model.today();
-    renderWill();
-    if (!will.dialog.open) will.dialog.showModal();
-  }
-  function renderWill() {
-    const date = will.date.value;
-    const total = from => data.journal.filter(row => row.date >= from).reduce((sum, row) => sum + row.value, 0);
-    const summary = create('p', 'Воля ' + data.will + ' · Рекорд ' + data.best);
-    const trend = create('p', '7 дней ' + signed(total(model.shift(currentDate, -7))) + ' · 30 дней ' + signed(total(model.shift(currentDate, -30))), 'hint');
-    const picker = create('label', 'Обязательства на дату ');
-    picker.append(will.date);
-    const plan = model.planAt(data, date);
-    const scheduled = model.validDate(date) && date <= currentDate && model.sources.filter(key =>
-      Array.isArray(plan?.[key]?.days) && plan[key].label && plan[key].days.includes(model.weekday(date)));
-    const entries = create('div');
-    for (const key of scheduled || []) {
-      const field = create('label', plan[key].label);
-      const select = create('select');
-      select.append(new Option('Без отметки', ''), new Option('Выполнено', 'done'), new Option('Нарушено', 'missed'), new Option('Отдых / уважительная причина', 'excused'));
-      select.value = data.bodyByDate[date]?.[key] || '';
-      select.onchange = () => {
-        const value = select.value, path = model.body + '/' + date;
-        enqueue(() => db.runTransaction(tx => tx.set(path, { ...tx.get(path), [key]: value }))).catch(renderWill);
-      };
-      field.append(select); entries.append(field);
-    }
-    if (!entries.children.length) entries.append(create('p', 'На эту дату обязательства не запланированы.', 'hint'));
-    const log = create('details'), list = create('ul');
-    log.open = !!will.content.querySelector('details')?.open;
-    log.append(create('summary', 'История Воли'), list);
-    for (const row of data.journal.slice().reverse()) list.append(create('li', pretty(row.date) + ' · ' + sourceLabel[row.source] + ' · ' + signed(row.value)));
-    if (!list.children.length) list.append(create('li', 'Начислений пока нет.'));
-    will.content.replaceChildren(summary, trend, picker, entries, button('Настроить план питания и активности', openPlan), log);
-  }
-  function openPlan() {
-    const view = makeDialog('chains-plan', 'План питания и активности');
-    view.dialog.addEventListener('close', () => view.dialog.remove(), { once: true });
-    const form = create('form'), fields = {};
-    const date = model.shift(model.today(), 1), plan = model.planAt(data, date);
-    form.append(create('p', 'Изменения вступят в силу ' + pretty(date) + '. Отметь только те дни, на которые берёшь обязательство.', 'hint'));
-    for (const key of model.sources) {
-      const group = create('fieldset'), label = create('label', 'Обязательство');
-      const input = create('input');
-      input.maxLength = 90;
-      input.value = plan?.[key]?.label || '';
-      label.append(input);
-      group.append(create('legend', sourceLabel[key]), label);
-      const days = create('div', undefined, 'chains-weekdays'), boxes = [];
-      ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach((name, i) => {
-        const field = create('label', name), box = create('input');
-        box.type = 'checkbox'; box.checked = !!plan?.[key]?.days?.includes(i);
-        field.append(box); days.append(field); boxes.push(box);
-      });
-      group.append(days); form.append(group);
-      fields[key] = { input, boxes };
-    }
-    const submit = create('button', 'Сохранить план', 'btn');
-    form.append(submit);
-    form.onsubmit = event => {
-      event.preventDefault();
-      if (date <= model.today()) { view.dialog.close(); openPlan(); return; }
-      const record = {};
-      for (const [key, { input, boxes }] of Object.entries(fields)) {
-        const label = input.value.trim();
-        const days = boxes.flatMap((box, i) => box.checked ? [i] : []);
-        record[key] = { label, days };
-      }
-      submit.disabled = true;
-      enqueue(() => db.doc(model.plans + '/' + date).set(record)).then(() => view.dialog.close(), () => {}).finally(() => { submit.disabled = false; });
-    };
-    view.content.append(form);
-    view.dialog.showModal();
-  }
   function updateClock() {
     const node = $('fate-hourglass');
     if (!node) return;
@@ -495,12 +414,7 @@
         create('p', time.complete ? 'Последняя песчинка упала. Заклятие запомнило твой путь.' : 'Песок продолжает сыпаться, даже пока Цитадель спит.', 'hint'));
     }
   }
-  function aspectButton() {
-    const node = button('Воля · ' + (data?.will || 0), openWill);
-    node.id = 'chains-aspect';
-    return node;
-  }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) requestRender(); });
   setInterval(() => { if (!document.hidden) currentDate !== model.today() ? requestRender() : updateClock(); }, 15000);
-  root.VkachChainsUI = Object.freeze({ connect, mountQuick, sandColor, aspectButton, owned: () => model.owned(awards) });
+  root.VkachChainsUI = Object.freeze({ connect, mountQuick, sandColor, getProgress, owned: () => model.owned(awards) });
 })(globalThis);

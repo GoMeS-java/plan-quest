@@ -192,7 +192,7 @@
         }
         // This is detection, not a distributed transaction. Device clock skew
         // and concurrent full-sheet uploads still require manual verification.
-        // Rebuildable monthly Will reports are projections of the synced events.
+        // Legacy monthly reports are derived records, not the original diary.
         if (options.detect && !p.startsWith('chains-ledger/') && l && !same(l.d, r.d) &&
             (l.u === r.u || (l.u > (meta.lastSync || 0) && r.u > (meta.lastSync || 0))) &&
             !(meta.accepted && meta.accepted[p] === JSON.stringify(r))) conflicts.push(p);

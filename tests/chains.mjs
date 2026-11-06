@@ -20,27 +20,30 @@ for (let i = 0; i <= 20; i++) {
 }
 assert.equal(model.limit(model.zero), 0);
 const confirmed = ['2026-11-06', '2026-11-07', '2026-11-08'].map(date => ({ date, kind: 'confirm' }));
-const settle = events => model.summarize(events, [], [], '2026-11-09');
-assert.equal(settle(confirmed).will, 6);
-assert.equal(settle(confirmed.slice(1)).will, 2);
+const settle = events => model.summarize(events, '2026-11-09');
+const gains = events => model.progression(settle(events), {}, '2026-11-09').byDay;
+assert.deepEqual(gains(confirmed), { '2026-11-07': 1, '2026-11-08': 1, '2026-11-09': 4 });
+assert.deepEqual(gains(confirmed.slice(1)), { '2026-11-08': 1, '2026-11-09': 1 });
 const exceed = Array.from({length:16}, () => ({date: model.start, kind:'smoke'}));
-assert.equal(settle([...confirmed, ...exceed]).will, -2);
+assert.deepEqual(gains([...confirmed, ...exceed]), gains(confirmed.slice(1)));
 exceed[0].voidAt = 1;
-assert.equal(settle([...confirmed, ...exceed]).will, 6);
-assert.deepEqual(settle(confirmed).journal, settle(confirmed).journal);
-const body = model.summarize([], [{ id: '2026-11-09', nutrition:{label:'Питание',days:[0,1]}, activity:{label:'Прогулка',days:[0,1]} }],
-  [{id:'2026-11-09', nutrition:'done', activity:'excused'}, {id:'2026-11-10',nutrition:'missed',activity:'done'}], '2026-11-16');
-assert.equal(body.will, 0);
-assert.equal(body.journal.length, 3);
-const bodyPassed = model.summarize([], [{id:'2026-11-09', activity:{label:'Прогулка',days:[0,1]}}],
-  [{id:'2026-11-09',activity:'done'}, {id:'2026-11-10',activity:'excused'}], '2026-11-16');
-assert.equal(bodyPassed.will, 4);
-const hidden = model.summarize(Array.from({length: 150}, (_, i) => ({date: model.shift(model.start, i),kind:'confirm'})),[],[],'2027-05-06');
+assert.deepEqual(gains([...confirmed, ...exceed]), gains(confirmed));
+assert.deepEqual(model.progression(model.summarize(confirmed, model.start), {}, model.start).byDay, {});
+const dates = Array.from({length: 150}, (_, i) => ({date: model.shift(model.start, i),kind:'confirm'}));
+const hidden = model.summarize(dates, '2027-05-06');
 const earned = model.pendingAwards(hidden, '2027-05-06', {});
 assert(earned.length > 0);
 const ledger = Object.fromEntries(earned.map(id => [id, '2027-05-06']));
 assert.deepEqual(model.pendingAwards(hidden, '2027-05-06', ledger), []);
 assert.deepEqual(model.mergeAwards(ledger, {}), ledger);
+const opened = model.progression(hidden, ledger, '2027-05-06');
+assert(opened.aspect);
+assert(opened.marks.some(row => row.points > 0));
+assert.equal(model.progression(hidden, ledger, '2027-05-05').aspect, null);
+const active = { ...ledger, 'chains-aspect': '2026-11-07' };
+assert.equal(model.progression(settle(confirmed), active, '2026-11-09').byDay['2026-11-09'], 5);
+assert.equal(model.progression(settle(confirmed), active, '2026-11-09').byDay['2026-11-07'], 1);
+assert.equal(model.owned(model.mergeAwards({'chains-body':'2026-11-06'}, ledger)).find(row => row.id === 'chains-body').points, 0);
 
 const { chromium } = createRequire(import.meta.url)('playwright');
 const contentTypes = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.webp':'image/webp','.png':'image/png'};
@@ -87,7 +90,7 @@ async function dismiss(page) {
     });
   }
 }
-const capture = (page,name) => page.screenshot({path:resolve(output,'v13-'+name+'.png')});
+const capture = (page,name) => page.screenshot({path:resolve(output,'v13-progression-'+name+'.png')});
 const close = (page, id) => page.locator(id).getByRole('button',{name:'Закрыть',exact:true}).click();
 const leave = async page => {
   await page.getByRole('button',{name:'Вернуться в Цитадель'}).click();
@@ -105,7 +108,7 @@ try {
   assert(await page.locator('#fate-clock-dialog').isHidden());
   assert(await page.locator('#citadel-home').evaluate(node => node.classList.contains('citadel-expanded')));
   await capture(page,'citadel');
-  await glass.screenshot({path:resolve(output,'v13-clock-green.png')});
+  await glass.screenshot({path:resolve(output,'v13-progression-clock-green.png')});
   const medallion = page.locator('.chains-medallion');
   const layout = await page.evaluate(() => {
     const b = document.querySelector('.chains-medallion').getBoundingClientRect(), nav = document.querySelector('.citadel-shell-dock').getBoundingClientRect();
@@ -125,7 +128,7 @@ try {
   await capture(page,'quick');
   await dock(page,'today');
   assert.match(await page.locator('#chains-daily').innerText(), /2 \/ 15/);
-  await page.locator('#chains-daily').screenshot({path:resolve(output,'v13-daily.png')});
+  await page.locator('#chains-daily').screenshot({path:resolve(output,'v13-progression-daily.png')});
   await page.locator('#chains-daily').getByRole('button',{name:'Дневник и исправления'}).click();
   await page.getByRole('button',{name:'Убрать запись'}).first().click();
   await page.waitForFunction(() => document.querySelectorAll('#chains-stat button').length > 0 && document.querySelector('.chains-quick-count').textContent === '1');
@@ -139,21 +142,15 @@ try {
   await page.waitForFunction(() => document.querySelector('.chains-quick').dataset.side === 'left');
   await dock(page,'wardrobe');
   assert.match(await page.locator('#chains-profile').innerText(), /1 \/ 15/);
-  await page.locator('#chains-profile').screenshot({path:resolve(output,'v13-profile.png')});
-  await page.getByRole('button',{name:'Аспект «Воля»',exact:true}).click();
-  await capture(page,'will');
-  await page.getByRole('button',{name:'Настроить план питания и активности'}).click();
-  await page.locator('#chains-plan input:not([type=checkbox])').last().fill('Прогулка');
-  await page.locator('#chains-plan fieldset').last().getByLabel('Сб').check();
-  await page.getByRole('button',{name:'Сохранить план'}).click();
-  await close(page,'#chains-will');
+  await page.locator('#chains-profile').screenshot({path:resolve(output,'v13-progression-profile.png')});
+  assert.doesNotMatch(await page.locator('#chains-profile').innerText(), /Воля/);
   await leave(page);
   await page.locator('.citadel-shell-dock button').last().click();
   const pathLink = page.locator('#citadel-shell-nav [data-section=goals]');
   const pathGroup = pathLink.locator('xpath=ancestor::details[1]');
   if (!await pathGroup.getAttribute('open').then(value => value !== null)) await pathGroup.locator('summary').click();
   await pathLink.click();
-  await page.locator('#chains-goal').screenshot({path:resolve(output,'v13-goal.png')});
+  await page.locator('#chains-goal').screenshot({path:resolve(output,'v13-progression-goal.png')});
   assert.match(await page.locator('#chains-goal').innerText(), /Факт сегодня · 1/);
   assert.equal(await page.locator('#days-gone').textContent(),'0');
   const copy = await page.evaluate(() => PlanSync.backupFor(PlanSync._docs()));
@@ -177,14 +174,33 @@ try {
   await page.clock.setFixedTime(instant('2026-11-09'));
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
   await page.waitForFunction(() => document.querySelector('.chains-medallion').title.includes('0 из 14'));
-  await page.waitForFunction(() => PlanSync._docs()['chains-ledger/2026-11']?.d?.['smoking:2026-11-06']?.value === 1);
-  await page.evaluate(async () => {
-    const path = 'chains-ledger/2026-11', saved = PlanSync._docs()[path];
-    await PlanSync._merge({ docs: { [path]: { u: saved.u + 1, d: {} } } }, { detect: true });
-  });
-  await page.waitForFunction(() => PlanSync._docs()['chains-ledger/2026-11']?.d?.['smoking:2026-11-06']?.value === 1);
-
+  await page.waitForFunction(() => VkachChainsUI.getProgress().byDay['2026-11-07'] === 1);
   await context.close();
+
+  const history = Object.fromEntries(confirmed.map(row => ['chains/confirm-' + row.date, row]));
+  const old = { 'will-plans/2026-11-07': { activity:{label:'Старая прогулка', days:[0]} },
+    'will-days/2026-11-07': { activity:'done' }, 'cfg/chains-discoveries': { 'chains-body':'2026-11-06' } };
+  const baseline = await launch('2026-11-09', old, {timezoneId:model.zone});
+  const baselineRank = await baseline.page.locator('#citadel-live-points').innerText();
+  await baseline.context.close();
+  const saved = await launch('2026-11-09', { ...old, ...history }, {timezoneId:model.zone});
+  const before = Number(baselineRank.match(/\d+/)[0]);
+  await saved.page.waitForFunction(before => Number(document.querySelector('#citadel-live-points').textContent.match(/\d+/)[0]) === before + 5, before);
+  assert.equal(await saved.page.evaluate(() => PlanSync._docs()['will-days/2026-11-07'].d.activity), 'done');
+  await dock(saved.page,'wardrobe');
+  await saved.page.locator('#profile-achievements-open').click();
+  assert.doesNotMatch(await saved.page.locator('#sklist').innerText(), /Воля|Свободное дыхание/);
+  await saved.context.close();
+
+  const streakSeed = Object.fromEntries(dates.slice(0,14).map(row => ['chains/confirm-' + row.date, row]));
+  const unlocked = await launch('2026-11-20', streakSeed, {timezoneId:model.zone});
+  await unlocked.page.waitForFunction(() => !!VkachChainsUI.getProgress().aspect);
+  await dismiss(unlocked.page);
+  await dock(unlocked.page,'wardrobe');
+  await unlocked.page.locator('#profile-achievements-open').click();
+  assert.match(await unlocked.page.locator('#sklist').innerText(), /дополнительный осколок/);
+  assert(await unlocked.page.locator('#alist [data-achievement^="chains-"]').count() > 0);
+  await unlocked.context.close();
 
   for (const [date,stage,bg] of [['2027-02-28','gold',null],['2027-04-25','red',null],['2026-12-22','winter','b_winter'],['2027-02-12','space','b_space'],['2027-05-06','complete',null]]) {
     const seed = bg ? {'cfg/look':{bg}, 'cfg/rare':{[bg==='b_winter'?'z02':'z01']:model.shift(date,-1)}} : {};
@@ -197,7 +213,7 @@ try {
       await page.evaluate(() => { document.getElementById('toast').hidden = true; });
     }
     const glass=page.locator('#fate-hourglass');
-    await glass.screenshot({path:resolve(output,'v13-clock-'+stage+'.png')});
+    await glass.screenshot({path:resolve(output,'v13-progression-clock-'+stage+'.png')});
     if(bg) await capture(page,'citadel-'+stage);
     assert.equal(await page.locator('.fate-stream').evaluate(n=>getComputedStyle(n).animationName),'none');
     assert.equal(await glass.getAttribute('data-complete'),String(stage==='complete'));
