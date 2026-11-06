@@ -181,6 +181,21 @@ try {
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
   await page.waitForFunction(() => document.querySelector('.chains-medallion').title.includes('0 из 14'));
   await page.waitForFunction(() => VkachChainsUI.getProgress().byDay['2026-11-07'] === 1);
+  await page.setViewportSize({width:390,height:844});
+  await dock(page,'today');
+  await page.locator('#chains-daily').getByRole('button',{name:'Дневник и исправления'}).click();
+  const diary = page.locator('#chains-stat');
+  await diary.getByLabel('Дневник за дату').fill('2026-11-08');
+  await diary.getByRole('button',{name:'+ Сигарета',exact:true}).click();
+  await diary.getByText('Сигарета · добавлено позже',{exact:true}).waitFor();
+  assert.equal(await diary.getByLabel('Дневник за дату').inputValue(),'2026-11-08');
+  assert.equal(await page.locator('.chains-quick-count').textContent(),'0');
+  assert.equal(await page.evaluate(() => VkachChainsUI.getProgress().byDay['2026-11-09']),1);
+  assert.equal(await page.evaluate(() => Object.values(PlanSync._docs()).filter(r => r.d?.kind==='smoke' && r.d.date==='2026-11-08' && !r.d.voidAt).length),1);
+  await diary.getByRole('button',{name:'Убрать запись'}).click();
+  await page.waitForFunction(() => !VkachChainsUI.getProgress().byDay['2026-11-09']);
+  await diary.getByText('Нет записи · Лимит 15',{exact:true}).waitFor();
+
   await context.close();
 
   const history = Object.fromEntries(confirmed.map(row => ['chains/confirm-' + row.date, row]));

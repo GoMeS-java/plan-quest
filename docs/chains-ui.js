@@ -325,12 +325,15 @@
       const passed = data.completed.includes(date);
       statsBody.append(create('p', passed ? 'День закрыт в пределах лимита' : 'День закрыт с превышением', passed ? 'hint' : 'chains-over'));
     }
-    if (date === currentDate) statsBody.append(button('+ Сигарета', () => addSmoke(date)));
+    statsBody.append(button('+ Сигарета', () => addSmoke(date)));
     if (!n && !entry?.confirmed) statsBody.append(button('Подтвердить 0 сигарет', () => addEvent('confirm', date, {}, 'confirm-' + date).catch(() => {})));
-    if (entry?.confirmed) statsBody.append(button('Снять подтверждение нуля', () => voidEvent('confirm-' + date).catch(() => {})));
+    if (!n && entry?.confirmed) statsBody.append(button('Снять подтверждение нуля', () => voidEvent('confirm-' + date).catch(() => {})));
     for (const event of (entry?.events || []).slice().sort((a,b) => b.at - a.at)) {
       const item = create('div', undefined, 'chains-log-row');
-      item.append(create('span', 'Сигарета · ' + times.format(event.at)), button('Убрать запись', () => voidEvent(event.id).catch(() => {})));
+      const label = Number.isFinite(event.at) && model.today(event.at) === date
+        ? 'Сигарета · ' + times.format(event.at)
+        : 'Сигарета · добавлено позже';
+      item.append(create('span', label), button('Убрать запись', () => voidEvent(event.id).catch(() => {})));
       statsBody.append(item);
     }
     const craving = create('select');
