@@ -80,7 +80,7 @@ shutil.copy(f'{SRC}/rpg-ui.css', f'{DIST}/rpg-ui.css')
 shutil.copytree(f'{SRC}/assets', f'{DIST}/assets')
 
 # --- sw.js с версией = хэш содержимого
-shell = ['./', 'index.html', 'manifest.json', 'config.js', 'localdb.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
+shell = ['index.html', 'manifest.json', 'config.js', 'localdb.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
 shell += ['citadel-art.css', 'rpg-ui.css'] + ['assets/citadel/' + name for name in sorted(os.listdir(f'{SRC}/assets/citadel'))]
 h = hashlib.sha256()
 for f in sorted(set(shell) - {'./'}):

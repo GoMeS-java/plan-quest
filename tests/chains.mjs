@@ -44,6 +44,12 @@ const active = { ...ledger, 'chains-aspect': '2026-11-07' };
 assert.equal(model.progression(settle(confirmed), active, '2026-11-09').byDay['2026-11-09'], 5);
 assert.equal(model.progression(settle(confirmed), active, '2026-11-09').byDay['2026-11-07'], 1);
 assert.equal(model.owned(model.mergeAwards({'chains-body':'2026-11-06'}, ledger)).find(row => row.id === 'chains-body').points, 0);
+const reduced = dates.slice(0,7).flatMap(({date}) => Array.from({length:10}, () => ({date,kind:'smoke'})));
+const reductionDate = '2026-11-13';
+assert(model.pendingAwards(model.summarize(reduced, reductionDate), reductionDate, {}).includes('chains-aspect'));
+assert(!model.pendingAwards(model.summarize(reduced.slice(10), reductionDate), reductionDate, {}).includes('chains-aspect'));
+assert.equal(model.dayShards(10, reductionDate, {date:reductionDate}), 2);
+
 
 const { chromium } = createRequire(import.meta.url)('playwright');
 const contentTypes = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.webp':'image/webp','.png':'image/png'};

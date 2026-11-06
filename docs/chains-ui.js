@@ -179,7 +179,7 @@
     for (const section of [daily, goal, profile]) section.hidden = !active;
     if (!active) return;
     const status = !observed(row) ? 'День пока не подтверждён' : n > limit ? 'Лимит превышен · награды за день нет' : 'В пределах лимита';
-    const reward = progression.aspect && n === 0 ? model.dayReward + 1 : model.dayReward;
+    const reward = model.dayShards(n, currentDate, progression.aspect);
     const dailyUndo = button('Отменить', undoLast);
     dailyUndo.id = 'chains-daily-undo';
     dailyUndo.hidden = !undoId;

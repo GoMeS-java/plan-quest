@@ -39,6 +39,7 @@
       if (event.kind === 'craving') entry.cravings.push(event);
     }
     let streak = 0, best = 0, free = 0, weekPassed = true;
+    let reducedStreak = 0, bestReduced = 0;
     const observed = [];
     for (let n = first; n < asDay(date); n++) {
       const key = keyOf(n), entry = days[key];
@@ -46,6 +47,8 @@
       const passed = logged && entry.count <= limit(key);
       if (logged) observed.push([key, entry]);
       if (passed) completed.push(key);
+      reducedStreak = passed && entry.count <= 10 ? reducedStreak + 1 : 0;
+      bestReduced = Math.max(bestReduced, reducedStreak);
       if (logged && entry.count === 0) { free++; streak++; best = Math.max(best, streak); }
       else streak = 0;
       weekPassed &&= passed;
@@ -57,13 +60,13 @@
     const recent = observed.filter(([key]) => key >= shift(date, -14));
     const mean = recent.length ? recent.reduce((sum, [, row]) => sum + row.count, 0) / recent.length : null;
     const stage = streak >= 14 ? 3 : recent.length >= 7 && mean <= 10 ? 2 : 1;
-    return { days, completed, weeks, success: completed.length, free, streak, best, mean, stage };
+    return { days, completed, weeks, success: completed.length, free, streak, best, bestReduced, mean, stage };
   }
 
   const awardsPath = 'cfg/chains-discoveries';
   const aspectKey = 'chains-aspect';
   const aspectName = 'Свободное дыхание';
-  const aspectText = 'Подтверди день с нулём сигарет. После закрытия дня ты получишь дополнительный осколок.';
+  const aspectText = 'Получай дополнительный осколок за закрытый день с нулём сигарет или с результатом на две сигареты ниже дневного лимита.';
   const dayReward = 1, weekReward = 3;
   const discoveries = {
     'chains-first': { kind: 'mark', name: 'Звено дрогнуло', points: 2 },
@@ -80,7 +83,7 @@
       'chains-fate': date >= end && data.streak >= 30
     };
     const pending = Object.keys(discoveries).filter(id => rules[id] && !validDate(ledger[id]));
-    if (data.best >= 14 && !validDate(ledger[aspectKey])) pending.push(aspectKey);
+    if (data.bestReduced >= 7 && !validDate(ledger[aspectKey])) pending.push(aspectKey);
     return pending;
   }
   function mergeAwards(a, b) {
@@ -95,17 +98,20 @@
     return Object.entries(mergeAwards(ledger, null)).filter(([id]) => id !== aspectKey).map(([id, date]) => ({ id, date,
       ...discoveries[id], description: 'Заклятие запомнило твой путь.' }));
   }
+  function dayShards(count, date, aspect) {
+    return dayReward + (aspect && date >= aspect.date && count <= Math.max(0, limit(date) - 2) ? 1 : 0);
+  }
   function progression(data, ledger, date) {
     const aspectDate = ledger[aspectKey];
     const aspect = validDate(aspectDate) && aspectDate <= date ? { date: aspectDate, name: aspectName, text: aspectText } : null;
     const marks = owned(ledger).filter(row => row.date <= date);
     const byDay = {};
     function give(key, amount) { byDay[key] = (byDay[key] || 0) + amount; }
-    for (const key of data.completed) give(shift(key, 1), dayReward + (aspect && key >= aspect.date && data.days[key].count === 0 ? 1 : 0));
+    for (const key of data.completed) give(shift(key, 1), dayShards(data.days[key].count, key, aspect));
     for (const key of data.weeks) give(shift(key, 1), weekReward);
     for (const row of marks) if (row.points) give(row.date, row.points);
     return { byDay, aspect, marks };
   }
   root.VkachChains = Object.freeze({ start, end, zero, zone, validDate, today, shift, monday, week, limit, clock,
-    collection, prefs, reasonOptions, summarize, awardsPath, pendingAwards, mergeAwards, owned, progression, dayReward, weekReward });
+    collection, prefs, reasonOptions, summarize, awardsPath, pendingAwards, mergeAwards, owned, progression, dayShards, weekReward });
 })(globalThis);

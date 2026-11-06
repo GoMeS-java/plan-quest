@@ -4,9 +4,22 @@ var CACHE_PREFIX = 'plan-shell-' + encodeURIComponent(self.registration.scope) +
 var CACHE = CACHE_PREFIX + VERSION;
 var FONT_CACHE = CACHE_PREFIX + 'fonts';
 var SHELL = __SHELL__;
+var APP_BUILD = '__APP_BUILD__';
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return Promise.all(SHELL.map(function (u) { return fetch(new Request(u, { cache: 'reload' })).then(function (r) { if (!r.ok) throw new Error(u); return c.put(u, r); }); })); }));
+  e.waitUntil(caches.open(CACHE).then(function (cache) {
+    return Promise.all(SHELL.map(async function (path) {
+      // GitHub Pages can retain the previous response for an unversioned URL.
+      var url = new URL(path, self.registration.scope);
+      url.searchParams.set('build', APP_BUILD);
+      var response = await fetch(new Request(url, { cache: 'reload' }));
+      if (!response.ok) throw new Error(path);
+      if (path === 'index.html' && !(await response.clone().text()).includes('window.APP_BUILD="' + APP_BUILD + '"')) {
+        throw new Error('Cached index does not match this service worker');
+      }
+      return cache.put(path, response);
+    }));
+  }));
 });
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
@@ -16,7 +29,7 @@ self.addEventListener('activate', function (e) {
 });
 self.addEventListener('message', function (e) {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
-  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage('__APP_BUILD__');
+  if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage(APP_BUILD);
 });
 
 self.addEventListener('fetch', function (e) {
@@ -35,9 +48,9 @@ self.addEventListener('fetch', function (e) {
   }
   if (url.origin !== location.origin || !url.href.startsWith(self.registration.scope)) return;      // Google API и вход не трогаем
   e.respondWith(caches.open(CACHE).then(function (c) {
+    if (req.mode === 'navigate') return c.match('index.html');
     return c.match(req, { ignoreSearch: true }).then(function (hit) {
       if (hit) return hit;
-      if (req.mode === 'navigate') return c.match('index.html');
       return fetch(req);
     });
   }));
