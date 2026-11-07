@@ -1457,8 +1457,7 @@ html,body{overflow-anchor:none}
   };
   var SK_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
   var SK_BONUS = [0, 1, 2, 3, 5, 6, 8, 10, 15, 20, 30];
-  var SK_SETREW_OLD = [[0.5, 0.5, 1], [1, 1, 1], [1, 1.5, 1.5], [1.5, 1.5, 1.5], [2, 1.5, 1.5], [2, 2, 1.5], [2, 2, 2], [2.5, 2, 2], [2.5, 2.5, 2], [2.5, 2.5, 2.5]];
-  var SK_SETREW = [[0.5, 0.5, 0.5], [1, 1, 1], [1.5, 1.5, 1.5], [2, 2, 2], [2.5, 2.5, 2.5], [3, 3, 3], [3.5, 3.5, 3.5], [4, 4, 4], [4.5, 4.5, 4.5], [5, 5, 5]];
+  var SK_SETREW = [[0.5, 0.5, 1], [1, 1, 1], [1, 1.5, 1.5], [1.5, 1.5, 1.5], [2, 1.5, 1.5], [2, 2, 1.5], [2, 2, 2], [2.5, 2, 2], [2.5, 2.5, 2], [2.5, 2.5, 2.5]];
   function skillCap(lvl) { return Math.min(lvl, 10); }
   function repsOf(q, key, i) { var r = q[key + 'R'] && q[key + 'R'][i]; return r > 0 ? r : 10; }
   function sizeIdx(reps) { return Math.max(0, Math.min(9, Math.round(reps / 10) - 1)); }
@@ -1479,7 +1478,7 @@ html,body{overflow-anchor:none}
   function periodicGain(k) {
     var q = perDay(k), g = 0, i;
     SK_KEYS.forEach(function (key) {
-      for (i = 0; i < Math.min(q[key].length, SQ_MAX); i++) g += (k < '2026-11-07' ? SK_SETREW_OLD : SK_SETREW)[sizeIdx(repsOf(q, key, i))][i];
+      for (i = 0; i < Math.min(q[key].length, SQ_MAX); i++) g += SK_SETREW[sizeIdx(repsOf(q, key, i))][i];
     });
     if (q.workout.length) g += 1;
     return g;
