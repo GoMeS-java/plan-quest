@@ -834,6 +834,7 @@ html,body{overflow-anchor:none}
       <div class="need">Чтобы успеть к 06.05.2027, нужно откладывать <b id="need-money"></b> ₽ в месяц.</div>
       <div class="hint">Считается как свободные деньги плюс то, что тебе должны.</div>
     </div>
+    <div id="forge-custom-goals"></div>
     <div class="goal">
       <div class="goal-head"><b id="forge-weight-title">Вес 120 кг</b><span class="pct" id="pct-weight">0%</span></div>
       <div class="bar" id="bar-weight" aria-hidden="true"></div>
@@ -852,7 +853,6 @@ html,body{overflow-anchor:none}
     </div>
     <div class="note">Отсчёт с 06.11.2026 по московскому времени.</div>
     <section id="chains-goal" class="goal chains-card" hidden></section>
-    <div id="forge-custom-goals"></div>
     <h2>ГЛОБАЛЬНЫЙ ПУТЬ И ШАГИ</h2>
     <div id="gg-list" style="display:flex;flex-direction:column;gap:10px"></div>
     <div class="row"><input id="gg-name" type="text" placeholder="Новая глобальная цель"><button class="btn go" id="gg-add" type="button">ДОБАВИТЬ</button></div>
@@ -3878,12 +3878,28 @@ html,body{overflow-anchor:none}
     if(host.dataset.signature===signature)return;host.dataset.signature=signature;clear(host);
     ids.forEach(function(id){
       var goal=forgeGoal(id),value=forgeGoalValue(goal),ratio=forgeGoalRatio(goal,value);
-      var card=el('div','goal'),head=el('div','goal-head'),bar=el('progress','forge-goal-meter');
-      head.appendChild(el('b',null,goal.title));head.appendChild(el('span','pct',pc(ratio)));
-      bar.max=1;bar.value=Math.max(0,Math.min(1,ratio));bar.setAttribute('aria-label',goal.title);
-      card.appendChild(head);card.appendChild(bar);card.appendChild(el('p','hint',forgeGoalText(goal,value)+' / '+forgeGoalText(goal,goal.target)));
-      if(goal.source==='manual')forgeManualProgress(card,id,goal);
-      host.appendChild(card);
+      var isCar=id==='custom-goal-car-20261107',unit=isCar?' ₽':'';
+      var card=el('div','goal'),head=el('div','goal-head'),bar=el('div','bar');
+      head.appendChild(el('b',null,goal.title+(isCar?', '+forgeGoalNumber(goal.target)+' ₽':'')));
+      head.appendChild(el('span','pct',pc(ratio)));
+      bar.id='forge-custom-bar-'+id.replace(/[^a-zA-Z0-9_-]/g,'-');
+      bar.setAttribute('aria-hidden','true');
+      card.appendChild(head);card.appendChild(bar);
+      card.appendChild(el('div','hint',isCar?'Накоплено '+forgeGoalNumber(value)+' ₽ из '+forgeGoalNumber(goal.target)+' ₽':
+        forgeGoalText(goal,value)+' из '+forgeGoalText(goal,goal.target)));
+      if(isCar){
+        var next=Math.min(goal.target,(Math.floor(Math.max(0,value)/1000000)+1)*1000000);
+        card.appendChild(el('div','hint',value<next?'Следующая ступень: '+forgeGoalNumber(next)+' ₽, осталось '+forgeGoalNumber(next-value)+' ₽.':'Все ступени пройдены.'));
+        var left=VkachChains.clock().left,need=left>0?fmt(Math.max(0,goal.target-value)/(left/30.4)):'0';
+        var targetLine=el('div','need','Чтобы успеть к 06.05.2027, нужно откладывать ');
+        targetLine.appendChild(el('b',null,need));targetLine.appendChild(document.createTextNode(' ₽ в месяц.'));
+        card.appendChild(targetLine);
+      }
+      if(goal.source==='manual'){
+        var details=el('details','forge-goal-edit'),summary=el('summary',null,'Изменить накопленную сумму');
+        details.appendChild(summary);forgeManualProgress(details,id,goal);card.appendChild(details);
+      }
+      host.appendChild(card);fillBar(bar.id,ratio);
     });
   }
 
