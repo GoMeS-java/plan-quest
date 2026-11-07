@@ -787,7 +787,7 @@ html,body{overflow-anchor:none}
   
     <h2>КАЛОРИИ</h2>
     <div class="goal" id="diet-sum">
-      <div class="goal-head"><b>Серия «в пределах 2200»</b><span class="pct" id="d-run"></span></div>
+      <div class="goal-head"><b>Серия «в пределах 2500»</b><span class="pct" id="d-run"></span></div>
       <div class="hint" id="d-line1"></div>
       <div class="hint" id="d-line2"></div>
       <div class="hint" id="d-line3"></div>
@@ -1012,7 +1012,7 @@ html,body{overflow-anchor:none}
       <div class="hint"><b>0.10</b> · 24.10 · Оформление-награды и суперредкие достижения</div>
       <div class="hint"><b>0.9</b> · 24.10 · Достижения и скрытые навыки</div>
       <div class="hint"><b>0.8</b> · 24.10 · Отжимания на коленях</div>
-      <div class="hint"><b>0.7</b> · 23.10 · Недельный квест: 7 дней в пределах 2200 ккал</div>
+      <div class="hint"><b>0.7</b> · 23.10 · Недельный квест: 7 дней в пределах 2500 ккал</div>
       <div class="hint"><b>0.6</b> · 22.10 · Долги не считаются доходом</div>
       <div class="hint"><b>0.5</b> · 22.10 · Офлайн-приложение и Google Таблица</div>
       <div class="hint"><b>0.4</b> · 21.10 · Цена улучшения зависит от стоимости</div>
@@ -1329,7 +1329,7 @@ html,body{overflow-anchor:none}
   var QDEF = [
     { t: 'Встал до 10:00', s: 'будильник не нужен, если проснулся сам' },
     { t: 'Обед не меньше 20 минут', s: 'можно с видео, но медленно' },
-    { t: 'Еда в пределах 2200 ккал', s: 'любая еда, дома или из магазина' },
+    { t: 'Еда в пределах 2500 ккал', s: 'любая еда, дома или из магазина' },
     { t: 'Приготовил еду на завтра', s: 'вечерняя задача' },
     { t: 'Уход за лицом', s: 'утром и вечером по твоей схеме, по понедельникам энзимная пудра' },
     { t: 'Уход за зубами', s: 'утром и вечером, отбеливающий гель по схеме' },
@@ -1382,7 +1382,7 @@ html,body{overflow-anchor:none}
       return 'В день засчитывается ' + (2 + L) + ' ' + plural(2 + L, 'спонтанное дело', 'спонтанных дела', 'спонтанных дел') + '. Дело можно пометить тяжёлым: оно даёт +' + (L >= 3 ? 3 : 2) + ' вместо +1.'; } }
   ];
   function nskLevels(st) {
-    var out = {}, t = [[70000, 11000], [250000, 16000], [600000, 22000]], n = 0;
+    var out = {}, t = [[70000, 11000], [250000, 16000], [600000, 25000]], n = 0;
     for (var i = 0; i < t.length; i++) { if (st.steps >= t[i][0] || st.maxDay >= t[i][1]) n = i + 1; else break; }
     out.n_walk = n;
     function byTh(v, th) { var c = 0; th.forEach(function (x) { if (v >= x) c++; }); return c; }
@@ -1476,9 +1476,9 @@ html,body{overflow-anchor:none}
     { id: 'x41', t: 'Скрытая отметина', d: 'Приготовить еду на завтра 203 раз', val: 'cook', goal: 203, pts: 12, title: 'ШЕФ' },
     { id: 'x42', t: 'Скрытая отметина', d: 'Принять душ 19 раз', val: 'shower', goal: 19, pts: 2 },
     { id: 'x43', t: 'Скрытая отметина', d: 'Позаниматься английским 66 раз', val: 'eng', goal: 66, pts: 5 },
-    { id: 'x44', t: 'Скрытая отметина', d: '14 дней в пределах 2200 ккал', val: 'kcalOk', goal: 14, pts: 2 },
-    { id: 'x45', t: 'Скрытая отметина', d: '59 дней в пределах 2200 ккал', val: 'kcalOk', goal: 59, pts: 5 },
-    { id: 'x46', t: 'Скрытая отметина', d: '148 дней в пределах 2200 ккал', val: 'kcalOk', goal: 148, pts: 10 },
+    { id: 'x44', t: 'Скрытая отметина', d: '14 дней в пределах 2500 ккал', val: 'kcalOk', goal: 14, pts: 2 },
+    { id: 'x45', t: 'Скрытая отметина', d: '59 дней в пределах 2500 ккал', val: 'kcalOk', goal: 59, pts: 5 },
+    { id: 'x46', t: 'Скрытая отметина', d: '148 дней в пределах 2500 ккал', val: 'kcalOk', goal: 148, pts: 10 },
     { id: 'x47', t: 'Скрытая отметина', d: 'Записать калории 10 дней', val: 'kcalLog', goal: 10, pts: 1 },
     { id: 'x48', t: 'Скрытая отметина', d: 'Записать калории 44 дней', val: 'kcalLog', goal: 44, pts: 4 },
     { id: 'x49', t: 'Скрытая отметина', d: 'Уход за лицом 21 дней', val: 'face', goal: 21, pts: 2 },
@@ -1487,9 +1487,9 @@ html,body{overflow-anchor:none}
     { id: 'x52', t: 'Скрытая отметина', d: 'Уход за зубами 16 дней', val: 'teeth', goal: 16, pts: 2 },
     { id: 'x53', t: 'Скрытая отметина', d: 'Уход за зубами 54 дней', val: 'teeth', goal: 54, pts: 5 },
     { id: 'x54', t: 'Скрытая отметина', d: 'Уход за зубами 142 дней', val: 'teeth', goal: 142, pts: 10 },
-    { id: 'x55', t: 'Скрытая отметина', d: '4 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 4, pts: 3 },
-    { id: 'x56', t: 'Скрытая отметина', d: '9 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 9, pts: 6 },
-    { id: 'x57', t: 'Скрытая отметина', d: '22 недель, где все 7 дней еда в пределах 2200 ккал', val: 'kcalW', goal: 22, pts: 15, title: 'РОВНЫЙ' },
+    { id: 'x55', t: 'Скрытая отметина', d: '4 недель, где все 7 дней еда в пределах 2500 ккал', val: 'kcalW', goal: 4, pts: 3 },
+    { id: 'x56', t: 'Скрытая отметина', d: '9 недель, где все 7 дней еда в пределах 2500 ккал', val: 'kcalW', goal: 9, pts: 6 },
+    { id: 'x57', t: 'Скрытая отметина', d: '22 недель, где все 7 дней еда в пределах 2500 ккал', val: 'kcalW', goal: 22, pts: 15, title: 'РОВНЫЙ' },
     { id: 'x58', t: 'Скрытая отметина', d: '3 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 3, pts: 2 },
     { id: 'x59', t: 'Скрытая отметина', d: '7 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 7, pts: 6 },
     { id: 'x60', t: 'Скрытая отметина', d: '19 недель, где все 7 дней выполнена цель по шагам', val: 'stepW', goal: 19, pts: 15, title: 'НЕУТОМИМЫЙ' },
@@ -1497,7 +1497,7 @@ html,body{overflow-anchor:none}
     { id: 'x62', t: 'Скрытая отметина', d: '12 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 12, pts: 3 },
     { id: 'x63', t: 'Скрытая отметина', d: '27 дней подряд с выполненной целью по шагам', val: 'stepStreak', goal: 27, pts: 8 },
     { id: 'x64', t: 'Скрытая отметина', d: 'Записать калории 17 дней', val: 'kcalLog', goal: 17, pts: 3 },
-    { id: 'x65', t: 'Скрытая отметина', d: '40 дней в пределах 2200 ккал', val: 'kcalOk', goal: 40, pts: 5, title: 'ЖЕЛЕЗНАЯ ВОЛЯ' },
+    { id: 'x65', t: 'Скрытая отметина', d: '40 дней в пределах 2500 ккал', val: 'kcalOk', goal: 40, pts: 5, title: 'ЖЕЛЕЗНАЯ ВОЛЯ' },
     { id: 'x66', t: 'Скрытая отметина', d: '200 идеальных дней', val: 'perf', goal: 200, pts: 15, title: 'ЛИДЕР' },
     { id: 'x67', t: 'Скрытая отметина', d: 'Взвешиваться 5 недель', val: 'weigh', goal: 5, pts: 1 },
     { id: 'x68', t: 'Скрытая отметина', d: 'Взвешиваться 14 недель', val: 'weigh', goal: 14, pts: 3 },
@@ -1535,7 +1535,7 @@ html,body{overflow-anchor:none}
     { id: 'x100', t: 'Скрытая отметина', d: '14 дней подряд вставать до 10:00', val: 'earlyBest', goal: 14, pts: 6, title: 'СИГМА' },
     { id: 'x101', t: 'Скрытая отметина', d: '4 200 отжиманий всего', val: 'pu', goal: 4200, pts: 9, title: 'ГИГАЧАД' },
     { id: 'x102', t: 'Скрытая отметина', d: 'Кинуть в копилку 42 раза', val: 'jar', goal: 42, pts: 8, title: 'СКРУДЖ' },
-    { id: 'x104', t: 'Скрытая отметина', d: '14 дней подряд в пределах 2200 ккал', val: 'kcalOkBest', goal: 14, pts: 8, title: 'СЧЁТОВОД' },
+    { id: 'x104', t: 'Скрытая отметина', d: '14 дней подряд в пределах 2500 ккал', val: 'kcalOkBest', goal: 14, pts: 8, title: 'СЧЁТОВОД' },
     { id: 'x103', t: 'Скрытая отметина', d: '33 тренировки', val: 'wk', goal: 33, pts: 10, title: 'ТРИДЦАТЬ ТРИ БОГАТЫРЯ' },
     { id: 'x105', t: 'Скрытая отметина', d: '9 дней английского подряд', val: 'engBest', goal: 9, pts: 3 },
     { id: 'x106', t: 'Скрытая отметина', d: 'Английский 31 раз', val: 'eng', goal: 31, pts: 6 },
@@ -1637,7 +1637,7 @@ html,body{overflow-anchor:none}
     { id: 'z06', title: 'ПЯТНИЧНЫЙ БОГ', val: 'friBest', goal: 3, d: 'Три идеальные пятницы подряд', pts: 15, cos: 'b_dawn' },
     { id: 'z07', title: 'НЕПОБЕДИМЫЙ', slot: 4, val: 'perfBest', goal: 21, d: '21 идеальный день подряд', pts: 25, cos: 'p_rainbow' },
     { id: 'z08', title: 'ТРОЙНАЯ УГРОЗА', slot: 9, val: 'perfCombo', goal: 1, d: 'Идеальный день, в который ещё и тройной удар', pts: 18, cos: 'b_library' },
-    { id: 'z09', title: 'ЖЕЛЕЗНЫЙ РЕЖИМ', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2200 ккал', pts: 20, cos: 'b_aurora' },
+    { id: 'z09', title: 'ЖЕЛЕЗНЫЙ РЕЖИМ', slot: 14, val: 'kcalOkBest', goal: 30, d: '30 дней подряд в пределах 2500 ккал', pts: 20, cos: 'b_aurora' },
     { id: 'z10', title: 'МАРАФОНЕЦ', slot: 20, val: 'stepStreak', goal: 60, d: '60 дней подряд с выполненной целью по шагам', pts: 25, cos: 'au_flame' },
     { id: 'z11', title: 'НА ВЕСАХ', slot: 27, val: 'weigh', goal: 8, d: 'Взвешиваться восемь недель', pts: 18, cos: 'fr_rgb' },
     { id: 'z12', title: 'ПЕРВЫЙ ЛУЧ', slot: 12, val: 'earlyBest', goal: 21, d: '21 день подряд вставать до 10:00', pts: 20, cos: 'b_sunrise' },
@@ -2584,7 +2584,7 @@ html,body{overflow-anchor:none}
     $('steps-show').textContent = day.steps == null ? '' : fmt(day.steps) + ' / ' + fmt(sg);
     var kc = $('kcal');
     if (document.activeElement !== kc) kc.value = day.kcal == null ? '' : day.kcal;
-    $('kcal-show').textContent = day.kcal == null ? '' : fmt(day.kcal) + ' / 2 200';
+    $('kcal-show').textContent = day.kcal == null ? '' : fmt(day.kcal) + ' / 2 500';
     renderPeriodic();
     var strip = $('strip');
     clear(strip);
@@ -2737,7 +2737,7 @@ html,body{overflow-anchor:none}
     var kc = kcalWeek(mk);
     var ec = engWeek(mk);
     list.appendChild(questButton('Английский каждый день', ec + ' из 7 дней. Отмечай задачу «Английский» каждый день', '+1', ec === 7, null, true));
-    list.appendChild(questButton('Неделя в пределах 2200 ккал', kc + ' из 7 дней подряд. Отмечай задачу «Еда в пределах 2200 ккал» каждый день', '+3', kc === 7, null, true));
+    list.appendChild(questButton('Неделя в пределах 2500 ккал', kc + ' из 7 дней подряд. Отмечай задачу «Еда в пределах 2500 ккал» каждый день', '+3', kc === 7, null, true));
   }
   function remaining(ms) {
     var s = Math.max(0, Math.floor(ms / 1000));
