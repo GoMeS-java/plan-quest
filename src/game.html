@@ -1344,7 +1344,10 @@ html,body{overflow-anchor:none}
   function refreshFoodSuggestion(){
     var control=$('kcal-from-food'),day=curKey(),result=loaded&&day===dkey(new Date())?food.summary(day):null;
     control.hidden=result?.kcal==null;
-    if(!control.hidden)control.textContent='Подставить из Трапезной · '+result.kcal.toLocaleString('ru-RU')+' ккал';
+    if(!control.hidden){
+      var estimate=result.stats.counts.estimate?'≈ ':'';
+      control.textContent='Подставить из Трапезной · '+estimate+result.kcal.toLocaleString('ru-RU')+' ккал';
+    }
   }
   $('kcal-from-food').onclick=function(){
     var day=curKey();if(!loaded||day!==dkey(new Date()))return;
@@ -5975,7 +5978,7 @@ function renderAllInner() {
     }, function (e) { dbErr(e); });
   }
   function subscribe() {
-    VkachChainsUI.connect(db, enqueue, requestProfileRender);
+    VkachChainsUI.connect(db, enqueue, requestProfileRender, function(){window.__citadelShell?.refreshToday();});
     food.connect(db);
     db.doc(VkachForgeAwards.path).onSnapshot(function(sn){S.forgeAwards=sn.exists?sn.data():null;forgeRegisterBackgrounds();firstDone('forge-awards');requestProfileRender();},dbErr);
     watchCollection('forge-tasks',function(rows){S.forge=Object.create(null);rows.forEach(function(row){S.forge[row.id]=row;});});
@@ -6179,12 +6182,12 @@ function renderAllInner() {
       if(!loaded)return;
       var day=dkey(new Date()),item=S.days[day]||{},idx=activeIdx(day),calories=food.calorieLine(day);
       var manualCalories=item.kcal!=null&&!food.summary(day).items.length?fmt(item.kcal)+' / '+fmt(nutritionDailyGoal)+' ккал':null;
-      var smoking=$('chains-daily').querySelector('progress');
-      if(metricsDay!==day){metricsDay=day;metricIds=['tasks','food',VkachChains.today()>=VkachChains.start?'smoking':'steps'];}
+      var smoking=VkachChainsUI.todayStatus();
+      if(metricsDay!==day){metricsDay=day;metricIds=['tasks','food',smoking?'smoking':'steps'];}
       var values={
         tasks:'Задания '+idx.filter(function(i){return Boolean((item.q||[])[i]);}).length+'/'+idx.length,
         food:'Питание '+(manualCalories||calories),
-        smoking:smoking?'Сигареты '+smoking.value+'/'+smoking.max:'Сигареты —',
+        smoking:smoking?'Сигареты '+smoking.count+'/'+smoking.limit:'Сигареты —',
         steps:'Шаги '+(item.steps==null?'—':fmt(item.steps))
       };
       var next=metricIds.map(function(id){return values[id];});

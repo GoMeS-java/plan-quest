@@ -100,7 +100,13 @@ try {
   }
 
   assert.equal(await page.locator('[data-croom]').count(), 10);
-  assert.equal(await page.locator('.citadel-today-values span').count(), 3);
+  const todayValues = page.locator('.citadel-today-values');
+  assert.equal(await todayValues.locator('span').count(), 3);
+  await todayValues.getByText('Сигареты 0/0', { exact: true }).waitFor();
+  await page.locator('.chains-medallion').click();
+  await todayValues.getByText('Сигареты 1/0', { exact: true }).waitFor();
+  await page.locator('.chains-quick .chains-undo').click();
+  await todayValues.getByText('Сигареты 0/0', { exact: true }).waitFor();
   await page.locator('.citadel-map-camera > summary').click();
   await page.getByLabel('Ярус', { exact: true }).selectOption('3');
   assert.equal(await page.getByLabel('Ярус', { exact: true }).locator('option').count(), 6);
@@ -226,6 +232,7 @@ try {
   await page.locator('#food .food-status').filter({ hasText: 'Приём пищи удалён' }).waitFor();
   await closeFood();
   await page.locator('.citadel-shell-dock [data-section="today"]').click();
+  assert.match(await page.locator('#kcal-from-food').innerText(), /≈ 161 ккал/);
   await page.locator('#kcal-from-food').click();
   await page.waitForFunction(date => PlanSync._docs()['days/' + date]?.d.kcal === 161, date);
   const afterTransfer = await docValues(['days/', 'per/', 'tx/', 'cfg/opening', 'buys/']);
@@ -261,6 +268,15 @@ try {
     assert.equal(await page.locator('.citadel-person[data-person="guardian"]:visible').count(), 1);
   }
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await page.clock.setFixedTime(new Date('2026-11-09T14:00:00+03:00'));
+  await page.evaluate(async () => {
+    await PlanDB.runTransaction(tx => {
+      for (let i = 0; i < 17; i++) {
+        tx.set('chains/test-over-limit-' + i, { kind: 'smoke', date: '2026-11-09', at: Date.now() });
+      }
+    });
+  });
+  await todayValues.getByText('Сигареты 17/14', { exact: true }).waitFor();
   assert.deepEqual(errors, []);
   console.log('Stage I mobile PWA: rooms, sections, offline diary and recipes, old records, backups and Forge verified');
   await context.close();
