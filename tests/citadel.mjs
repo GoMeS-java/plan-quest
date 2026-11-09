@@ -2081,7 +2081,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
    await (await cameraControls(p)).getByRole('button',{name:'+',exact:true}).click();await (await cameraControls(p)).getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(500);
    const position=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));
-   await p.reload();await p.waitForFunction(()=>window.__qa?.S.abyss?.rank>=24);await dismiss(p);await p.clock.runFor(500);
+   await p.reload();await p.waitForFunction(()=>window.__qa?.S.abyss?.rank>=24);await dismiss(p);await p.clock.runFor(500);await cameraControls(p);
    const restored=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));assert.deepEqual(restored,position,'camera preference survives reload without shifting ancestors');
    assert.deepEqual(await shellGeometry(),geometry);
    assert.deepEqual(await p.evaluate(()=>({balance:__qa.balance(),abyss:JSON.parse(JSON.stringify(__qa.S.abyss)),buys:JSON.parse(JSON.stringify(__qa.S.buys))})),economy);
