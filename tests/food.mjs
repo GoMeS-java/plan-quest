@@ -40,6 +40,11 @@ assert.equal(read('drafts').length, 2);
 assert.equal(read('meals').length, 1);
 assert.equal(read('events').length, 1);
 assert.equal(model.suggestedCalories(saved.items), 161);
+assert.deepEqual(model.read({
+  'food-meals/meal-1': { d: saved },
+  'food-meals/damaged': { d: { ...saved, items: null } },
+  'food-meals/future': { d: { ...saved, version: 2 } },
+}, 'meals'), [saved]);
 assert.deepEqual(model.totals(saved.items).metrics.protein, { known: 1, missing: 1, sum: 0 });
 assert.equal(read('days')[0].complete, false);
 

@@ -1082,3 +1082,19 @@ body.citadel-shell-active #fate-forge-dialog{
     position:sticky;top:0;z-index:2;background:#130e20;display:flex;align-items:center;justify-content:space-between
   }
 }
+
+@media(orientation:landscape) and (max-height:540px){
+  body.citadel-shell-active #citadel-home.citadel-shell[data-ui-view="room"] .citadel-inside>.citadel-interior:not([hidden]){
+    display:grid!important;align-content:start;align-items:start;gap:6px 12px;
+    grid-template-columns:minmax(0,3fr) minmax(145px,2fr);
+    grid-template-areas:"heading heading" "stage calories" "stage primary" "stage feedback" "stage extra"
+  }
+  .citadel-shell[data-ui-view="room"] .citadel-interior-top{grid-area:heading;margin-bottom:0}
+  .citadel-shell[data-ui-view="room"] .citadel-interior-stage{
+    grid-area:stage;width:min(100%,calc((var(--app-height,100dvh) - 120px)*1.5));justify-self:center
+  }
+  .citadel-shell[data-ui-view="room"] .citadel-refectory-calories{grid-area:calories;margin:0;text-align:left}
+  .citadel-shell[data-ui-view="room"] .citadel-room-primary{grid-area:primary;margin:0}
+  .citadel-shell[data-ui-view="room"] #citadel-object-status{grid-area:feedback}
+  .citadel-shell[data-ui-view="room"] .citadel-room-more{grid-area:extra;margin:0}
+}

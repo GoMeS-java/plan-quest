@@ -63,7 +63,7 @@
   }
 
   function nutrients(values = {}) {
-    return Object.fromEntries(keys.map(key => [key, number(values[key])]));
+    return Object.fromEntries(keys.map(key => [key, number(values?.[key])]));
   }
 
   function position(raw) {
@@ -248,10 +248,36 @@
     return { id, name: row.name, source: row.id, base: row.base, grams: row.lastGrams ?? row.base, mode, values: { ...row.values } };
   }
 
+  function validFacts(values) {
+    return values && keys.every(key => values[key] === null || (Number.isFinite(values[key]) && values[key] >= 0));
+  }
+
+  function validPosition(item) {
+    return item && validId(item.id) && typeof item.name === 'string' && has(modes, item.mode) &&
+      Number.isFinite(item.grams) && item.grams > 0 && Number.isFinite(item.base) && item.base > 0 && validFacts(item.values);
+  }
+
+  function readable(group, row) {
+    if (row?.version !== version) return false;
+    if (group === 'catalog') {
+      return validId(row.id) && typeof row.name === 'string' && Number.isFinite(row.base) && row.base > 0 &&
+        validFacts(row.values) && (row.type === 'product' || (row.type === 'recipe' &&
+          Array.isArray(row.ingredients) && row.ingredients.every(validPosition) && row.overrides));
+    }
+    if (!validDate(row.date)) return false;
+    if (group === 'days') return typeof row.complete === 'boolean';
+    if (!has(kinds, row.kind)) return false;
+    if (group === 'events') return Array.isArray(row.names) && row.names.every(value => typeof value === 'string');
+    if (!validId(row.id) || !Array.isArray(row.items) || row.items.length > limit) return false;
+    if (group === 'meals') return row.items.length > 0 && row.items.every(validPosition);
+    return row.items.every(item => item && validId(item.id) && item.values && has(modes, item.mode));
+  }
+
   function read(records, group) {
     const prefix = collections[group] + '/';
+    // Unsupported or damaged food rows stay in the backup, isolated from game views.
     return Object.entries(records)
-      .filter(([path, row]) => path.startsWith(prefix) && row.d?.version === version)
+      .filter(([path, row]) => path.startsWith(prefix) && readable(group, row.d))
       .map(([, row]) => row.d);
   }
 

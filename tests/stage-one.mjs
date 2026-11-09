@@ -123,7 +123,14 @@ try {
   await page.waitForFunction(() => document.querySelector('#citadel-interior-stage').dataset.room === 'refectory');
   assert.match(await page.locator('.citadel-refectory-calories').textContent(), /2\s500/);
   assert(!(await page.locator('#citadel-exits').isVisible()));
-  console.log('Mobile map, room inspection, doors and search verified');
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.waitForFunction(() => {
+    const scene = document.querySelector('#citadel-interior-stage').getBoundingClientRect();
+    const primary = document.querySelector('.citadel-room-primary').getBoundingClientRect();
+    return scene.width > 300 && scene.bottom <= innerHeight + 1 && primary.bottom <= innerHeight && primary.left >= scene.right;
+  });
+  await page.setViewportSize({ width: 360, height: 800 });
+  console.log('Mobile map, room inspection, doors, search and landscape room verified');
   const preserved = await docValues(['days/', 'per/', 'tx/', 'cfg/opening', 'buys/']);
   await page.locator('#citadel-interior-object').click();
   await byLabel('Дневник заполнен').waitFor();
@@ -192,6 +199,11 @@ try {
   await saveMeal();
   assert.match(await page.locator('#food').innerText(), /Записано 150/);
   await byLabel('Дневник заполнен').check();
+  await entries('Сегодня').click();
+  await group('Завтрак').getByRole('button', { name: 'Повторить приём от 15.04.2027' }).click();
+  assert.equal(await byLabel('Масса порции, г').inputValue(), '125');
+  await entries('Удалить черновик').click();
+  await page.locator('#food .food-status').filter({ hasText: 'Черновик удалён' }).waitFor();
   assert.deepEqual(await docValues(['days/', 'per/', 'tx/', 'cfg/opening', 'buys/']), preserved);
 
   await closeFood();
@@ -233,6 +245,21 @@ try {
   assert(await page.locator('#citadel-residents button').count() >= 4);
   await page.goBack();
   assert(await page.locator('.citadel-viewport').isVisible());
+  for (let visit = 0; visit < 2; visit++) {
+    await openRoom('observatory');
+    const actor = page.locator('#citadel-interior-stage .citadel-person[data-person="guardian"]');
+    await actor.click();
+    const panel = page.locator('#citadel-room-conversation');
+    await panel.waitFor({ state: 'visible' });
+    assert.match(await panel.innerText(), /Страж Цитадели/);
+    assert.equal(await panel.evaluate(node => getComputedStyle(node).position), 'absolute');
+    assert.equal(await page.locator('.citadel-person[data-person="guardian"]:visible').count(), 1);
+    await page.goBack();
+    await panel.waitFor({ state: 'hidden' });
+    assert(await actor.isVisible());
+    await backToMap();
+    assert.equal(await page.locator('.citadel-person[data-person="guardian"]:visible').count(), 1);
+  }
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   assert.deepEqual(errors, []);
   console.log('Stage I mobile PWA: rooms, sections, offline diary and recipes, old records, backups and Forge verified');

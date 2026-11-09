@@ -5111,8 +5111,8 @@ function citadelRoomConversation(){
  if(panel.hidden)return;
  $('citadel-room-speech').textContent=$('citadel-npc-dialogue').textContent;
  var task=citadelNpcTask(person),button=$('citadel-room-npc-action');button.textContent=task.label;button.onclick=function(){citadelNavigate(task.tab,task.focus);};
- var more=$('citadel-room-npc-more');if(more&&more.dataset.person!==person.key){
-  more.dataset.person=person.key;clear(more);
+ var more=$('citadel-room-npc-more');if(more&&more.dataset.resident!==person.key){
+  more.dataset.resident=person.key;clear(more);
   [['Где ты?',function(){citadelFindResident(person);}],['Дела на сегодня',function(){citadelNavigate('today');}],['Хроника недели',function(){citadelNavigate('week');}]].forEach(function(row){
    var action=el('button',null,row[0]);action.type='button';action.onclick=row[1];more.appendChild(action);
   });
@@ -6166,11 +6166,12 @@ function renderAllInner() {
     function refreshToday(){
       if(!loaded)return;
       var day=dkey(new Date()),item=S.days[day]||{},idx=activeIdx(day),calories=food.calorieLine(day);
+      var manualCalories=item.kcal!=null&&!food.summary(day).items.length?fmt(item.kcal)+' / '+fmt(nutritionDailyGoal)+' ккал':null;
       var smoking=$('chains-daily').querySelector('progress');
       if(metricsDay!==day){metricsDay=day;metricIds=['tasks','food',VkachChains.today()>=VkachChains.start?'smoking':'steps'];}
       var values={
         tasks:'Задания '+idx.filter(function(i){return Boolean((item.q||[])[i]);}).length+'/'+idx.length,
-        food:'Питание '+calories,
+        food:'Питание '+(manualCalories||calories),
         smoking:smoking?'Сигареты '+smoking.value+'/'+smoking.max:'Сигареты —',
         steps:'Шаги '+(item.steps==null?'—':fmt(item.steps))
       };
@@ -6203,8 +6204,11 @@ function renderAllInner() {
     function toggleMenu(trigger){
       if(home.dataset.menu==='open'){closeMenu();return;}
       if(menuReturning)return;
+      var state=Object.assign({},history.state,{citadelMenu:true}),replaceDrawer=drawer&&state.citadelOverlay==='drawer';
+      if(drawer)closeDrawer(true);
       menuTrigger=trigger;home.dataset.menu='open';menuExpanded(true);allFunctions.open=false;pinSettings.open=false;search.value='';runSearch();
-      history.pushState(Object.assign({},history.state,{citadelMenu:true}),'');
+      if(replaceDrawer){delete state.citadelOverlay;history.replaceState(state,'');}
+      else history.pushState(state,'');
       menuClose.focus({preventScroll:true});
     }
     menuButton.onclick=function(){toggleMenu(menuButton);};
@@ -6360,9 +6364,10 @@ function renderAllInner() {
     var dockMenu=document.createElement('button');dockMenu.type='button';dockMenu.textContent='Разделы';dockMenu.setAttribute('aria-label','Все разделы игры');dockMenu.setAttribute('aria-controls','citadel-shell-nav');dockMenu.setAttribute('aria-expanded','false');dockMenu.onclick=function(){toggleMenu(dockMenu);};dock.appendChild(dockMenu);
     var shade=document.createElement('div');shade.className='citadel-shell-shade';home.appendChild(shade);shade.onclick=closeDrawer;
     function pushOverlay(kind){var previous=history.state?.citadelOverlay,state=Object.assign({},history.state,{citadelOverlay:kind});if(previous===kind||previous==='drawer')history.replaceState(state,'');else history.pushState(state,'');}
-    function closeDrawer(silent){var was=drawer;drawer='';home.dataset.drawer='';if(was&&!silent&&history.state?.citadelOverlay==='drawer')history.back();}
-    function toggleDrawer(side){if(drawer===side){closeDrawer();return;}drawer=side;home.dataset.drawer=drawer;pushOverlay('drawer');refreshDrawer();}
-    var left=document.createElement('aside'),right=document.createElement('aside');left.className='citadel-shell-drawer left';right.className='citadel-shell-drawer right';
+    function setDrawer(side){drawer=side;home.dataset.drawer=side;left.inert=side!=='left';right.inert=side!=='right';}
+    function closeDrawer(silent){var was=drawer;setDrawer('');if(was&&!silent&&history.state?.citadelOverlay==='drawer')history.back();}
+    function toggleDrawer(side){if(drawer===side){closeDrawer();return;}setDrawer(side);pushOverlay('drawer');refreshDrawer();}
+    var left=document.createElement('aside'),right=document.createElement('aside');left.className='citadel-shell-drawer left';right.className='citadel-shell-drawer right';setDrawer('');
     left.setAttribute('aria-label','Управление Цитаделью');right.setAttribute('aria-label','Комната и жители');home.appendChild(left);home.appendChild(right);
     var castleLinks=navGroup('УПРАВЛЕНИЕ ЗАМКОМ',[]);
     [['left','Цитадель'],['right','Жители']].forEach(function(entry){var b=document.createElement('button');b.type='button';b.className='citadel-shell-tail '+entry[0];b.textContent=entry[0]==='left'?'Обзор Цитадели':'Комната и жители';b.setAttribute('aria-label','Открыть панель: '+entry[1]);b.dataset.drawerOpen=entry[0];b.onclick=function(){exitMenu(function(){toggleDrawer(entry[0]);});};castleLinks.appendChild(b);});
