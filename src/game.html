@@ -1377,14 +1377,19 @@ html,body{overflow-anchor:none}
     needs:function(key){
       var date=dkey(new Date());
       if(key==='food')return date>=VkachFood.start&&!food.summary(date).items.length&&!S.days[date]?.kcal;
-      if(key==='recovery')return !PlanSync._docs()['room-recovery/'+date]?.d;
+      if(key==='recovery'){
+        var entry=PlanSync._docs()['room-recovery/'+date]?.d;
+        return !entry||entry.deleted;
+      }
       return dayCount(date,stepInfo())<reqTotal(date);
     }
   });
+  function roomDailyIds(day){
+    var active=activeIdx(day);
+    return day>=NEW_Q&&forgeEnabled('daily-8',day)?active.concat(8):active;
+  }
   function roomRitualIds(day){
-    var allowed=[0,4,5,6,8], active=activeIdx(day);
-    if(day>=NEW_Q&&forgeEnabled('daily-8',day))active=active.concat(8);
-    return allowed.filter(function(index){return active.includes(index);});
+    return roomDailyIds(day).filter(function(index){return [0,4,5,6,8].includes(index);});
   }
   function roomRituals(history){
     var today=dkey(new Date());
@@ -1398,7 +1403,7 @@ html,body{overflow-anchor:none}
   }
   function roomProjectTasks(){
     var day=dkey(new Date()),week=mondayKey(day),SI=stepInfo();
-    var daily=activeIdx(day).map(function(index){
+    var daily=roomDailyIds(day).map(function(index){
       return {id:'daily-'+index,label:qTitle(index,day),done:!!S.days[day]?.q?.[index]};
     });
     var completed={steps:!!SI.done[week],weight:S.weights.some(function(row){return mondayKey(row.date)===week;}),

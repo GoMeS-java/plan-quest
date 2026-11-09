@@ -286,7 +286,8 @@
       total.append(element('strong', 'Записано ' + calorieLine(day)), breakdown(view.stats));
       if (view.kcal != null) {
         const rest = goal() - view.stats.metrics.kcal.sum;
-        total.append(element('p', (rest >= 0 ? 'Осталось ' : 'Сверх цели ') + format.format(Math.abs(rest)) + ' ккал'));
+        const estimate = view.stats.counts.estimate ? '≈ ' : '';
+        total.append(element('p', (rest >= 0 ? 'Осталось ' : 'Сверх цели ') + estimate + format.format(Math.abs(rest)) + ' ккал'));
       } else {
         total.append(element('p', view.items.length ? 'Итог дня неизвестен: есть позиции без калорийности.' : 'Записей о питании пока нет.'));
       }
@@ -465,11 +466,17 @@
           try {
             const result = model.recipe(data.ingredients, data.recipeMode, data.base, data.overrides);
             const kcal = result.values.kcal;
-            const grams = Number(String(data.previewGrams).replace(',', '.'));
+            const estimate = result.estimated ? '≈ ' : '';
+            const kcalText = value => estimate + format.format(value) + ' ккал';
             preview.textContent = 'Вес блюда ' + format.format(result.base) + ' г · ' +
-              (kcal == null ? 'калорийность неизвестна' : format.format(kcal) + ' ккал на всё блюдо · ' +
-                format.format(kcal / result.base * 100) + ' ккал на 100 г' +
-                (Number.isFinite(grams) && grams > 0 ? ' · ' + format.format(kcal / result.base * grams) + ' ккал в порции' : ''));
+              (kcal == null ? 'калорийность неизвестна' : kcalText(kcal) + ' на всё блюдо · ' +
+                kcalText(kcal / result.base * 100) + ' на 100 г');
+            if (String(data.previewGrams).trim()) {
+              try {
+                const grams = model.mass(data.previewGrams);
+                if (kcal != null) preview.textContent += ' · ' + kcalText(kcal / result.base * grams) + ' в порции';
+              } catch (error) { preview.textContent += ' · ' + error.message; }
+            }
           } catch { preview.textContent = 'Заполни массу и данные ингредиентов для расчёта.'; }
         }
         body.appendChild(select('Способ приготовления', [['simple', 'Собрать из готовых продуктов'],
@@ -504,7 +511,8 @@
       const group = (title, entries) => {
         const rows = entries.map(row => {
           const node = element('div', null, 'food-catalog-row');
-          const kcal = row.values.kcal == null ? 'ккал неизвестны' : format.format(row.values.kcal) + ' ккал';
+          const estimated = row.estimated || model.keys.some(key => row.values[key] == null);
+          const kcal = row.values.kcal == null ? 'ккал неизвестны' : (estimated ? '≈ ' : '') + format.format(row.values.kcal) + ' ккал';
           node.append(element('strong', row.name), element('small', format.format(row.base) + ' г · ' + kcal + (row.note ? ' · ' + row.note : '')),
             button('Редактировать ' + row.name, () => editCatalog(row.type, row)),
             button(row.favorite ? 'Убрать из избранного' : 'В избранное', () => run(

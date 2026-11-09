@@ -294,7 +294,7 @@
   }
 
   root.VkachFood = Object.freeze({
-    start, kinds, modes, keys, collections, limit, validDate, checkKey, makeId, position, portion, totals,
+    start, kinds, modes, keys, collections, limit, validDate, checkKey, makeId, mass, position, portion, totals,
     suggestedCalories, putDraft, clearDraft, finishMeal, setDeleted, setComplete, recipe, saveCatalog, favorite, fromCatalog, setGoal, read
   });
 })(globalThis);

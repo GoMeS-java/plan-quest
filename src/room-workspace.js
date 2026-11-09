@@ -70,7 +70,9 @@
     if (JSON.stringify(old) !== JSON.stringify(expected)) {
       throw Object.assign(new Error('Запись уже изменилась. Открой её заново.'), { code: 'record_changed' });
     }
-    tx.set(path, { ...values, version: 1, created: old?.created ?? Date.now(), updated: Date.now() });
+    const row = { ...values, version: 1, created: old?.created ?? Date.now(), updated: Date.now() };
+    tx.set(path, row);
+    return row;
   }
   function duration(record) {
     if (Number.isFinite(record.minutes)) return record.minutes;
@@ -118,6 +120,14 @@
       if (busy) return;
       busy = true;
       transact(operation).then(success, error => report(error.message || 'Не удалось сохранить.')).finally(() => { busy = false; });
+    }
+    function remove(group, id, expected, removedText, restoredText) {
+      save(tx=>write(tx,group,id,expected,{...expected,deleted:true}),removed=>{
+        render();
+        message.replaceChildren(node('span',removedText + ' '),button('Отменить',()=>save(
+          tx=>write(tx,group,id,removed,{...expected,deleted:false}),()=>{render();report(restoredText);}
+        )));
+      });
     }
     function card(title, ...children) {
       const view = node('section', null, 'room-work-card');
@@ -254,18 +264,13 @@
           const linked = row.tasks.map(id => taskById.get(id)).filter(Boolean);
           view.append(node('p','Выполнено ' + linked.filter(item=>item.done).length + ' из ' + linked.length));
           const detail = node('details');
+          detail.dataset.roomDisclosure = 'project-' + row.id;
           detail.append(node('summary','Задания проекта'));
           for (const item of linked) detail.append(node('p',(item.done ? '✓ ' : '○ ') + item.label));
           view.append(detail);
         }
         view.append(button('Редактировать',()=>openEditor(group,row)));
-        if (group === 'notes') view.append(button('Удалить',()=>save(tx=>write(tx,group,row.id,expected,{...expected,deleted:true}),()=>{
-          const removed = stored(group,row.id);
-          render();
-          message.replaceChildren(node('span','Заметка удалена. '),button('Отменить',()=>save(
-            tx=>write(tx,group,row.id,removed,{...expected,deleted:false}),()=>{render();report('Заметка восстановлена');}
-          )));
-        })));
+        if (group === 'notes') view.append(button('Удалить',()=>remove(group,row.id,expected,'Заметка удалена.','Заметка восстановлена')));
         body.append(view);
       }
     }
@@ -278,14 +283,20 @@
         const done = button(item.done ? 'Снять отметку' : 'Выполнить',()=>toggleRitual(item.id));
         done.setAttribute('aria-label',(item.done ? 'Снять отметку: ' : 'Выполнить: ') + item.label);
         const detail = node('details');
+        detail.dataset.roomDisclosure = 'ritual-' + item.id;
         detail.append(node('summary','Последние 7 дней'),
           ...history.slice().reverse().map(key=>node('p',dateLabel(key) + ' · ' +
             (item.history[key] === true ? 'Выполнено' : item.history[key] === false ? 'Без отметки' : 'Недоступно'))));
-        body.append(card(item.label,node('p','Серия: ' + item.streak + ' дн.','hint'),done,detail));
+        const heading = node('div',null,'room-ritual-heading');
+        heading.append(node('strong',item.label),node('p','Серия: ' + item.streak + ' дн.','hint'));
+        const view = node('section',null,'room-work-card room-ritual-card');
+        view.append(heading,done,detail);
+        body.append(view);
       }
     }
     function recovery() {
-      const current = stored('recovery',recoveryDate);
+      const expected = stored('recovery',recoveryDate);
+      const current = expected?.deleted ? null : expected;
       const date = input('date',recoveryDate);
       date.max = today();
       date.onchange = () => {
@@ -303,16 +314,20 @@
         const row = {date:recoveryDate,minutes:value,asleep:asleep.value,awake:awake.value,
           mood:Number(mood.value)||null,energy:Number(energy.value)||null,note:note.value.trim()};
         if (![row.minutes,row.asleep,row.awake,row.mood,row.energy,row.note].some(Boolean)) { report('Заполни хотя бы одно поле.'); return; }
-        save(tx=>write(tx,'recovery',row.date,current,row),()=>{render();report('Запись сохранена');});
+        save(tx=>write(tx,'recovery',row.date,expected,row),()=>{render();report('Запись сохранена');});
       },'room-work-primary');
+      const actions = node('div',null,'room-recovery-actions');
+      actions.append(saveControl);
+      if (current) actions.append(button('Удалить запись',()=>remove('recovery',current.date,expected,'Запись удалена.','Запись восстановлена')));
       body.append(field('Дата записи',date),
         card('Сон и самочувствие',field('Длительность сна, минут',minutes),field('Засыпание',asleep),
-          field('Пробуждение',awake),field('Самочувствие от 1 до 5',mood),field('Энергия от 1 до 5',energy),field('Заметка',note),saveControl));
+          field('Пробуждение',awake),field('Самочувствие от 1 до 5',mood),field('Энергия от 1 до 5',energy),field('Заметка',note),actions));
       const dates = daysBack(today(),7);
       const recent = rows(records(),'recovery').filter(row=>dates.includes(row.date)).sort((a,b)=>b.date.localeCompare(a.date));
       if (recent.length) {
         const times = recent.map(duration).filter(value=>value != null);
         const history = node('details',null,'room-work-card');
+        history.dataset.roomDisclosure = 'recovery';
         history.append(node('summary','Последние 7 дней'),
           ...recent.map(row=>node('p',dateLabel(row.date) + ' · ' + (duration(row) == null ? 'сон не записан' : duration(row) + ' мин') +
             (row.mood ? ' · самочувствие ' + row.mood + '/5' : '') + (row.energy ? ' · энергия ' + row.energy + '/5' : ''))));
@@ -321,15 +336,19 @@
       }
     }
     function render() {
+      const expanded = new Set([...body.querySelectorAll('details[open][data-room-disclosure]')].map(detail=>detail.dataset.roomDisclosure));
       body.replaceChildren();
       editing = false;
       if (room === 'observatory') analytics();
       if (room === 'study') cabinet();
       if (room === 'cloister') ritualView();
       if (room === 'rest') recovery();
+      for (const detail of body.querySelectorAll('details[data-room-disclosure]')) {
+        detail.open = expanded.has(detail.dataset.roomDisclosure);
+      }
     }
     return {
-      open(value) { room = value; recoveryDate = today(); report(''); render(); },
+      open(value) { room = value; recoveryDate = today(); body.replaceChildren(); report(''); render(); },
       close() { room = ''; editing = false; },
       refresh() { if (room === 'cloister' || room === 'study' && !editing && !busy) render(); }
     };
@@ -367,8 +386,9 @@
         control.checked=config.categories.includes(key);
         return [key,field(title,control),control];
       });
-      form.replaceChildren(node('p','Напоминания появляются, пока игра открыта.','hint'),
-        field('Показывать после',schedule),field('Тишина с',from),field('Тишина до',to),...checks.map(row=>row[1]));
+      const times = node('div',null,'room-reminder-times');
+      times.append(field('Показывать после',schedule),field('Тишина с',from),field('Тишина до',to));
+      form.replaceChildren(node('p','Напоминания появляются, пока игра открыта.','hint'),times,...checks.map(row=>row[1]));
       const saveControl = button('Сохранить напоминания',()=>{
         if (![schedule.value,from.value,to.value].every(value=>timePattern.test(value))) {
           status.textContent='Укажи время напоминаний и часы тишины.';

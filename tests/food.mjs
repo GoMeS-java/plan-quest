@@ -76,6 +76,13 @@ const cooked = model.saveCatalog(tx, cookedInput, null, 24);
 assert.equal(model.recipe([one, two], 'simple').base, 110.5);
 assert.equal(cooked.values.kcal, 161);
 assert.equal(cooked.values.protein, null);
+assert(cooked.estimated);
+assert.equal(model.recipe([one], 'simple').values.kcal, 101);
+assert.equal(model.recipe([one, unknown], 'cooked', 100).values.kcal, null);
+assert.equal(model.recipe([one, unknown], 'cooked', 100, { kcal: 180 }).values.kcal, 180);
+assert.throws(() => model.recipe([one], 'cooked', 0));
+assert.throws(() => model.recipe([one], 'cooked', 'Infinity'));
+assert.throws(() => model.recipe([{ ...one, grams: 0 }], 'simple'));
 assert.equal(model.recipe([one, two], 'cooked', 200, { protein: 0 }).values.protein, 0);
 const recipeDraft = model.putDraft(tx, {
   id: 'meal-4', date: today, kind: 'lunch', items: [{ ...model.fromCatalog(cooked), grams: 50 }],
@@ -84,7 +91,9 @@ const recipeMeal = model.finishMeal(tx, recipeDraft, 26);
 assert.equal(model.suggestedCalories(recipeMeal.items), 40.25);
 const recents = read('catalog').find(row => row.id === 'recipe');
 assert.equal(model.fromCatalog(recents).grams, 50);
-model.saveCatalog(tx, { ...cookedInput, base: 100 }, recents, 27);
+const revised = model.saveCatalog(tx, { ...cookedInput, base: 100 }, recents, 27);
+assert.equal(model.portion(model.fromCatalog(revised), 'kcal'), 80.5);
+assert.equal(revised.lastGrams, 50);
 assert.equal(model.suggestedCalories(read('meals').find(row => row.id === recipeMeal.id).items), 40.25);
 assert.deepEqual(tx.get('days/' + today), { q: [false, true], kcal: 1500, unrelated: 123 });
 assert.deepEqual(tx.get('cfg/opening'), { card: 7400, cash: 100 });
