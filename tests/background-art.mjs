@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {withApprovedCalorieLabels} from './fixtures/approved-copy.mjs';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 const source=await readFile('src/game.html','utf8');
@@ -20,7 +21,7 @@ const awarded=[...leg.matchAll(/cos:\s*'(b_[^']+)'/g)].map(m=>m[1]);
 for(const id of awarded)assert(keys.has(id.slice(2)),'every existing superrare background is covered');
 assert(context.lookLandscape('abyss'),'multi-part existing reward is covered');
 for(const key of ['__proto__','constructor','not-owned','../../private'])assert.equal(context.lookLandscape(key),'');
-const before=await import('node:child_process').then(({execFileSync})=>execFileSync('git',['show','ed7e43e:src/game.html'],{encoding:'utf8'}));
+const before=await import('node:child_process').then(({execFileSync})=>withApprovedCalorieLabels(execFileSync('git',['show','ed7e43e:src/game.html'],{encoding:'utf8'})));
 for(const name of ['ACH','LEG']){
  const start='  var '+name+' = [';const part=s=>{const i=s.indexOf(start);assert(i>=0);return s.slice(i,s.indexOf('];',i)+2);};assert.equal(part(source),part(before),'achievement definitions and rewards stay unchanged');
 }

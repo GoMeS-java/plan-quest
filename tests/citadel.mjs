@@ -1,5 +1,6 @@
 // Synthetic saves only. Never print achievement definitions or personal save data.
 import assert from 'node:assert/strict';
+import {withApprovedCalorieLabels} from './fixtures/approved-copy.mjs';
 import {createServer} from 'node:http';
 import {readFile, mkdir} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -18,8 +19,8 @@ const interfaceFixture=`window.__qa.appearance={look:setLook,titles:titleList,fi
 const frameFixture=`window.__qa.frameVisualFixture=function(){window.__qaBackgroundArt={};Object.keys(COS).forEach(function(id){if(['frame','aura','bg'].indexOf(COS[id].cat)!==-1)window.__qaBackgroundArt[id]=true;});applyLook();renderLook();return Object.keys(COS).filter(function(id){return COS[id].cat==='frame';}).map(function(id){return {id:id,key:COS[id].key};});};`;
 function instrument(html) { html=html.replace('    legendFinish=function(){','    legendDialog.dataset.qaAutomatic=String(!!done);legendFinish=function(){').replace("$('achup').dataset.event =","$('achup').dataset.qaRealmNotice=/^a:realm:/.test(e.id||'')?'true':'false';$('achup').dataset.event =").replace('function renderAllInner() {','function renderAllInner() { window.__qaRenderCount=(window.__qaRenderCount||0)+1;').replace('function realmSync(){','function realmSync(){if(window.__qaPauseRealm)return;').replace('function unlockedCos() {','function unlockedCos() { if(window.__qaBackgroundArt)return window.__qaBackgroundArt;');const i=html.lastIndexOf('})();'); assert(i>0); return html.slice(0,i)+expose+backgroundFixture+auraFixture+frameFixture+interfaceFixture+html.slice(i); }
 const game = await readFile(resolve(root,'index.html'),'utf8');
-// Normalize only the historical fixture's storage bootstrap to the current local adapter.
-const baselineSrc = execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'}).replace(/var cl = window\.\w+;/, 'var cl = {use: function(){return Promise.resolve(window.PlanDB);}};');
+// Adapt the historical fixture to the current local storage adapter and approved calorie label.
+const baselineSrc = withApprovedCalorieLabels(execFileSync('git',['show',process.env.BASELINE_REF || 'c65a44e:src/game.html'],{encoding:'utf8'})).replace(/var cl = window\.\w+;/, 'var cl = {use: function(){return Promise.resolve(window.PlanDB);}};');
 const baseline = '<!doctype html><html><head><meta charset="utf-8"><script src="/config.js"></script><script src="/localdb.js"></script></head><body>'+baselineSrc+'</body></html>';
 const servedOverrides=new Map();
 const server=createServer(async(req,res)=>{try { const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname); const file=resolve(root,'.'+(path==='/'?'/index.html':path)); if(!file.startsWith(root+sep))throw Error(); const body=servedOverrides.has(file)?servedOverrides.get(file):await readFile(file); if(file.endsWith(sep+'sw.js'))res.setHeader('Cache-Control','no-cache'); res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp'})[extname(file)]||'text/plain');res.end(body); }catch{res.writeHead(404);res.end();}});
@@ -320,10 +321,13 @@ await check('fate forge stage II edits live goals and keeps the original records
     await shellNav(p,'Путь');
     const path=p.locator('.citadel-system-dialog #goals');
     assert.match(await path.locator('#pct-money').innerText(),/57,1%/);
-    const custom=path.locator('#forge-custom-goals .goal');
+    const custom=path.locator('#forge-custom-goals .goal').filter({hasText:'Регулярные тренировки'});
+    await custom.getByText('Изменить накопленную сумму',{exact:true}).click();
     await custom.getByRole('spinbutton').fill('5');
     await custom.getByRole('button',{name:'Записать'}).click();
-    await p.waitForFunction(()=>document.querySelector('#forge-custom-goals progress')?.value===.25);
+    await p.waitForFunction(()=>Object.entries(PlanSync._docs()).some(([key,record])=>
+      key.startsWith('forge-tasks/custom-goal-')&&record.d.title==='Регулярные тренировки'&&record.d.value===5));
+    assert.equal(await custom.locator('.pct').innerText(),'25,0%');
     await path.locator('#forge-money-title').locator('../..').screenshot({path:resolve(out,'forge-stage-ii-capital-progress.png')});
     await custom.screenshot({path:resolve(out,'forge-stage-ii-custom-progress.png')});
     const after=await docs(p);

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {withApprovedCalorieLabels} from './fixtures/approved-copy.mjs';
 import {readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
@@ -12,6 +13,6 @@ for(const key of keys){
  for(const name of [path,path.replace('.svg','-light.svg')]){const svg=await readFile('src/'+name,'utf8');assert(svg.includes('shape-rendering="crispEdges"'));assert(svg.includes('viewBox="0 0 120 120"'));assert(worker.includes(name),'both border layers are cached offline');assert.equal(await readFile('docs/'+name,'utf8'),svg);}
 }
 for(const key of ['','constructor','__proto__','../../private','unknown'])assert.equal(context.framePixels(key),'');
-const previous=execFileSync('git',['show','90e1505:src/game.html'],{encoding:'utf8'});
+const previous=withApprovedCalorieLabels(execFileSync('git',['show','90e1505:src/game.html'],{encoding:'utf8'}));
 for(const name of ['ACH','LEG']){const marker='  var '+name+' = [';const part=s=>{const i=s.indexOf(marker);assert(i>=0);return s.slice(i,s.indexOf('];',i)+2);};assert.equal(part(source),part(previous),'existing conditions and rewards stay unchanged');}
 console.log('PASS existing frame coverage, native border/light cache and unchanged achievement definitions');
