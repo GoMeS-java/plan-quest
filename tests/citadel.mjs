@@ -67,7 +67,10 @@ async function waitForIdle(page) {
  finally{await completion.dispose();}
 }
 async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();if(!document.getElementById('achup')?.hidden)document.getElementById('ac-ok')?.click();for(const id of ['lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await p.clock.runFor(30).catch(()=>{});await p.waitForTimeout(15);if(!await p.locator('#legend-scene[open]').count()&&await p.locator('#achup').isHidden()&&await p.locator('#lvup').isHidden())return;}}
-async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));if(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-shell'))){if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').first().click();if(await p.locator('#citadel-home').getAttribute('data-ui-view')!=='overview')await p.locator('[data-room-view="overview"]').click();}}
+async function roomBack(p){const close=p.locator('#citadel-interior-close');if(await close.isVisible())await close.click();else await p.locator('[data-room-view="overview"]').click();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');}
+async function roomMore(p){const panel=p.locator('.citadel-room-more');if(await panel.count()&&await panel.getAttribute('open')===null)await panel.locator(':scope > summary').click();}
+async function cameraControls(p){const details=p.locator('.citadel-map-camera');if(await details.getAttribute('open')===null)await details.locator('summary').click();return details;}
+async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));if(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-shell'))){if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').first().click();if(await p.locator('#citadel-home').getAttribute('data-ui-view')!=='overview')await roomBack(p);}}
 async function shellMenu(p){if(await p.locator('#setup').isVisible())await p.locator('#setup-x').click();if(await p.locator('#trophy').isVisible())await p.locator('#trophy-x').click();if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').click();await dismiss(p);if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
 async function shellNav(p,label){
  if(await p.locator('#setup').isVisible())await p.locator('#setup-x').click();if(await p.locator('#trophy').isVisible())await p.locator('#trophy-x').click();
@@ -85,10 +88,10 @@ async function shellNav(p,label){
  if(['Траты','Деньги','Колесо'].includes(label)){await shellNav(p,'Финансы');await p.locator('.citadel-finance-nav [data-finance=\"'+({'Траты':'spend','Деньги':'money','Колесо':'wheel'})[label]+'\"]').click();return;}
  if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
  const target=p.locator('.citadel-shell-nav button').filter({hasText:label}).first();
- await target.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});
+ await target.evaluate(n=>{for(let group=n.closest('details');group&&group.id!=='citadel-home';group=group.parentElement.closest('details'))group.open=true;});
  await target.click();
 }
-async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await b.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});await b.click();}
+async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await b.evaluate(n=>{for(let group=n.closest('details');group&&group.id!=='citadel-home';group=group.parentElement.closest('details'))group.open=true;});await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=window.PlanDB;await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
 function advancedSeed(){
@@ -398,7 +401,7 @@ await check('shelter two offline profiles reconcile competing moves through simu
       await castle(page);
       await page.locator('[data-croom="'+room+'"]').click();
       await page.locator('#citadel-interior').waitFor({state:'visible'});
-      await page.locator('#shelter-collection summary').click();
+      await roomMore(page);await page.locator('#shelter-collection summary').click();
       await page.locator('#shelter-list button').filter({hasText:/кот/i}).first().click();
       await page.getByRole('button',{name:'Примерить · На столе'}).click();
       await context.setOffline(true);
@@ -457,7 +460,7 @@ await check('shelter collection previews, persists and restores receipts without
     await p.locator('[data-croom="rest"]').click();
     await p.locator('#citadel-interior').waitFor({state:'visible'});
     const award=await docs(p);
-    await p.locator('#shelter-collection summary').click();
+    await roomMore(p);await p.locator('#shelter-collection summary').click();
     const choose=async()=>p.locator('#shelter-list button').filter({hasText:/кот/i}).first().click();
     await choose();
     await p.locator('#shelter-detail').getByText('Место появится после восстановления.').waitFor();
@@ -892,7 +895,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
 
  await check('1.1 Android background flush restores last section, scroll and camera without progress writes',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.clock.runFor(80);const before=await docs(p);
-  await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();await p.locator('.citadel-viewport').evaluate(n=>n.scrollTo(120,180));await p.clock.runFor(20);
+  await (await cameraControls(p)).locator('button').filter({hasText:'+'}).click();await p.locator('.citadel-viewport').evaluate(n=>n.scrollTo(120,180));await p.clock.runFor(20);
   const camera=await p.locator('.citadel-viewport').evaluate(n=>({left:n.scrollLeft,top:n.scrollTop}));await shellNav(p,'Профиль');await p.locator('.citadel-system-content').evaluate(n=>n.scrollTop=150);
   await p.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new Event('pagehide'));});
   const saved=await p.evaluate(()=>({camera:JSON.parse(localStorage.getItem('plan.citadel.camera.v1')),view:JSON.parse(localStorage.getItem('plan.citadel.view.v1'))}));assert.equal(saved.view.section,'wardrobe');assert.equal(saved.camera.left,camera.left);assert.equal(saved.camera.top,camera.top);assert(saved.view.scroll>=100);
@@ -1444,7 +1447,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const bounds=await p.locator('#citadel-mystery').boundingBox();assert(bounds.x>=0&&bounds.x+bounds.width<=width+.5&&bounds.y>=0&&bounds.y+bounds.height<=height+.5);
    assert.equal(await p.locator('[data-croom][aria-pressed="true"]').getAttribute('data-croom'),selected);assert(await p.locator('#citadel-interior').isHidden());
    await p.goBack();await p.locator('#citadel-mystery').waitFor({state:'hidden'});assert.deepEqual(await docs(p),before);
-   await p.locator('.citadel-shell-camera button').filter({hasText:'К комнате'}).click();await p.clock.runFor(64);
+   await (await cameraControls(p)).locator('button').filter({hasText:'К комнате'}).click();await p.clock.runFor(64);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(await p.locator('#citadel-home').evaluate(n=>n.scrollTop),0);
    if(width===390)await p.screenshot({path:resolve(out,'android-076-mystery-390.png')});await context.close();
   }
@@ -2056,14 +2059,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     await p.evaluate(id=>__qa.move(id),room);await waitForIdle(p);await p.clock.runFor(64);
     for(let repeat=0;repeat<3;repeat++){
      const expected=await viewport.evaluate((v,id)=>{const r=document.querySelector('[data-croom="'+id+'"]').getBoundingClientRect(),b=v.getBoundingClientRect();return {left:Math.max(0,Math.min(v.scrollWidth-v.clientWidth,v.scrollLeft+r.left-b.left-v.clientLeft+(r.width-v.clientWidth)/2)),top:Math.max(0,Math.min(v.scrollHeight-v.clientHeight,v.scrollTop+r.top-b.top-v.clientTop+(r.height-v.clientHeight)/2))};},room);
-     await camera.getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(64);
+     await (await cameraControls(p)).getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(64);
      const pos=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));
      assert(Math.abs(pos.left-expected.left)<=1&&Math.abs(pos.top-expected.top)<=1,'focus must center and clamp inside viewport: '+JSON.stringify({width,room,pos,expected}));
      assert.deepEqual(await shellGeometry(),geometry,'focus must not scroll shell ancestors or displace the viewport');
     }
     if(width===390&&room==='study')await p.screenshot({path:resolve(out,'android-069-room-focus-390.png')});
-    for(const name of ['+','−']){await camera.getByRole('button',{name,exact:true}).click();await p.clock.runFor(64);assert.deepEqual(await shellGeometry(),geometry);}
-    await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+    for(const name of ['+','−']){await (await cameraControls(p)).getByRole('button',{name,exact:true}).click();await p.clock.runFor(64);assert.deepEqual(await shellGeometry(),geometry);}
+    await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
     assert(await viewport.evaluate(v=>v.scrollLeft===0&&v.scrollTop===0&&document.querySelector('#citadel-castle').getBoundingClientRect().width<=v.clientWidth+1));
     assert.deepEqual(await shellGeometry(),geometry);
     assert(await p.locator('.citadel-floor-caption,.citadel-skyline').evaluateAll(ns=>{const v=document.querySelector('.citadel-viewport').getBoundingClientRect();return ns.every(n=>{const r=n.getBoundingClientRect();return r.left>=v.left&&r.right<=v.right;});}));
@@ -2072,14 +2075,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    // Pinch uses actual rendered castle bounds, including centered margins at overview scale.
    await viewport.evaluate(v=>{const r=v.getBoundingClientRect(),y=r.top+Math.min(100,r.height/2),x=r.left+r.width/2;function touches(d){return [new Touch({identifier:1,target:v,clientX:x-d,clientY:y}),new Touch({identifier:2,target:v,clientX:x+d,clientY:y})];}v.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:touches(30)}));v.dispatchEvent(new TouchEvent('touchmove',{bubbles:true,cancelable:true,touches:touches(60)}));v.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[]}));});
    await p.clock.runFor(500);assert.deepEqual(await shellGeometry(),geometry,'pinch must never scroll ancestors');
-   await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
-   await camera.getByRole('button',{name:'+',exact:true}).click();await camera.getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(500);
+   await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+   await (await cameraControls(p)).getByRole('button',{name:'+',exact:true}).click();await (await cameraControls(p)).getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(500);
    const position=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));
    await p.reload();await p.waitForFunction(()=>window.__qa?.S.abyss?.rank>=24);await dismiss(p);await p.clock.runFor(500);
    const restored=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));assert.deepEqual(restored,position,'camera preference survives reload without shifting ancestors');
    assert.deepEqual(await shellGeometry(),geometry);
    assert.deepEqual(await p.evaluate(()=>({balance:__qa.balance(),abyss:JSON.parse(JSON.stringify(__qa.S.abyss)),buys:JSON.parse(JSON.stringify(__qa.S.buys))})),economy);
-   await p.setViewportSize({width:height,height:width});await p.clock.runFor(64);await dismiss(p);await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+   await p.setViewportSize({width:height,height:width});await p.clock.runFor(64);await dismiss(p);await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await context.close();
   }
@@ -2090,7 +2093,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await p.locator('[data-croom]').count(),10);
   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await p.screenshot({path:resolve(out,'graphics-landscape-844x390.png')});
-  await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();
+  await (await cameraControls(p)).locator('button').filter({hasText:'+'}).click();
   await p.locator('[data-croom="gatehouse"]').evaluate(n=>n.scrollIntoView({block:'center',inline:'center'}));
   const target=await p.locator('[data-croom="gatehouse"]').evaluate(n=>{const r=n.getBoundingClientRect(),x=Math.round(r.left+40),y=Math.round(r.top+35);return {x,y,visible:document.elementFromPoint(x,y)?.closest('[data-croom="gatehouse"]')===n,room:[r.left,r.top,r.right,r.bottom],viewport:[innerWidth,innerHeight]};});
   assert(target.visible,'landscape camera must expose selected room: '+JSON.stringify(target));
@@ -2107,9 +2110,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    assert(await p.locator('#citadel-castle').isVisible());assert(!(await p.locator('.stage').isVisible()));
    assert.equal(await p.locator('[data-croom]').count(),10);
    assert.match(await p.locator('.citadel-shell-drawer.left').innerText(),/Ранг 24/);
-   if(width<700)await shellMenu(p);
+   await shellMenu(p);
    assert(await p.locator('.citadel-shell-nav .pl-chip').isVisible());await p.locator('.citadel-shell-nav .pl-chip').click();assert(await p.locator('.pl-menu').isVisible());await p.locator('.pl-menu').getByRole('button',{name:'ЗАКРЫТЬ',exact:true}).click();
-   if(width<700)await shellMenu(p);
+   await shellMenu(p);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    if(width===390){await p.locator('.citadel-shell-dock button').last().click();assert.equal(await p.locator('.citadel-shell-menu-toggle').getAttribute('aria-expanded'),'true');await p.screenshot({path:resolve(out,'shell-menu-390.png')});await shellMenu(p);}
    if(width<1050){await shellDrawer(p,'left');assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');
@@ -2121,7 +2124,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('#citadel-castle').isVisible());
    for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());if(width===390)await p.screenshot({path:resolve(out,'rpg-'+id+'-390.png')});await p.locator('.citadel-system-dialog header button').click();}
    if(width===390){await shellNav(p,'Настройки');assert(await p.locator('#setup').isVisible());await p.screenshot({path:resolve(out,'rpg-settings-390.png')});await p.locator('#setup-x').click();await shellNav(p,'Достижения');assert(await p.locator('#trophy').isVisible());await p.screenshot({path:resolve(out,'rpg-achievements-390.png')});await p.locator('#trophy-x').click();assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible());await p.locator('.citadel-system-dialog header button').click();}
-   await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
+   await (await cameraControls(p)).locator('button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});if(width===390){
     const trigger=p.getByRole('button',{name:'Все разделы игры'});
     const close=p.getByRole('button',{name:'Закрыть разделы'});
@@ -2251,21 +2254,21 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const rooms=['throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'];
   await p.addLocatorHandler(p.locator('#achup:not([hidden])'),()=>p.locator('#ac-ok').click(),{noWaitAfter:true});
   for(const room of rooms){
-   if(!(await p.locator('#citadel-castle').isVisible()))await p.locator('[data-room-view="overview"]').click();
+   if(!(await p.locator('#citadel-castle').isVisible()))await roomBack(p);
    await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
    assert.equal(await p.evaluate(room=>__qa.roomLevel(room),room),1);
-   assert.equal(await p.locator('#citadel-room-condition').innerText(),'Заброшенная');
+   assert.equal(await p.locator('#citadel-room-condition').textContent(),'Заброшенная');
    assert(await p.locator('#citadel-interior-title').evaluate(n=>n.getBoundingClientRect().top>=document.querySelector('.citadel-room-tools').getBoundingClientRect().bottom),'room title must not scroll behind the toolbar');
    const art=await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n,'::before').backgroundImage);
    assert(art.includes(room+'-interior-1.svg')&&!art.includes('.webp'),'abandoned room cannot reveal luxury backdrop');
    assert(await p.evaluate(src=>new Promise(r=>{const im=new Image();im.onload=()=>r(im.naturalWidth>0);im.onerror=()=>r(false);im.src=src;}),'assets/citadel/'+room+'-interior-1.svg'));
    await p.screenshot({path:resolve(out,'android-067-'+room+'-state0.png')});
-   await p.locator('[data-room-view="upgrades"]').click();
+   await roomMore(p);await p.getByRole('button',{name:'Улучшить комнату',exact:true}).click();
    for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await waitForIdle(p);await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});assert.equal(await p.locator('#citadel-room-condition').innerText(),level===2?'Восстановленная':'Роскошная');await p.screenshot({path:resolve(out,'android-067-'+room+'-state'+(level-1)+'.png')});}
   }
   const paid=await docs(p);assert.equal(Object.keys(paid).filter(k=>/^buys\/citadel-/.test(k)).length,20);
   await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&window.__qa&&__qa.roomLevel('vault')===3);await dismiss(p);
-  for(const room of rooms){if(!(await p.locator('#citadel-castle').isVisible()))await p.locator('[data-room-view="overview"]').click();await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'3');}
+  for(const room of rooms){if(!(await p.locator('#citadel-castle').isVisible()))await roomBack(p);await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'3');}
   await context.close();
  });
  await check('Android 0.68 camera captions, unobstructed scenes and dock survive pan and rotation',async()=>{
@@ -2283,15 +2286,15 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await viewport.evaluate(n=>{n.scrollLeft=155;n.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[new Touch({identifier:1,target:n,clientX:240,clientY:300})]}));n.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[],changedTouches:[new Touch({identifier:1,target:n,clientX:70,clientY:305})]}));});
    await captions();assert(!(await p.locator('#pg-a').evaluate(n=>n.hidden)),'castle pan must never switch to legacy finance page');assert(await p.locator('#citadel-home').isVisible());
    if(width===390)await p.screenshot({path:resolve(out,'android-068-castle-panned-390.png')});
-   await p.locator('.citadel-shell-camera button').filter({hasText:'Общий вид'}).click();await captions();
+   await (await cameraControls(p)).locator('button').filter({hasText:'Общий вид'}).click();await captions();
    assert(await viewport.evaluate(n=>document.querySelector('#citadel-castle').getBoundingClientRect().width<=n.clientWidth+1),'explicit overview fits both room columns');
    if(width===390)await p.screenshot({path:resolve(out,'android-068-castle-overview-390.png')});
-   await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();await captions();
+   await (await cameraControls(p)).locator('button').filter({hasText:'+'}).click();await captions();
    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
    assert(await p.locator('.citadel-shell-tail').evaluateAll(nodes=>nodes.every(n=>{if(!n.getClientRects().length)return true;const a=n.getBoundingClientRect(),target=document.querySelector('#citadel-home').dataset.uiView==='overview'?document.querySelector('.citadel-viewport'):document.querySelector('#citadel-interior-stage'),b=target.getBoundingClientRect();return a.bottom<=b.top||a.top>=b.bottom||a.right<=b.left||a.left>=b.right;})),'drawer triggers must stay outside the artwork');
-   assert.equal(await p.locator('#citadel-room-condition').innerText(),'Заброшенная');
+   assert.equal(await p.locator('#citadel-room-condition').textContent(),'Заброшенная');
    if(width===390)await p.screenshot({path:resolve(out,'android-068-room-390.png')});
-   await p.locator('[data-room-view="overview"]').click();await captions();
+   await roomBack(p);await captions();
    await p.setViewportSize({width:height,height:width});await p.clock.runFor(64);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await context.close();
@@ -2651,7 +2654,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    }
   };
   await time('14:14:50');const castleSprite=await actor.elementHandle();await oneVisible();await sample(actor,['work','idle']);
-  await p.locator('#citadel-home button').filter({hasText:/^Общий вид$/}).click();
+  await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();
   await actor.screenshot({path:resolve(out,'living-citadel-guardian-work.png'),scale:'css'});
   await time('14:15:05');await oneVisible();assert(await actor.evaluate((n,old)=>n===old,castleSprite));
   assert(await p.evaluate(()=>__qa.npcState('guardian').moving));await sample(actor,['walk-1','walk-2']);
@@ -2686,7 +2689,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.waitForFunction(()=>document.querySelector('#citadel-castle .citadel-person[data-person="guardian"]').parentElement.dataset.croom==='observatory');
   assert.equal(await closeup.count(),0);
   await p.reload();await p.waitForFunction(()=>__qa.loading());await dismiss(p);
-  await p.locator('[data-room-view="overview"]').dispatchEvent('click');
+  await roomBack(p);
   await castle(p);await oneVisible();assert.equal(await actor.evaluate(n=>n.parentElement.dataset.croom),'observatory');
   await time('18:02:00');await oneVisible();await sample(actor,['idle','talk']);
   await time('23:02:00');await oneVisible();await sample(actor,['rest']);

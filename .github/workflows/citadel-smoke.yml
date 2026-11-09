@@ -9,6 +9,7 @@ on:
       - 'src/shelter-items.js'
       - 'src/fate.js'
       - 'src/chains*'
+      - 'src/food*.js'
       - 'src/awakening.js'
       - 'src/citadel*.css'
       - 'src/rpg-ui.css'
@@ -116,6 +117,8 @@ jobs:
           node --check docs/shelter-items.js
           node --check docs/chains.js
           node --check docs/chains-ui.js
+          node --check docs/food.js
+          node --check docs/food-ui.js
           python - <<'PY'
           import re
           from pathlib import Path
