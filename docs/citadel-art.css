@@ -508,3 +508,11 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 #shelter-layer{z-index:auto}
 .shelter-prop{z-index:7}
 .shelter-prop.shelter-rug{z-index:4}
+
+/* Diagnostic Android fallback: one stable NPC frame; walking routes still work. */
+body.citadel-shell-active #citadel-home .citadel-person,
+body.citadel-shell-active #citadel-home .citadel-person.is-travelling,
+body.citadel-shell-active #citadel-home .citadel-person[data-mode="work"],
+body.citadel-shell-active #citadel-home .citadel-person[data-mode="interaction"]{
+ animation:none!important;background-position:0% 0!important;translate:none!important;transform:none!important;
+}
