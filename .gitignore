@@ -7,3 +7,6 @@ node_modules/
 test-results/
 
 android-test/
+firebase-debug.log
+database-debug.log
+ui-debug.log

@@ -1,0 +1,144 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "vaults": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && newData.exists() && newData.child('head/revision').val() === (data.exists() ? data.child('head/revision').val() + 1 : 1) && newData.child('head/op').val() !== data.child('head/op').val()",
+        ".validate": "newData.hasChild('head') && newData.child('head/savedAt').val() >= now - 60000 && (!data.child('head').exists() ? !newData.child('history/a').exists() : (newData.child('history/a').child('revision').val() === data.child('head').child('revision').val() && newData.child('history/a').child('op').val() === data.child('head').child('op').val() && newData.child('history/a').child('hash').val() === data.child('head').child('hash').val() && newData.child('history/a').child('payload').val() === data.child('head').child('payload').val() && newData.child('history/a').child('savedAt').val() === data.child('head').child('savedAt').val())) && (!data.child('history/a').exists() ? !newData.child('history/b').exists() : (newData.child('history/b').child('revision').val() === data.child('history/a').child('revision').val() && newData.child('history/b').child('op').val() === data.child('history/a').child('op').val() && newData.child('history/b').child('hash').val() === data.child('history/a').child('hash').val() && newData.child('history/b').child('payload').val() === data.child('history/a').child('payload').val() && newData.child('history/b').child('savedAt').val() === data.child('history/a').child('savedAt').val())) && (!data.child('history/b').exists() ? !newData.child('history/c').exists() : (newData.child('history/c').child('revision').val() === data.child('history/b').child('revision').val() && newData.child('history/c').child('op').val() === data.child('history/b').child('op').val() && newData.child('history/c').child('hash').val() === data.child('history/b').child('hash').val() && newData.child('history/c').child('payload').val() === data.child('history/b').child('payload').val() && newData.child('history/c').child('savedAt').val() === data.child('history/b').child('savedAt').val()))",
+        "head": {
+          ".validate": "newData.hasChildren(['revision','op','hash','payload','savedAt'])",
+          "revision": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() % 1 === 0"
+          },
+          "op": {
+            ".validate": "newData.isString() && newData.val().matches(/^[a-zA-Z0-9_-]{1,128}$/)"
+          },
+          "hash": {
+            ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{64}$/)"
+          },
+          "payload": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 2097152"
+          },
+          "savedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "history": {
+          "a": {
+            ".validate": "newData.hasChildren(['revision','op','hash','payload','savedAt'])",
+            "revision": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() % 1 === 0"
+            },
+            "op": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-zA-Z0-9_-]{1,128}$/)"
+            },
+            "hash": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{64}$/)"
+            },
+            "payload": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 2097152"
+            },
+            "savedAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "b": {
+            ".validate": "newData.hasChildren(['revision','op','hash','payload','savedAt'])",
+            "revision": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() % 1 === 0"
+            },
+            "op": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-zA-Z0-9_-]{1,128}$/)"
+            },
+            "hash": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{64}$/)"
+            },
+            "payload": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 2097152"
+            },
+            "savedAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "c": {
+            ".validate": "newData.hasChildren(['revision','op','hash','payload','savedAt'])",
+            "revision": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() % 1 === 0"
+            },
+            "op": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-zA-Z0-9_-]{1,128}$/)"
+            },
+            "hash": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{64}$/)"
+            },
+            "payload": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 2097152"
+            },
+            "savedAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "subscriptions": {
+      "$uid": {
+        "$device": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && $device.matches(/^[a-f0-9-]{36}$/)",
+          ".validate": "newData.hasChildren(['token','timezone','day','at','quietFrom','quietTo','needed','revision','observedAt'])",
+          "token": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 4096"
+          },
+          "timezone": {
+            ".validate": "newData.isString() && newData.val().length <= 80"
+          },
+          "day": {
+            ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)"
+          },
+          "at": {
+            ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)"
+          },
+          "quietFrom": {
+            ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)"
+          },
+          "quietTo": {
+            ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)"
+          },
+          "needed": {
+            ".validate": "newData.isBoolean()"
+          },
+          "revision": {
+            ".validate": "newData.isNumber() && newData.val() === root.child('vaults').child($uid).child('head/revision').val()"
+          },
+          "observedAt": {
+            ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    }
+  }
+}
