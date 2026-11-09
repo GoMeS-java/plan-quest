@@ -132,8 +132,15 @@ vault=null;
 await assert.rejects(tablet.sync.tick(),{code:'missing-remote'});
 assert.deepEqual(tablet.records(),row(333,6));
 vault=healthy;
-await tablet.sync.signOut();
+let rejectCleanup;
+tablet.bridge.disablePush=()=>new Promise((_,reject)=>{rejectCleanup=reject;});
+const signingOut=tablet.sync.signOut();
+assert.equal(tablet.sync.signOut(),signingOut,'duplicate clicks share the logout');
+await assert.rejects(tablet.sync.enable(),{code:'paused'});
+rejectCleanup(Error('Browser notification storage unavailable'));
+await signingOut;
 assert(!tablet.sync.state().enabled);
+assert.equal(tablet.sync.state().user,null,'Push cleanup must not keep a Google session signed in');
 
 const untouched = device(row(99,8));
 untouched.bridge.archive=async()=>{throw Error('Storage quota');};

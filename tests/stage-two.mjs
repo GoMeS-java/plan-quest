@@ -44,6 +44,7 @@ try {
   for (const [i,kg] of [149.2,148.7,149,148.3,148.2,147.9].entries()) {
     seed['weights/stage-two-'+i] = { date:'2027-04-'+(10+i),kg,ts:Date.UTC(2027,3,10+i,11) };
   }
+  seed['chains/stage-two-observation'] = {kind:'smoke',date:'2027-04-15',at:Date.UTC(2027,3,15,11)};
   const context = await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,
     timezoneId:'Europe/Moscow',reducedMotion:'reduce'});
   await context.route('https://**/*', route => route.fulfill({body:'',contentType:'text/css'}));
@@ -118,11 +119,17 @@ try {
   await panel.getByText('График и записи',{exact:true}).click();
   assert.equal(await panel.locator('svg circle').count(),6);
   await b('30 дней').click();
-  for (const metric of ['food','tasks','habits']) {
+  for (const metric of ['food','tasks','habits','activity']) {
     await panel.getByLabel('Направление').selectOption(metric);
     await panel.getByText('График и записи',{exact:true}).click();
     assert.equal(await panel.locator('svg circle').count(),29);
   }
+  await panel.getByLabel('Направление').selectOption('aspects');
+  await panel.getByText('График и записи',{exact:true}).click();
+  assert.match(await panel.locator('svg title').allTextContents().then(values=>values.join(' ')),/12\.04\.2027 · [1-9]/);
+  await panel.getByLabel('Направление').selectOption('smoking');
+  await panel.getByText('График и записи',{exact:true}).click();
+  assert.deepEqual((await panel.locator('svg title').allTextContents()).map(value=>value.trim()),['15.04.2027 · 1 сиг.']);
   await panel.getByLabel('Направление').selectOption('sleep');
   await panel.getByText('За этот период нет записей.',{exact:true}).waitFor();
   assert.equal(await panel.locator('svg').count(),0);
@@ -133,6 +140,8 @@ try {
   await map();
 
   await open('study');
+  await panel.getByText('Текущая цель',{exact:true}).waitFor();
+  await b('Открыть задания').waitFor();
   await b('Проекты').click();
   await b('Новый проект').click();
   await panel.getByLabel('Название',{exact:true}).fill('Учёба и режим');
@@ -339,7 +348,13 @@ try {
   await panel.getByLabel('Направление').selectOption('food');
   await panel.getByText('В сводке есть приблизительные записи.',{exact:true}).waitFor();
   await panel.getByText('График и записи',{exact:true}).click();
-  await panel.getByText('16.04.2027 · ≈ 150 ккал',{exact:true}).waitFor();
+  await panel.locator('li').getByText('16.04.2027 · ≈ 150 ккал',{exact:true}).waitFor();
+  assert((await panel.locator('svg title').allTextContents()).includes('16.04.2027 · ≈ 150 ккал'));
+  for (const [metric,value] of [['sleep','450 мин'],['wellbeing','4 из 5'],['energy','4 из 5']]) {
+    await panel.getByLabel('Направление').selectOption(metric);
+    await panel.getByText('График и записи',{exact:true}).click();
+    assert((await panel.locator('svg title').allTextContents()).includes('16.04.2027 · '+value));
+  }
   await closePanel();
   await map();
   await open('study');

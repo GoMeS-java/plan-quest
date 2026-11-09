@@ -10,7 +10,8 @@ const root=resolve('docs'), outputs=process.env.CLOUD_FINAL_SHOTS;
 if (outputs) await mkdir(outputs,{recursive:true});
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE_PATH});
 const date='2027-04-16';
-let vault=null, writes=0, protectedByBackup=false, subscription=null;
+let vault=null, writes=0, protectedByBackup=false, subscription=null, pauseSubscription, finishSubscription;
+const pushUpdates=[];
 const pageErrors=[];
 const sdk={
   app:'export function initializeApp(options) { return options; }',
@@ -80,8 +81,14 @@ async function device(amount, offline=false) {
       const path=url.searchParams.get('path');
       if (request.method()==='PUT') {
         if (path.startsWith('subscriptions/')) {
-          subscription=request.postDataJSON();
-          return route.fulfill({body:'null',contentType:'application/json'});
+          const value=request.postDataJSON();
+          const delayed=value && pauseSubscription;
+          if (delayed) await delayed();
+          subscription=value;
+          pushUpdates.push(Boolean(value));
+          await route.fulfill({body:'null',contentType:'application/json'});
+          if (delayed) finishSubscription();
+          return;
         }
         const {expected,next,backed}=request.postDataJSON();
         if (expected!==(vault?.head.revision || 0)) return route.fulfill({status:412,json:vault});
@@ -136,6 +143,16 @@ async function device(amount, offline=false) {
 }
 const button=(device,name)=>device.menu.getByRole('button',{name,exact:true});
 const shot=(device,name)=>outputs && device.page.screenshot({path:resolve(outputs,name+'.png'),animations:'disabled'});
+async function mobileAccountLayout(device) {
+  for (const width of [320,360,390,430]) {
+    await device.page.setViewportSize({width,height:800});
+    assert(await device.menu.evaluate(el=>
+      el.scrollWidth<=el.clientWidth && el.getBoundingClientRect().right<=innerWidth &&
+      Array.from(el.querySelectorAll('button')).filter(button=>button.getClientRects().length)
+        .every(button=>button.getBoundingClientRect().height>=44)),`Account menu overflow at ${width}px`);
+  }
+  await device.page.setViewportSize({width:360,height:800});
+}
 async function connect(device) {
   await button(device,'Войти через Google · Firebase').click();
   await device.menu.getByText('sandbox@example.invalid',{exact:true}).waitFor();
@@ -149,7 +166,7 @@ try {
   assert.equal(writes,1);
   assert(protectedByBackup);
   assert.equal(vault.head.revision,1);
-  assert(await phone.menu.evaluate(el=>el.scrollWidth<=el.clientWidth && el.getBoundingClientRect().right<=innerWidth));
+  await mobileAccountLayout(phone);
   await button(phone,'Включить Push').click();
   await phone.menu.getByText('Фоновые уведомления включены на этом устройстве.',{exact:true}).waitFor();
   assert.equal(subscription.token,'synthetic-push-token');
@@ -157,8 +174,24 @@ try {
   assert(subscription.needed);
   await button(phone,'Отключить Push').scrollIntoViewIfNeeded();
   await shot(phone,'04-push-settings');
+  const initialPushUpdates=pushUpdates.length;
+  let started, release;
+  const waiting=new Promise(resolve=>{started=resolve;});
+  const hold=new Promise(resolve=>{release=resolve;});
+  const finished=new Promise(resolve=>{finishSubscription=resolve;});
+  pauseSubscription=()=>{
+    pauseSubscription=null;
+    started();
+    return hold;
+  };
+  await phone.page.clock.fastForward(3605000);
+  await Promise.race([waiting,new Promise((_,reject)=>setTimeout(()=>reject(Error('Expected a pending Push refresh')),10000).unref())]);
   await button(phone,'Отключить Push').click();
+  await phone.page.waitForFunction(()=>JSON.parse(localStorage.getItem('plan.push136.v1'))?.enabled!==true);
+  release();
   await phone.menu.getByText('Фоновые уведомления отключены на этом устройстве.',{exact:true}).waitFor();
+  await finished;
+  assert.deepEqual(pushUpdates.slice(initialPushUpdates),[true,false],'a pending refresh must precede removal');
   assert.equal(subscription,null);
   await button(phone,'Включить Push').scrollIntoViewIfNeeded();
   await shot(phone,'01-cloud-account');
@@ -170,6 +203,7 @@ try {
   assert.equal(writes,1);
   await tablet.menu.getByText('Подробные различия',{exact:true}).click();
   await tablet.menu.getByText('Финансы · 1',{exact:true}).waitFor();
+  await mobileAccountLayout(tablet);
   await tablet.menu.getByText('Конфликт сохранений',{exact:true}).evaluate(el=>{
     const menu=el.closest('.pl-menu');
     menu.scrollTop+=el.getBoundingClientRect().top-menu.getBoundingClientRect().top-20;

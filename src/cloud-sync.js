@@ -37,14 +37,18 @@
   }
 
   function create(bridge, transport) {
-    let user = null, review = null, busy = false, lastError = '', observed = 0;
+    let user = null, review = null, busy = false, signingOut = null, lastError = '', observed = 0;
     const meta = () => bridge.meta();
     const emit = () => bridge.changed();
-    const active = () => user && meta().uid === user.uid && meta().enabled;
+    const active = () => !signingOut && user && meta().uid === user.uid && meta().enabled;
     const ensureUser = uid => { if (!user || user.uid !== uid) throw fail('auth'); };
-    const ensureActive = uid => { ensureUser(uid); if (!active()) throw fail('paused'); };
+    const ensureActive = uid => {
+      ensureUser(uid);
+      if (!active()) throw fail('paused');
+      if (bridge.blocked()) throw fail('local-blocked');
+    };
     const publicState = () => ({
-      user, busy, enabled:Boolean(active()), lastSync:meta().lastSync || 0, error:lastError,
+      user, busy, signingOut:Boolean(signingOut), enabled:Boolean(active()), lastSync:meta().lastSync || 0, error:lastError,
       blocked:Boolean(user && meta().uid && meta().uid !== user.uid),
       review:review ? {local:review.local,remote:review.remote.records,revision:review.remote.head.revision} : null
     });
@@ -129,14 +133,23 @@
     const api = {
       state:publicState,
       signIn:() => transport.signIn(),
-      signOut:async () => {
-        if (active()) saveMeta({...meta(),enabled:false});
-        await bridge.disablePush?.();
-        await transport.signOut();
+      signOut:() => {
+        if (signingOut) return signingOut;
+        signingOut = Promise.resolve().then(async () => {
+          try {
+            if (meta().enabled && meta().uid === user?.uid) saveMeta({...meta(),enabled:false});
+          } finally {
+            try { await bridge.disablePush?.(); } catch (_) { /* Auth logout is independent of Push. */ }
+            await transport.signOut();
+            lastError = '';
+          }
+        }).finally(() => { signingOut = null; emit(); });
         review = null;
         emit();
+        return signingOut;
       },
       enable:() => run(async () => {
+        if (signingOut) throw fail('paused');
         if (!user || (meta().uid && meta().uid !== user.uid)) throw fail('wrong-account');
         saveMeta({...meta(),uid:user.uid,enabled:true});
         await reconcile();

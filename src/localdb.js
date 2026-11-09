@@ -440,6 +440,7 @@
   var firebaseCloud, firebaseTransport, firebaseConnecting=false, cloudTimer, cloudRetry=false, firebaseError='', archivedCloud=null;
   var firebaseQueue=Promise.resolve();
   var pushTimer, remindersForPush, pushStatus='', lastPushProof='', lastPushAt=0;
+  var pushQueues={remote:Promise.resolve(),worker:Promise.resolve()};
   var PUSH_KEY = PREFIX + 'push136.v1';
   function firebaseMeta() { return jget(CLOUD_META,{}) || {}; }
   function firebaseSerial(fn) {
@@ -473,7 +474,7 @@
   }
   function replaceFromCloud(expected, incoming) {
     return exclusive(function () {
-      if (upgradeBlocked || !firebaseMeta().enabled) throw storageError();
+      if (upgradeBlocked || loadConflict() || !firebaseCloud?.state().enabled) throw storageError();
       var local = persistedDocs();
       if (!same(local,expected)) throw Object.assign(new Error('Local profile changed'),{code:'changed-local'});
       var next = clone(incoming);
@@ -506,7 +507,7 @@
           if (envelope?.v !== 2) throw new Error('Unsupported cloud backup');
           return validateBackup(envelope,true);
         },
-        archive:verifiedArchive, replace:replaceFromCloud, disablePush:disablePush
+        archive:verifiedArchive, replace:replaceFromCloud, disablePush:disablePushForSignOut
       },firebaseTransport);
       firebaseError='';
       firebaseTransport.authError.then(function (error) { if (error) reportFirebaseError(error); });
@@ -521,74 +522,105 @@
     renderChip();
   }
   function bindReminders(controller) { remindersForPush=controller; }
-  async function workerPushState(state) {
-    var registration = await navigator.serviceWorker.getRegistration();
-    if (!registration?.active) throw new Error('Worker inactive');
-    var cache = await caches.open('vkach-push-' + registration.scope);
-    var path = new URL('__vkach_push_state__',registration.scope);
-    if (state) await cache.put(path,new Response(JSON.stringify(state)));
-    else await cache.delete(path);
-    return registration;
+  function pushSerial(kind,fn) {
+    if (navigator.locks) return navigator.locks.request(KEY+'.push-'+kind,fn);
+    var next=pushQueues[kind].then(fn,fn);
+    pushQueues[kind]=next.catch(function () {});
+    return next;
+  }
+  function workerPushState(readState) {
+    return pushSerial('worker',async function () {
+      var registration = await navigator.serviceWorker.getRegistration();
+      var scope = registration?.scope || new URL('./',location.href).href;
+      var cache = await caches.open('vkach-push-' + scope);
+      var path = new URL('__vkach_push_state__',scope), state=readState();
+      if (state && registration?.active) await cache.put(path,new Response(JSON.stringify(state)));
+      else await cache.delete(path);
+      return registration;
+    });
+  }
+  function currentSubscription(expected) {
+    return same(jget(PUSH_KEY,null),expected);
   }
   async function enablePush() {
     var state=firebaseCloud?.state(), uid=state?.user?.uid;
     if (!uid || !state.enabled || !firebaseMeta().revision || !firebaseTransport.online() || !CFG.cloud.vapidKey ||
         !('Notification' in window) || !('PushManager' in window)) throw new Error('Push unavailable');
     if (await Notification.requestPermission() !== 'granted') throw new Error('Push permission');
-    var registration = await workerPushState(null);
-    var prior = jget(PUSH_KEY,null);
-    var token = await firebaseTransport.pushToken(registration);
-    if (!token || firebaseCloud.state().user?.uid !== uid || !firebaseCloud.state().enabled) throw new Error('Push unavailable');
-    var subscription={uid,device:prior?.uid===uid?prior.device:crypto.randomUUID(),token,enabled:true};
-    if (!jset(PUSH_KEY,subscription)) throw storageError();
+    var subscription=await pushSerial('remote',async function () {
+      if (!firebaseCloud.state().enabled || firebaseCloud.state().user?.uid!==uid) throw new Error('Push unavailable');
+      var registration = await workerPushState(()=>null);
+      if (!registration?.active) throw new Error('Worker inactive');
+      var prior = jget(PUSH_KEY,null), token = await firebaseTransport.pushToken(registration);
+      if (!token || !currentSubscription(prior) || firebaseCloud.state().user?.uid!==uid || !firebaseCloud.state().enabled) throw new Error('Push unavailable');
+      var next={uid,device:prior?.uid===uid?prior.device:crypto.randomUUID(),token,consent:crypto.randomUUID(),enabled:true};
+      if (!jset(PUSH_KEY,next)) throw storageError();
+      return next;
+    });
     try { await refreshPush(); }
-    catch (error) { await disablePush(); throw error; }
+    catch (error) { if (currentSubscription(subscription)) await disablePush(); throw error; }
+    if (!currentSubscription(subscription)) return;
     pushStatus='Фоновые уведомления включены на этом устройстве.';
     renderChip();
   }
   async function disablePush() {
     var prior=jget(PUSH_KEY,null);
     if (!prior) return;
-    await workerPushState(null);
-    if (!jset(PUSH_KEY,{...prior,enabled:false})) throw storageError();
-    lastPushProof=''; lastPushAt=0;
-    if (firebaseTransport.online() && firebaseCloud.state().user?.uid===prior.uid) {
-      try {
-        await firebaseTransport.subscription(prior.uid,prior.device,null);
-        await firebaseTransport.deletePushToken();
-        jset(PUSH_KEY,null);
-      } catch (_) {
-        pushStatus='На устройстве уведомления отключены. Подписку удалим при подключении.';
-        renderChip();
-        return;
-      }
+    var disabled={...prior,enabled:false};
+    if (!jset(PUSH_KEY,disabled)) {
+      await workerPushState(()=>null).catch(()=>{});
+      throw storageError();
     }
-    pushStatus='Фоновые уведомления отключены на этом устройстве.';
+    lastPushProof=''; lastPushAt=0;
+    var cleared=await workerPushState(pushMarker).then(()=>true,()=>false);
+    var removed=false;
+    if (firebaseTransport.online()) {
+      removed=await pushSerial('remote',async function () {
+        if (!currentSubscription(disabled) || !firebaseTransport.online() || firebaseCloud.state().user?.uid!==disabled.uid) return false;
+        await firebaseTransport.subscription(disabled.uid,disabled.device,null);
+        await firebaseTransport.deletePushToken();
+        if (cleared && currentSubscription(disabled)) jset(PUSH_KEY,null);
+        return true;
+      }).catch(()=>false);
+    }
+    var current=jget(PUSH_KEY,null);
+    if (current?.enabled) return;
+    pushStatus=removed||!current?'Фоновые уведомления отключены на этом устройстве.' :
+      'На устройстве уведомления отключены. Подписку удалим при подключении.';
     renderChip();
   }
-  function refreshPushLocal() {
-    var subscription=jget(PUSH_KEY,null), info=firebaseMeta();
-    if (!subscription?.enabled || !remindersForPush) return;
-    if (!info.enabled || !firebaseCloud?.state().enabled || firebaseCloud.state().review) {
-      workerPushState(null).catch(function () {});
-      return;
-    }
+  async function disablePushForSignOut() {
+    var timer;
+    try {
+      await Promise.race([disablePush(),new Promise(resolve=>{timer=setTimeout(resolve,3000);})]);
+    } finally { clearTimeout(timer); }
+  }
+  function pushMarker() {
+    var subscription=jget(PUSH_KEY,null), info=firebaseMeta(), state=firebaseCloud?.state();
+    if (!subscription?.enabled || !remindersForPush || !state?.enabled || state.review) return null;
     var proof=remindersForPush.pushState();
-    workerPushState({device:subscription.device,day:proof.day,revision:info.revision,needed:proof.needed}).catch(function () {});
+    return {device:subscription.device,day:proof.day,revision:info.revision,needed:proof.needed};
+  }
+  function refreshPushLocal() {
+    if (jget(PUSH_KEY,null)) workerPushState(pushMarker).catch(function () {});
   }
   async function refreshPush() {
-    var subscription=jget(PUSH_KEY,null), info=firebaseMeta();
+    var subscription=jget(PUSH_KEY,null);
     if (!subscription || !remindersForPush || !firebaseTransport.online() || firebaseCloud.state().user?.uid!==subscription.uid) return;
     if (!subscription.enabled) return disablePush();
-    if (!info.enabled || !info.revision || firebaseCloud.state().review) return;
-    var proof=remindersForPush.pushState(), local=persistedDocs();
-    if (await digest(local) !== info.base || firebaseMeta().revision !== info.revision) return;
-    var payload={...proof,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,revision:info.revision,token:subscription.token};
-    var stamp=JSON.stringify(payload);
-    if (stamp!==lastPushProof || Date.now()-lastPushAt>=3600000) {
-      await firebaseTransport.subscription(subscription.uid,subscription.device,payload);
-      lastPushProof=stamp; lastPushAt=Date.now();
-    }
+    await pushSerial('remote',async function () {
+      var info=firebaseMeta(), state=firebaseCloud.state();
+      if (!currentSubscription(subscription) || !state.enabled || !info.revision || state.review) return;
+      var local=persistedDocs(), localRevision=revision, proof=remindersForPush.pushState();
+      if (await digest(local) !== info.base || !currentSubscription(subscription) || !firebaseCloud.state().enabled ||
+          firebaseMeta().revision !== info.revision || localRevision !== revision || firebaseCloud.state().review) return;
+      var payload={...proof,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,revision:info.revision,token:subscription.token};
+      var stamp=JSON.stringify(payload);
+      if (stamp!==lastPushProof || Date.now()-lastPushAt>=3600000) {
+        await firebaseTransport.subscription(subscription.uid,subscription.device,payload);
+        if (currentSubscription(subscription)) { lastPushProof=stamp; lastPushAt=Date.now(); }
+      }
+    });
     refreshPushLocal();
   }
   async function pushShownToday(date) {
@@ -985,6 +1017,11 @@
       panel.append(login);
     } else {
       panel.append(el('p','pl-s',state.user.email || 'Аккаунт Google'));
+      if (state.signingOut) {
+        panel.append(el('p','pl-s','Выходим из аккаунта…'));
+        menu.append(panel);
+        return;
+      }
       panel.append(el('p','pl-s',state.busy ? 'Сверяем версии…' : !navigator.onLine ? 'Офлайн · изменения остаются на устройстве' :
         state.lastSync ? 'Последнее согласование · '+backupDate(state.lastSync) : 'Ожидает первоначального согласования'));
       if (!state.enabled && !state.blocked) panel.append(dataButton('Включить синхронизацию',function () {

@@ -100,7 +100,7 @@
       const [x,y] = position(row), dot = document.createElementNS(svg.namespaceURI, 'circle');
       dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r', 2.8);
       const title = document.createElementNS(svg.namespaceURI, 'title');
-      title.textContent = dateLabel(row.date) + ' · ' + format.format(row.value) + ' ' + unit;
+      title.textContent = dateLabel(row.date) + ' · ' + (row.approximate ? '≈ ' : '') + format.format(row.value) + ' ' + unit;
       dot.append(title);
       svg.append(dot);
     }
