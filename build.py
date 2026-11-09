@@ -2,6 +2,7 @@
 """Собирает dist/: index.html из game.html, sw.js с хэшем, иконки, манифест."""
 import hashlib, json, os, re, shutil, sys
 from pathlib import Path
+from xml.etree import ElementTree as ET
 from PIL import Image, ImageDraw
 
 if any(arg != '--test' for arg in sys.argv[1:]):
@@ -79,9 +80,26 @@ shutil.copy(f'{SRC}/citadel-art.css', f'{DIST}/citadel-art.css')
 shutil.copy(f'{SRC}/rpg-ui.css', f'{DIST}/rpg-ui.css')
 shutil.copytree(f'{SRC}/assets', f'{DIST}/assets')
 
+# Export one painted pose per SVG. The original sheets remain the art source.
+svg = '{http://www.w3.org/2000/svg}'
+ET.register_namespace('', svg[1:-1])
+poses = ('idle', 'talk', 'walk-1', 'walk-2', 'work', 'rest')
+for actor in ('guardian', 'archivist', 'smith', 'treasurer'):
+    art = Path(DIST, 'assets/citadel')
+    sheet = ET.parse(art / f'{actor}.svg').getroot()
+    frames = list(sheet)
+    if sheet.get('viewBox') != '0 0 144 40' or len(frames) != len(poses):
+        raise ValueError(f'Unexpected resident sprite sheet: {actor}')
+    for i, (pose, frame) in enumerate(zip(poses, frames)):
+        if frame.tag != svg + 'g' or frame.attrib.pop('transform', None) != f'translate({24 * i} 0)':
+            raise ValueError(f'Unexpected resident frame: {actor}-{pose}')
+        image = ET.Element(svg + 'svg', {**sheet.attrib, 'width': '24', 'viewBox': '0 0 24 40'})
+        image.append(frame)
+        ET.ElementTree(image).write(art / f'{actor}-{pose}.svg', encoding='utf-8')
+
 # --- sw.js с версией = хэш содержимого
 shell = ['index.html', 'manifest.json', 'config.js', 'localdb.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
-shell += ['citadel-art.css', 'rpg-ui.css'] + ['assets/citadel/' + name for name in sorted(os.listdir(f'{SRC}/assets/citadel'))]
+shell += ['citadel-art.css', 'rpg-ui.css'] + ['assets/citadel/' + name for name in sorted(os.listdir(f'{DIST}/assets/citadel'))]
 h = hashlib.sha256()
 for f in sorted(set(shell) - {'./'}):
     h.update(open(f'{DIST}/{f}', 'rb').read())

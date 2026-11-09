@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {withApprovedCalorieLabels} from './fixtures/approved-copy.mjs';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
@@ -7,7 +8,7 @@ const sealed={id:'sealed'};Object.defineProperty(sealed,'title',{get(){throw Err
 const ctx={S:{look:{}},cachedLook:{},LEG:[{id:'later',title:'Owned later'},sealed],ACH:[{id:'earlier',title:'Owned earlier'}],lastGI:{ach:{earlier:'2026-11-01',later:'2026-11-02'}}};vm.createContext(ctx);
 vm.runInContext(source.slice(source.indexOf('  function titleList()'),source.indexOf('  function lookGroupDefinitions()')),ctx);
 assert.deepEqual(Array.from(ctx.titleList(),t=>t.id),['earlier','later']);assert.equal(ctx.heroTitle(),'Owned later');ctx.S.look.title='earlier';assert.equal(ctx.heroTitle(),'Owned earlier');ctx.S.look.title='__none__';assert.equal(ctx.heroTitle(),'СПЯЩИЙ');ctx.S.look.title='sealed';assert.equal(ctx.heroTitle(),'Owned later');ctx.lastGI.ach=Object.create({later:'2026-11-02'});assert.equal(ctx.titleList().length,0);assert.equal(ctx.heroTitle(),'СПЯЩИЙ');
-const previous=execFileSync('git',['show','bd27e97:src/game.html'],{encoding:'utf8'});
+const previous=withApprovedCalorieLabels(execFileSync('git',['show','bd27e97:src/game.html'],{encoding:'utf8'}));
 for(const name of ['ACH','LEG']){const marker='  var '+name+' = [';const part=s=>{const i=s.indexOf(marker);assert(i>=0);return s.slice(i,s.indexOf('];',i)+2);};assert(part(source)===part(previous),'existing conditions and rewards remain identical');}
 for(const path of ['src/fate.js','src/legends.js','src/citadel-world.js']){
  const prior=execFileSync('git',['show','bd27e97:'+path],{encoding:'utf8'}).replace(/\r\n/g,'\n');
