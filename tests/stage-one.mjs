@@ -250,10 +250,8 @@ try {
   await page.goBack();
   assert(!(await page.locator('#fate-forge-dialog').isVisible()));
   await backToMap();
-  const residents = page.locator('.citadel-map-tools').getByRole('button', { name: 'Жители', exact: true });
-  await residents.click();
+  // Residents are reached through their rooms, not through a duplicate map toolbar button.
   assert(await page.locator('#citadel-residents button').count() >= 4);
-  await page.goBack();
   assert(await page.locator('.citadel-viewport').isVisible());
   for (let visit = 0; visit < 2; visit++) {
     await openRoom('observatory');
