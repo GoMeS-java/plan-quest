@@ -6537,7 +6537,9 @@ function renderAllInner() {
     }
     document.querySelectorAll('[data-croom]').forEach(function(room){room.addEventListener('click',function(){if(home.dataset.uiView==='overview'&&room.getAttribute('aria-disabled')!=='true'){requestAnimationFrame(function(){citadelEnter();pushOverlay('room');refreshDrawer();});}});});
     var camera=document.createElement('div');camera.className='citadel-shell-camera';camera.setAttribute('aria-label','Инструменты замка');home.insertBefore(camera,inside);
-    var mapTools=el('div','citadel-map-tools');camera.appendChild(mapTools);
+    var mapToggle=el('button','citadel-map-toggle','Карта');mapToggle.type='button';mapToggle.setAttribute('aria-label','Инструменты карты Цитадели');mapToggle.setAttribute('aria-expanded','false');mapToggle.setAttribute('aria-controls','citadel-map-tools');header.insertBefore(mapToggle,nav);
+    var mapTools=el('div','citadel-map-tools');mapTools.id='citadel-map-tools';camera.appendChild(mapTools);
+    mapToggle.onclick=function(){var open=home.dataset.mapToolsOpen!=='true';home.dataset.mapToolsOpen=String(open);mapToggle.setAttribute('aria-expanded',String(open));cameraMore.open=false;measureShell();cameraSize();};
     var cameraMore=el('details','citadel-map-camera'),cameraPanel=el('div','citadel-map-camera-panel');
     cameraMore.append(el('summary',null,'Ярус'),cameraPanel);mapTools.appendChild(cameraMore);
     var floorSelect=el('select');floorSelect.setAttribute('aria-label','Ярус');cameraPanel.appendChild(floorSelect);
@@ -6558,7 +6560,7 @@ function renderAllInner() {
       floorSelect.value='';cameraMore.open=false;
     };
     drawerButton(mapTools,'Улучшения',function(){if(!citadelRoomOpen(citadelSelected))return;citadelSetArtView('upgrades');citadelEnter();pushOverlay('room');});
-    drawerButton(mapTools,'Жители',function(){citadelSetArtView('people');pushOverlay('room');});
+    // Residents are reached by entering their rooms; the existing drawer keeps the full roster accessible.
     castle.querySelectorAll('.citadel-floor-label').forEach(function(n){var caption=document.createElement('span');caption.className='citadel-floor-caption';caption.textContent=n.textContent;n.textContent='';n.appendChild(caption);});
     var lastCamera={left:0,top:0},cameraFrame=0;
     function measureShell(){var headerHeight=header.getBoundingClientRect().height;home.style.setProperty('--shell-header-height',headerHeight+'px');var top=headerHeight+todayPanel.getBoundingClientRect().height+roomTools.getBoundingClientRect().height+camera.getBoundingClientRect().height;home.style.setProperty('--shell-top',top+'px');home.style.setProperty('--shell-bottom',dock.getBoundingClientRect().height+'px');}

@@ -107,6 +107,9 @@ try {
   await todayValues.getByText('Сигареты 1/0', { exact: true }).waitFor();
   await page.locator('.chains-quick .chains-undo').click();
   await todayValues.getByText('Сигареты 0/0', { exact: true }).waitFor();
+  assert.equal(await page.locator('.citadel-shell-camera').isVisible(), false);
+  await page.getByRole('button', { name: 'Инструменты карты Цитадели' }).click();
+  assert.equal(await page.locator('.citadel-shell-camera').isVisible(), true);
   await page.locator('.citadel-map-camera > summary').click();
   await page.getByLabel('Ярус', { exact: true }).selectOption('3');
   assert.equal(await page.getByLabel('Ярус', { exact: true }).locator('option').count(), 6);
