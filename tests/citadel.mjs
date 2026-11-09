@@ -67,7 +67,10 @@ async function waitForIdle(page) {
  finally{await completion.dispose();}
 }
 async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();if(!document.getElementById('achup')?.hidden)document.getElementById('ac-ok')?.click();for(const id of ['lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await p.clock.runFor(30).catch(()=>{});await p.waitForTimeout(15);if(!await p.locator('#legend-scene[open]').count()&&await p.locator('#achup').isHidden()&&await p.locator('#lvup').isHidden())return;}}
-async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));if(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-shell'))){if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').first().click();if(await p.locator('#citadel-home').getAttribute('data-ui-view')!=='overview')await p.locator('[data-room-view="overview"]').click();}}
+async function roomBack(p){const close=p.locator('#citadel-interior-close');if(await close.isVisible())await close.click();else await p.locator('[data-room-view="overview"]').click();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');}
+async function roomMore(p){const panel=p.locator('.citadel-room-more');if(await panel.count()&&await panel.getAttribute('open')===null)await panel.locator(':scope > summary').click();}
+async function cameraControls(p){const details=p.locator('.citadel-map-camera');if(await details.getAttribute('open')===null)await details.locator('summary').click();return details;}
+async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));if(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-shell'))){if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').first().click();if(await p.locator('#citadel-home').getAttribute('data-ui-view')!=='overview')await roomBack(p);}}
 async function shellMenu(p){if(await p.locator('#setup').isVisible())await p.locator('#setup-x').click();if(await p.locator('#trophy').isVisible())await p.locator('#trophy-x').click();if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').click();await dismiss(p);if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
 async function shellNav(p,label){
  if(await p.locator('#setup').isVisible())await p.locator('#setup-x').click();if(await p.locator('#trophy').isVisible())await p.locator('#trophy-x').click();
@@ -85,10 +88,10 @@ async function shellNav(p,label){
  if(['Траты','Деньги','Колесо'].includes(label)){await shellNav(p,'Финансы');await p.locator('.citadel-finance-nav [data-finance=\"'+({'Траты':'spend','Деньги':'money','Колесо':'wheel'})[label]+'\"]').click();return;}
  if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);
  const target=p.locator('.citadel-shell-nav button').filter({hasText:label}).first();
- await target.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});
+ await target.evaluate(n=>{for(let group=n.closest('details');group&&group.id!=='citadel-home';group=group.parentElement.closest('details'))group.open=true;});
  await target.click();
 }
-async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await b.evaluate(n=>{const group=n.closest('details');if(group)group.open=true;});await b.click();}
+async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await b.evaluate(n=>{for(let group=n.closest('details');group&&group.id!=='citadel-home';group=group.parentElement.closest('details'))group.open=true;});await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=window.PlanDB;await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
 function advancedSeed(){
@@ -398,7 +401,7 @@ await check('shelter two offline profiles reconcile competing moves through simu
       await castle(page);
       await page.locator('[data-croom="'+room+'"]').click();
       await page.locator('#citadel-interior').waitFor({state:'visible'});
-      await page.locator('#shelter-collection summary').click();
+      await roomMore(page);await page.locator('#shelter-collection summary').click();
       await page.locator('#shelter-list button').filter({hasText:/кот/i}).first().click();
       await page.getByRole('button',{name:'Примерить · На столе'}).click();
       await context.setOffline(true);
@@ -457,7 +460,7 @@ await check('shelter collection previews, persists and restores receipts without
     await p.locator('[data-croom="rest"]').click();
     await p.locator('#citadel-interior').waitFor({state:'visible'});
     const award=await docs(p);
-    await p.locator('#shelter-collection summary').click();
+    await roomMore(p);await p.locator('#shelter-collection summary').click();
     const choose=async()=>p.locator('#shelter-list button').filter({hasText:/кот/i}).first().click();
     await choose();
     await p.locator('#shelter-detail').getByText('Место появится после восстановления.').waitFor();
@@ -892,7 +895,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
 
  await check('1.1 Android background flush restores last section, scroll and camera without progress writes',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.clock.runFor(80);const before=await docs(p);
-  await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();await p.locator('.citadel-viewport').evaluate(n=>n.scrollTo(120,180));await p.clock.runFor(20);
+  await (await cameraControls(p)).locator('button').filter({hasText:'+'}).click();await p.locator('.citadel-viewport').evaluate(n=>n.scrollTo(120,180));await p.clock.runFor(20);
   const camera=await p.locator('.citadel-viewport').evaluate(n=>({left:n.scrollLeft,top:n.scrollTop}));await shellNav(p,'Профиль');await p.locator('.citadel-system-content').evaluate(n=>n.scrollTop=150);
   await p.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new Event('pagehide'));});
   const saved=await p.evaluate(()=>({camera:JSON.parse(localStorage.getItem('plan.citadel.camera.v1')),view:JSON.parse(localStorage.getItem('plan.citadel.view.v1'))}));assert.equal(saved.view.section,'wardrobe');assert.equal(saved.camera.left,camera.left);assert.equal(saved.camera.top,camera.top);assert(saved.view.scroll>=100);
@@ -984,9 +987,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.locator('[data-croom="rest"]').click();
   for(const tier of [2,3]){
    await p.evaluate(tier=>__qa.upgrade('rest',tier-1),tier);await p.waitForFunction(tier=>document.querySelector('#citadel-interior-stage').dataset.level===String(tier),tier);await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());const before=await docs(p);
-   await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('[data-room-inspect]').click();await p.locator('[data-room-inspect]').click();
+   await p.emulateMedia({reducedMotion:'no-preference'});await roomMore(p);await p.locator('[data-room-inspect]').click();await p.locator('[data-room-inspect]').click();
    const response=await p.locator('#citadel-interior-stage').evaluate(n=>{const light=n.querySelector('.citadel-room-light'),old=n.querySelector('.citadel-interior-renovation');return {visible:getComputedStyle(light).display!=='none',light:light.getAnimations().filter(a=>!a.animationName).length,hidden:old.getAnimations().filter(a=>!a.animationName).length};});assert(response.visible);assert.equal(response.light,1);assert.equal(response.hidden,0);
-   await p.emulateMedia({reducedMotion:'reduce'});await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-stage .citadel-room-light').evaluate(n=>n.getAnimations().filter(a=>!a.animationName).length),0);assert.deepEqual(await docs(p),before,'visual response cannot charge resources');
+   await p.emulateMedia({reducedMotion:'reduce'});await roomMore(p);await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-stage .citadel-room-light').evaluate(n=>n.getAnimations().filter(a=>!a.animationName).length),0);assert.deepEqual(await docs(p),before,'visual response cannot charge resources');
   }
   await context.close();
  });
@@ -1015,7 +1018,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     if(level>1){await p.evaluate(({room,level})=>__qa.upgrade(room,level-1),{room,level});await waitForIdle(p);}
     await p.waitForFunction(level=>document.querySelector('#citadel-interior-stage').dataset.level===String(level),level);
     assert((await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n,'::before').backgroundImage)).includes(room+'-interior-'+level+'.svg'),'actual scene must use its own room and stage');
-    await p.locator(room==='forge'?'[data-room-inspect]':'#citadel-interior-object').click();
+    if(['forge','refectory'].includes(room))await roomMore(p);
+    await p.locator(['forge','refectory'].includes(room)?'[data-room-inspect]':'#citadel-interior-object').click();
     assert.equal(await p.locator('#citadel-interior-object').getAttribute('data-inspected'),'true');
     await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,`v11-room-${room}-level-${level}.png`)});
     if(level>1){const saved=await docs(p);await p.evaluate(({room,level})=>__qa.upgrade(room,level-1),{room,level});await waitForIdle(p);assert.deepEqual(await docs(p),saved,'same upgrade must not charge twice');}
@@ -1351,7 +1355,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await p.setViewportSize({width,height});
    for(const room of rooms){
     await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);
-    const before=await docs(p),action=p.locator('[data-room-moment]');
+    await roomMore(p);const before=await docs(p),action=p.locator('[data-room-moment]');
     assert(await action.isVisible());assert(await action.evaluate(n=>n.getBoundingClientRect().height>=44));
     await action.click();const text=await p.locator('#citadel-object-status').innerText();assert(text.length>40);
     for(let i=0;i<5;i++)await action.click();assert.equal(await p.locator('#citadel-object-status').innerText(),text);
@@ -1365,7 +1369,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('0.77 room actions do not expose locked rooms and new cues do not weaken black masks',async()=>{
   const {page:p,context}=await open({shell:true,width:320});
   await p.locator('[data-croom="study"]').click();await waitForIdle(p);const before=await docs(p);
-  await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
+  await roomMore(p);await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
   assert(!/Обсерватория|Мастерская|Казначейство|летопис/i.test(text));assert.deepEqual(await docs(p),before);
   await p.evaluate(()=>__qa.move('vault'));assert(await p.locator('#citadel-mystery').isVisible());
   assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'study');
@@ -1376,7 +1380,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});
   await p.evaluate(()=>{__qa.move('forge');document.querySelector('#citadel-enter').click();});await waitForIdle(p);const before=await docs(p);
   const smith=p.locator('#citadel-interior-stage [data-person="smith"]');assert.equal(await smith.getAttribute('data-occupation'),'craft');
-  assert(await smith.locator('.citadel-occupation-prop').isVisible());await p.locator('[data-room-moment]').click();
+  assert(await smith.locator('.citadel-occupation-prop').isVisible());await roomMore(p);await p.locator('[data-room-moment]').click();
   assert.match(await p.locator('#citadel-object-status').innerText(),/Кузнец/);
   await smith.click();assert.equal(await smith.getAttribute('data-mode'),'interaction');assert(await smith.locator('.citadel-occupation-prop').isHidden());
   assert.deepEqual(await docs(p),before);
@@ -1386,13 +1390,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.clock.setFixedTime(new Date('2027-04-16T18:02:00+03:00'));await p.evaluate(()=>__qa.render());await dismiss(p);
   await p.evaluate(()=>{__qa.move('refectory');document.querySelector('#citadel-enter').click();});
   assert.equal(await p.locator('#citadel-interior-stage [data-occupation="meal"]').count(),4);
-  await p.locator('[data-room-moment]').click();assert.match(await p.locator('#citadel-object-status').innerText(),/Страж/);await context.close();
+  await roomMore(p);await p.locator('[data-room-moment]').click();assert.match(await p.locator('#citadel-object-status').innerText(),/Страж/);await context.close();
  });
  await check('0.77 treasury reactions acknowledge an existing essence conflict without optimistic reassurance',async()=>{
   const seed=advancedSeed();seed['cfg/abyss-economy']={version:1,rank:100000,earned:-100000,claims:{}};seed['cfg/citadel']={selectedRoom:'vault',decor:{}};
   const {page:p,context}=await open({shell:true,seed,day:'2027-04-16'});
   await p.clock.runFor(64);await p.evaluate(()=>{__qa.move('vault');document.querySelector('#citadel-enter').click();});await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);const before=await docs(p);
-  await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
+  await roomMore(p);await p.locator('[data-room-moment]').click();const text=await p.locator('#citadel-object-status').innerText();
   assert.match(text,/Расходы требуют сверки/);assert(!/Записи сходятся/.test(text));
   await p.locator('#citadel-interior-stage [data-person="treasurer"]').click();assert.match(await p.locator('#citadel-room-speech').innerText(),/несогласованные расходы/);
   assert.deepEqual(await docs(p),before);await context.close();
@@ -1444,7 +1448,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const bounds=await p.locator('#citadel-mystery').boundingBox();assert(bounds.x>=0&&bounds.x+bounds.width<=width+.5&&bounds.y>=0&&bounds.y+bounds.height<=height+.5);
    assert.equal(await p.locator('[data-croom][aria-pressed="true"]').getAttribute('data-croom'),selected);assert(await p.locator('#citadel-interior').isHidden());
    await p.goBack();await p.locator('#citadel-mystery').waitFor({state:'hidden'});assert.deepEqual(await docs(p),before);
-   await p.locator('.citadel-shell-camera button').filter({hasText:'К комнате'}).click();await p.clock.runFor(64);
+   await (await cameraControls(p)).locator('button').filter({hasText:'К комнате'}).click();await p.clock.runFor(64);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(await p.locator('#citadel-home').evaluate(n=>n.scrollTop),0);
    if(width===390)await p.screenshot({path:resolve(out,'android-076-mystery-390.png')});await context.close();
   }
@@ -1463,7 +1467,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('0.76 travel, drawers, activities, building and purchase history do not disclose locked content',async()=>{
   const seed=structuredClone(initial);seed['buys/citadel-archive-2']={kind:'citadel-room',currency:'abyss',room:'archive',level:2,name:'Цитадель: Новые стеллажи',cost:5};
   const {page:p,context}=await open({seed,shell:true});await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
-  const exits=await p.locator('#citadel-exits').innerText();assert.match(exits,/Неизведанная комната/);assert(!/Архив|Мастерская|Обсерватория/i.test(exits));
+  await roomMore(p);const exits=await p.locator('#citadel-exits').innerText();assert.match(exits,/Неизведанная комната/);assert(!/Архив|Мастерская|Обсерватория/i.test(exits));
   const tree=await p.locator('#citadel-interior').ariaSnapshot();assert(!/Архив|стеллаж|Мастерская|Обсерватория/i.test(tree));
   await shellDrawer(p,'right');const drawer=await p.locator('.citadel-shell-drawer.right').innerText();assert(!/Архив|стеллаж|Мастерская|Обсерватория/i.test(drawer));await p.goBack();
   await shellNav(p,'Воспоминания');assert.match(await p.locator('#shop').innerText(),/Улучшение неизведанной комнаты/);assert(!/стеллаж/i.test(await p.locator('#shop').innerText()));await context.close();
@@ -1609,7 +1613,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const {page:p,context}=await open({width,height,shell:true,seed:advancedSeed(),day:'2027-04-16'});
    for(const room of await p.locator('[data-croom]').evaluateAll(nodes=>nodes.map(n=>n.dataset.croom))){
     await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);const object=p.locator('#citadel-interior-object'),box=await object.boundingBox(),stage=await p.locator('#citadel-interior-stage').boundingBox();assert(box.width>=44&&box.height>=44);assert(box.x>=stage.x&&box.x+box.width<=stage.x+stage.width&&box.y>=stage.y&&box.y+box.height<=stage.y+stage.height);
-    await (room==='forge'?p.locator('[data-room-inspect]'):object).click();assert.equal(await object.getAttribute('data-inspected'),'true');assert.match(await p.locator('#citadel-object-status').innerText(),/:/);
+    if(['forge','refectory'].includes(room))await roomMore(p);
+    await (['forge','refectory'].includes(room)?p.locator('[data-room-inspect]'):object).click();assert.equal(await object.getAttribute('data-inspected'),'true');assert.match(await p.locator('#citadel-object-status').innerText(),/:/);
    }
    if(width===390)await p.screenshot({path:resolve(out,'final-074-interaction-390.png')});await context.close();
   }
@@ -1641,7 +1646,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const day=await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n).getPropertyValue('--window-color'));
   await p.clock.setSystemTime(new Date('2027-04-16T23:02:00+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-phase'),'НОЧЬ');assert.notEqual(await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n).getPropertyValue('--window-color')),day);
   const powers=await p.locator('#citadel-interior-stage').evaluate(stage=>{const light=stage.querySelector('.citadel-room-light'),level=stage.dataset.level,values=[];for(const tier of [1,2,3]){stage.dataset.level=tier;values.push(Number(getComputedStyle(light).opacity));}stage.dataset.level=level;return values;});assert(powers[0]<powers[1]&&powers[1]<powers[2]);
-  await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-object').getAttribute('data-inspected'),'true');assert.equal(await p.locator('#citadel-interior-stage .citadel-light-source').evaluate(n=>getComputedStyle(n).animationName),'none');
+  await roomMore(p);await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-object').getAttribute('data-inspected'),'true');assert.equal(await p.locator('#citadel-interior-stage .citadel-light-source').evaluate(n=>getComputedStyle(n).animationName),'none');
   await p.emulateMedia({reducedMotion:'no-preference'});assert.notEqual(await p.locator('#citadel-interior-stage .citadel-light-source').evaluate(n=>getComputedStyle(n).animationName),'none');await p.emulateMedia({reducedMotion:'reduce'});
   // Return to the original civil time before comparing persisted game state.
   await p.clock.setSystemTime(new Date('2027-04-16T14:00:00+03:00'));await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),before);await context.close();
@@ -1666,14 +1671,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await waitForIdle(p);const before=await docs(p);
   await p.clock.setSystemTime(new Date('2027-04-16T14:16:19+03:00'));await p.evaluate(()=>__qa.render());
   assert(await actor.evaluate((n,old)=>n===old&&document.activeElement===n,sprite),'a stationary actor must retain focus and animation identity');
-  const inspect=p.locator('[data-room-inspect]');await inspect.focus();const control=await inspect.elementHandle();
+  await roomMore(p);const inspect=p.locator('[data-room-inspect]');await inspect.focus();const control=await inspect.elementHandle();
   await p.clock.setSystemTime(new Date('2027-04-16T14:16:30+03:00'));await p.evaluate(()=>__qa.render());
   assert(await inspect.evaluate((n,old)=>n===old&&document.activeElement===n,control));assert.deepEqual(await docs(p),before);await context.close();
  });
  await check('0.74 departing conversation restores room focus and companions face the hero',async()=>{
   const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16',shell:true});
   await p.clock.setFixedTime(new Date('2027-04-16T09:59:59+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
-  await p.locator('[data-room-talk="smith"]').click();const actor=p.locator('#citadel-interior-stage [data-person="smith"]');
+  await roomMore(p);await p.locator('[data-room-talk="smith"]').click();const actor=p.locator('#citadel-interior-stage [data-person="smith"]');
   assert.equal(await actor.getAttribute('data-mode'),'interaction');assert(await actor.evaluate(n=>{const a=n.getBoundingClientRect(),h=document.querySelector('#citadel-interior-stage .citadel-hero-sprite').getBoundingClientRect();return n.dataset.facing===(h.left+h.width/2<a.left+a.width/2?'left':'right');}));
   assert.equal(await actor.evaluate(n=>getComputedStyle(n,'::after').content),'"◆"');await waitForIdle(p);const before=await docs(p);
   await p.clock.setFixedTime(new Date('2027-04-16T10:00:10+03:00'));await p.evaluate(()=>__qa.render());
@@ -1684,7 +1689,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const [width,height]of [[320,760],[360,800],[390,844],[430,900],[844,390]]){
    const {page:p,context}=await open({width,height,mobile:true,shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await waitForIdle(p);const before=await docs(p);
    const object=p.locator('#citadel-interior-object');await object.focus();await p.keyboard.press('Enter');assert.equal(await object.getAttribute('data-inspected'),'true');assert.match(await p.locator('#citadel-object-status').innerText(),/Старая кровать/);assert.equal(await object.evaluate(n=>getComputedStyle(n,'::before').animationName),'none');
-   await p.keyboard.press('Space');await p.locator('[data-room-inspect]').click();assert.deepEqual(await docs(p),before);
+   await p.keyboard.press('Space');await roomMore(p);await p.locator('[data-room-inspect]').click();assert.deepEqual(await docs(p),before);
    if(width===390)await p.screenshot({path:resolve(out,'android-074-object-390.png')});
    await context.close();
   }
@@ -1697,7 +1702,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await p.locator('#cur-weight').textContent(),'145','later entry time must not replace the latest calendar measurement');
   await write(p,'weights/outside-range',{kg:500,date,ts:1000,futureField:'keep'});await write(p,'weights/impossible',{kg:80,date:'2026-02-31',ts:1001});
   assert.equal(await p.locator('#citadel-live-body').textContent(),'ВЕС 145 КГ');assert.equal(await p.locator('#cur-weight').textContent(),'145');assert.equal(await p.evaluate(()=>__qa.shape()),shape);
-  await p.locator('#citadel-activity-actions').getByRole('button',{name:'Осмотреть облик'}).click();assert.match(await p.locator('#citadel-activity-feedback').innerText(),/145 кг/);
+  await roomMore(p);await p.locator('#citadel-activity-actions').getByRole('button',{name:'Осмотреть облик'}).click();assert.match(await p.locator('#citadel-activity-feedback').innerText(),/145 кг/);
   await p.evaluate(async()=>{const db=window.PlanDB;await db.doc('weights/test').delete();await db.doc('weights/backdated').delete();});await p.waitForFunction(()=>!__qa.S.weights.some(w=>w.id==='test'||w.id==='backdated'));
   assert.equal(await p.locator('#citadel-live-body').textContent(),'ВЕС 160 КГ');assert.equal(await p.locator('#cur-weight').textContent(),'160');
   const before=await docs(p);assert.equal(before['weights/outside-range'].d.kg,500);assert.equal(before['weights/impossible'].d.date,'2026-02-31');
@@ -1712,7 +1717,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const before=await docs(p),stage=p.locator('#citadel-interior-stage'),hero=stage.locator('.citadel-hero-sprite');const box=await stage.boundingBox(),first=await hero.boundingBox();
    await stage.click({position:{x:box.width*.8,y:box.height*.93}});const walked=await hero.boundingBox();assert(walked.x>first.x,'a floor tap must move the actual sprite');
    await stage.focus();await p.keyboard.press('ArrowLeft');assert((await hero.boundingBox()).x<walked.x);
-   await p.locator('[data-room-inspect]').click();assert.match(await p.locator('#citadel-object-status').innerText(),/Старая кровать/);assert.equal(await p.locator('[data-room-talk]').count(),0,'no residents before their rank');
+   await roomMore(p);await p.locator('[data-room-inspect]').click();assert.match(await p.locator('#citadel-object-status').innerText(),/Старая кровать/);assert.equal(await p.locator('[data-room-talk]').count(),0,'no residents before their rank');
    const door=stage.locator('.citadel-scene-door').first(),handle=await door.elementHandle();assert((await door.locator('small').innerText()).length>3);await door.focus();await p.evaluate(()=>__qa.render());
    assert(await door.evaluate((n,previous)=>n===previous&&document.activeElement===n,handle),'refresh must retain the focused door');
    const a=await hero.boundingBox(),b=await stage.boundingBox();assert(a.x>=b.x&&a.x+a.width<=b.x+b.width&&a.y+a.height<=b.y+b.height);
@@ -1725,13 +1730,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const {page:p,context}=await open({width:320,seed:advancedSeed(),day:'2027-04-16',shell:true});
   await p.clock.setSystemTime(new Date('2027-04-16T18:02:00+03:00'));await p.evaluate(()=>__qa.render());await p.locator('[data-croom="refectory"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
   assert.equal(await p.locator('[data-room-talk]').count(),4);await waitForIdle(p);const before=await docs(p);
-  await p.locator('[data-room-talk="smith"]').click();assert(await p.locator('#citadel-room-conversation').isVisible());assert.match(await p.locator('#citadel-room-speech').innerText(),/Кузнец/);assert(await p.locator('#citadel-room-npc-action').evaluate(n=>{var b=n.getBoundingClientRect(),hit=document.elementFromPoint(b.left+b.width/2,b.top+b.height/2);return hit===n||n.contains(hit);}),'conversation action must be reachable above the Android dock');
+  await roomMore(p);await p.locator('[data-room-talk="smith"]').click();assert(await p.locator('#citadel-room-conversation').isVisible());assert.match(await p.locator('#citadel-room-speech').innerText(),/Кузнец/);assert(await p.locator('#citadel-room-npc-action').evaluate(n=>{var b=n.getBoundingClientRect(),hit=document.elementFromPoint(b.left+b.width/2,b.top+b.height/2);return hit===n||n.contains(hit);}),'conversation action must be reachable above the Android dock');
   const hero=await p.locator('#citadel-interior-stage .citadel-hero-sprite').boundingBox();
   for(const npc of await p.locator('#citadel-interior-stage .citadel-person,#citadel-interior-stage .citadel-scene-door,#citadel-interior-stage .citadel-scene-door small').all()){const b=await npc.boundingBox();assert(hero.x+hero.width<=b.x||hero.x>=b.x+b.width||hero.y+hero.height<=b.y||hero.y>=b.y+b.height,'hero must stop clear of residents, doors and labels');}
   await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-room-conversation').hidden);assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
-  await p.locator('[data-room-talk="smith"]').click();await p.keyboard.press('Escape');assert(await p.locator('#citadel-room-conversation').isHidden());assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
-  await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');
-  await p.locator('[data-croom="refectory"]').click();await p.locator('[data-room-talk="smith"]').click();
+  await roomMore(p);await p.locator('[data-room-talk="smith"]').click();await p.keyboard.press('Escape');assert(await p.locator('#citadel-room-conversation').isHidden());assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
+  await p.waitForFunction(()=>history.state?.citadelOverlay!=='resident');await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');
+  await p.locator('[data-croom="refectory"]').click();await roomMore(p);await p.locator('[data-room-talk="smith"]').click();
   await p.clock.setSystemTime(new Date('2027-04-16T23:00:10+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await p.locator('[data-room-talk]').count(),0);assert(await p.locator('#citadel-room-conversation').isHidden());
   assert.deepEqual(await docs(p),before);await context.close();
  });
@@ -1843,7 +1848,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
   await session.send('HeapProfiler.collectGarbage');const initialMetrics=await session.send('Performance.getMetrics');
   const baseline=await p.evaluate(()=>document.querySelectorAll('*').length);
-  for(let n=0;n<8;n++){await p.locator('#citadel-exits [data-travel="study"]').click();await p.locator('#citadel-exits [data-travel="rest"]').click();}
+  for(let n=0;n<8;n++){await roomMore(p);await p.locator('#citadel-exits [data-travel="study"]').click();await roomMore(p);await p.locator('#citadel-exits [data-travel="rest"]').click();}
   await waitForIdle(p);assert.equal((await p.evaluate(()=>__qa.S.tx)).length,1000);assert.equal((await p.evaluate(()=>__qa.S.weights)).length,501);assert.equal((await p.evaluate(()=>__qa.S.spont)).length,301);
   const nodes=await p.evaluate(()=>document.querySelectorAll('*').length);assert(nodes<=baseline+8,'round trips must not accumulate room controls or sprites');
   await session.send('HeapProfiler.collectGarbage');const finalMetrics=await session.send('Performance.getMetrics');
@@ -2056,14 +2061,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     await p.evaluate(id=>__qa.move(id),room);await waitForIdle(p);await p.clock.runFor(64);
     for(let repeat=0;repeat<3;repeat++){
      const expected=await viewport.evaluate((v,id)=>{const r=document.querySelector('[data-croom="'+id+'"]').getBoundingClientRect(),b=v.getBoundingClientRect();return {left:Math.max(0,Math.min(v.scrollWidth-v.clientWidth,v.scrollLeft+r.left-b.left-v.clientLeft+(r.width-v.clientWidth)/2)),top:Math.max(0,Math.min(v.scrollHeight-v.clientHeight,v.scrollTop+r.top-b.top-v.clientTop+(r.height-v.clientHeight)/2))};},room);
-     await camera.getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(64);
+     await (await cameraControls(p)).getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(64);
      const pos=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));
      assert(Math.abs(pos.left-expected.left)<=1&&Math.abs(pos.top-expected.top)<=1,'focus must center and clamp inside viewport: '+JSON.stringify({width,room,pos,expected}));
      assert.deepEqual(await shellGeometry(),geometry,'focus must not scroll shell ancestors or displace the viewport');
     }
     if(width===390&&room==='study')await p.screenshot({path:resolve(out,'android-069-room-focus-390.png')});
-    for(const name of ['+','−']){await camera.getByRole('button',{name,exact:true}).click();await p.clock.runFor(64);assert.deepEqual(await shellGeometry(),geometry);}
-    await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+    for(const name of ['+','−']){await (await cameraControls(p)).getByRole('button',{name,exact:true}).click();await p.clock.runFor(64);assert.deepEqual(await shellGeometry(),geometry);}
+    await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
     assert(await viewport.evaluate(v=>v.scrollLeft===0&&v.scrollTop===0&&document.querySelector('#citadel-castle').getBoundingClientRect().width<=v.clientWidth+1));
     assert.deepEqual(await shellGeometry(),geometry);
     assert(await p.locator('.citadel-floor-caption,.citadel-skyline').evaluateAll(ns=>{const v=document.querySelector('.citadel-viewport').getBoundingClientRect();return ns.every(n=>{const r=n.getBoundingClientRect();return r.left>=v.left&&r.right<=v.right;});}));
@@ -2072,14 +2077,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    // Pinch uses actual rendered castle bounds, including centered margins at overview scale.
    await viewport.evaluate(v=>{const r=v.getBoundingClientRect(),y=r.top+Math.min(100,r.height/2),x=r.left+r.width/2;function touches(d){return [new Touch({identifier:1,target:v,clientX:x-d,clientY:y}),new Touch({identifier:2,target:v,clientX:x+d,clientY:y})];}v.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:touches(30)}));v.dispatchEvent(new TouchEvent('touchmove',{bubbles:true,cancelable:true,touches:touches(60)}));v.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[]}));});
    await p.clock.runFor(500);assert.deepEqual(await shellGeometry(),geometry,'pinch must never scroll ancestors');
-   await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
-   await camera.getByRole('button',{name:'+',exact:true}).click();await camera.getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(500);
+   await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+   await (await cameraControls(p)).getByRole('button',{name:'+',exact:true}).click();await (await cameraControls(p)).getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(500);
    const position=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));
    await p.reload();await p.waitForFunction(()=>window.__qa?.S.abyss?.rank>=24);await dismiss(p);await p.clock.runFor(500);
    const restored=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));assert.deepEqual(restored,position,'camera preference survives reload without shifting ancestors');
    assert.deepEqual(await shellGeometry(),geometry);
    assert.deepEqual(await p.evaluate(()=>({balance:__qa.balance(),abyss:JSON.parse(JSON.stringify(__qa.S.abyss)),buys:JSON.parse(JSON.stringify(__qa.S.buys))})),economy);
-   await p.setViewportSize({width:height,height:width});await p.clock.runFor(64);await dismiss(p);await camera.getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
+   await p.setViewportSize({width:height,height:width});await p.clock.runFor(64);await dismiss(p);await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await context.close();
   }
@@ -2090,7 +2095,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await p.locator('[data-croom]').count(),10);
   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await p.screenshot({path:resolve(out,'graphics-landscape-844x390.png')});
-  await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();
+  await (await cameraControls(p)).locator('button').filter({hasText:'+'}).click();
   await p.locator('[data-croom="gatehouse"]').evaluate(n=>n.scrollIntoView({block:'center',inline:'center'}));
   const target=await p.locator('[data-croom="gatehouse"]').evaluate(n=>{const r=n.getBoundingClientRect(),x=Math.round(r.left+40),y=Math.round(r.top+35);return {x,y,visible:document.elementFromPoint(x,y)?.closest('[data-croom="gatehouse"]')===n,room:[r.left,r.top,r.right,r.bottom],viewport:[innerWidth,innerHeight]};});
   assert(target.visible,'landscape camera must expose selected room: '+JSON.stringify(target));
@@ -2107,9 +2112,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    assert(await p.locator('#citadel-castle').isVisible());assert(!(await p.locator('.stage').isVisible()));
    assert.equal(await p.locator('[data-croom]').count(),10);
    assert.match(await p.locator('.citadel-shell-drawer.left').innerText(),/Ранг 24/);
-   if(width<700)await shellMenu(p);
+   await shellMenu(p);
    assert(await p.locator('.citadel-shell-nav .pl-chip').isVisible());await p.locator('.citadel-shell-nav .pl-chip').click();assert(await p.locator('.pl-menu').isVisible());await p.locator('.pl-menu').getByRole('button',{name:'ЗАКРЫТЬ',exact:true}).click();
-   if(width<700)await shellMenu(p);
+   await shellMenu(p);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    if(width===390){await p.locator('.citadel-shell-dock button').last().click();assert.equal(await p.locator('.citadel-shell-menu-toggle').getAttribute('aria-expanded'),'true');await p.screenshot({path:resolve(out,'shell-menu-390.png')});await shellMenu(p);}
    if(width<1050){await shellDrawer(p,'left');assert.equal(await p.locator('#citadel-home').getAttribute('data-drawer'),'left');
@@ -2121,7 +2126,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await p.locator('.citadel-system-dialog header button').click();assert(await p.locator('#citadel-castle').isVisible());
    for(const [label,id] of [['Финансы','money'],['Воспоминания','shop'],['Профиль','wardrobe']]){await shellNav(p,label);assert(await p.locator('.citadel-system-dialog #'+id).isVisible());if(width===390)await p.screenshot({path:resolve(out,'rpg-'+id+'-390.png')});await p.locator('.citadel-system-dialog header button').click();}
    if(width===390){await shellNav(p,'Настройки');assert(await p.locator('#setup').isVisible());await p.screenshot({path:resolve(out,'rpg-settings-390.png')});await p.locator('#setup-x').click();await shellNav(p,'Достижения');assert(await p.locator('#trophy').isVisible());await p.screenshot({path:resolve(out,'rpg-achievements-390.png')});await p.locator('#trophy-x').click();assert(await p.locator('.citadel-system-dialog #wardrobe').isVisible());await p.locator('.citadel-system-dialog header button').click();}
-   await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
+   await (await cameraControls(p)).locator('button').filter({hasText:'+'}).click();assert(await p.locator('#citadel-castle').evaluate(n=>n.clientWidth>600));
    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});if(width===390){
     const trigger=p.getByRole('button',{name:'Все разделы игры'});
     const close=p.getByRole('button',{name:'Закрыть разделы'});
@@ -2251,21 +2256,21 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const rooms=['throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'];
   await p.addLocatorHandler(p.locator('#achup:not([hidden])'),()=>p.locator('#ac-ok').click(),{noWaitAfter:true});
   for(const room of rooms){
-   if(!(await p.locator('#citadel-castle').isVisible()))await p.locator('[data-room-view="overview"]').click();
+   if(!(await p.locator('#citadel-castle').isVisible()))await roomBack(p);
    await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
    assert.equal(await p.evaluate(room=>__qa.roomLevel(room),room),1);
-   assert.equal(await p.locator('#citadel-room-condition').innerText(),'Заброшенная');
+   assert.equal(await p.locator('#citadel-room-condition').textContent(),'Заброшенная');
    assert(await p.locator('#citadel-interior-title').evaluate(n=>n.getBoundingClientRect().top>=document.querySelector('.citadel-room-tools').getBoundingClientRect().bottom),'room title must not scroll behind the toolbar');
    const art=await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n,'::before').backgroundImage);
    assert(art.includes(room+'-interior-1.svg')&&!art.includes('.webp'),'abandoned room cannot reveal luxury backdrop');
    assert(await p.evaluate(src=>new Promise(r=>{const im=new Image();im.onload=()=>r(im.naturalWidth>0);im.onerror=()=>r(false);im.src=src;}),'assets/citadel/'+room+'-interior-1.svg'));
    await p.screenshot({path:resolve(out,'android-067-'+room+'-state0.png')});
-   await p.locator('[data-room-view="upgrades"]').click();
+   await roomMore(p);await p.getByRole('button',{name:'Улучшить комнату',exact:true}).click();
    for(const level of [2,3]){await p.locator('#citadel-upgrade').click();await waitForIdle(p);await p.waitForFunction(({room,level})=>__qa.roomLevel(room)===level,{room,level});assert.equal(await p.locator('#citadel-room-condition').innerText(),level===2?'Восстановленная':'Роскошная');await p.screenshot({path:resolve(out,'android-067-'+room+'-state'+(level-1)+'.png')});}
   }
   const paid=await docs(p);assert.equal(Object.keys(paid).filter(k=>/^buys\/citadel-/.test(k)).length,20);
   await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&window.__qa&&__qa.roomLevel('vault')===3);await dismiss(p);
-  for(const room of rooms){if(!(await p.locator('#citadel-castle').isVisible()))await p.locator('[data-room-view="overview"]').click();await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'3');}
+  for(const room of rooms){if(!(await p.locator('#citadel-castle').isVisible()))await roomBack(p);await p.locator('[data-croom="'+room+'"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'3');}
   await context.close();
  });
  await check('Android 0.68 camera captions, unobstructed scenes and dock survive pan and rotation',async()=>{
@@ -2283,15 +2288,15 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await viewport.evaluate(n=>{n.scrollLeft=155;n.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[new Touch({identifier:1,target:n,clientX:240,clientY:300})]}));n.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[],changedTouches:[new Touch({identifier:1,target:n,clientX:70,clientY:305})]}));});
    await captions();assert(!(await p.locator('#pg-a').evaluate(n=>n.hidden)),'castle pan must never switch to legacy finance page');assert(await p.locator('#citadel-home').isVisible());
    if(width===390)await p.screenshot({path:resolve(out,'android-068-castle-panned-390.png')});
-   await p.locator('.citadel-shell-camera button').filter({hasText:'Общий вид'}).click();await captions();
+   await (await cameraControls(p)).locator('button').filter({hasText:'Общий вид'}).click();await captions();
    assert(await viewport.evaluate(n=>document.querySelector('#citadel-castle').getBoundingClientRect().width<=n.clientWidth+1),'explicit overview fits both room columns');
    if(width===390)await p.screenshot({path:resolve(out,'android-068-castle-overview-390.png')});
-   await p.locator('.citadel-shell-camera button').filter({hasText:'+'}).click();await captions();
+   await (await cameraControls(p)).locator('button').filter({hasText:'+'}).click();await captions();
    await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
    assert(await p.locator('.citadel-shell-tail').evaluateAll(nodes=>nodes.every(n=>{if(!n.getClientRects().length)return true;const a=n.getBoundingClientRect(),target=document.querySelector('#citadel-home').dataset.uiView==='overview'?document.querySelector('.citadel-viewport'):document.querySelector('#citadel-interior-stage'),b=target.getBoundingClientRect();return a.bottom<=b.top||a.top>=b.bottom||a.right<=b.left||a.left>=b.right;})),'drawer triggers must stay outside the artwork');
-   assert.equal(await p.locator('#citadel-room-condition').innerText(),'Заброшенная');
+   assert.equal(await p.locator('#citadel-room-condition').textContent(),'Заброшенная');
    if(width===390)await p.screenshot({path:resolve(out,'android-068-room-390.png')});
-   await p.locator('[data-room-view="overview"]').click();await captions();
+   await roomBack(p);await captions();
    await p.setViewportSize({width:height,height:width});await p.clock.runFor(64);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await context.close();
@@ -2515,7 +2520,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await clock(14);const before=await docs(p);await p.locator('#citadel-residents button').filter({hasText:'Хранительница'}).click();assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/завершены/);assert.deepEqual(await docs(p),before);
   await write(p,'days/2027-04-16',{q:Array(10).fill(false),steps:0,kcal:2500});assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/0 из/);
   await p.locator('#citadel-npc-actions button').filter({hasText:'Где ты?'}).click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');assert.match(await p.locator('#citadel-room-journal').innerText(),/Летопись недели/);
-  await p.locator('#citadel-room-journal-open').click();assert(await p.locator('#week').isVisible());
+  await roomMore(p);await p.locator('#citadel-room-journal-open').click();assert(await p.locator('#week').isVisible());
   await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();assert.match(await p.locator('#citadel-room-journal').innerText(),/0 \//);await context.close();
  });
  await check('all room upgrades and interiors stay usable at narrow and desktop sizes',async()=>{
@@ -2529,7 +2534,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
     assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth),'interior overflow '+room+' at '+width+' '+JSON.stringify(await p.locator('#citadel-interior').evaluate(n=>({self:{w:n.clientWidth,sw:n.scrollWidth,r:n.getBoundingClientRect().right},children:Array.from(n.querySelectorAll('*')).map(c=>({id:c.id,cls:c.className,w:c.getBoundingClientRect().width,r:c.getBoundingClientRect().right,sw:c.scrollWidth,cw:c.clientWidth})).filter(c=>c.r>n.getBoundingClientRect().right-1)}))));
     assert.equal(await p.locator('.citadel-interior-renovation').evaluate(n=>getComputedStyle(n).display),'block');
-    await p.locator(room==='forge'?'[data-room-inspect]':'#citadel-interior-object').focus();await p.keyboard.press('Enter');assert((await p.locator('#citadel-object-status').innerText()).includes(':'));
+    if(['forge','refectory'].includes(room))await roomMore(p);
+    await p.locator(['forge','refectory'].includes(room)?'[data-room-inspect]':'#citadel-interior-object').focus();await p.keyboard.press('Enter');assert((await p.locator('#citadel-object-status').innerText()).includes(':'));
    }
    await dismiss(p);await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'citadel-room-'+room+'.png')});
   }
@@ -2573,15 +2579,15 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const {from,to,path}of graph.paths){assert.equal(path[0],from);assert.equal(path.at(-1),to);for(let i=1;i<path.length;i++)assert(graph.graph[path[i-1]].includes(path[i]),'nonadjacent route edge');}
   await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();
   assert((await p.locator('#citadel-exits [data-travel]').count())>=3);
-  await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');
+  await roomMore(p);await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');
   assert.equal(await p.locator('#citadel-avatar').getAttribute('data-route'),'gatehouse hall-3 hall-2 archive');
   await waitForIdle(p);await p.reload();await castle(p);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('aria-pressed'),'true');
   await context.close();
  });
  await check('a new player can return from the gatehouse through stairs past locked rooms',async()=>{
   const {page:p,context}=await open({width:320});await castle(p);assert.equal(await p.evaluate(()=>__qa.points().L),1);
-  await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();assert(await p.locator('#citadel-exits [data-travel="archive"]').isDisabled());
-  await p.locator('#citadel-exits [data-travel="rest"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'rest');assert.equal(await p.locator('#citadel-avatar').getAttribute('data-route'),'gatehouse hall-3 hall-2 hall-1 rest');await context.close();
+  await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await roomMore(p);assert(await p.locator('#citadel-exits [data-travel="archive"]').isDisabled());
+  await roomMore(p);await p.locator('#citadel-exits [data-travel="rest"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'rest');assert.equal(await p.locator('#citadel-avatar').getAttribute('data-route'),'gatehouse hall-3 hall-2 hall-1 rest');await context.close();
  });
  await check('all new rooms, paid renovations, doors and objects work at six viewport widths',async()=>{
   const {page:p,context}=await open({seed:advancedSeed(),day:'2027-04-16'});await castle(p);const before=await p.evaluate(()=>__qa.points());
@@ -2651,7 +2657,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    }
   };
   await time('14:14:50');const castleSprite=await actor.elementHandle();await oneVisible();await sample(actor,['work','idle']);
-  await p.locator('#citadel-home button').filter({hasText:/^Общий вид$/}).click();
+  await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();
   await actor.screenshot({path:resolve(out,'living-citadel-guardian-work.png'),scale:'css'});
   await time('14:15:05');await oneVisible();assert(await actor.evaluate((n,old)=>n===old,castleSprite));
   assert(await p.evaluate(()=>__qa.npcState('guardian').moving));await sample(actor,['walk-1','walk-2']);
@@ -2686,7 +2692,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.waitForFunction(()=>document.querySelector('#citadel-castle .citadel-person[data-person="guardian"]').parentElement.dataset.croom==='observatory');
   assert.equal(await closeup.count(),0);
   await p.reload();await p.waitForFunction(()=>__qa.loading());await dismiss(p);
-  await p.locator('[data-room-view="overview"]').dispatchEvent('click');
+  await roomBack(p);
   await castle(p);await oneVisible();assert.equal(await actor.evaluate(n=>n.parentElement.dataset.croom),'observatory');
   await time('18:02:00');await oneVisible();await sample(actor,['idle','talk']);
   await time('23:02:00');await oneVisible();await sample(actor,['rest']);
@@ -3019,6 +3025,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     tx.set('cfg/citadel',{decor:{},selectedRoom:'rest'});
     tx.set('cfg/future-synthetic',{nested:{keep:42}});
    }));
+   // The old build initializes the economy on a timer, after the rank becomes visible.
+   await p.waitForFunction(()=>PlanSync._docs()['cfg/abyss-economy']?.d?.rankSeeded===true);
    await p.evaluate(()=>PlanSync.beforeUpdate());const before=await docs(p);
    servedOverrides.clear();await p.reload();await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
    await shellMenu(p);await p.locator('.pl-chip').click();
@@ -3041,19 +3049,32 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    assert.deepEqual(await docs(p),after);
   }finally{servedOverrides.clear();await context.close();}
  });
- await check('0.73 through 1.3 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
-  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778'],['1.0','7317a00710f8d2c95a91f2cd9a34b862ad1b690f'],['1.1','2c1ff84'],['1.2','f56d9f9'],['1.3','ca5b6c9']]){
-  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(oldVersion==='1.3'?['chains.js','chains-ui.js','chains.css']:[]),...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
+ await check('0.73 through 1.3.5 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
+  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778'],['1.0','7317a00710f8d2c95a91f2cd9a34b862ad1b690f'],['1.1','2c1ff84'],['1.2','f56d9f9'],['1.3','ca5b6c9'],['1.3.2','6e803409efc1afd695401f2959b0895039287e58'],['1.3.3','212442e'],['1.3.4','1babd748d46766a396aa6a9c92ea0e8ecb0da279'],['1.3.5','03f3e1c1c3c0ed08f938f61129dc534c10d5b1cc']]){
+  const diaryVersion=['1.3.3','1.3.4','1.3.5'].includes(oldVersion);
+  const workspaceVersion=['1.3.4','1.3.5'].includes(oldVersion);
+  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(['1.3','1.3.2'].includes(oldVersion)?['chains.js','chains-ui.js','chains.css']:[]),...(diaryVersion?['food.js','food-ui.js']:[]),...(workspaceVersion?['room-workspace.js']:[]),...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
   context.setDefaultTimeout(15000);const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}},'cfg/future-synthetic':{nested:{keep:42}}};if(['0.79','0.90'].includes(oldVersion)){seed['cfg/legends']={version:1,active:'',unlocked:{echo01:{version:1,at:1,presented:true}}};seed['cfg/fate']={version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}};}
   if(oldVersion==='1.3')seed['chains/legacy-smoke']={kind:'smoke',date:'2026-11-06',at:1793962800000};
+  if(oldVersion==='1.3.2')seed['chains/legacy-smoke']={kind:'smoke',date:'2026-11-09',at:1794211200000};
+  if(diaryVersion)seed['food-meals/migration-meal']={version:1,id:'migration-meal',date:'2026-11-09',kind:'breakfast',
+    items:[{id:'migration-item',name:'Завтрак',grams:100,base:100,mode:'exact',values:{kcal:200,protein:8,fat:4,carbs:31}}],
+    deleted:false,created:1794211200000,updated:1794211200000};
+  if(workspaceVersion)Object.assign(seed,{
+    'food-settings/preferences':{version:1,kcal:2600,created:1,updated:1},
+    'room-projects/migration-project':{version:1,title:'Режим',tasks:['daily-0'],created:1,updated:1},
+    'room-notes/migration-note':{version:1,title:'План',text:'Проверка записи',project:'migration-project',created:1,updated:1},
+    'room-recovery/2026-11-09':{version:1,date:'2026-11-09',minutes:450,mood:4,created:1,updated:1},
+    'cfg/room-reminders':{version:1,at:'19:00',quietFrom:'22:30',quietTo:'07:30',categories:[]}
+  });
   await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2026-10-26');localStorage.setItem('msum','2026-10');localStorage.setItem('trialSeen','2026-10-30');},seed);
-  await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date((oldVersion==='1.3'?'2026-11-06':'2026-10-30')+'T14:00:00+03:00')});
+  await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date((oldVersion==='1.3'?'2026-11-06':diaryVersion||oldVersion==='1.3.2'?'2026-11-09':'2026-10-30')+'T14:00:00+03:00')});
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&PlanSync._docs()['cfg/abyss-economy']?.d?.rank>=1);await dismiss(p);
   if(oldVersion==='1.3')await p.waitForFunction(()=>document.querySelector('#chains-daily').textContent.includes('Воли'));
   assert.equal(await p.evaluate(()=>APP_VERSION),oldVersion);assert.notEqual(await p.evaluate(()=>APP_BUILD),expectedBuild);await p.evaluate(()=>PlanSync.beforeUpdate());const before=await docs(p);
-  servedOverrides.clear();if(['1.0','1.1','1.2','1.3'].includes(oldVersion))await p.reload();else await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
+  servedOverrides.clear();if(diaryVersion||['1.0','1.1','1.2','1.3','1.3.2'].includes(oldVersion))await p.reload();else await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
   await shellMenu(p);await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();
   await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),currentVersion);
   if(oldVersion==='1.3'){
@@ -3100,7 +3121,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date('2027-04-16T14:00:00+03:00')});
   await p.addLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first(),()=>dismiss(p),{noWaitAfter:true});
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await castle(p);
-  await context.setOffline(true);await p.reload();await castle(p);assert(await p.evaluate(()=>!!window.CitadelWorld));const artCache=await p.evaluate(async()=>Promise.all(['citadel-space.js',...['throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'].flatMap(room=>[1,2,3].map(level=>'assets/citadel/'+room+'-interior-'+level+'.svg')),'rpg-ui.css','assets/citadel/rest-ruins.svg','citadel-art.css','assets/citadel/rest.webp','assets/citadel/sky.webp','assets/citadel/roof.svg','assets/citadel/abandoned.svg','assets/citadel/guardian.svg','assets/citadel/rest-upgrade3.svg'].map(path=>caches.match(new URL(path,location.href)).then(Boolean))));assert(artCache.every(Boolean),'offline shell must include textures, roof, room states, sprites and renovation art');await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
+  await context.setOffline(true);await p.reload();await castle(p);assert(await p.evaluate(()=>!!window.CitadelWorld));const artCache=await p.evaluate(async()=>Promise.all(['citadel-space.js',...['throne','observatory','rest','study','archive','forge','gatehouse','refectory','cloister','vault'].flatMap(room=>[1,2,3].map(level=>'assets/citadel/'+room+'-interior-'+level+'.svg')),'rpg-ui.css','assets/citadel/rest-ruins.svg','citadel-art.css','assets/citadel/rest.webp','assets/citadel/sky.webp','assets/citadel/roof.svg','assets/citadel/abandoned.svg','assets/citadel/guardian.svg','assets/citadel/rest-upgrade3.svg'].map(path=>caches.match(new URL(path,location.href)).then(Boolean))));assert(artCache.every(Boolean),'offline shell must include textures, roof, room states, sprites and renovation art');await p.locator('[data-croom="gatehouse"]').click();await p.locator('#citadel-enter').click();await roomMore(p);await p.locator('#citadel-exits [data-travel="archive"]').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-room'),'archive');await p.locator('[data-croom="study"]').click();await p.locator('#citadel-enter').click();const before=await p.locator('#upg').innerText();
   await p.locator('#citadel-upgrade').click();await p.waitForFunction(()=>!!PlanSync._docs()['buys/citadel-study-2']);await p.waitForFunction(()=>document.querySelector('#citadel-interior-stage').dataset.level==='2');
   assert.equal(Number(await p.locator('#upg').innerText()),Number(before));await p.reload();await castle(p);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'2');
   assert.equal(Object.keys(await docs(p)).filter(k=>k==='buys/citadel-study-2').length,1);assert.equal(Number(await p.locator('#upg').innerText()),Number(before));await context.close();

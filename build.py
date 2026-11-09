@@ -19,7 +19,7 @@ g = g.replace('__VER__', open(f'{SRC}/version.txt', encoding='utf-8').read().str
 art_assets = sorted(Path(SRC).glob('assets/citadel/*'))
 art_hash = hashlib.sha256(b''.join(p.read_bytes() for p in art_assets)).hexdigest()
 icon_hash = hashlib.sha256(Path(SRC, 'assets/icon-shadow-v1.png').read_bytes()).hexdigest()
-build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'sw.template.js', 'manifest.json', config_source]) + art_hash + icon_hash + open(f'{SRC}/citadel-art.css', encoding='utf-8').read() + open(f'{SRC}/rpg-ui.css', encoding='utf-8').read() + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
+build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js', 'sw.template.js', 'manifest.json', config_source]) + art_hash + icon_hash + open(f'{SRC}/citadel-art.css', encoding='utf-8').read() + open(f'{SRC}/rpg-ui.css', encoding='utf-8').read() + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
 g = g.replace('__BUILD__', build_id)
 i = g.index('<link rel="stylesheet" href="rpg-ui.css">') + len('<link rel="stylesheet" href="rpg-ui.css">')
 head_part, body_part = g[:i], g[i:]
@@ -30,7 +30,7 @@ html = ('<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
         '<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">'
         '<link rel="apple-touch-icon" href="icon-192.png">'
         '<script>window.APP_VERSION=' + json.dumps(open(f'{SRC}/version.txt', encoding='utf-8').read().strip()) + ';window.APP_BUILD=' + json.dumps(build_id) + ';</script>'
-        '<script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>\n'
+        '<script src="config.js"></script><script src="save-history.js"></script><script src="cloud-sync.js"></script><script src="cloud-firebase.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>\n'
         + head_part + '</head><body>' + body_part + '\n</body></html>\n')
 open(f'{DIST}/index.html', 'w', encoding='utf-8').write(html)
 
@@ -56,7 +56,7 @@ icon(192, .82).save(f'{DIST}/icon-192.png')
 icon(512, .82).save(f'{DIST}/icon-512.png')
 icon(512, .62).save(f'{DIST}/icon-512-maskable.png')
 
-for f in ['manifest.json', 'config.js', 'localdb.js', 'awakening.js', 'privacy.html', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css']:
+for f in ['manifest.json', 'config.js', 'localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'privacy.html', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js']:
     source_name = config_source if f == 'config.js' else f
     shutil.copy(f'{SRC}/{source_name}', f'{DIST}/{f}')
 
@@ -98,7 +98,7 @@ for actor in ('guardian', 'archivist', 'smith', 'treasurer'):
         ET.ElementTree(image).write(art / f'{actor}-{pose}.svg', encoding='utf-8')
 
 # --- sw.js с версией = хэш содержимого
-shell = ['index.html', 'manifest.json', 'config.js', 'localdb.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
+shell = ['index.html', 'manifest.json', 'config.js', 'localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
 shell += ['citadel-art.css', 'rpg-ui.css'] + ['assets/citadel/' + name for name in sorted(os.listdir(f'{DIST}/assets/citadel'))]
 h = hashlib.sha256()
 for f in sorted(set(shell) - {'./'}):

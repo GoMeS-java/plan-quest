@@ -59,19 +59,24 @@
     return { dialog, content };
   }
   const settingsTitle = 'Настройки испытания';
-  let db, enqueue, events = [], prefs = {}, data, currentDate, refreshHero;
+  let db, enqueue, events = [], prefs = {}, data, currentDate, refreshHero, refreshOverview;
   let quick, quickPanel, quickCount, undo, undoTimer, undoId, stat, statDate, statsBody, statsSummary;
   let settings, watch, clockDetail, clockSeen, clockPending;
   let renderQueued = false;
   function requestRender() {
     if (renderQueued) return;
     renderQueued = true;
-    Promise.resolve().then(() => { renderQueued = false; render(); });
+    Promise.resolve().then(() => {
+      renderQueued = false;
+      render();
+      refreshOverview?.();
+    });
   }
-  function connect(database, queue, onProgress) {
+  function connect(database, queue, onProgress, onOverview) {
     db = database;
     enqueue = queue;
     refreshHero = onProgress;
+    refreshOverview = onOverview;
     $('chains-settings-open').onclick = openSettings;
     db.doc('cfg/fate-clock').onSnapshot(snapshot => {
       const seen = !!snapshot.data()?.finished;
@@ -221,6 +226,16 @@
       if (rolledOver) { requestRender(); refreshHero?.(); }
     }
     return progressData;
+  }
+  function recordedCount(date) {
+    getProgress();
+    const row = data.days[date];
+    return observed(row) ? row.count : null;
+  }
+  function todayStatus() {
+    getProgress();
+    const limit = model.limit(currentDate);
+    return limit === null ? null : { count: data.days[currentDate]?.count || 0, limit };
   }
   function syncProgress() {
     if (awarding || !model.pendingAwards(data, currentDate, awards).length) return;
@@ -419,5 +434,5 @@
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) requestRender(); });
   setInterval(() => { if (!document.hidden) currentDate !== model.today() ? requestRender() : updateClock(); }, 15000);
-  root.VkachChainsUI = Object.freeze({ connect, mountQuick, sandColor, getProgress, owned: () => model.owned(awards) });
+  root.VkachChainsUI = Object.freeze({ connect, mountQuick, sandColor, getProgress, todayStatus, recordedCount, owned: () => model.owned(awards) });
 })(globalThis);

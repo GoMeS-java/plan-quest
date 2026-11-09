@@ -111,9 +111,7 @@ try{
   const before=await financial(),version=(await readFile('src/version.txt','utf8')).trim();
   assert.equal(await t.evaluate(()=>APP_VERSION),version);assert.equal(await t.evaluate(()=>PLAN_CONFIG.cloudEnabled),false);
   if(!(await t.locator('.citadel-shell-nav').isVisible())){if(await t.locator('.citadel-shell-menu-toggle').isVisible())await t.locator('.citadel-shell-menu-toggle').click();else await t.locator('.citadel-shell-dock button').last().click();}
-  const financeGroup=t.locator('.citadel-shell-nav .citadel-menu-group').filter({has:t.locator('[data-section="money"]')});
-  if(!(await financeGroup.evaluate(n=>n.open)))await financeGroup.locator('summary').click();
-  await t.locator('.citadel-shell-nav [data-section="money"]').click();
+  await t.locator('.citadel-pins [data-section="money"]').click();
   for(const id of ['wheel','spend','money','wheel']){
    await t.locator('[data-finance="'+id+'"]').click();
    assert.equal(await t.locator('.citadel-finance-nav [aria-selected="true"]').getAttribute('data-finance'),id);
@@ -128,11 +126,12 @@ try{
   assert.equal(await t.locator('.citadel-finance-nav [aria-selected="true"]').getAttribute('data-finance'),'wheel');
   if(width===390)await t.screenshot({path:resolve(shotDir,'android-069-test-wheel-'+(populated?'filled':'empty')+'-390.png')});
   await t.locator('.citadel-system-dialog header button').click();
-  const camera=t.locator('.citadel-shell-camera');await camera.getByRole('button',{name:'Общий вид',exact:true}).click();
+  const camera=t.locator('.citadel-map-camera');await camera.locator('summary').click();await camera.getByRole('button',{name:'Общий вид',exact:true}).click();
   await t.locator('[data-croom="study"]').click();await t.locator('#citadel-interior').waitFor({state:'visible'});
   // Exercise 0.77 through the actual isolated bundle and its own storage keys.
   await t.waitForFunction(()=>PlanSync._docs()['cfg/citadel']?.d.selectedRoom==='study');
   const roomSave=await t.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));
+  await t.locator('.citadel-room-more > summary').click();
   for(let i=0;i<5;i++)await t.locator('[data-room-moment]').click();
   assert.match(await t.locator('#citadel-object-status').innerText(),/страницу/);
   assert.deepEqual(await t.evaluate(()=>PlanSync._docs()),roomSave,'isolated quiet actions wrote progress');
@@ -140,7 +139,8 @@ try{
   assert(await t.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth));
   if(width===390&&!populated)await t.screenshot({path:resolve(shotDir,'android-077-room-action-390.png')});
 
-  await t.locator('[data-room-view="overview"]').click();
+  await t.locator('#citadel-interior-close').click();
+  await camera.locator('summary').click();
   await camera.getByRole('button',{name:'+',exact:true}).click();
   for(let repeat=0;repeat<3;repeat++){
    await camera.getByRole('button',{name:'К комнате',exact:true}).click();
@@ -174,6 +174,7 @@ try{
  await presentation.addInitScript(({prodCamera,prodView})=>{localStorage.setItem('plan.citadel.camera.v1',prodCamera);localStorage.setItem('plan.citadel.view.v1',prodView);localStorage.setItem('plan.citadel.selectedRoom.v1','vault');localStorage.setItem('plan.android-test.awakening.v1',JSON.stringify({version:1,status:'skipped',step:0}));},{prodCamera,prodView});
  const ui=await presentation.newPage();await ui.addLocatorHandler(ui.locator('#achup:not([hidden])'),()=>ui.locator('#ac-ok').click(),{noWaitAfter:true});ui.on('pageerror',e=>errors.push(String(e)));await ui.goto(url+'/android-test/');await ui.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');
  assert(!await ui.locator('.citadel-system-dialog').isVisible(),'test app must not restore production section');
+ await ui.locator('.citadel-map-camera summary').click();
  await ui.locator('.citadel-shell-camera button').getByText('+',{exact:true}).click();await ui.locator('.citadel-shell-dock [data-section="wardrobe"]').click();await ui.locator('#profile-hero').waitFor({state:'visible'});
  await ui.evaluate(()=>window.dispatchEvent(new Event('pagehide')));
  assert(await ui.evaluate(()=>!!localStorage.getItem('plan.android-test.citadel.camera.v1')));assert.equal(await ui.evaluate(()=>JSON.parse(localStorage.getItem('plan.android-test.citadel.view.v1')).section),'wardrobe');

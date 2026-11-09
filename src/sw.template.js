@@ -5,6 +5,7 @@ var CACHE = CACHE_PREFIX + VERSION;
 var FONT_CACHE = CACHE_PREFIX + 'fonts';
 var SHELL = __SHELL__;
 var APP_BUILD = '__APP_BUILD__';
+var pushQueue = Promise.resolve();
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (cache) {
@@ -30,6 +31,44 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('message', function (e) {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
   if (e.data === 'APP_BUILD' && e.ports[0]) e.ports[0].postMessage(APP_BUILD);
+});
+
+self.addEventListener('push', function (event) {
+  if (!event.data) return;
+  var data;
+  try { data = event.data.json().data; } catch (_) { return; }
+  if (data?.vkach !== '1' || typeof data.id !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(data.id) ||
+      !(Number(data.expiresAt) > Date.now())) return;
+  pushQueue = pushQueue.catch(function () {}).then(async function () {
+    var scope = self.registration.scope, cache = await caches.open('vkach-push-' + scope);
+    var stateKey = new URL('__vkach_push_state__',scope);
+    async function stillWanted() {
+      var response=await cache.match(stateKey), state=response && await response.json();
+      return state?.needed && state.device===data.device && state.day===data.day &&
+        state.revision===Number(data.revision) && Number(data.expiresAt)>Date.now();
+    }
+    if (!await stillWanted()) return;
+    var windows = await self.clients.matchAll({type:'window',includeUncontrolled:true});
+    if (windows.some(client=>client.url.startsWith(scope)&&client.visibilityState==='visible')) return;
+    var key = new URL('__vkach_push_last__',scope);
+    var previous = await cache.match(key);
+    if (previous && (await previous.json()).id === data.id) return;
+    if (!await stillWanted()) return;
+    await cache.put(key,new Response(JSON.stringify({id:data.id,day:data.day,device:data.device})));
+    await self.registration.showNotification('Вкач', {
+      body:'Открой Цитадель, чтобы проверить дела дня.',
+      icon:new URL('icon-192.png',scope).href, tag:'vkach-daily', renotify:false
+    });
+  });
+  event.waitUntil(pushQueue);
+});
+self.addEventListener('notificationclick', function (event) {
+  if (event.notification.tag !== 'vkach-daily') return;
+  event.notification.close();
+  event.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function (clients) {
+    var client = clients.find(item=>item.url.startsWith(self.registration.scope));
+    return client ? client.focus() : self.clients.openWindow(self.registration.scope);
+  }));
 });
 
 self.addEventListener('fetch', function (e) {

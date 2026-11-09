@@ -9,12 +9,18 @@ on:
       - 'src/shelter-items.js'
       - 'src/fate.js'
       - 'src/chains*'
+      - 'src/food*.js'
+      - 'src/room-workspace.js'
       - 'src/awakening.js'
       - 'src/citadel*.css'
       - 'src/rpg-ui.css'
       - 'src/assets/citadel/**'
       - 'src/game.html'
       - 'src/localdb.js'
+      - 'src/save-history.js'
+      - 'src/cloud-*.js'
+      - 'cloud/**'
+      - 'firebase.json'
       - 'src/config*.js'
       - 'src/sw.template.js'
       - 'src/manifest.json'
@@ -27,6 +33,18 @@ on:
 permissions:
   contents: write
 jobs:
+  cloud-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm run test:cloud-rules
   build:
     strategy:
       fail-fast: false
@@ -112,10 +130,16 @@ jobs:
           node --check docs/citadel-life.js
           node --check docs/citadel-weather.js
           node --check docs/localdb.js
+          node --check docs/save-history.js
+          node --check docs/cloud-sync.js
+          node --check docs/cloud-firebase.js
           node --check docs/awakening.js
           node --check docs/shelter-items.js
           node --check docs/chains.js
           node --check docs/chains-ui.js
+          node --check docs/food.js
+          node --check docs/food-ui.js
+          node --check docs/room-workspace.js
           python - <<'PY'
           import re
           from pathlib import Path
@@ -129,6 +153,9 @@ jobs:
       - name: Browser regression tests
         env:
           TEST_SHARD: ${{ github.ref == 'refs/heads/citadel-development-20261030' && '1/1' || format('{0}/4', matrix.shard) }}
+          STAGE_TWO_SHOTS: test-results/stage-two
+          STAGE_THREE_SHOTS: test-results/stage-three
+          CLOUD_FINAL_SHOTS: test-results/memory-final
           CI_SHARD: ${{ matrix.shard }}
         run: |
           npm ci
