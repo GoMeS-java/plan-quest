@@ -15,6 +15,7 @@ const ctx = vm.createContext({
   dirty: true,
   TAB: 'data',
   validDocs: value => value,
+  parseBackupText: JSON.parse,
   JSON,
   Object,
   api: (url, options) => {

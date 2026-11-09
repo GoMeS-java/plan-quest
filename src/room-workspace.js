@@ -357,7 +357,7 @@
   const reminderPath = 'cfg/room-reminders';
   const reminderCategories = [
     ['tasks','Задания ещё открыты'], ['food','В дневнике питания пока нет записей'],
-    ['recovery','В дневнике восстановления пока нет записи']
+    ['habits','Есть ритуалы без отметки'], ['recovery','Сон ещё не записан']
   ];
   const reminderDefaults = { version:1, at:'19:00', quietFrom:'23:00', quietTo:'08:00', categories:[] };
   function readReminders(value) {
@@ -424,5 +424,5 @@
     document.addEventListener('visibilitychange',check);
   }
 
-  root.VkachRoomWorkspace = Object.freeze({ labels, mount, mountReminders, dueReminders });
+  root.VkachRoomWorkspace = Object.freeze({ labels, mount, mountReminders, dueReminders, duration });
 })(globalThis);

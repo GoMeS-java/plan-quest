@@ -1001,7 +1001,7 @@ html,body{overflow-anchor:none}
     <div class="shead"><b>НАСТРОЙКИ</b><button class="gear" id="setup-x" type="button" aria-label="Закрыть">&#10005;</button></div>
     <button type="button" class="btn" id="chains-settings-open">Настройки «Разрыва оков»</button>
     <h2>ОБУЧЕНИЕ</h2><p class="hint">Заклятие проведёт тебя по настоящим разделам. Можно остановиться в любой момент.</p><div class="row"><button class="btn" id="awakening-start" type="button">НАЧАТЬ ОБУЧЕНИЕ</button><button class="btn alt" id="awakening-restart" type="button" hidden>ПРОЙТИ ЗАНОВО</button><button class="btn alt" id="awakening-update-start" type="button">НОВОЕ ОФОРМЛЕНИЕ</button></div>
-    <button class="btn" id="data-management" type="button">ДАННЫЕ И РЕЗЕРВНЫЕ КОПИИ</button>
+    <button class="btn" id="data-management" type="button">АККАУНТ И СОХРАНЕНИЯ</button>
     <details id="room-reminders" class="goal"><summary>Напоминания в игре</summary></details>
     <h2>ЭФФЕКТЫ</h2>
     <div class="goal settings-effects">
@@ -1376,10 +1376,14 @@ html,body{overflow-anchor:none}
     notify:toast,
     needs:function(key){
       var date=dkey(new Date());
-      if(key==='food')return date>=VkachFood.start&&!food.summary(date).items.length&&!S.days[date]?.kcal;
+      if(key==='food'){
+        var day=food.summary(date);
+        return date>=VkachFood.start&&!day.complete&&!day.items.length&&S.days[date]?.kcal==null;
+      }
+      if(key==='habits')return roomRitualIds(date).some(function(index){return !S.days[date]?.q?.[index];});
       if(key==='recovery'){
         var entry=PlanSync._docs()['room-recovery/'+date]?.d;
-        return !entry||entry.deleted;
+        return !entry||entry.deleted||VkachRoomWorkspace.duration(entry)===null;
       }
       return dayCount(date,stepInfo())<reqTotal(date);
     }

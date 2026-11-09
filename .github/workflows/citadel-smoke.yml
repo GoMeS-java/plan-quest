@@ -17,6 +17,7 @@ on:
       - 'src/assets/citadel/**'
       - 'src/game.html'
       - 'src/localdb.js'
+      - 'src/save-history.js'
       - 'src/config*.js'
       - 'src/sw.template.js'
       - 'src/manifest.json'
@@ -114,6 +115,7 @@ jobs:
           node --check docs/citadel-life.js
           node --check docs/citadel-weather.js
           node --check docs/localdb.js
+          node --check docs/save-history.js
           node --check docs/awakening.js
           node --check docs/shelter-items.js
           node --check docs/chains.js
@@ -135,6 +137,7 @@ jobs:
         env:
           TEST_SHARD: ${{ github.ref == 'refs/heads/citadel-development-20261030' && '1/1' || format('{0}/4', matrix.shard) }}
           STAGE_TWO_SHOTS: test-results/stage-two
+          STAGE_THREE_SHOTS: test-results/stage-three
           CI_SHARD: ${{ matrix.shard }}
         run: |
           npm ci

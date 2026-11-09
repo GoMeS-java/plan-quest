@@ -1136,6 +1136,12 @@ body.citadel-shell-active #fate-forge-dialog{
 .room-reminder-form>label{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;cursor:pointer}
 .room-reminder-form>label input{flex:none;margin:0}
 #room-reminders>summary{min-height:44px;align-content:center;cursor:pointer}
+.pl-section,.pl-history-entry{display:grid;gap:6px;min-width:0;border:1px solid var(--line);border-radius:4px;padding:8px}
+.pl-section summary{min-height:44px;align-content:center;cursor:pointer;color:var(--gold)}
+.pl-section p{margin:3px 0}
+.pl-history{display:grid;gap:8px}
+.pl-history-entry small{color:var(--muted)}
+.pl-history-entry button{width:100%}
 @media(max-width:440px){
   .room-reminder-times{grid-template-columns:repeat(2,minmax(0,1fr))}
   .room-reminder-times label:first-child{grid-column:1/-1}
