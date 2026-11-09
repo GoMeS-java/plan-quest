@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
-const game = readFileSync('src/game.html', 'utf8');
+const source = path => readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
+const game = source('src/game.html');
 const hash = text => createHash('sha256').update(text).digest('hex');
 // Captured from 1.3.2 before Stage I. Browser tests cover behavior; these
 // checks also catch edits to protected rules outside the exercised fixtures.
@@ -24,6 +25,6 @@ for (const [path, expected] of [
   ['src/citadel-world.js', '96f39bad7c3044c413c8cdd6b320d2d096f8f6fcf5984765c75afb8b11fd5186'],
   ['src/forge-awards.js', 'c60b2f6f6cc0867a1b6ec4045a7475323a01f8d7408ba6a946163ed292a6f81e'],
 ]) {
-  assert.equal(hash(readFileSync(path)), expected, path);
+  assert.equal(hash(source(path)), expected, path);
 }
 console.log('1.3.2 progression, economy and resident rules verified');

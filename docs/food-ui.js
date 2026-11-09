@@ -124,7 +124,7 @@
   }
 
   function mount(host, options) {
-    const { today, goal, records, transact, notify } = options;
+    const { today, goal: defaultGoal, records, transact, notify } = options;
     let tab = 'today';
     let date;
     let active = false;
@@ -155,6 +155,8 @@
       if (!cachedGroups.has(group)) cachedGroups.set(group, model.read(current, group));
       return cachedGroups.get(group);
     }
+
+    const goal = () => get('settings')[0]?.kcal ?? defaultGoal();
 
     function summary(day) {
       const meals = get('meals').filter(row => row.date === day && !row.deleted);
@@ -290,7 +292,7 @@
       }
       if (view.items.length) {
         const c = view.stats.counts;
-        total.append(element('small', 'Точно: ' + c.exact + ' · приблизительно: ' + c.estimate + ' · без расчёта: ' + c.unknown));
+        total.append(element('small', 'Точно: ' + c.exact + ' · приблизительно: ' + c.estimate + ' (' + Math.round(100 * c.estimate / view.items.length) + '%) · без расчёта: ' + c.unknown));
       }
       const complete = check('Дневник заполнен', view.complete, value => run(
         () => transact(tx => model.setComplete(tx, day, value)), () => { report(''); render(); }
@@ -457,12 +459,17 @@
       } else {
         const cooked = data.recipeMode === 'cooked';
         const preview = element('p');
+        data.previewGrams ??= previous?.lastGrams ?? '';
+        const portionInput = input('Порция для расчёта, г', data.previewGrams, value => { data.previewGrams = value; updatePreview(); }, { decimal: true });
         function updatePreview() {
           try {
             const result = model.recipe(data.ingredients, data.recipeMode, data.base, data.overrides);
             const kcal = result.values.kcal;
+            const grams = Number(String(data.previewGrams).replace(',', '.'));
             preview.textContent = 'Вес блюда ' + format.format(result.base) + ' г · ' +
-              (kcal == null ? 'калорийность неизвестна' : format.format(kcal) + ' ккал на всё блюдо');
+              (kcal == null ? 'калорийность неизвестна' : format.format(kcal) + ' ккал на всё блюдо · ' +
+                format.format(kcal / result.base * 100) + ' ккал на 100 г' +
+                (Number.isFinite(grams) && grams > 0 ? ' · ' + format.format(kcal / result.base * grams) + ' ккал в порции' : ''));
           } catch { preview.textContent = 'Заполни массу и данные ингредиентов для расчёта.'; }
         }
         body.appendChild(select('Способ приготовления', [['simple', 'Собрать из готовых продуктов'],
@@ -481,6 +488,7 @@
           body.append(yieldSection, disclosure('КБЖУ всего блюда, если известны',
             nutrientFields(data.overrides, updatePreview)));
         }
+        body.appendChild(disclosure('Расчёт порции', portionInput));
         updatePreview();
       }
       body.appendChild(button('Отменить редактирование', () => { catalogEditor = null; render(); }));
@@ -511,6 +519,14 @@
       group('Свои продукты', list.filter(row => row.type === 'product'));
       group('Домашние блюда и рецепты', list.filter(row => row.type === 'recipe'));
       body.appendChild(button('Создать рецепт', () => editCatalog('recipe')));
+      let target = goal();
+      body.appendChild(disclosure('Настройки питания',
+        input('Дневная цель, ккал', target, value => { target = value; }, { decimal: true }),
+        element('p', 'Цель для дневника. Условия игрового задания остаются прежними.', 'hint'),
+        button('Сохранить цель', () => run(() => transact(tx => model.setGoal(tx, target)), () => {
+          report('Цель питания сохранена');
+          render();
+        }))));
       footer.appendChild(button('Создать продукт', () => editCatalog('product'), 'food-primary'));
     }
 
@@ -597,7 +613,7 @@
       await pendingOperation;
     }
 
-    return Object.freeze({ open, close, connect, summary, calorieLine, flush });
+    return Object.freeze({ open, close, connect, summary, calorieLine, goal, flush });
   }
 
   root.VkachFoodUI = Object.freeze({ mount });
