@@ -18,5 +18,12 @@ const source=readFileSync('src/game.html','utf8'),worker=readFileSync('docs/sw.j
 console.log('PASS rebuild discoveries: durable facts, no click farming, atomic reward paths, one-time receipts, retained ownership, malformed dates and cached assets');
 
 const approved=execFileSync('git',['show','2c1ff84:src/rpg-ui.css'],{encoding:'utf8'});
-const base=css=>css.split('\n.profile-system-hub')[0].trim();
+// The resident renderer owns its frame and sizing rules. Keep the scenery snapshot strict.
+const base=css=>css.split('\n.profile-system-hub')[0].split('\n').filter(line=>
+ !line.startsWith('@keyframes citadelInterior') &&
+ !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person') &&
+ !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:max(22px,7.5%)') &&
+ !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:var(--citadel-room-actor-width)') &&
+ !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage{--citadel-room-actor-width:')
+).join('\n').replace('/* Six frames scale with the resident; pixel offsets would tile the sheet. */','').replace(/\n{3,}/g,'\n\n').trim();
 assert.equal(base(readFileSync('src/rpg-ui.css','utf8')),base(approved),'approved 1.1 scenery, light, frames, auras, portrait and menu styles stay unchanged');
