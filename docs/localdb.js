@@ -14,12 +14,14 @@
   var UPGRADE = PREFIX + 'pre-update.v1';
   var RECOVERY = PREFIX + 'recovery.v1', CONFLICT = PREFIX + 'conflict.v1';
   var TOKEN_KEY = PREFIX + 'tok', CHECKPOINT = PREFIX + 'checkpoint.v1';
+  var CLOUD_META = PREFIX + 'cloud136.v1';
+  var firebaseConfigured = !CFG.testMode && window.VkachCloudSync?.configured(CFG.cloud,location.origin);
   // The isolated Android build has no cloud access until a separate OAuth
   // client and its exact HTTPS origin have been explicitly configured.
-  var cloudAllowed = !CFG.testMode || (CFG.cloudEnabled === true &&
+  var cloudAllowed = !firebaseConfigured && (!CFG.testMode || (CFG.cloudEnabled === true &&
     CFG.clientId && CFG.clientId !== CFG.productionClientId &&
     /^https:\/\//.test(CFG.allowedOrigin || '') && CFG.allowedOrigin === location.origin &&
-    CFG.fileName === 'plan-data-android-test');
+    CFG.fileName === 'plan-data-android-test'));
   var FILE_NAME = CFG.fileName || 'plan-data';
   var SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
@@ -88,6 +90,11 @@
   var tick = null;
   function notify() {
     archiveDay();
+    scheduleCloud();
+    if (firebaseConfigured) {
+      clearTimeout(pushTimer);
+      pushTimer=setTimeout(refreshPushLocal,200);
+    }
     if (tick) return;
     tick = setTimeout(function () {
       tick = null;
@@ -127,6 +134,7 @@
     if (e.key === CONFLICT) { pendingConflict = loadConflict(); renderChip(); }
     if (e.key === META) { meta = jget(META, {}) || {}; renderChip(); }
     if (e.key === TOKEN_KEY) { readToken(); renderChip(); }
+    if (e.key === CLOUD_META && firebaseConfigured) { renderChip(); scheduleCloud(); }
     if (e.key === KEY) { try { docs = persistedDocs(); dirty = true; revision++; notify(); scheduleSync(); } catch (_) { corruptRaw = e.newValue; upgradeBlocked = true; } renderChip(); }
   });
 
@@ -238,6 +246,8 @@
       if (changedLocal) {
         recovery(local, rd, options.detect ? 'sync' : 'import');
         if (options.pauseSync) {
+          firebaseCloud?.pause();
+          if (firebaseConfigured) refreshPushLocal();
           meta = jget(META,{}) || {};
           meta.syncPaused = true;
           if (!jset(META,meta)) throw storageError();
@@ -322,6 +332,8 @@
         next[p] = { d: discoveryPaths.includes(p)&&((local[p]&&local[p].d)||(incoming[p]&&incoming[p].d)) ? retainDiscovery(p,local[p]&&local[p].d,incoming[p]&&incoming[p].d) : incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
       });
       // Persist the cloud pause before replacing data, even if later storage fails.
+      firebaseCloud?.pause();
+      if (firebaseConfigured) refreshPushLocal();
       meta.signed = false; meta.syncPaused = true;
       if (!jset(META, meta)) throw storageError();
       if (!jset(KEY, { v: 1, docs: next })) throw storageError();
@@ -423,6 +435,171 @@
       e.message === 'unsupported schema' ? 'Эта версия копии пока не поддерживается. Данные не заменены.' :
       e.message === 'changed since preview' ? 'Сохранение изменилось после просмотра. Откройте копию ещё раз.' :
       'Копия не применена. Проверьте файл и свободное место.', 'warn');
+  }
+
+  var firebaseCloud, firebaseTransport, firebaseConnecting=false, cloudTimer, cloudRetry=false, firebaseError='', archivedCloud=null;
+  var firebaseQueue=Promise.resolve();
+  var pushTimer, remindersForPush, pushStatus='', lastPushProof='', lastPushAt=0;
+  var PUSH_KEY = PREFIX + 'push136.v1';
+  function firebaseMeta() { return jget(CLOUD_META,{}) || {}; }
+  function firebaseSerial(fn) {
+    if (navigator.locks) return navigator.locks.request(KEY+'.firebase',fn);
+    var next=firebaseQueue.then(fn,fn);
+    firebaseQueue=next.catch(function () {});
+    return next;
+  }
+  function scheduleCloud() {
+    if (!firebaseCloud?.state().enabled) return;
+    clearTimeout(cloudTimer);
+    cloudTimer = setTimeout(runCloud,8000);
+  }
+  function runCloud() {
+    clearTimeout(cloudTimer); cloudTimer=null;
+    if (!firebaseCloud?.state().enabled || !firebaseTransport.online()) return;
+    if (firebaseCloud.state().busy) { cloudRetry=true; return; }
+    cloudRetry=false;
+    firebaseCloud.tick().then(refreshPush).catch(function (error) {
+      cloudRetry=!['invalid-remote','missing-remote','local-blocked','too-large','empty-local'].includes(error.code);
+    });
+  }
+  async function verifiedArchive(id, local, incoming, reason) {
+    if (!saveHistory) throw storageError();
+    await saveHistory.change(id,Date.now(),local,incoming,reason);
+    var stored = await saveHistory.read('change-'+id);
+    var prior = await validateBackup(stored?.local,true);
+    if (await digest(prior) !== await digest(local)) throw storageError();
+    if (incoming && await digest(await validateBackup(stored?.incoming,true)) !== await digest(incoming)) throw storageError();
+    refreshHistory(true);
+  }
+  function replaceFromCloud(expected, incoming) {
+    return exclusive(function () {
+      if (upgradeBlocked || !firebaseMeta().enabled) throw storageError();
+      var local = persistedDocs();
+      if (!same(local,expected)) throw Object.assign(new Error('Local profile changed'),{code:'changed-local'});
+      var next = clone(incoming);
+      for (var path of discoveryPaths) {
+        if (!local[path]?.d) continue;
+        var earned = retainDiscovery(path,local[path].d,next[path]?.d);
+        if (!same(earned,next[path]?.d)) next[path]={d:earned,u:Math.max(Date.now(),local[path].u,next[path]?.u || 0)};
+      }
+      recovery(local,incoming,'cloud-restore');
+      if (!jset(KEY,{v:1,docs:next})) throw storageError();
+      docs=next; revision++; writeFailure=false; notify();
+    });
+  }
+  async function startFirebase() {
+    if (!firebaseConfigured || firebaseCloud || firebaseConnecting || !navigator.onLine) return;
+    firebaseConnecting=true;
+    try {
+      firebaseTransport=await window.VkachFirebase.connect(CFG.cloud);
+      firebaseCloud=window.VkachCloudSync.create({
+        meta:firebaseMeta,
+        setMeta:function (value) { if (!jset(CLOUD_META,value)) throw storageError(); },
+        changed:renderChip, schedule:scheduleCloud,
+        serial:firebaseSerial,
+        blocked:function () { return upgradeBlocked || Boolean(pendingConflict); },
+        read:function () { return exclusive(persistedDocs); },
+        hash:function (records) { return digest(validateIncoming(records)); },
+        encode:async function (records) { return JSON.stringify(await backupFor(records)); },
+        decode:function (payload) {
+          var envelope=parseBackupText(payload);
+          if (envelope?.v !== 2) throw new Error('Unsupported cloud backup');
+          return validateBackup(envelope,true);
+        },
+        archive:verifiedArchive, replace:replaceFromCloud, disablePush:disablePush
+      },firebaseTransport);
+      firebaseError='';
+      firebaseTransport.authError.then(function (error) { if (error) reportFirebaseError(error); });
+    } catch (error) { reportFirebaseError(error); }
+    finally { firebaseConnecting=false; }
+    renderChip();
+  }
+  function reportFirebaseError(error) {
+    firebaseError=error.code === 'auth/popup-blocked' ? 'Браузер заблокировал окно Google. Откройте игру в Chrome и повторите вход.' :
+      error.code === 'auth/popup-closed-by-user' ? 'Вход отменён.' :
+      'Не удалось подключиться к Firebase. Данные доступны на устройстве.';
+    renderChip();
+  }
+  function bindReminders(controller) { remindersForPush=controller; }
+  async function workerPushState(state) {
+    var registration = await navigator.serviceWorker.getRegistration();
+    if (!registration?.active) throw new Error('Worker inactive');
+    var cache = await caches.open('vkach-push-' + registration.scope);
+    var path = new URL('__vkach_push_state__',registration.scope);
+    if (state) await cache.put(path,new Response(JSON.stringify(state)));
+    else await cache.delete(path);
+    return registration;
+  }
+  async function enablePush() {
+    var state=firebaseCloud?.state(), uid=state?.user?.uid;
+    if (!uid || !state.enabled || !firebaseMeta().revision || !firebaseTransport.online() || !CFG.cloud.vapidKey ||
+        !('Notification' in window) || !('PushManager' in window)) throw new Error('Push unavailable');
+    if (await Notification.requestPermission() !== 'granted') throw new Error('Push permission');
+    var registration = await workerPushState(null);
+    var prior = jget(PUSH_KEY,null);
+    var token = await firebaseTransport.pushToken(registration);
+    if (!token || firebaseCloud.state().user?.uid !== uid || !firebaseCloud.state().enabled) throw new Error('Push unavailable');
+    var subscription={uid,device:prior?.uid===uid?prior.device:crypto.randomUUID(),token,enabled:true};
+    if (!jset(PUSH_KEY,subscription)) throw storageError();
+    try { await refreshPush(); }
+    catch (error) { await disablePush(); throw error; }
+    pushStatus='Фоновые уведомления включены на этом устройстве.';
+    renderChip();
+  }
+  async function disablePush() {
+    var prior=jget(PUSH_KEY,null);
+    if (!prior) return;
+    await workerPushState(null);
+    if (!jset(PUSH_KEY,{...prior,enabled:false})) throw storageError();
+    lastPushProof=''; lastPushAt=0;
+    if (firebaseTransport.online() && firebaseCloud.state().user?.uid===prior.uid) {
+      try {
+        await firebaseTransport.subscription(prior.uid,prior.device,null);
+        await firebaseTransport.deletePushToken();
+        jset(PUSH_KEY,null);
+      } catch (_) {
+        pushStatus='На устройстве уведомления отключены. Подписку удалим при подключении.';
+        renderChip();
+        return;
+      }
+    }
+    pushStatus='Фоновые уведомления отключены на этом устройстве.';
+    renderChip();
+  }
+  function refreshPushLocal() {
+    var subscription=jget(PUSH_KEY,null), info=firebaseMeta();
+    if (!subscription?.enabled || !remindersForPush) return;
+    if (!info.enabled || !firebaseCloud?.state().enabled || firebaseCloud.state().review) {
+      workerPushState(null).catch(function () {});
+      return;
+    }
+    var proof=remindersForPush.pushState();
+    workerPushState({device:subscription.device,day:proof.day,revision:info.revision,needed:proof.needed}).catch(function () {});
+  }
+  async function refreshPush() {
+    var subscription=jget(PUSH_KEY,null), info=firebaseMeta();
+    if (!subscription || !remindersForPush || !firebaseTransport.online() || firebaseCloud.state().user?.uid!==subscription.uid) return;
+    if (!subscription.enabled) return disablePush();
+    if (!info.enabled || !info.revision || firebaseCloud.state().review) return;
+    var proof=remindersForPush.pushState(), local=persistedDocs();
+    if (await digest(local) !== info.base || firebaseMeta().revision !== info.revision) return;
+    var payload={...proof,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,revision:info.revision,token:subscription.token};
+    var stamp=JSON.stringify(payload);
+    if (stamp!==lastPushProof || Date.now()-lastPushAt>=3600000) {
+      await firebaseTransport.subscription(subscription.uid,subscription.device,payload);
+      lastPushProof=stamp; lastPushAt=Date.now();
+    }
+    refreshPushLocal();
+  }
+  async function pushShownToday(date) {
+    if (!firebaseConfigured || !jget(PUSH_KEY,null)?.enabled) return false;
+    var registration=await navigator.serviceWorker.getRegistration();
+    if (!registration?.active) return false;
+    var cache=await caches.open('vkach-push-'+registration.scope);
+    var item=await cache.match(new URL('__vkach_push_last__',registration.scope));
+    if (!item) return false;
+    var receipt=await item.json();
+    return receipt.day===date && receipt.device===jget(PUSH_KEY,null)?.device;
   }
 
   // ---- Google Диск -----------------------------------------------------
@@ -666,6 +843,14 @@
     var txt, cls;
     if (upgradeBlocked || writeFailure || pendingConflict) { txt = '!'; cls = 'warn'; }
     else if (updateReady) { txt = 'ОБНОВИТЬ'; cls = 'upd'; }
+    else if (firebaseConfigured) {
+      var cloud=firebaseCloud?.state();
+      if (!navigator.onLine) { txt='ОФЛАЙН'; cls='off'; }
+      else if (cloud?.busy) { txt='…'; cls='work'; }
+      else if (cloud?.review || cloud?.error || cloud?.blocked || firebaseError) { txt='!'; cls='warn'; }
+      else if (cloud?.enabled && cloud.lastSync && !cloudTimer) { txt='✓'; cls='ok'; }
+      else { txt=cloud?.user ? '●' : 'ВОЙТИ'; cls='work'; }
+    }
     else if (CFG.testMode && !cloudAllowed) { txt = 'ТЕСТ'; cls = 'warn'; }
     else if (!navigator.onLine) { txt = 'ОФЛАЙН'; cls = 'off'; }
     else if (busy) { txt = '…'; cls = 'work'; }
@@ -730,7 +915,8 @@
         if (historyWriteFailed) list.append(el('p','pl-s','Не удалось записать одну из копий. Текущее сохранение доступно для экспорта.'));
         if (!entries.length) { list.append(el('p','pl-s','Копий в истории пока нет. Можно скачать JSON текущего сохранения.')); return; }
         summary.textContent = 'Последняя копия · ' + backupDate(entries[0].at);
-        var names = {daily:'Автоматическая копия',restore:'До восстановления',conflict:'Копии при конфликте',import:'До импорта',sync:'До обновления из Google Sheets'};
+        var names = {daily:'Автоматическая копия',restore:'До восстановления',conflict:'Копии при конфликте',import:'До импорта',sync:'До обновления из Google Sheets',
+          'cloud-first':'До первой отправки в Firebase','cloud-conflict':'Две версии при конфликте','cloud-restore':'До получения версии из Firebase'};
         for (var row of entries) {
           var card = el('section','pl-history-entry');
           card.append(el('strong',null,names[row.reason] || 'Сохранённая копия'),el('small',null,backupDate(row.at)));
@@ -774,12 +960,99 @@
     compare.append(dataButton('Отложить решение',function () { conflictDeferred=true; renderMenu(); }));
     menu.append(compare);
   }
+  function renderFirebase() {
+    var panel=el('section','pl-section'), state=firebaseCloud?.state();
+    panel.append(el('strong',null,'Защищённое хранилище'));
+    var messages={
+      'invalid-remote':'Облачная копия не прошла проверку целостности. Синхронизация остановлена.',
+      'missing-remote':'Последняя версия отсутствует в облаке. Автоматическая замена остановлена.',
+      'changed-remote':'Облачная версия изменилась. Проверим сохранения снова.',
+      'changed-local':'Данные на устройстве изменились. Проверим сохранения снова.',
+      'changed-review':'Копии изменились после просмотра. Откройте сравнение заново.',
+      'local-blocked':'Перед подключением восстановите локальное сохранение или завершите сравнение Google Sheets.',
+      'too-large':'Снимок превышает лимит 2 МиБ. Скачайте JSON и сохраните его отдельно.',
+      'empty-local':'Пустое сохранение нельзя отправить вместо облачного.',
+      'quota_exceeded':'Не удалось записать защитную копию. Данные не заменены.'
+    };
+    var detail = firebaseError || (state?.error && (messages[state.error] || 'Синхронизация не завершена. Локальный прогресс доступен.'));
+    if (state?.blocked) detail='Сохранение связано с другим аккаунтом Firebase.';
+    if (detail) panel.append(el('p','pl-s',detail));
+    if (!state?.user) {
+      var login=dataButton('Войти через Google · Firebase',function () {
+        firebaseError=''; firebaseCloud.signIn().catch(reportFirebaseError);
+      });
+      login.disabled=!firebaseCloud || !navigator.onLine;
+      panel.append(login);
+    } else {
+      panel.append(el('p','pl-s',state.user.email || 'Аккаунт Google'));
+      panel.append(el('p','pl-s',state.busy ? 'Сверяем версии…' : !navigator.onLine ? 'Офлайн · изменения остаются на устройстве' :
+        state.lastSync ? 'Последнее согласование · '+backupDate(state.lastSync) : 'Ожидает первоначального согласования'));
+      if (!state.enabled && !state.blocked) panel.append(dataButton('Включить синхронизацию',function () {
+        if (window.confirm('Подключить этот профиль? Перед первой отправкой игра сохранит проверенную локальную копию. Если версии различаются, потребуется выбор.')) {
+          firebaseError=''; firebaseCloud.enable().then(refreshPush).catch(function () {});
+        }
+      }));
+      if (state.enabled && !state.busy) panel.append(dataButton('Проверить синхронизацию',runCloud));
+      panel.append(dataButton('Выйти из Firebase',function () {
+        firebaseCloud.signOut().catch(reportFirebaseError);
+      }));
+      if (state.review) renderFirebaseReview(panel,state.review);
+      if (!state.blocked && firebaseMeta().uid===state.user.uid) {
+        panel.append(dataButton('Облачные версии',function () {
+          firebaseCloud.history().then(function (rows) { archivedCloud={uid:state.user.uid,rows:rows}; renderChip(); }).catch(reportFirebaseError);
+        }));
+        if (archivedCloud?.uid===state.user.uid) {
+          if (!archivedCloud.rows.length) panel.append(el('p','pl-s','Предыдущих облачных версий пока нет.'));
+          for (const row of archivedCloud.rows) {
+            panel.append(el('p','pl-s','Версия '+row.head.revision+' · '+backupDate(row.head.savedAt)),
+              dataButton('Восстановить версию '+row.head.revision,()=>reviewBackup(row.records,true).catch(backupFailure)),
+              dataButton('Скачать версию '+row.head.revision,()=>downloadSnapshot(JSON.parse(row.head.payload),'vkach-cloud')));
+          }
+        }
+      }
+      if (CFG.cloud.vapidKey && !state.blocked) renderPushSettings(panel,state);
+    }
+    menu.append(panel);
+  }
+  function renderFirebaseReview(panel,review) {
+    if (conflictDeferred) { panel.append(dataButton('Сравнить версии Firebase',()=>{conflictDeferred=false;renderMenu();})); return; }
+    var compare=el('section','pl-section');
+    compare.append(el('strong',null,'Конфликт сохранений'),
+      el('p','pl-s','Устройство · '+profileSummary(review.local)),
+      el('p','pl-s','Облачная версия '+review.revision+' · '+profileSummary(review.remote)));
+    var details=el('details');
+    details.append(el('summary',null,'Подробные различия'));
+    for (var label of changeSummary(review.local,review.remote)) details.append(el('p','pl-s',label));
+    compare.append(details);
+    for (const [choice,title] of [['local','Оставить локальную версию'],['remote','Использовать облачную версию']]) {
+      compare.append(dataButton(title,()=>{
+        if (window.confirm(title+'? Обе версии уже сохранены в истории копий.')) {
+          firebaseCloud.resolve(choice).then(refreshPush).catch(function () { scheduleCloud(); });
+        }
+      }));
+    }
+    compare.append(dataButton('Отложить решение',()=>{conflictDeferred=true;renderMenu();}));
+    panel.append(compare);
+  }
+  function renderPushSettings(panel,state) {
+    var subscription=jget(PUSH_KEY,null), enabled=Boolean(subscription?.enabled && subscription.uid===state.user.uid);
+    panel.append(el('p','pl-s',pushStatus || (enabled?'Фоновые уведомления включены':'Фоновые уведомления отключены')));
+    var button=dataButton(enabled?'Отключить Push':'Включить Push',function () {
+      button.disabled=true;
+      (enabled?disablePush():enablePush()).catch(function () {
+        pushStatus='Не удалось изменить Push. Проверьте подключение и разрешение Chrome.';
+        renderChip();
+      });
+    });
+    button.disabled=!enabled && (!state.enabled || !firebaseMeta().revision);
+    panel.append(button);
+  }
   function renderMenu() {
     menu.textContent = '';
     menu.appendChild(el('div', 'pl-t', 'АККАУНТ И СОХРАНЕНИЯ'));
     if (window.APP_VERSION) menu.appendChild(el('div', 'pl-s', 'Версия ' + window.APP_VERSION));
     if (CFG.testMode) menu.appendChild(el('div', 'pl-s', 'ТЕСТОВАЯ ВЕРСИЯ · отдельные сохранения. ' + (cloudAllowed ? 'Тестовая таблица Google.' : 'Google отключён. Основная таблица не используется.')));
-    var line = (corruptRaw !== null ? 'Обнаружено повреждение сохранения. Доступ только для чтения. Скачайте исходный файл и восстановите проверенную копию.' : writeFailure ? 'Последнее изменение не сохранено: недостаточно места или хранилище недоступно. Скачайте копию сохранённых данных, освободите место и повторите действие.' : upgradeBlocked ? 'Прогресс только для чтения. Скачайте копию, освободите место и перезагрузите приложение.' : pendingConflict ? 'Конфликт устройств. Синхронизация приостановлена. Сохраните обе копии перед выбором.' : status.text) || (!navigator.onLine ? 'Нет сети: всё сохранено на телефоне' : (meta.signed ? fmtAgo(meta.lastSync) : 'Данные только на этом телефоне'));
+    var line = (corruptRaw !== null ? 'Обнаружено повреждение сохранения. Доступ только для чтения. Скачайте исходный файл и восстановите проверенную копию.' : writeFailure ? 'Последнее изменение не сохранено: недостаточно места или хранилище недоступно. Скачайте копию сохранённых данных, освободите место и повторите действие.' : upgradeBlocked ? 'Прогресс только для чтения. Скачайте копию, освободите место и перезагрузите приложение.' : pendingConflict ? 'Конфликт устройств. Синхронизация приостановлена. Сохраните обе копии перед выбором.' : status.text) || (!navigator.onLine ? 'Нет сети: всё сохранено на телефоне' : firebaseConfigured ? 'Локальные копии доступны без подключения' : (meta.signed ? fmtAgo(meta.lastSync) : 'Данные только на этом телефоне'));
     menu.appendChild(el('div', 'pl-s', line));
     if (cloudAllowed && meta.signed) menu.appendChild(el('div','pl-s',(meta.hint || 'Аккаунт Google') +
       ' · Google Sheets · ' + (meta.lastSync ? 'Последняя синхронизация ' + backupDate(meta.lastSync) : 'Синхронизации ещё не было')));
@@ -790,9 +1063,12 @@
     if (updateReady) {
       b = el('button', 'pl-b go', 'ОБНОВИТЬ ПРИЛОЖЕНИЕ'); b.onclick = function () { Promise.resolve(window.PlanSync.beforeUpdate ? window.PlanSync.beforeUpdate() : null).then(function () { return exclusive(function () { if (!jset(UPGRADE, { v: 1, docs: persistedDocs() })) throw storageError(); if (swReg && swReg.waiting) swReg.waiting.postMessage('SKIP_WAITING'); }); }).catch(function () { setStatus('Обновление отложено: не удалось сохранить резервную копию. Скачайте копию и освободите место.', 'warn'); }); }; menu.appendChild(b);
     }
-    b = el('button', 'pl-b go', meta.signed ? 'СИНХРОНИЗИРОВАТЬ' : 'ВОЙТИ ЧЕРЕЗ GOOGLE');
-    b.onclick = function () { sync(true); }; b.disabled = !cloudAllowed; menu.appendChild(b);
-    if (meta.signed) {
+    if (firebaseConfigured) renderFirebase();
+    else {
+      b = el('button', 'pl-b go', meta.signed ? 'СИНХРОНИЗИРОВАТЬ' : 'ВОЙТИ ЧЕРЕЗ GOOGLE');
+      b.onclick = function () { sync(true); }; b.disabled = !cloudAllowed; menu.appendChild(b);
+    }
+    if (meta.signed && !firebaseConfigured) {
       b = el('button', 'pl-b', 'ВЫЙТИ'); b.onclick = function () {
         b.disabled=true;
         signOut().catch(function () { setStatus('Не удалось сохранить состояние выхода.','warn'); });
@@ -901,15 +1177,26 @@
     archiveDay();
     archiveChange(jget(RECOVERY,null));
     ui(); registerSW();
-    window.addEventListener('online', function () { renderChip(); if (meta.signed) sync(false); });
+    startFirebase();
+    window.addEventListener('online', function () {
+      renderChip();
+      if (firebaseConfigured) { if (firebaseCloud) scheduleCloud(); else startFirebase(); }
+      else if (meta.signed) sync(false);
+    });
     window.addEventListener('offline', renderChip);
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && meta.signed && navigator.onLine) sync(false);
     });
-    setInterval(function () { renderChip(); if (!document.hidden && meta.signed && navigator.onLine && haveToken()) sync(false); }, 60000);
+    setInterval(function () {
+      renderChip();
+      if (firebaseConfigured) {
+        if (cloudRetry) runCloud();
+        else refreshPush().catch(function () {});
+      } else if (!document.hidden && meta.signed && navigator.onLine && haveToken()) sync(false);
+    }, 60000);
     if (meta.signed && navigator.onLine) sync(false);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
-  window.PlanSync = { sync: sync, importObj: importObj, exportBackup: exportBackup, backupFor: backupFor, validateBackup: validateBackup, openData: openData, resolveConflict: resolveConflict, _docs: function () { return docs; }, _merge: merge };
+  window.PlanSync = { sync: sync, importObj: importObj, exportBackup: exportBackup, backupFor: backupFor, validateBackup: validateBackup, openData: openData, resolveConflict: resolveConflict, bindReminders:bindReminders, pushShownToday:pushShownToday, _docs: function () { return docs; }, _merge: merge };
 })();

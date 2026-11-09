@@ -1367,13 +1367,14 @@ html,body{overflow-anchor:none}
     },
     openTasks:function(){citadelNavigate('today');}
   });
-  VkachRoomWorkspace.mountReminders($('room-reminders'), {
+  var roomReminders = VkachRoomWorkspace.mountReminders($('room-reminders'), {
     records:function(){return PlanSync._docs();},
     transact:function(fn){return enqueue(function(){return db.runTransaction(fn);});},
     today:function(){return dkey(new Date());},
     time:function(){var now=new Date();return pad(now.getHours())+':'+pad(now.getMinutes());},
     ready:function(){return loaded;},
     notify:toast,
+    pushShown:function(date){return window.PlanSync.pushShownToday?.(date);},
     needs:function(key){
       var date=dkey(new Date());
       if(key==='food'){
@@ -1388,6 +1389,7 @@ html,body{overflow-anchor:none}
       return dayCount(date,stepInfo())<reqTotal(date);
     }
   });
+  window.PlanSync.bindReminders?.(roomReminders);
   function roomDailyIds(day){
     var active=activeIdx(day);
     return day>=NEW_Q&&forgeEnabled('daily-8',day)?active.concat(8):active;

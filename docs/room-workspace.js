@@ -412,16 +412,24 @@
       const sent = records()[path]?.d?.sent || [];
       if (!dueReminders(config,time(),sent,needs).length) return;
       checking=true;
-      transact(tx=>{
+      Promise.resolve(options.pushShown?.(date)).catch(()=>false).then(shown=>transact(tx=>{
         const previous=tx.get(path)?.sent || [];
         const due=dueReminders(readReminders(tx.get(reminderPath)),time(),previous,needs);
         if (date !== today() || document.hidden || !due.length) return [];
         tx.set(path,{version:1,sent:previous.concat(due.map(row=>row[0]))});
-        return due;
-      }).then(due=>{if(due.length)notify(due.map(row=>row[1]).join(' · '));},()=>{}).finally(()=>{checking=false;});
+        return shown ? [] : due;
+      })).then(due=>{if(due.length)notify(due.map(row=>row[1]).join(' · '));},()=>{}).finally(()=>{checking=false;});
     }
     setInterval(check,60000);
     document.addEventListener('visibilitychange',check);
+    return {
+      pushState() {
+        const date=today(), config=readReminders(records()[reminderPath]?.d);
+        const sent=records()['room-reminder-days/'+date]?.d?.sent || [];
+        return {day:date,at:config.at,quietFrom:config.quietFrom,quietTo:config.quietTo,
+          needed:ready()&&reminderCategories.some(([key])=>config.categories.includes(key)&&!sent.includes(key)&&needs(key))};
+      }
+    };
   }
 
   root.VkachRoomWorkspace = Object.freeze({ labels, mount, mountReminders, dueReminders, duration });
