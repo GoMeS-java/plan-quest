@@ -403,9 +403,8 @@ body.citadel-shell-active #citadel-home .citadel-room:not(.is-locked)[data-croom
 body.citadel-shell-active #citadel-home .citadel-interior-stage[data-room="vault"][data-level="3"]:before{background:url("assets/citadel/vault-interior-3.svg") center/100% 100% no-repeat!important;opacity:1!important;filter:none!important}
 body.citadel-shell-active #citadel-home .citadel-room:not(.is-locked):after,
 body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interior-renovation{background:none!important}
-body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:max(22px,7.5%);height:auto;aspect-ratio:32/52}
-body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person{width:max(20px,6.5%);height:auto;aspect-ratio:3/5;bottom:5%;scale:1!important;transform-origin:center bottom}
-body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person[data-facing="left"]{scale:-1 1!important}
+body.citadel-shell-active #citadel-home .citadel-interior-stage{--citadel-room-actor-width:max(22px,7.5%)}
+body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:var(--citadel-room-actor-width);height:auto;aspect-ratio:32/52}
 body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person[role="button"]:before{inset:auto;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
 body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person:after{pointer-events:none}
 body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interior-object{z-index:6;border-color:transparent;background:none;box-shadow:none}
@@ -419,15 +418,6 @@ body.citadel-shell-active #citadel-home .citadel-interior-stage[data-room="forge
 body.citadel-shell-active #citadel-home .citadel-interior-stage[data-room="observatory"]{--object-x:38%;--object-y:43%;--object-w:28%;--object-h:24%}
 body.citadel-shell-active #citadel-home .citadel-interior-stage[data-room="cloister"]{--object-x:35%;--object-y:65%;--object-w:32%;--object-h:19%}
 body.citadel-shell-active #citadel-home .citadel-interior-stage[data-room="vault"]{--object-x:30%;--object-y:66%;--object-w:14%;--object-h:18%}
-
-/* Six frames scale with the resident; pixel offsets would tile the sheet. */
-body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person{background-size:600% 100%;background-repeat:no-repeat;animation-name:citadelInteriorIdle}
-body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person[data-mode="work"]{animation-name:citadelInteriorWork}
-body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person[data-mode="interaction"]{animation-name:citadelInteriorTalk}
-body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person[data-mode="rest"]{background-position:100% 0;animation:none}
-@keyframes citadelInteriorIdle{0%,84%,100%{background-position:0 0}89%,94%{background-position:20% 0}}
-@keyframes citadelInteriorWork{0%,100%{background-position:80% 0}50%{background-position:100% 0}}
-@keyframes citadelInteriorTalk{0%,100%{background-position:0 0}50%{background-position:20% 0}}
 
 /* All fixed architecture and furnishings now live in the same scene image. */
 body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-interior-renovation{display:none!important}
