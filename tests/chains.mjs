@@ -152,6 +152,7 @@ try {
   assert.doesNotMatch(await page.locator('#chains-profile').innerText(), /Воля/);
   await leave(page);
   await page.locator('.citadel-shell-dock button').last().click();
+  await page.locator('.citadel-all-functions > summary').click();
   const pathLink = page.locator('#citadel-shell-nav [data-section=goals]');
   const pathGroup = pathLink.locator('xpath=ancestor::details[1]');
   if (!await pathGroup.getAttribute('open').then(value => value !== null)) await pathGroup.locator('summary').click();
