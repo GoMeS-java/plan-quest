@@ -5094,7 +5094,14 @@ function citadelNpcSpeak(key,refresh) {
  var echo=legendActive();if(echo&&citadelRoomOpen(state.room))line+=' '+echo.reaction;
  $('citadel-npc-dialogue').textContent=person.name+' · '+state.activity+': «'+line+'»';
  citadelRoomConversation();
- if(!refresh&&!$('citadel-room-conversation').hidden){$('citadel-room-conversation').focus({preventScroll:true});if(!$('citadel-home').classList.contains('citadel-shell'))$('citadel-room-conversation').scrollIntoView({block:'nearest',behavior:'auto'});}
+ if(!refresh&&!$('citadel-room-conversation').hidden){
+  var panel=$('citadel-room-conversation');
+  if($('citadel-home').classList.contains('citadel-shell')){
+   $('citadel-interior').scrollTop=0;panel.scrollTop=0;$('citadel-room-speech').scrollTop=0;
+   panel.querySelector('.citadel-room-npc-options').open=false;
+  }else panel.scrollIntoView({block:'nearest',behavior:'auto'});
+  panel.focus({preventScroll:true});
+ }
  var host=$('citadel-npc-actions');if(host.dataset.person===key)return;host.dataset.person=key;host.textContent='';
  [[citadelNpcTask(person).label,function(){var task=citadelNpcTask(person);citadelNavigate(task.tab,task.focus);}],['Где ты?',function(){citadelFindResident(person);}],['Дела на сегодня',function(){citadelNavigate('today');}],['Хроника недели',function(){citadelNavigate('week');}],['Завершить разговор',citadelNpcClose]].forEach(function(row){var b=document.createElement('button');b.type='button';b.textContent=row[0];b.addEventListener('click',row[1]);host.appendChild(b);});
 }
@@ -6139,11 +6146,16 @@ function renderAllInner() {
     var refectoryCalories=el('p','citadel-refectory-calories');refectoryCalories.hidden=true;
     stage.after(refectoryCalories,roomPrimary,$('citadel-object-status'));
     var npcPanel=$('citadel-room-conversation'),npcMore=el('div','citadel-room-npc-more');npcMore.id='citadel-room-npc-more';
-    npcPanel.insertBefore(npcMore,$('citadel-room-npc-close'));stage.appendChild(npcPanel);
-    var npcOpened=false;
+    var npcOptions=el('details','citadel-room-npc-options');npcOptions.append(el('summary',null,'Другие действия'),npcMore);
+    var npcClose=$('citadel-room-npc-close');npcClose.textContent='✕';npcClose.setAttribute('aria-label','Завершить разговор');
+    npcPanel.insertBefore(npcOptions,npcClose);stage.appendChild(npcPanel);
+    var npcOpened=false,npcReturning=false;
     new MutationObserver(function(){
       if(!npcPanel.hidden&&!npcOpened){npcOpened=true;pushOverlay('resident');}
-      else if(npcPanel.hidden&&npcOpened){npcOpened=false;if(history.state?.citadelOverlay==='resident')history.back();}
+      else if(npcPanel.hidden&&npcOpened){
+        npcOpened=false;
+        if(history.state?.citadelOverlay==='resident'){npcReturning=true;history.back();}
+      }
     }).observe(npcPanel,{attributes:true,attributeFilter:['hidden']});
     var activitySettings=el('button',null,'Улучшить комнату');activitySettings.type='button';activitySettings.onclick=function(){citadelSetArtView('upgrades');citadelEnter();};roomMoreContent.appendChild(activitySettings);
     function compactRoom(){
@@ -6483,7 +6495,7 @@ function renderAllInner() {
         requestAnimationFrame(function(){var saved=lastCamera;cameraSize();viewport.scrollTo(saved.left,saved.top);cameraCaptions();});
       }
     }).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
-    window.addEventListener('popstate',function(){if(menuReturning){menuReturning=false;var destination=menuDestination;menuDestination=null;if(destination)destination();return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcOrigin&&history.state?.citadelOverlay==='room'){citadelNpcClose();return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
+    window.addEventListener('popstate',function(){if(npcReturning){npcReturning=false;return;}if(menuReturning){menuReturning=false;var destination=menuDestination;menuDestination=null;if(destination)destination();return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcOrigin&&history.state?.citadelOverlay!=='resident'){citadelNpcClose();return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
     function updateShellStatus(){if(!loaded)return;restoreView();updateFloors();updateMenuAccess();refreshToday();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}

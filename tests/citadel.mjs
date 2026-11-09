@@ -1735,7 +1735,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const npc of await p.locator('#citadel-interior-stage .citadel-person,#citadel-interior-stage .citadel-scene-door,#citadel-interior-stage .citadel-scene-door small').all()){const b=await npc.boundingBox();assert(hero.x+hero.width<=b.x||hero.x>=b.x+b.width||hero.y+hero.height<=b.y||hero.y>=b.y+b.height,'hero must stop clear of residents, doors and labels');}
   await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-room-conversation').hidden);assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
   await roomMore(p);await p.locator('[data-room-talk="smith"]').click();await p.keyboard.press('Escape');assert(await p.locator('#citadel-room-conversation').isHidden());assert.equal(await p.locator('#citadel-home').getAttribute('data-ui-view'),'room');
-  await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');
+  await p.waitForFunction(()=>history.state?.citadelOverlay!=='resident');await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');
   await p.locator('[data-croom="refectory"]').click();await roomMore(p);await p.locator('[data-room-talk="smith"]').click();
   await p.clock.setSystemTime(new Date('2027-04-16T23:00:10+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await p.locator('[data-room-talk]').count(),0);assert(await p.locator('#citadel-room-conversation').isHidden());
   assert.deepEqual(await docs(p),before);await context.close();

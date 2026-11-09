@@ -956,6 +956,13 @@ body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-room-co
   overflow:auto;overscroll-behavior:contain;box-shadow:0 6px 14px #0c0912b0
 }
 body.citadel-shell-active .citadel-room-conversation button{width:auto;margin:2px}
+body.citadel-shell-active #citadel-room-speech{
+  margin:0 48px 4px 0;min-height:44px;max-height:5.2em;overflow:auto;overscroll-behavior:contain
+}
+body.citadel-shell-active #citadel-room-npc-close{
+  position:absolute;top:3px;right:3px;width:44px;min-width:44px;padding:0
+}
+.citadel-room-npc-options summary{min-height:36px;align-content:center;cursor:pointer;padding:0 4px}
 .citadel-room-npc-more{display:flex;flex-wrap:wrap}
 body.citadel-shell-active .citadel-interior-stage[data-inspect="true"] :is(.citadel-interior-object,.shelter-prop){
   outline:2px dashed #f4d69e;outline-offset:-2px;background-color:#ad713b40

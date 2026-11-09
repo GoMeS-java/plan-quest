@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.3.3";window.APP_BUILD="a94d98c278d8";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.3.3";window.APP_BUILD="f081f408b4f7";</script><script src="config.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -1017,7 +1017,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="release-stamp"><b>Версия 1.3.3</b><span>Сборка a94d98c278d8</span></div>
+    <div class="release-stamp"><b>Версия 1.3.3</b><span>Сборка f081f408b4f7</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.3.3</b> · Пробуждение Цитадели. Меню комнат, поиск и дневник питания с рецептами.</div><div class="hint"><b>1.3.2</b> · Живая Цитадель. Жители снова ходят, работают и реагируют на разговор. У каждого движения отдельный кадр.<br><b>1.3.1</b> · Разрыв оков использует общие осколки и скрытый аспект. Исправлена загрузка сборки при обновлении.<br><b>1.3</b> · Разрыв оков: дневник, осколки за соблюдение лимита, скрытые отметины и Песочные часы судьбы.<br><b>1.2</b> · Кузница судьбы: настройка заданий, целей и открытых аспектов.<br><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -5096,7 +5096,14 @@ function citadelNpcSpeak(key,refresh) {
  var echo=legendActive();if(echo&&citadelRoomOpen(state.room))line+=' '+echo.reaction;
  $('citadel-npc-dialogue').textContent=person.name+' · '+state.activity+': «'+line+'»';
  citadelRoomConversation();
- if(!refresh&&!$('citadel-room-conversation').hidden){$('citadel-room-conversation').focus({preventScroll:true});if(!$('citadel-home').classList.contains('citadel-shell'))$('citadel-room-conversation').scrollIntoView({block:'nearest',behavior:'auto'});}
+ if(!refresh&&!$('citadel-room-conversation').hidden){
+  var panel=$('citadel-room-conversation');
+  if($('citadel-home').classList.contains('citadel-shell')){
+   $('citadel-interior').scrollTop=0;panel.scrollTop=0;$('citadel-room-speech').scrollTop=0;
+   panel.querySelector('.citadel-room-npc-options').open=false;
+  }else panel.scrollIntoView({block:'nearest',behavior:'auto'});
+  panel.focus({preventScroll:true});
+ }
  var host=$('citadel-npc-actions');if(host.dataset.person===key)return;host.dataset.person=key;host.textContent='';
  [[citadelNpcTask(person).label,function(){var task=citadelNpcTask(person);citadelNavigate(task.tab,task.focus);}],['Где ты?',function(){citadelFindResident(person);}],['Дела на сегодня',function(){citadelNavigate('today');}],['Хроника недели',function(){citadelNavigate('week');}],['Завершить разговор',citadelNpcClose]].forEach(function(row){var b=document.createElement('button');b.type='button';b.textContent=row[0];b.addEventListener('click',row[1]);host.appendChild(b);});
 }
@@ -6141,11 +6148,16 @@ function renderAllInner() {
     var refectoryCalories=el('p','citadel-refectory-calories');refectoryCalories.hidden=true;
     stage.after(refectoryCalories,roomPrimary,$('citadel-object-status'));
     var npcPanel=$('citadel-room-conversation'),npcMore=el('div','citadel-room-npc-more');npcMore.id='citadel-room-npc-more';
-    npcPanel.insertBefore(npcMore,$('citadel-room-npc-close'));stage.appendChild(npcPanel);
-    var npcOpened=false;
+    var npcOptions=el('details','citadel-room-npc-options');npcOptions.append(el('summary',null,'Другие действия'),npcMore);
+    var npcClose=$('citadel-room-npc-close');npcClose.textContent='✕';npcClose.setAttribute('aria-label','Завершить разговор');
+    npcPanel.insertBefore(npcOptions,npcClose);stage.appendChild(npcPanel);
+    var npcOpened=false,npcReturning=false;
     new MutationObserver(function(){
       if(!npcPanel.hidden&&!npcOpened){npcOpened=true;pushOverlay('resident');}
-      else if(npcPanel.hidden&&npcOpened){npcOpened=false;if(history.state?.citadelOverlay==='resident')history.back();}
+      else if(npcPanel.hidden&&npcOpened){
+        npcOpened=false;
+        if(history.state?.citadelOverlay==='resident'){npcReturning=true;history.back();}
+      }
     }).observe(npcPanel,{attributes:true,attributeFilter:['hidden']});
     var activitySettings=el('button',null,'Улучшить комнату');activitySettings.type='button';activitySettings.onclick=function(){citadelSetArtView('upgrades');citadelEnter();};roomMoreContent.appendChild(activitySettings);
     function compactRoom(){
@@ -6485,7 +6497,7 @@ function renderAllInner() {
         requestAnimationFrame(function(){var saved=lastCamera;cameraSize();viewport.scrollTo(saved.left,saved.top);cameraCaptions();});
       }
     }).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
-    window.addEventListener('popstate',function(){if(menuReturning){menuReturning=false;var destination=menuDestination;menuDestination=null;if(destination)destination();return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcOrigin&&history.state?.citadelOverlay==='room'){citadelNpcClose();return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
+    window.addEventListener('popstate',function(){if(npcReturning){npcReturning=false;return;}if(menuReturning){menuReturning=false;var destination=menuDestination;menuDestination=null;if(destination)destination();return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcOrigin&&history.state?.citadelOverlay!=='resident'){citadelNpcClose();return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
     function updateShellStatus(){if(!loaded)return;restoreView();updateFloors();updateMenuAccess();refreshToday();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}
