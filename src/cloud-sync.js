@@ -6,6 +6,7 @@
   const hashPattern = /^[a-f0-9]{64}$/;
   const idPattern = /^[a-zA-Z0-9_-]{1,128}$/;
   const fail = code => Object.assign(new Error(code), {code});
+  const hasRecords = records => Object.values(records).some(row=>row.d!==null);
 
   function configured(config, origin) {
     if (!config || config.enabled !== true || config.origin !== origin || !origin.startsWith('https://')) return false;
@@ -56,7 +57,7 @@
           new TextEncoder().encode(head.payload).byteLength > MAX_PAYLOAD) throw fail('invalid-remote');
       try {
         const records = await bridge.decode(head.payload);
-        if (await bridge.hash(records) !== head.hash) throw fail('invalid-remote');
+        if (!hasRecords(records) || await bridge.hash(records) !== head.hash) throw fail('invalid-remote');
         return {head,records};
       } catch (_) { throw fail('invalid-remote'); }
     }
@@ -66,7 +67,7 @@
     }
 
     async function write(uid, local, hash, remote, info) {
-      if (!Object.values(local).some(row=>row.d!==null)) throw fail('empty-local');
+      if (!hasRecords(local)) throw fail('empty-local');
       const op = info.pending?.hash === hash ? info.pending.op : crypto.randomUUID();
       const payload = await bridge.encode(local);
       if (new TextEncoder().encode(payload).byteLength > MAX_PAYLOAD) throw fail('too-large');
@@ -93,7 +94,7 @@
         acknowledge({...info,firstUpload:true},remote.head.hash,remote.head.revision);
         info = meta();
       }
-      const action = decide(hash,remote?.head.hash,info.base,!Object.values(local).some(row=>row.d!==null));
+      const action = decide(hash,remote?.head.hash,info.base,!hasRecords(local));
       if (action === 'missing') throw fail('missing-remote');
       if (action === 'empty') { review = null; return; }
       if (action === 'equal') {
