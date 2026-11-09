@@ -10,6 +10,7 @@ on:
       - 'src/fate.js'
       - 'src/chains*'
       - 'src/food*.js'
+      - 'src/room-workspace.js'
       - 'src/awakening.js'
       - 'src/citadel*.css'
       - 'src/rpg-ui.css'
@@ -119,6 +120,7 @@ jobs:
           node --check docs/chains-ui.js
           node --check docs/food.js
           node --check docs/food-ui.js
+          node --check docs/room-workspace.js
           python - <<'PY'
           import re
           from pathlib import Path
@@ -132,6 +134,7 @@ jobs:
       - name: Browser regression tests
         env:
           TEST_SHARD: ${{ github.ref == 'refs/heads/citadel-development-20261030' && '1/1' || format('{0}/4', matrix.shard) }}
+          STAGE_TWO_SHOTS: test-results/stage-two
           CI_SHARD: ${{ matrix.shard }}
         run: |
           npm ci

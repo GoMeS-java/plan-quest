@@ -8,7 +8,7 @@
   const modes = Object.freeze({ exact: 'Точно', estimate: 'Приблизительно', unknown: 'Без расчёта' });
   const keys = Object.freeze(['kcal', 'protein', 'fat', 'carbs']);
   const collections = Object.freeze({
-    meals: 'food-meals', drafts: 'food-drafts', catalog: 'food-catalog', days: 'food-days', events: 'food-events'
+    meals: 'food-meals', drafts: 'food-drafts', catalog: 'food-catalog', days: 'food-days', events: 'food-events', settings: 'food-settings'
   });
   const limit = 24;
   const has = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
@@ -257,8 +257,20 @@
       Number.isFinite(item.grams) && item.grams > 0 && Number.isFinite(item.base) && item.base > 0 && validFacts(item.values);
   }
 
+  function setGoal(tx, value, now = Date.now()) {
+    const kcal = number(value);
+    if (!Number.isInteger(kcal) || kcal < 1 || kcal > 20000) throw problem('Введи дневную цель целым числом от 1 до 20 000 ккал.');
+    const path = collections.settings + '/preferences';
+    const previous = tx.get(path);
+    if (previous?.kcal === kcal) return previous;
+    const row = stamp({ kcal }, previous, now);
+    tx.set(path, row);
+    return row;
+  }
+
   function readable(group, row) {
     if (row?.version !== version) return false;
+    if (group === 'settings') return Number.isInteger(row.kcal) && row.kcal > 0 && row.kcal <= 20000;
     if (group === 'catalog') {
       return validId(row.id) && typeof row.name === 'string' && Number.isFinite(row.base) && row.base > 0 &&
         validFacts(row.values) && (row.type === 'product' || (row.type === 'recipe' &&
@@ -282,7 +294,7 @@
   }
 
   root.VkachFood = Object.freeze({
-    start, kinds, modes, keys, collections, limit, validDate, checkKey, makeId, position, portion, totals,
-    suggestedCalories, putDraft, clearDraft, finishMeal, setDeleted, setComplete, recipe, saveCatalog, favorite, fromCatalog, read
+    start, kinds, modes, keys, collections, limit, validDate, checkKey, makeId, mass, position, portion, totals,
+    suggestedCalories, putDraft, clearDraft, finishMeal, setDeleted, setComplete, recipe, saveCatalog, favorite, fromCatalog, setGoal, read
   });
 })(globalThis);

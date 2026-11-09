@@ -227,6 +227,11 @@
     }
     return progressData;
   }
+  function recordedCount(date) {
+    getProgress();
+    const row = data.days[date];
+    return observed(row) ? row.count : null;
+  }
   function todayStatus() {
     getProgress();
     const limit = model.limit(currentDate);
@@ -429,5 +434,5 @@
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) requestRender(); });
   setInterval(() => { if (!document.hidden) currentDate !== model.today() ? requestRender() : updateClock(); }, 15000);
-  root.VkachChainsUI = Object.freeze({ connect, mountQuick, sandColor, getProgress, todayStatus, owned: () => model.owned(awards) });
+  root.VkachChainsUI = Object.freeze({ connect, mountQuick, sandColor, getProgress, todayStatus, recordedCount, owned: () => model.owned(awards) });
 })(globalThis);

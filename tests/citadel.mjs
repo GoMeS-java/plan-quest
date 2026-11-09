@@ -3025,6 +3025,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     tx.set('cfg/citadel',{decor:{},selectedRoom:'rest'});
     tx.set('cfg/future-synthetic',{nested:{keep:42}});
    }));
+   // The old build initializes the economy on a timer, after the rank becomes visible.
+   await p.waitForFunction(()=>PlanSync._docs()['cfg/abyss-economy']?.d?.rankSeeded===true);
    await p.evaluate(()=>PlanSync.beforeUpdate());const before=await docs(p);
    servedOverrides.clear();await p.reload();await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
    await shellMenu(p);await p.locator('.pl-chip').click();
@@ -3047,19 +3049,30 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    assert.deepEqual(await docs(p),after);
   }finally{servedOverrides.clear();await context.close();}
  });
- await check('0.73 through 1.3 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
-  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778'],['1.0','7317a00710f8d2c95a91f2cd9a34b862ad1b690f'],['1.1','2c1ff84'],['1.2','f56d9f9'],['1.3','ca5b6c9']]){
-  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(oldVersion==='1.3'?['chains.js','chains-ui.js','chains.css']:[]),...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
+ await check('0.73 through 1.3.4 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
+  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778'],['1.0','7317a00710f8d2c95a91f2cd9a34b862ad1b690f'],['1.1','2c1ff84'],['1.2','f56d9f9'],['1.3','ca5b6c9'],['1.3.3','212442e'],['1.3.4','1babd748d46766a396aa6a9c92ea0e8ecb0da279']]){
+  const diaryVersion=['1.3.3','1.3.4'].includes(oldVersion);
+  for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(oldVersion==='1.3'?['chains.js','chains-ui.js','chains.css']:[]),...(diaryVersion?['food.js','food-ui.js']:[]),...(oldVersion==='1.3.4'?['room-workspace.js']:[]),...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
   context.setDefaultTimeout(15000);const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}},'cfg/future-synthetic':{nested:{keep:42}}};if(['0.79','0.90'].includes(oldVersion)){seed['cfg/legends']={version:1,active:'',unlocked:{echo01:{version:1,at:1,presented:true}}};seed['cfg/fate']={version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}};}
   if(oldVersion==='1.3')seed['chains/legacy-smoke']={kind:'smoke',date:'2026-11-06',at:1793962800000};
+  if(diaryVersion)seed['food-meals/migration-meal']={version:1,id:'migration-meal',date:'2026-11-09',kind:'breakfast',
+    items:[{id:'migration-item',name:'Завтрак',grams:100,base:100,mode:'exact',values:{kcal:200,protein:8,fat:4,carbs:31}}],
+    deleted:false,created:1794211200000,updated:1794211200000};
+  if(oldVersion==='1.3.4')Object.assign(seed,{
+    'food-settings/preferences':{version:1,kcal:2600,created:1,updated:1},
+    'room-projects/migration-project':{version:1,title:'Режим',tasks:['daily-0'],created:1,updated:1},
+    'room-notes/migration-note':{version:1,title:'План',text:'Проверка записи',project:'migration-project',created:1,updated:1},
+    'room-recovery/2026-11-09':{version:1,date:'2026-11-09',minutes:450,mood:4,created:1,updated:1},
+    'cfg/room-reminders':{version:1,at:'19:00',quietFrom:'22:30',quietTo:'07:30',categories:[]}
+  });
   await context.addInitScript(seed=>{if(!localStorage.getItem('qa-init')){localStorage.setItem('plan.store.v1',JSON.stringify({v:1,docs:Object.fromEntries(Object.entries(seed).map(([k,d])=>[k,{d,u:1}]))}));localStorage.setItem('qa-init','1');}localStorage.setItem('wsum','2026-10-26');localStorage.setItem('msum','2026-10');localStorage.setItem('trialSeen','2026-10-30');},seed);
-  await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date((oldVersion==='1.3'?'2026-11-06':'2026-10-30')+'T14:00:00+03:00')});
+  await context.route('https://**/*',r=>r.fulfill({body:'',contentType:'text/css'}));const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));await p.clock.install({time:new Date((oldVersion==='1.3'?'2026-11-06':diaryVersion?'2026-11-09':'2026-10-30')+'T14:00:00+03:00')});
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&PlanSync._docs()['cfg/abyss-economy']?.d?.rank>=1);await dismiss(p);
   if(oldVersion==='1.3')await p.waitForFunction(()=>document.querySelector('#chains-daily').textContent.includes('Воли'));
   assert.equal(await p.evaluate(()=>APP_VERSION),oldVersion);assert.notEqual(await p.evaluate(()=>APP_BUILD),expectedBuild);await p.evaluate(()=>PlanSync.beforeUpdate());const before=await docs(p);
-  servedOverrides.clear();if(['1.0','1.1','1.2','1.3'].includes(oldVersion))await p.reload();else await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
+  servedOverrides.clear();if(diaryVersion||['1.0','1.1','1.2','1.3'].includes(oldVersion))await p.reload();else await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
   await shellMenu(p);await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();
   await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),currentVersion);
   if(oldVersion==='1.3'){
