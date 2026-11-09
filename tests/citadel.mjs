@@ -1018,8 +1018,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     if(level>1){await p.evaluate(({room,level})=>__qa.upgrade(room,level-1),{room,level});await waitForIdle(p);}
     await p.waitForFunction(level=>document.querySelector('#citadel-interior-stage').dataset.level===String(level),level);
     assert((await p.locator('#citadel-interior-stage').evaluate(n=>getComputedStyle(n,'::before').backgroundImage)).includes(room+'-interior-'+level+'.svg'),'actual scene must use its own room and stage');
-    if(room==='forge')await roomMore(p);
-    await p.locator(room==='forge'?'[data-room-inspect]':'#citadel-interior-object').click();
+    if(['forge','refectory'].includes(room))await roomMore(p);
+    await p.locator(['forge','refectory'].includes(room)?'[data-room-inspect]':'#citadel-interior-object').click();
     assert.equal(await p.locator('#citadel-interior-object').getAttribute('data-inspected'),'true');
     await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,`v11-room-${room}-level-${level}.png`)});
     if(level>1){const saved=await docs(p);await p.evaluate(({room,level})=>__qa.upgrade(room,level-1),{room,level});await waitForIdle(p);assert.deepEqual(await docs(p),saved,'same upgrade must not charge twice');}
@@ -1467,7 +1467,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('0.76 travel, drawers, activities, building and purchase history do not disclose locked content',async()=>{
   const seed=structuredClone(initial);seed['buys/citadel-archive-2']={kind:'citadel-room',currency:'abyss',room:'archive',level:2,name:'Цитадель: Новые стеллажи',cost:5};
   const {page:p,context}=await open({seed,shell:true});await p.locator('[data-croom="study"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});
-  const exits=await p.locator('#citadel-exits').innerText();assert.match(exits,/Неизведанная комната/);assert(!/Архив|Мастерская|Обсерватория/i.test(exits));
+  await roomMore(p);const exits=await p.locator('#citadel-exits').innerText();assert.match(exits,/Неизведанная комната/);assert(!/Архив|Мастерская|Обсерватория/i.test(exits));
   const tree=await p.locator('#citadel-interior').ariaSnapshot();assert(!/Архив|стеллаж|Мастерская|Обсерватория/i.test(tree));
   await shellDrawer(p,'right');const drawer=await p.locator('.citadel-shell-drawer.right').innerText();assert(!/Архив|стеллаж|Мастерская|Обсерватория/i.test(drawer));await p.goBack();
   await shellNav(p,'Воспоминания');assert.match(await p.locator('#shop').innerText(),/Улучшение неизведанной комнаты/);assert(!/стеллаж/i.test(await p.locator('#shop').innerText()));await context.close();
@@ -1613,8 +1613,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const {page:p,context}=await open({width,height,shell:true,seed:advancedSeed(),day:'2027-04-16'});
    for(const room of await p.locator('[data-croom]').evaluateAll(nodes=>nodes.map(n=>n.dataset.croom))){
     await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);const object=p.locator('#citadel-interior-object'),box=await object.boundingBox(),stage=await p.locator('#citadel-interior-stage').boundingBox();assert(box.width>=44&&box.height>=44);assert(box.x>=stage.x&&box.x+box.width<=stage.x+stage.width&&box.y>=stage.y&&box.y+box.height<=stage.y+stage.height);
-    if(room==='forge')await roomMore(p);
-    await (room==='forge'?p.locator('[data-room-inspect]'):object).click();assert.equal(await object.getAttribute('data-inspected'),'true');assert.match(await p.locator('#citadel-object-status').innerText(),/:/);
+    if(['forge','refectory'].includes(room))await roomMore(p);
+    await (['forge','refectory'].includes(room)?p.locator('[data-room-inspect]'):object).click();assert.equal(await object.getAttribute('data-inspected'),'true');assert.match(await p.locator('#citadel-object-status').innerText(),/:/);
    }
    if(width===390)await p.screenshot({path:resolve(out,'final-074-interaction-390.png')});await context.close();
   }
@@ -2534,8 +2534,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page overflow '+room+' at '+width);
     assert(await p.locator('#citadel-interior').evaluate(n=>n.scrollWidth<=n.clientWidth),'interior overflow '+room+' at '+width+' '+JSON.stringify(await p.locator('#citadel-interior').evaluate(n=>({self:{w:n.clientWidth,sw:n.scrollWidth,r:n.getBoundingClientRect().right},children:Array.from(n.querySelectorAll('*')).map(c=>({id:c.id,cls:c.className,w:c.getBoundingClientRect().width,r:c.getBoundingClientRect().right,sw:c.scrollWidth,cw:c.clientWidth})).filter(c=>c.r>n.getBoundingClientRect().right-1)}))));
     assert.equal(await p.locator('.citadel-interior-renovation').evaluate(n=>getComputedStyle(n).display),'block');
-    if(room==='forge')await roomMore(p);
-    await p.locator(room==='forge'?'[data-room-inspect]':'#citadel-interior-object').focus();await p.keyboard.press('Enter');assert((await p.locator('#citadel-object-status').innerText()).includes(':'));
+    if(['forge','refectory'].includes(room))await roomMore(p);
+    await p.locator(['forge','refectory'].includes(room)?'[data-room-inspect]':'#citadel-interior-object').focus();await p.keyboard.press('Enter');assert((await p.locator('#citadel-object-status').innerText()).includes(':'));
    }
    await dismiss(p);await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'citadel-room-'+room+'.png')});
   }
