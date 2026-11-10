@@ -1,4 +1,4 @@
-/* Private 1.1 discovery rules. UI receives earned rows only. No currency rewards. */
+/* Discovery rules and redacted views. No currency rewards. */
 (function(root){
  'use strict';
  var rooms=['rest','throne','study','archive','forge','observatory','gatehouse','refectory','cloister','vault'];
@@ -38,17 +38,86 @@
   {id:'ascent-chains',name:'Воля крепче железа',title:'НЕСЛОМЛЕННЫЙ',kind:'legendary',text:'«Разрыв Оков» сохранил твою длительную серию.',test:s=>s.chains},
   {id:'ascent-citadel',name:'Свет над башнями',title:'ХРАНИТЕЛЬ БАШЕН',kind:'legendary',text:'Ты вернул свет нескольким крыльям Цитадели.',test:s=>s.finished>=3&&s.active>=30}
  ];
+ const path='cfg/realm-achievements';
+ const mysteries=[
+  {id:'mystery-road',name:'Иней на путевых камнях',title:'СЛЫШАЩИЙ ДОРОГУ',kind:'rare',
+    text:'Шаги, записанные в разные дни, сложились в тропу за пределами Цитадели.',
+    direction:'Тело',action:'Записи о ходьбе в разные дни',test:s=>s.walk.size>=12,
+    stages:[s=>s.walk.size>=3,s=>s.walk.size>=8],hints:['Пыль оседает там, где никто не ходит.','На камнях проступили следы твоих переходов.']},
+  {id:'mystery-iron',name:'Отзвук под северным склоном',title:'ВЫКОВАВШИЙ ШАГ',kind:'epic',
+    text:'Записи прогулок и тренировок сохранили след усилия, к которому ты возвращался.',
+    direction:'Тело',action:'Записанные прогулки и подходы упражнений',test:s=>s.walk.size>=20&&s.training.size>=12},
+  {id:'mystery-embers',name:'Угли под пеплом',title:'ХРАНЯЩИЙ ЖАР',kind:'rare',
+    text:'Завершённые дела оставили ровный след в дневнике.',
+    direction:'Воля',action:'Отметки выполненных ежедневных заданий',test:s=>s.active.size>=14,
+    stages:[s=>s.active.size>=4,s=>s.active.size>=10],hints:['Под пеплом ещё держится тепло.','В дневнике разгорается огонь обычных дел.']},
+  {id:'mystery-hearth',name:'Ужин при невидимом госте',title:'ХРАНИТЕЛЬ ТИХОГО СТОЛА',kind:'epic',
+    text:'Завершённые трапезы раз за разом возвращали свет к очагу.',
+    direction:'Воля',action:'Завершённые записи в дневнике питания',test:s=>s.meals.size>=18,
+    stages:[s=>s.meals.size>=5,s=>s.meals.size>=12],hints:['У очага стало чуть теплее.','Трапезная запоминает вечера, отмеченные в книге.']},
+  {id:'mystery-ink',name:'Чернила под лунным светом',title:'ЧИТАЮЩИЙ ПОЛЯ',kind:'rare',
+    text:'Повторные занятия оставили в архиве строки, которые раньше были пусты.',
+    direction:'Разум',action:'Отметки занятий английским в разные дни',test:s=>s.study.size>=12,
+    stages:[s=>s.study.size>=3,s=>s.study.size>=8],hints:['На полях темнеет знак.','Отметки занятий складываются в строки.']},
+  {id:'mystery-measure',name:'Камень, который меряет время',title:'СВИДЕТЕЛЬ НЕДЕЛЬ',kind:'epic',
+    text:'Регулярные измерения создали хронику, у которой есть продолжение.',
+    direction:'Путь',action:'Записи веса за разные недели',test:s=>s.weightWeeks.size>=6,
+    stages:[s=>s.weightWeeks.size>=2,s=>s.weightWeeks.size>=4],hints:['В летописи зашелестели страницы.','В журнале измерений проступает ход недель.']},
+  {id:'mystery-stone',name:'Печать под старой кладкой',title:'ОТЫСКАВШИЙ ФУНДАМЕНТ',kind:'legendary',
+    text:'Обустроенные комнаты и сохранённый ритм пробудили древнюю часть Цитадели.',
+    direction:'Цитадель',action:'Подтверждённые улучшения комнат и ежедневные дела',test:s=>s.rooms.size>=3&&s.active.size>=18}
+ ];
+ defs.push(...mysteries);
  function day(k,today){return typeof k==='string'&&/^\d{4}-\d\d-\d\d$/.test(k)&&k<=today&&Number.isFinite(Date.parse(k))&&new Date(k+'T12:00:00Z').toISOString().slice(0,10)===k;}
  function valid(r){return r&&r.version===1&&Number.isFinite(r.at)&&r.at>0;}
- function owned(ledger){var flags=ledger&&ledger.unlocked||{};return defs.filter(d=>Object.prototype.hasOwnProperty.call(flags,d.id)&&valid(flags[d.id])).map(d=>({id:d.id,name:d.name,title:d.title,kind:d.kind||'mark',text:d.text||'',cos:d.cos||[],clothes:d.clothes||'',at:flags[d.id].at,presented:!!flags[d.id].presented}));}
+ function owned(ledger){var flags=ledger&&ledger.unlocked||{};return defs.filter(d=>Object.prototype.hasOwnProperty.call(flags,d.id)&&valid(flags[d.id])).map(d=>({id:d.id,name:d.name,title:d.title,kind:d.kind||'mark',text:d.text||'',cos:d.cos||[],clothes:d.clothes||'',at:flags[d.id].at,presented:!!flags[d.id].presented,
+  ...(d.direction?{direction:d.direction,action:d.action}:{})}));}
  function timestamp(value,now){return Number.isFinite(value)&&value>0&&value<=now;}
  function weekStart(date){
   var time=Date.parse(date);
   return time-(new Date(time).getUTCDay()+6)%7*86400000;
  }
+ function roomUpgrade(r,today){
+  return r.kind==='citadel-room'&&r.currency==='abyss'&&rooms.includes(r.room)&&[2,3].includes(r.level)&&
+    r.cost>0&&r.id==='citadel-'+r.room+'-'+r.level&&timestamp(r.ts,Infinity)&&
+    Number.isFinite(new Date(r.ts).getTime())&&day(new Date(r.ts).toISOString().slice(0,10),today);
+ }
+ function mysteryFacts(tx,today,now,since){
+  const s={walk:new Set(),training:new Set(),active:new Set(),study:new Set(),meals:new Set(),weightWeeks:new Set(),rooms:new Set()};
+  const newDay=date=>day(date,today)&&date>since;
+  tx.list('days').forEach(r=>{
+   if(!newDay(r.id))return;
+   if(Number.isFinite(r.steps)&&r.steps>=5000)s.walk.add(r.id);
+   if(Array.isArray(r.q)){
+    if(r.q.some((v,i)=>v===true&&(i!==3||!r.ex?.cov)))s.active.add(r.id);
+    if(r.q[7]===true)s.study.add(r.id);
+   }
+  });
+  tx.list('per').forEach(r=>{
+   if(newDay(r.id)&&['squat','pushup'].some(key=>Array.isArray(r[key])&&r[key].some(at=>timestamp(at,now))))s.training.add(r.id);
+  });
+  tx.list('food-meals').forEach(r=>{
+   if(newDay(r.date)&&root.VkachFood?.savedMeal?.(r))s.meals.add(r.date);
+  });
+  tx.list('weights').forEach(r=>{
+   if(newDay(r.date)&&Number(r.kg)>30&&Number(r.kg)<400&&(r.ts==null||timestamp(r.ts,now)))s.weightWeeks.add(weekStart(r.date));
+  });
+  tx.list('buys').forEach(r=>{
+   if(roomUpgrade(r,today)&&timestamp(r.ts,now)&&newDay(new Date(r.ts).toISOString().slice(0,10)))s.rooms.add(r.room);
+  });
+  return s;
+ }
+ function previews(tx,today,now){
+  const ledger=tx.get(path),since=ledger?.mysterySince;
+  const s=day(since,today)?mysteryFacts(tx,today,now,since):null;
+  return mysteries.filter(d=>d.stages&&!valid(ledger?.unlocked?.[d.id])).map(d=>{
+   const stage=!s?0:d.stages[1](s)?2:d.stages[0](s)?1:0;
+   return {stage,hint:stage?d.hints[stage-1]:'Под печатью что-то ждёт своего часа.'};
+  });
+ }
  function facts(tx,today,proof,now){
   proof=proof||{};var s={upgrades:0,rooms:0,finished:0,decor:0,active:0,steps:0,heavy:0,weightWeeks:0,foodDays:0,showcase:0,title:false,appearance:0,dressed:false,customEquipped:false},renovated={},weeks={};
-  tx.list('buys').forEach(r=>{if(r.kind!=='citadel-room'||r.currency!=='abyss'||rooms.indexOf(r.room)<0||![2,3].includes(r.level)||!(r.cost>0)||r.id!=='citadel-'+r.room+'-'+r.level||!Number.isFinite(r.ts)||r.ts<=0||!Number.isFinite(new Date(r.ts).getTime())||!day(new Date(r.ts).toISOString().slice(0,10),today))return;s.upgrades++;renovated[r.room]=Math.max(renovated[r.room]||1,r.level);});
+  tx.list('buys').forEach(r=>{if(!roomUpgrade(r,today))return;s.upgrades++;renovated[r.room]=Math.max(renovated[r.room]||1,r.level);});
   s.rooms=Object.keys(renovated).length;s.finished=Object.values(renovated).filter(v=>v===3).length;
   var activity=[],studyWeeks={};
   s.walkDays=0;s.studyDays=0;s.calorieDays=0;
@@ -117,13 +186,20 @@
  }
  function reconcile(tx,today,now,proof){
   if(!Number.isFinite(now)||now<=0)return [];
-  var old=tx.get('cfg/realm-achievements')||{},unlocked=Object.assign({},old.unlocked||{}),s=facts(tx,today,proof,now),added=[];
-  defs.forEach(d=>{if(!valid(unlocked[d.id])&&d.test(s)){unlocked[d.id]={version:1,at:now,presented:false};added.push(d.id);}});
-  if(added.length)tx.set('cfg/realm-achievements',Object.assign({},old,{version:1,unlocked}));
+  var old=tx.get(path)||{},unlocked=Object.assign({},old.unlocked||{}),s=facts(tx,today,proof,now),added=[];
+  const since=day(old.mysterySince,'9999-12-31')?old.mysterySince:today;
+  const mystery=day(since,today)?mysteryFacts(tx,today,now,since):null;
+  defs.forEach(d=>{if(!valid(unlocked[d.id])&&(d.direction?mystery&&d.test(mystery):d.test(s))){unlocked[d.id]={version:1,at:now,presented:false};added.push(d.id);}});
+  if(added.length||old.mysterySince!==since)tx.set(path,Object.assign({},old,{version:1,mysterySince:since,unlocked}));
   owned({unlocked}).forEach(d=>{if(d.clothes&&!tx.get('wardrobe/'+d.clothes))tx.set('wardrobe/'+d.clothes,Object.assign({ts:now},clothing[d.clothes]));});return added;
  }
- function merge(a,b){a=a||{};b=b||{};var unlocked=Object.assign({},a.unlocked||{},b.unlocked||{});Object.keys(unlocked).forEach(id=>{var x=a.unlocked&&a.unlocked[id],y=b.unlocked&&b.unlocked[id];if(valid(x)&&valid(y))unlocked[id]=Object.assign({},x,y,{at:Math.min(x.at,y.at),presented:!!(x.presented||y.presented)});else if(valid(x))unlocked[id]=x;else if(valid(y))unlocked[id]=y;});return Object.assign({},a,b,{version:1,unlocked});}
- function needs(tx,today,proof,now=Date.now()){var old=tx.get('cfg/realm-achievements')||{},flags=old.unlocked||{},s=facts(tx,today,proof,now);return defs.some(d=>!valid(flags[d.id])&&d.test(s))||owned(old).some(d=>!d.presented||d.clothes&&!tx.get('wardrobe/'+d.clothes));}
- function claim(tx){var old=tx.get('cfg/realm-achievements')||{},pending=owned(old).filter(d=>!d.presented);if(!pending.length)return [];var unlocked=Object.assign({},old.unlocked);pending.forEach(d=>unlocked[d.id]=Object.assign({},unlocked[d.id],{presented:true}));tx.set('cfg/realm-achievements',Object.assign({},old,{unlocked}));return pending;}
- root.VkachRealm=Object.freeze({owned,reconcile,claim,merge,needs});
+ function merge(a,b){a=a||{};b=b||{};var unlocked=Object.assign({},a.unlocked||{},b.unlocked||{});Object.keys(unlocked).forEach(id=>{var x=a.unlocked&&a.unlocked[id],y=b.unlocked&&b.unlocked[id];if(valid(x)&&valid(y))unlocked[id]=Object.assign({},x,y,{at:Math.min(x.at,y.at),presented:!!(x.presented||y.presented)});else if(valid(x))unlocked[id]=x;else if(valid(y))unlocked[id]=y;});const since=[a.mysterySince,b.mysterySince].filter(value=>day(value,'9999-12-31')).sort()[0];return Object.assign({},a,b,{version:1,unlocked},since?{mysterySince:since}:{});}
+ function needs(tx,today,proof,now=Date.now()){
+  const old=tx.get(path)||{},flags=old.unlocked||{};
+  if(day(today,today)&&!day(old.mysterySince,'9999-12-31'))return true;
+  const s=facts(tx,today,proof,now),mystery=day(old.mysterySince,today)?mysteryFacts(tx,today,now,old.mysterySince):null;
+  return defs.some(d=>!valid(flags[d.id])&&(d.direction?mystery&&d.test(mystery):d.test(s)))||owned(old).some(d=>!d.presented||d.clothes&&!tx.get('wardrobe/'+d.clothes));
+ }
+ function claim(tx){var old=tx.get(path)||{},pending=owned(old).filter(d=>!d.presented);if(!pending.length)return [];var unlocked=Object.assign({},old.unlocked);pending.forEach(d=>unlocked[d.id]=Object.assign({},unlocked[d.id],{presented:true}));tx.set(path,Object.assign({},old,{unlocked}));return pending;}
+ root.VkachRealm=Object.freeze({path,owned,previews,reconcile,claim,merge,needs});
 })(typeof window==='undefined'?globalThis:window);
