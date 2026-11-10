@@ -1218,6 +1218,7 @@ body.citadel-shell-active #fate-forge-dialog{
 .ascension-node p,.ascension-help{margin:0;color:#d4c2d7;font-size:13px}
 .ascension-help{margin:8px 2px 0;color:#b9abc4;font-size:11px}
 
+body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
 #push-settings .push-category{display:grid;grid-template-columns:minmax(0,1fr) minmax(96px,34%);align-items:center;gap:8px;padding:5px 0}
 #push-settings label{min-height:44px;display:flex;align-items:center;gap:7px}
 #push-settings .push-controls{flex-wrap:wrap}

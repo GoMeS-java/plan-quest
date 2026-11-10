@@ -135,7 +135,10 @@ try {
   await page.screenshot({path:resolve(shots,'03-push-settings.png'),animations:'disabled'});
   for(const width of [320,360,430]){
     await page.setViewportSize({width,height:800});
-    assert(await settings.evaluate(node=>node.scrollWidth<=node.clientWidth+2),'push inputs fit at '+width);
+    assert(await settings.evaluate(node=>{
+      const bounds=node.getBoundingClientRect();
+      return bounds.left>=0&&bounds.right<=document.documentElement.clientWidth+1&&node.scrollWidth<=node.clientWidth+2;
+    }),'push inputs fit at '+width);
   }
   await page.setViewportSize({width:360,height:800});
   await page.waitForFunction(()=>navigator.serviceWorker.controller);
