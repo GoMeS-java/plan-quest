@@ -102,8 +102,10 @@ function gameplayRecords(records){
 }
 function appearanceComparison(data){
  delete data['cfg/look'];delete data['cfg/citadel'];
- // Cycling through saved appearances updates the observation time, even after restoring the original look.
- for(const [path,row] of Object.entries(data))if(path.startsWith('world-history/')&&row.d){delete row.d.at;delete row.u;}
+ // These comparisons cover progression. Equipped cosmetics are asserted separately.
+ for(const [path,row] of Object.entries(data))if(path.startsWith('world-history/')&&row.d){
+  delete row.d.at;delete row.u;delete row.d.frame.look;
+ }
  return data;
 }
 function restoredRecord(path,record,prior){
