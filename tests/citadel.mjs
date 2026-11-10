@@ -715,7 +715,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.deepEqual(appearanceComparison(await docs(p)),appearanceComparison(before),'frame presentation cannot grant rewards or change gameplay');await context.close();
  });
  await check('1.1 reward frames still fit the original sanctuary and keep controls accessible',async()=>{
-  const {page:p,context}=await open({seed:landscapeSeed(),day:'2027-09-15'});await p.removeLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first());await p.evaluate(()=>__qa.frameVisualFixture());await p.locator('#gear').click();const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="fr_gold"]').click();await waitForIdle(p);await p.locator('#setup-x').click();const stage=p.locator('.stage');await stage.waitFor({state:'visible'});
+  const {page:p,context}=await open({seed:landscapeSeed(),day:'2027-09-15'});await p.removeLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first());const notice=p.locator('#legend-scene[data-qa-automatic="true"][open]');
+  await p.addLocatorHandler(notice,()=>notice.evaluate(el=>el.close()),{noWaitAfter:true});
+  await p.evaluate(()=>__qa.frameVisualFixture());await p.locator('#gear').click();const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="fr_gold"]').click();await waitForIdle(p);await p.locator('#setup-x').click();const stage=p.locator('.stage');await stage.waitFor({state:'visible'});
   const sample=await stage.evaluate(n=>{const r=n.getBoundingClientRect(),hero=n.querySelector('#hero').getBoundingClientRect(),frame=n.querySelector(':scope>.reward-frame');return {art:getComputedStyle(frame,'::before').borderImageSource,pointer:getComputedStyle(frame).pointerEvents,animation:getComputedStyle(n).animationName,safe:hero.left>=r.left+16&&hero.right<=r.right-16&&hero.top>=r.top+16&&hero.bottom<=r.bottom-16,control:Number(getComputedStyle(n.querySelector('.wopen')).zIndex),frame:Number(getComputedStyle(frame).zIndex)};});assert(sample.art.includes('frame-gold.svg'));assert.equal(sample.pointer,'none');assert.equal(sample.animation,'none','the border never recolors the whole scene');assert(sample.safe);assert(sample.control>sample.frame);await stage.locator('.nametag').evaluateAll(ns=>ns.forEach(n=>n.textContent='СПЯЩИЙ'));await stage.screenshot({path:resolve(out,'v11-frame-sanctuary.png')});await context.close();
  });
  await check('1.1 earned frame persists with equipment and unknown appearance fields',async()=>{
@@ -1004,7 +1006,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const meters=await p.locator('#profile-rank-meter').evaluate(n=>({value:n.value,max:n.max})),points=await p.evaluate(()=>__qa.points());assert.equal(meters.value,points.P);assert.equal(meters.max,points.need);
   const sprites=await p.evaluate(()=>{const a=document.querySelector('#profile-hero'),b=document.querySelector('#citadel-interior-hero');return [a.toDataURL(),b.toDataURL()];});assert.equal(sprites[0],sprites[1],'profile uses current body geometry and exactly the equipped hero');
   await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-profile-hero-mobile.png')});
-  await p.locator('.profile-journey').scrollIntoViewIfNeeded();await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-profile-journey-mobile.png')});
+  await p.getByRole('region',{name:'Последние семь дней'}).scrollIntoViewIfNeeded();await p.locator('.citadel-system-dialog').screenshot({path:resolve(out,'v11-profile-journey-mobile.png')});
   assert.deepEqual(await docs(p),before,'history and category navigation must not write progress');
   const category=p.locator('#profile-collections button:not(:disabled)').first();if(await category.count()){await category.click();assert(await p.locator('#setup').isVisible());assert.equal(await p.locator('#looklist .look-group[open]').count(),1);await p.locator('#setup-x').click();}
   await write(p,'days/2026-10-29',{q:Array(10).fill(false),steps:2200});
@@ -1347,7 +1349,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const untouched=!PlanSync._docs()['cfg/legends'];const awarded=await deliver(),again=await deliver();return {failed,untouched,hasAward:awarded.length>0,repeated:again.length};
   });assert.deepEqual(result,{failed:true,untouched:true,hasAward:true,repeated:0});
   await p.waitForTimeout(80);await waitForIdle(p);await dismiss(p);const earned=(await docs(p))['cfg/legends'].d;
-  for(const [path,record]of Object.entries(before))assert.deepEqual((await docs(p))[path].d,record.d);
+  await p.waitForFunction(echo=>VkachWorldHistory.frames(PlanSync._docs())[0]?.echo===echo,earned.active);
+  const after=await docs(p);
+  for(const [path,record]of Object.entries(before)){
+   if(path.startsWith('world-history/')){
+    assert(after[path].d.at>=record.d.at);
+    assert.deepEqual(after[path].d.frame,{...record.d.frame,echo:earned.active});
+   }else assert.deepEqual(after[path].d,record.d);
+  }
   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);assert.deepEqual((await docs(p))['cfg/legends'].d,earned);await context.close();
  });
 
@@ -2889,6 +2898,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const backup of [copy,{v:1,docs:copy.docs},copy]){
    await write(p,'weights/test',{kg:160,date,ts:1});await write(p,'tx/after-copy',{amt:123.45,kind:'out',acc:'cash',date});
    await p.evaluate(copy=>PlanSync.importObj(copy,true),backup);await p.waitForTimeout(50);
+   const [path,observed]=Object.entries(before).find(([key])=>key.startsWith('world-history/'));
+   await p.waitForFunction(({path,frame})=>JSON.stringify(PlanSync._docs()[path]?.d.frame)===JSON.stringify(frame),{path,frame:observed.d.frame});
    const after=await docs(p);for(const [key,value]of Object.entries(before))restoredRecord(key,after[key],value);
    assert.equal(after['tx/after-copy'].d,null);assert.equal(await p.evaluate(()=>__qa.shape()),shape);
   }
