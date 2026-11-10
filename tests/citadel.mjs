@@ -3074,10 +3074,10 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    assert.deepEqual(await docs(p),after);
   }finally{servedOverrides.clear();await context.close();}
  });
- await check('0.73 through 1.3.5 to current PWA upgrade preserves saves and offline room secrecy',async()=>{
-  for(const [oldVersion,previous] of [['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778'],['1.0','7317a00710f8d2c95a91f2cd9a34b862ad1b690f'],['1.1','2c1ff84'],['1.2','f56d9f9'],['1.3','ca5b6c9'],['1.3.2','6e803409efc1afd695401f2959b0895039287e58'],['1.3.3','212442e'],['1.3.4','1babd748d46766a396aa6a9c92ea0e8ecb0da279'],['1.3.5','03f3e1c1c3c0ed08f938f61129dc534c10d5b1cc']]){
-  const diaryVersion=['1.3.3','1.3.4','1.3.5'].includes(oldVersion);
-  const workspaceVersion=['1.3.4','1.3.5'].includes(oldVersion);
+ async function checkPwaUpgrade(versions){
+  for(const [oldVersion,previous] of versions){
+  const diaryVersion=['1.3.3','1.3.4','1.3.5','1.4'].includes(oldVersion);
+  const workspaceVersion=['1.3.4','1.3.5','1.4'].includes(oldVersion);
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(['1.3','1.3.2'].includes(oldVersion)?['chains.js','chains-ui.js','chains.css']:[]),...(diaryVersion?['food.js','food-ui.js']:[]),...(workspaceVersion?['room-workspace.js']:[]),...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
@@ -3116,9 +3116,31 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   assert.deepEqual(migrated,expected,'an upgrade preserves records and economy apart from the existing rank migration and one earned meal receipt');
   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
-  await context.setOffline(true);await p.reload();await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);assert.deepEqual(await docs(p),migrated);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.equal(await p.locator('[data-croom="archive"] .citadel-room-name').textContent(),'Неизведанная комната');assert.equal(await p.locator('[data-croom="rest"]').getAttribute('data-revealed'),'true');await context.close();
+  await context.setOffline(true);await p.reload();await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);assert.deepEqual(await docs(p),migrated);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.equal(await p.locator('[data-croom="archive"] .citadel-room-name').textContent(),'Неизведанная комната');assert.equal(await p.locator('[data-croom="rest"]').getAttribute('data-revealed'),'true');
+  if(oldVersion==='1.4'){
+    await dismiss(p);
+    await p.evaluate(()=>window.__citadelShell.openFood(false));
+    const food=p.locator('#food');
+    await food.getByRole('button',{name:'Продукты',exact:true}).click();
+    await food.getByLabel('Найти продукт для редактирования').fill('ЗАВТР');
+    await food.getByRole('button',{name:/Завтрак.*Из истории/}).waitFor();
+    assert.deepEqual(await docs(p),migrated,'opening the library must not write or migrate older meal records');
   }
- });
+  await context.close();
+  }
+ }
+ await check('0.73 through 1.3.5 to current PWA upgrade preserves saves and offline room secrecy',()=>checkPwaUpgrade([
+  ['0.73','2b40210b50924748a6d0d7a1d18cc91f31828205'],['0.74','f167bf4498f73393ad103c7abb42fd3cffc6862e'],
+  ['0.75','88cd086ad5bf5b7f70e5dacae7ed198de1fa8504'],['0.76','bdd690216a1899e612a03144e39dfb212862f8d7'],
+  ['0.77','ee0f42865972388be5731f54cf927d9470cc658d'],['0.78','1eeac78c66601f11fb966a616ebfe2b6c968f538'],
+  ['0.79','d35fb9295b0bc2237ae51d38af62843eac54e3fe'],['0.90','fd0c953138015a790709c396c0b40b1f2cdb0778'],
+  ['1.0','7317a00710f8d2c95a91f2cd9a34b862ad1b690f'],['1.1','2c1ff84'],['1.2','f56d9f9'],['1.3','ca5b6c9'],
+  ['1.3.2','6e803409efc1afd695401f2959b0895039287e58'],['1.3.3','212442e'],['1.3.4','1babd748d46766a396aa6a9c92ea0e8ecb0da279'],
+  ['1.3.5','03f3e1c1c3c0ed08f938f61129dc534c10d5b1cc']
+ ]));
+ await check('1.4 to current PWA upgrade preserves saves and exposes old products offline',()=>checkPwaUpgrade([
+  ['1.4','769c9e00a878e8caaf3bb78c913bc9ccefe6fe8b']
+ ]));
  await check('0.68 to 0.69 PWA update replaces cached UI while preserving synthetic saves',async()=>{
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','fbe6f935569a798b5b9ed3109b7a260668e8b96a:docs/'+name]));
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});context.setDefaultTimeout(20000);

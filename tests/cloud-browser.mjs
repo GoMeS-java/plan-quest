@@ -144,7 +144,10 @@ async function device(amount, offline=false) {
       'cfg/opening':{d:{cash:5000,card:10000},u},
       'cfg/abyss-economy':{d:{version:1,rank:1,claims:{},earned:0,rankSeeded:true},u},
       'cfg/room-reminders':{d:{version:1,at:'18:00',quietFrom:'23:00',quietTo:'08:00',categories:['tasks']},u},
-      'tx/sample':{d:{amt:amount,kind:'out',acc:'cash',cat:'Продукты',what:'Синтетическая операция',date,ts:u,counted:true},u}
+      'tx/sample':{d:{amt:amount,kind:'out',acc:'cash',cat:'Продукты',what:'Синтетическая операция',date,ts:u,counted:true},u},
+      ...(amount===200?{'food-catalog/synthetic-product':{d:{id:'synthetic-product',version:1,type:'product',name:'Синтетический продукт',
+        base:100,values:{kcal:120,protein:null,fat:null,carbs:null},estimated:true,automatic:true,favorite:true,
+        lastGrams:75,lastUsed:u,created:u,updated:u},u}}:{})
     }}));
   },{amount,date,offline});
   const page=await context.newPage();
@@ -270,10 +273,15 @@ try {
   tablet.page.once('dialog',dialog=>dialog.accept());
   await button(tablet,'Использовать облачную версию').click();
   await tablet.page.waitForFunction(()=>PlanSync._docs()['tx/sample'].d.amt===200);
+  assert.equal(await tablet.page.evaluate(()=>VkachFood.read(PlanSync._docs(),'catalog')[0]?.lastGrams),75);
   await tablet.menu.getByText(/Последнее согласование/).waitFor();
   assert.equal(writes,1);
 
-  await phone.page.evaluate(()=>PlanDB.doc('tx/sample').update({amt:300}));
+  await phone.page.evaluate(()=>PlanDB.runTransaction(tx=>{
+    tx.set('tx/sample',{...tx.get('tx/sample'),amt:300});
+    const product=tx.get('food-catalog/synthetic-product');
+    VkachFood.saveCatalog(tx,{...product,note:'Синтетическая правка'},product);
+  }));
   await button(phone,'Проверить синхронизацию').click();
   await phone.page.waitForFunction(()=>JSON.parse(localStorage.getItem('plan.cloud136.v1'))?.revision===2);
   assert.equal(vault.head.revision,2);
@@ -282,6 +290,7 @@ try {
   await shot(phone,'03-cloud-history');
   await button(tablet,'Проверить синхронизацию').click();
   await tablet.page.waitForFunction(()=>PlanSync._docs()['tx/sample'].d.amt===300);
+  assert.equal(await tablet.page.evaluate(()=>VkachFood.read(PlanSync._docs(),'catalog')[0]?.note),'Синтетическая правка');
   await tablet.page.reload();
   await tablet.page.evaluate(()=>{window.qaOnline=true;window.dispatchEvent(new Event('online'));});
   await tablet.open();
@@ -292,6 +301,7 @@ try {
   phone.page.once('dialog',dialog=>dialog.accept());
   await button(phone,'Восстановить версию 1').click();
   await phone.page.waitForFunction(()=>PlanSync._docs()['tx/sample'].d.amt===200);
+  assert.equal(await phone.page.evaluate(()=>VkachFood.read(PlanSync._docs(),'catalog')[0]?.note),undefined);
   assert.equal(await phone.page.evaluate(()=>JSON.parse(localStorage.getItem('plan.cloud136.v1')).enabled),false);
   assert.equal(vault.head.revision,2,'restoring an archive does not silently publish it');
   assert.equal(writes,2);

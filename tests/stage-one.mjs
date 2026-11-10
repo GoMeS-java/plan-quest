@@ -26,6 +26,10 @@ try {
   const date = '2027-04-16';
   const seed = { 'cfg/opening': { cash: 100, card: 1200 }, 'cfg/citadel': { selectedRoom: 'rest' },
     'cfg/abyss-economy': { version: 1, rank: 1, earned: 1000, claims: {} } };
+  const oldProduct = 'Мёд цветочный с длинным названием для проверки списка на узком экране';
+  seed['food-meals/old-meal'] = { version: 1, id: 'old-meal', date: '2027-04-14', kind: 'lunch', deleted: false,
+    created: 1, updated: 1, items: [{ id: 'old-honey', name: oldProduct, mode: 'exact', base: 100, grams: 35,
+      values: { kcal: 200, protein: 0, fat: 0, carbs: 50 } }] };
   for (let n = 0; n < 179; n++) {
     const value = new Date(Date.UTC(2026, 9, 19 + n, 12));
     const day = value.toISOString().slice(0, 10), t = +value;
@@ -224,7 +228,12 @@ try {
   assert.equal(backup.format, 'vkach-backup');
   assert(Object.keys(backup.docs).some(key => key.startsWith('food-events/')));
   assert(Object.keys(backup.docs).some(key => key.startsWith('food-drafts/')));
-  await page.evaluate(() => PlanDB.doc('food-days/2027-04-15').delete());
+  const catalogPath = Object.keys(backup.docs).find(key => backup.docs[key].d?.automatic === true);
+  assert(catalogPath?.startsWith('food-catalog/'));
+  await page.evaluate(path => PlanDB.runTransaction(tx => {
+    tx.delete('food-days/2027-04-15');
+    tx.delete(path);
+  }), catalogPath);
   await page.evaluate(backup => PlanSync.importObj(backup, true), backup);
   assert.deepEqual(await docValues(['food-', 'days/', 'per/', 'cfg/opening']), beforeBackup);
   await openFood();
@@ -242,6 +251,46 @@ try {
   assert.deepEqual(afterTransfer, { ...preserved, ['days/' + date]: { ...preserved['days/' + date], kcal: 161 } });
   await page.goBack();
   console.log('Food UI: offline edits, restored backup and explicit calorie transfer verified');
+
+  await openFood();
+  await entries('Продукты').tap();
+  const food = page.locator('#food');
+  const historyProducts = food.locator('details').filter({ has: page.getByText('Продукты из истории · 1', { exact: true }) });
+  await historyProducts.locator('summary').tap();
+  await historyProducts.getByRole('button', { name: 'В избранное', exact: true }).tap();
+  const favorites = food.locator('details').filter({ has: page.getByText('Избранное · 1', { exact: true }) });
+  await favorites.locator('summary').tap();
+  await favorites.getByRole('button', { name: 'Редактировать ' + oldProduct }).tap();
+  await byLabel('Примечание').fill('Синтетическая закладка');
+  await entries('Сохранить').tap();
+  await food.getByText('Сохранено в продуктах', { exact: true }).waitFor();
+  await entries('Сегодня').tap();
+  await add('Перекусы');
+  for (const width of [320, 360, 430]) {
+    await page.setViewportSize({ width, height: 720 });
+    await byLabel('Поиск в Книге Трапезной').fill('МЕД ЦВЕТОЧ');
+    const result = food.getByRole('button', { name: new RegExp(oldProduct) });
+    await result.waitFor();
+    const rect = await result.boundingBox();
+    assert(rect.x >= 0 && rect.x + rect.width <= width && rect.height >= 44);
+    assert(await food.evaluate(node => node.scrollWidth <= node.clientWidth));
+  }
+  await food.getByRole('button', { name: new RegExp(oldProduct) }).tap();
+  assert.equal(await byLabel('Масса порции, г').inputValue(), '35');
+  await byLabel('Масса порции, г').fill('180');
+  await food.getByText('В черновике 360 ккал', { exact: true }).waitFor();
+  await saveMeal();
+  const foods = await docValues(['food-catalog/', 'food-meals/']);
+  assert.deepEqual(foods['food-meals/old-meal'], seed['food-meals/old-meal']);
+  const entriesForHoney = Object.values(foods).filter(row => row.type === 'product' && row.name === oldProduct);
+  assert.equal(entriesForHoney.length, 1);
+  assert.equal(entriesForHoney[0].lastGrams, 180);
+  assert(entriesForHoney[0].favorite);
+  assert.equal(entriesForHoney[0].note, 'Синтетическая закладка');
+  assert.equal(Object.values(foods).filter(row => row.kind === 'snack').length, 1);
+  await closeFood();
+  await page.setViewportSize({ width: 360, height: 800 });
+  console.log('Food library: old records, favorites, editing, offline search and one-tap portions at 320–430 px verified');
 
   await backToMap();
   await openRoom('forge');
