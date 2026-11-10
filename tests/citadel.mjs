@@ -956,9 +956,20 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.deepEqual(after['cfg/citadel']?.d,before['cfg/citadel']?.d,'final selected room and decoration remain unchanged');
   delete before['cfg/citadel'];delete after['cfg/citadel'];assert.deepEqual(after,before,'time and atmosphere do not change gameplay records');
   await p.evaluate(()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();});
-  await p.evaluate(()=>document.documentElement.dataset.citadelBg='rain');
-  const rain=await p.locator('.citadel-interior-stage .citadel-daylight').evaluate(n=>{document.documentElement.dataset.citadelBg='rain';return {mask:getComputedStyle(n,'::after').maskImage,mode:getComputedStyle(n,'::after').maskMode,events:getComputedStyle(n).pointerEvents,opacity:getComputedStyle(n,'::after').opacity};});
-  assert(rain.mask.includes('rest-apertures.svg'));assert.equal(rain.mode,'luminance');assert.equal(rain.events,'none');assert(Number(rain.opacity)>0);
+  await p.evaluate(()=>{
+   document.documentElement.dataset.citadelBg='rain';
+   const startedAt=Date.now();
+   localStorage.setItem('plan.world-weather.v1',JSON.stringify({version:1,id:'lighting-rain',type:'downpour',intensity:3,startedAt,endsAt:startedAt+30*60_000}));
+   window.dispatchEvent(new Event('pageshow'));
+  });
+  await p.waitForFunction(()=>document.documentElement.dataset.worldWeatherId==='lighting-rain');
+  const rain=await p.locator('.citadel-interior-stage .citadel-daylight').evaluate(n=>{
+   const aperture=getComputedStyle(n,'::after'), layer=getComputedStyle(n.querySelector('.citadel-window-weather'));
+   const slot=n.querySelector('.citadel-window-weather .is-current');
+   return {aperture:aperture.maskImage,mask:layer.maskImage,mode:layer.maskMode,events:layer.pointerEvents,
+     opacity:getComputedStyle(slot).opacity,texture:getComputedStyle(slot.firstElementChild).backgroundImage};
+  });
+  assert(rain.aperture.includes('rest-apertures.svg'));assert(rain.mask.includes('rest-windows-3.svg'));assert.equal(rain.mode,'luminance');assert.equal(rain.events,'none');assert(Number(rain.opacity)>0);assert(rain.texture.includes('weather-rain.svg'));
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'v11-light-rest-rain.png')});
   await context.close();
  });
