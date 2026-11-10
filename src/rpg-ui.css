@@ -1013,7 +1013,7 @@ body.citadel-shell-active .citadel-shell-camera .citadel-map-tools{grid-template
 .food-tabs [aria-pressed="true"]{border-color:#c6a07d!important;background:#50375d!important}
 .food-row>*{flex:1 1 105px;min-width:0}
 .food-row>strong{flex:2 1 115px}
-.food-stack,.food-entry{display:grid;gap:8px;min-width:0}
+.food-stack,.food-entry,.food-library-search{display:grid;gap:8px;min-width:0}
 .food-panel p,.food-panel ul{margin:0}
 .food-remote-search{gap:7px}
 .food-remote-search input,.food-remote-search select{width:100%;min-width:0;min-height:44px;box-sizing:border-box}
@@ -1023,7 +1023,7 @@ body.citadel-shell-active .citadel-shell-camera .citadel-map-tools{grid-template
 .food-library-result small{color:#dfcbe5;font-weight:normal}
 .food-panel [data-food-position]{scroll-margin-block:12px 64px}
 .food-panel ul{padding-inline-start:20px}
-.food-panel .food-entry,.food-panel details{
+.food-panel .food-entry,.food-panel .food-library-search,.food-panel details{
   background:#211a2b;border:1px solid #574665;border-radius:5px;padding:9px
 }
 .food-panel details>summary{cursor:pointer;min-height:44px;align-content:center}

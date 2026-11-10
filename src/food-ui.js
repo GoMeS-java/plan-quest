@@ -209,7 +209,7 @@
   }
 
   function librarySearch(library, choose, catalogView = false) {
-    const panel = element('section', null, 'food-entry food-library-search');
+    const panel = element('section', null, 'food-library-search');
     const results = element('div', null, 'food-stack');
     const message = element('p', null, 'hint');
     message.setAttribute('role', 'status');
