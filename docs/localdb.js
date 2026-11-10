@@ -135,6 +135,7 @@
     if (e.key === META) { meta = jget(META, {}) || {}; renderChip(); }
     if (e.key === TOKEN_KEY) { readToken(); renderChip(); }
     if (e.key === CLOUD_META && firebaseConfigured) { renderChip(); scheduleCloud(); }
+    if (e.key === PUSH_KEY && firebaseConfigured) { refreshPushLocal(); renderChip(); scheduleCloud(); }
     if (e.key === KEY) { try { docs = persistedDocs(); dirty = true; revision++; notify(); scheduleSync(); } catch (_) { corruptRaw = e.newValue; upgradeBlocked = true; } renderChip(); }
   });
 
@@ -444,6 +445,7 @@
   var pushQueues={remote:Promise.resolve(),worker:Promise.resolve()};
   var PUSH_KEY = PREFIX + 'push136.v1';
   var PUSH_SETTINGS_PATH = 'cfg/push-reminders';
+  var registeredPush = null, registeredPushRevision = 0;
   function firebaseMeta() { return jget(CLOUD_META,{}) || {}; }
   function firebaseSerial(fn) {
     if (navigator.locks) return navigator.locks.request(KEY+'.firebase',fn);
@@ -552,8 +554,7 @@
   }
   async function enablePush() {
     var state=firebaseCloud?.state(), uid=state?.user?.uid;
-    if (!uid || !state.enabled || !firebaseMeta().revision || !firebaseTransport.online() || !CFG.cloud.vapidKey ||
-        !('Notification' in window) || !('PushManager' in window)) throw new Error('Push unavailable');
+    if (!uid || !pushConnection().ready) throw new Error('Push unavailable');
     if (await Notification.requestPermission() !== 'granted') throw new Error('Push permission');
     var subscription=await pushSerial('remote',async function () {
       if (!firebaseCloud.state().enabled || firebaseCloud.state().user?.uid!==uid) throw new Error('Push unavailable');
@@ -568,6 +569,7 @@
       if (!token || !currentSubscription(prior) || firebaseCloud.state().user?.uid!==uid || !firebaseCloud.state().enabled) throw new Error('Push unavailable');
       var next={uid,device:prior?.uid===uid?prior.device:crypto.randomUUID(),token,consent:crypto.randomUUID(),enabled:true};
       if (!jset(PUSH_KEY,next)) throw storageError();
+      registeredPush=null;
       lastPushTokenCheck=Date.now(); lastPushProof=''; lastPushAt=0;
       return next;
     });
@@ -585,7 +587,7 @@
       await workerPushState(()=>null).catch(()=>{});
       throw storageError();
     }
-    lastPushProof=''; lastPushAt=0; lastPushTokenCheck=0;
+    registeredPush=null; lastPushProof=''; lastPushAt=0; lastPushTokenCheck=0;
     var cleared=await workerPushState(pushMarker).then(()=>true,()=>false);
     var removed=false;
     if (firebaseTransport.online()) {
@@ -624,6 +626,7 @@
     var subscription=jget(PUSH_KEY,null);
     if (!subscription || !remindersForPush || !firebaseTransport?.online() || firebaseCloud.state().user?.uid!==subscription.uid) return;
     if (!subscription.enabled || !('Notification' in window) || Notification.permission!=='granted') return disablePush();
+    var registrationChanged=false;
     await pushSerial('remote',async function () {
       var info=firebaseMeta(), state=firebaseCloud.state();
       if (!currentSubscription(subscription) || !state.enabled || !info.revision || state.review) return;
@@ -643,12 +646,17 @@
           firebaseMeta().revision !== info.revision || localRevision !== revision || firebaseCloud.state().review) return;
       var payload={...proof,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,revision:info.revision,token:subscription.token};
       var stamp=JSON.stringify(payload);
-      if (stamp!==lastPushProof || Date.now()-lastPushAt>=3600000) {
+      if (!same(registeredPush,subscription) || stamp!==lastPushProof || Date.now()-lastPushAt>=3600000) {
         await firebaseTransport.subscription(subscription.uid,subscription.device,payload);
-        if (currentSubscription(subscription)) { lastPushProof=stamp; lastPushAt=Date.now(); }
+        if (currentSubscription(subscription)) {
+          registrationChanged=!same(registeredPush,subscription)||registeredPushRevision!==info.revision;
+          registeredPush=subscription; registeredPushRevision=info.revision;
+          lastPushProof=stamp; lastPushAt=Date.now();
+        }
       }
     });
     await workerPushState(pushMarker);
+    if (registrationChanged) renderChip();
   }
   function pushConnection() {
     var state=firebaseCloud?.state(), subscription=jget(PUSH_KEY,null);
@@ -657,6 +665,8 @@
     var supported='Notification' in window && 'PushManager' in window && 'serviceWorker' in navigator;
     var ready=Boolean(configured && supported && Notification.permission!=='denied' &&
       state?.enabled && firebaseMeta().revision && !state.review && firebaseTransport?.online());
+    var canTest=Boolean(active && ready && Notification.permission==='granted' &&
+      same(registeredPush,subscription) && registeredPushRevision===firebaseMeta().revision);
     var description=pushStatus;
     if (!configured) description='На этом сайте Firebase Push не подключён.';
     else if (!supported) description='Этот браузер не поддерживает фоновые уведомления.';
@@ -664,16 +674,16 @@
     else if (!state?.user) description='Войди в Google через «Аккаунт и сохранения».';
     else if (!navigator.onLine) description='Нет сети. Настройки сохраняются на устройстве.';
     else if (!ready) description='Ожидается успешная синхронизация с Firebase.';
-    else if (active) description=lastPushAt?'Устройство зарегистрировано в Firebase.':'Уведомления включены. Подписка обновляется.';
+    else if (active) description=canTest?'Устройство зарегистрировано в Firebase.':'Уведомления включены. Подписка обновляется.';
     else if (!description) description='Уведомления на этом устройстве отключены.';
-    return {active,ready,description,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone};
+    return {active,ready,canTest,description,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone};
   }
   async function testPush() {
     var subscription=jget(PUSH_KEY,null);
-    if (!pushConnection().ready || !subscription?.enabled || firebaseCloud.state().user?.uid!==subscription.uid) return false;
+    if (!pushConnection().canTest) return false;
     await refreshPush();
     var current=jget(PUSH_KEY,null);
-    if (!current?.enabled || current.uid!==subscription.uid || current.device!==subscription.device) return false;
+    if (!pushConnection().canTest || current.uid!==subscription.uid || current.device!==subscription.device) return false;
     return firebaseTransport.testPush(current.uid,current.device);
   }
   async function pushShownToday(date) {
@@ -1101,7 +1111,7 @@
           }
         }
       }
-      if (CFG.cloud.vapidKey && !state.blocked) renderPushSettings(panel,state);
+      if (CFG.cloud.vapidKey && !state.blocked) renderPushSettings(panel);
     }
     menu.append(panel);
   }
@@ -1125,8 +1135,8 @@
     compare.append(dataButton('Отложить решение',()=>{conflictDeferred=true;renderMenu();}));
     panel.append(compare);
   }
-  function renderPushSettings(panel,state) {
-    var subscription=jget(PUSH_KEY,null), enabled=Boolean(subscription?.enabled && subscription.uid===state.user.uid);
+  function renderPushSettings(panel) {
+    var connection=pushConnection(), enabled=connection.active;
     panel.append(el('p','pl-s',pushStatus || (enabled?'Фоновые уведомления включены':'Фоновые уведомления отключены')));
     var button=dataButton(enabled?'Отключить Push':'Включить Push',function () {
       button.disabled=true;
@@ -1135,7 +1145,7 @@
         renderChip();
       });
     });
-    button.disabled=!enabled && (!state.enabled || !firebaseMeta().revision);
+    button.disabled=!enabled && !connection.ready;
     panel.append(button);
   }
   function renderMenu() {
@@ -1269,6 +1279,14 @@
     archiveChange(jget(RECOVERY,null));
     ui(); registerSW();
     startFirebase();
+    if (firebaseConfigured && navigator.permissions?.query) {
+      navigator.permissions.query({name:'notifications'}).then(function (permission) {
+        permission.addEventListener('change',function () {
+          refreshPushLocal(); renderChip();
+          refreshPush().catch(function () {});
+        });
+      }).catch(function () {});
+    }
     window.addEventListener('online', function () {
       renderChip();
       if (firebaseConfigured) { if (firebaseCloud) scheduleCloud(); else startFirebase(); }

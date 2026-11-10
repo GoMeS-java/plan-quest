@@ -99,9 +99,9 @@
       x=Math.max(min,Math.min(0,nx));y=Math.max(min,Math.min(0,ny));
       stage.setAttribute('transform',`translate(${x} ${y}) scale(${scale})`);
     }
-    function zoom(factor,at=center) {
+    function zoom(factor,at=center,target=at) {
       const ratio=Math.max(1,Math.min(2.6,scale*factor))/scale;
-      camera(at[0]-(at[0]-x)*ratio,at[1]-(at[1]-y)*ratio,scale*ratio);
+      camera(target[0]-(at[0]-x)*ratio,target[1]-(at[1]-y)*ratio,scale*ratio);
     }
     function point(event) {
       const value = map.createSVGPoint();
@@ -127,8 +127,8 @@
       if(!suppressClick&&Math.hypot(next[0]-before.at[0],next[1]-before.at[1])<5)return;
       suppressClick=true;pointers.set(event.pointerId,next);
       const after=gesture();
-      if(before.distance&&after.distance)zoom(after.distance/before.distance,before.at);
-      camera(x+after.at[0]-before.at[0],y+after.at[1]-before.at[1],scale);
+      const factor=before.distance&&after.distance?after.distance/before.distance:1;
+      zoom(factor,before.at,after.at);
     });
     for(const type of ['pointerup','pointercancel','lostpointercapture']){
       map.addEventListener(type,event=>pointers.delete(event.pointerId));
@@ -179,7 +179,7 @@
             'aria-label':branch.label+' · '+node.name,class:'ascension-seal '+node.state+(node.ready?' ready':'')+
               (animate&&node.at&&!previouslyOpen.has(node.id)?' fresh':'')});
           seal.dataset.node=node.id;
-          seal.append(svgElement('circle',{r:23,class:'ascension-hit'}),svgElement('path',{d:'M0-17L13-11 16 0 13 11 0 17-13 11-16 0-13-11Z',class:'ascension-stone'}),
+          seal.append(svgElement('circle',{r:27,class:'ascension-hit'}),svgElement('path',{d:'M0-17L13-11 16 0 13 11 0 17-13 11-16 0-13-11Z',class:'ascension-stone'}),
             svgElement('path',{d:node.state==='locked'?'M-4-1H4V6H-4ZM-2-1V-5H2V-1':branch.glyph,class:'ascension-glyph'}));
           seal.addEventListener('click',()=>{if(!suppressClick)select(node.id);});
           seal.addEventListener('keydown',event=>{

@@ -105,7 +105,7 @@
   s.chains=day(chains['chains-rhythm'],today)||day(chains['chains-free'],today);
   // Count completed and still-present meals, not drafts, taps or deleted records.
   var foodDates=new Set();
-  tx.list('food-meals').forEach(r=>{if(root.VkachFood?.savedMeal(r)&&day(r.date,today))foodDates.add(r.date);});
+  tx.list('food-meals').forEach(r=>{if(root.VkachFood?.savedMeal?.(r)&&day(r.date,today))foodDates.add(r.date);});
   s.foodDays=foodDates.size;
   var decor=(tx.get('cfg/citadel')||{}).decor||{};rooms.forEach(r=>{if(['banner','lantern','crystal','tapestry'].includes(decor[r]))s.decor++;});
   var wardrobe=tx.list('wardrobe'),outfit=tx.get('cfg/outfit')||{},lookup={};wardrobe.forEach(r=>lookup[r.id]=r);

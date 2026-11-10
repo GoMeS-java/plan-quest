@@ -24,6 +24,10 @@ const sdk={
     export const setPersistence=async()=>{};
     export class GoogleAuthProvider { setCustomParameters(){} }
     export function onAuthStateChanged(_,callback) { listener=callback; queueMicrotask(()=>callback(session.currentUser)); }
+    window.qaSwitchUser = foreign => {
+      session.currentUser=foreign?{uid:'sandbox-other',email:'other@example.invalid'}:user;
+      listener(session.currentUser);
+    };
     export async function signInWithPopup() { localStorage.setItem('qa-auth','1'); session.currentUser=user; listener(user); }
     export async function signOut() { localStorage.removeItem('qa-auth'); session.currentUser=null; listener(null); }
   `,
@@ -118,8 +122,15 @@ async function device(amount, offline=false) {
       Object.defineProperty(navigator,'onLine',{get:()=>window.qaOnline});
     }
     let permission='default';
+    const notificationPermission=new EventTarget();
+    const query=navigator.permissions.query.bind(navigator.permissions);
+    navigator.permissions.query=descriptor=>descriptor.name==='notifications'?Promise.resolve(notificationPermission):query(descriptor);
+    window.qaChangePushPermission=value=>{
+      permission=value;
+      notificationPermission.dispatchEvent(new Event('change'));
+    };
     Object.defineProperty(window,'Notification',{value:{get permission(){return permission;},
-      requestPermission:async()=>permission='granted'}});
+      requestPermission:async()=>permission=window.qaPushDecision||'granted'}});
     if (!('PushManager' in window)) window.PushManager=class {};
     navigator.serviceWorker.getRegistration=async()=>({active:{},scope:location.origin+'/'});
     localStorage.setItem('plan.awakening.v1',JSON.stringify({version:1,step:12,status:'done'}));
@@ -177,6 +188,13 @@ try {
   assert.equal(vault.head.revision,1);
   await mobileAccountLayout(phone);
   assert.equal(await phone.page.evaluate(()=>Notification.permission),'default','startup must not request permission');
+  assert.equal(await phone.page.evaluate(()=>PlanSync.pushSettings.connection().canTest),false);
+  await phone.page.evaluate(()=>window.qaPushDecision='denied');
+  await button(phone,'Включить Push').click();
+  await phone.menu.getByText(/Не удалось изменить Push/).waitFor();
+  assert(await button(phone,'Включить Push').isDisabled());
+  assert.equal(subscription,null,'refusal must not create a device subscription');
+  await phone.page.evaluate(()=>{window.qaPushDecision='granted';window.qaChangePushPermission('default');});
   await button(phone,'Включить Push').click();
   await phone.menu.getByText('Фоновые уведомления включены на этом устройстве.',{exact:true}).waitFor();
   assert.equal(subscription.token,'synthetic-push-token');
@@ -205,6 +223,22 @@ try {
   assert.deepEqual(pushUpdates.slice(initialPushUpdates),[true,false],'a pending refresh must precede removal');
   assert.equal(subscription,null);
   assert.equal(await phone.page.evaluate(()=>PlanSync.pushSettings.test()),false);
+  await button(phone,'Включить Push').click();
+  await phone.page.waitForFunction(()=>PlanSync.pushSettings.connection().canTest);
+  await phone.page.evaluate(()=>window.qaSwitchUser(true));
+  assert.equal(await phone.page.evaluate(()=>PlanSync.pushSettings.test()),false,'another account cannot use this device registration');
+  await phone.page.waitForFunction(async()=>{
+    const cache=await caches.open('vkach-push-'+location.origin+'/');
+    return !(await cache.match(location.origin+'/__vkach_push_state__'));
+  });
+  await phone.page.evaluate(()=>window.qaSwitchUser(false));
+  await phone.page.waitForFunction(()=>PlanSync.pushSettings.connection().canTest);
+  await phone.page.evaluate(()=>window.qaChangePushPermission('denied'));
+  await phone.page.waitForFunction(()=>!JSON.parse(localStorage.getItem('plan.push136.v1'))?.enabled);
+  await phone.menu.getByText('Фоновые уведомления отключены на этом устройстве.',{exact:true}).waitFor();
+  assert.equal(subscription,null,'revoking permission removes the server subscription');
+  assert.equal(await phone.page.evaluate(()=>PlanSync.pushSettings.test()),false);
+  await phone.page.evaluate(()=>window.qaChangePushPermission('default'));
   await button(phone,'Включить Push').scrollIntoViewIfNeeded();
   await shot(phone,'01-cloud-account');
 

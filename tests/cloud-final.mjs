@@ -211,6 +211,7 @@ const v2head={revision:5,savedAt:sunday,payload:JSON.stringify({v:2,format:'vkac
 const v2proof={...proof,revision:5,token:'categories-device',observedAt:sunday-9000,day:'2027-04-18'};
 const policy=readPolicy(v2head);
 assert.deepEqual(dueCategories(policy,v2proof,5,sunday).map(row=>row.category),['daily','food','chains','achievements','weekly']);
+assert.deepEqual(dueCategories({...policy,config:{...config,times:{food:'19:00'}}},v2proof,5,sunday).map(row=>row.category),['food']);
 assert.deepEqual(dueCategories(policy,v2proof,5,sunday).find(row=>row.category==='achievements').events,['ascent-study']);
 assert.deepEqual(dueCategories(policy,v2proof,4,sunday),[]);
 assert.deepEqual(dueCategories(policy,v2proof,5,sunday+5*3600000),[],'quiet hours continue across midnight');

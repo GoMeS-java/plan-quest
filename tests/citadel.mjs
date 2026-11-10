@@ -525,8 +525,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await shellNav(p,'Профиль');await p.locator('#profile-gear-open').click();for(const row of owned.filter(d=>d.clothes)){const id=row.clothes,slot=snapshot['wardrobe/'+id].d.slot;assert(await p.locator('.witem[data-item="'+id+'"] .wardrobe-reward').count());await p.locator('.witem[data-item="'+id+'"]').click();await waitForIdle(p);assert.equal((await docs(p))['cfg/outfit'].d[slot],id);assert.equal(await p.locator('#profile-portrait-'+slot).textContent(),snapshot['wardrobe/'+id].d.name);}await context.close();
  });
  await check('1.1 failed award persistence grants nothing and retry has one receipt and no currency mutation',async()=>{
-  const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await p.evaluate(()=>window.__qaPauseRealm=true);const before=await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()}));await write(p,'buys/citadel-rest-2',{kind:'citadel-room',currency:'abyss',room:'rest',level:2,cost:100,ts:1798804800000});
+  const {page:p,context}=await open({shell:true,day:'2027-09-15'});await p.evaluate(()=>window.__qaPauseRealm=true);
+  assert.equal(await p.evaluate(()=>__qa.realm.owned().length),0,'the fixture starts without eligible historical achievements');
+  const before=await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()}));await write(p,'buys/citadel-rest-2',{kind:'citadel-room',currency:'abyss',room:'rest',level:2,cost:100,ts:1798804800000});
+  const beforeAward=await docs(p);
   await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.store.v1')throw new DOMException('Synthetic full','QuotaExceededError');return original.call(this,k,v);};window.__qaPauseRealm=false;try{__qa.realm.sync();await __qa.idle();}finally{Storage.prototype.setItem=original;}});assert.equal(await p.evaluate(()=>__qa.realm.owned().length),0);assert(!(await docs(p))['cfg/realm-achievements']);
+  assert.deepEqual(await docs(p),beforeAward,'failed persistence cannot alter inventory, balances or saved evidence');
+  assert.deepEqual(await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()})),before);
   await p.evaluate(()=>__qa.realm.sync());await waitForIdle(p);await p.waitForFunction(()=>__qa.realm.owned().length>0&&__qa.realm.idle());assert.equal(await p.evaluate(()=>__qa.realm.owned().length),1);assert.deepEqual(await p.evaluate(()=>({points:__qa.points(),balance:__qa.balance()})),before);
   const saved=(await docs(p))['cfg/realm-achievements'];await p.evaluate(()=>{__qa.realm.sync();__qa.render();});await waitForIdle(p);assert.deepEqual((await docs(p))['cfg/realm-achievements'],saved);await context.close();
  });
@@ -2193,6 +2198,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await balance(),essence-5);
   assert(await p.locator('.citadel-finish-detail').isVisible());
   const restoredTrim=await p.locator('.citadel-finish-detail').evaluate(n=>getComputedStyle(n).borderTopWidth);
+  await p.waitForFunction(()=>PlanSync._docs()['cfg/ascension']?.d.nodes['citadel-1']);
+  await waitForIdle(p);
   const paidOnce=await docs(p);
   await p.evaluate(()=>{__qa.upgrade('rest',1);__qa.upgrade('rest',1);return __qa.idle();});
   assert.deepEqual(await docs(p),paidOnce,'stale repeated purchase must not write or charge');
@@ -2201,8 +2208,19 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await balance(),essence-17);
   assert.notEqual(await p.locator('.citadel-finish-detail').evaluate(n=>getComputedStyle(n).borderTopWidth),restoredTrim);
   assert(await p.locator('#citadel-upgrade').isDisabled());
+  await p.waitForFunction(()=>__qa.realm.owned().some(row=>row.id==='rebuild02')&&__qa.realm.idle());
   const completed=await docs(p);
-  for(const [key,value] of Object.entries(original))assert.deepEqual(completed[key],value,'shell renovation modified '+key);
+  const expected=structuredClone(original);
+  const previousAwards=expected['cfg/realm-achievements'].d.unlocked;
+  const {rebuild01,rebuild02,...retained}=completed['cfg/realm-achievements'].d.unlocked;
+  assert.deepEqual(retained,previousAwards);
+  for(const award of [rebuild01,rebuild02])assert(award.version===1&&award.presented&&award.at>0);
+  expected['cfg/realm-achievements']={d:{...expected['cfg/realm-achievements'].d,unlocked:{...previousAwards,rebuild01,rebuild02}},u:completed['cfg/realm-achievements'].u};
+  const {['citadel-1']:firstRoom,...priorNodes}=completed['cfg/ascension'].d.nodes;
+  assert(firstRoom>0);
+  assert.deepEqual(priorNodes,expected['cfg/ascension']?.d.nodes||{});
+  expected['cfg/ascension']={d:{version:1,nodes:{...priorNodes,'citadel-1':firstRoom}},u:completed['cfg/ascension'].u};
+  for(const [key,value] of Object.entries(expected))assert.deepEqual(completed[key],value,'shell renovation modified '+key);
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-grand-'+width+'x'+height+'.png')});
   await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&document.querySelector('[data-croom="rest"]').dataset.roomLevel==='3');
   assert.equal(await p.evaluate(()=>__qa.roomLevel('rest')),3);
@@ -3029,10 +3047,10 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    // The old build initializes the economy on a timer, after the rank becomes visible.
    await p.waitForFunction(()=>PlanSync._docs()['cfg/abyss-economy']?.d?.rankSeeded===true);
    await p.evaluate(()=>PlanSync.beforeUpdate());const before=await docs(p);
-   servedOverrides.clear();await p.reload();await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
+   servedOverrides.clear();await p.reload();await p.waitForFunction(()=>document.querySelector('.pl-chip')?.textContent==='ОБНОВИТЬ');
    await shellMenu(p);await p.locator('.pl-chip').click();
    await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();
-   await p.waitForFunction(v=>APP_VERSION===v&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',currentVersion);
+   await p.waitForFunction(v=>window.APP_VERSION===v&&/^РАНГ \d+$/.test(document.querySelector('#citadel-live-rank')?.textContent),currentVersion);
    const after=await docs(p);assert.deepEqual(after,expectedEconomyUpgrade(before,after));
    assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
    await context.setOffline(true);await p.reload();
@@ -3075,15 +3093,23 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.goto(url);await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller&&PlanSync._docs()['cfg/abyss-economy']?.d?.rank>=1);await dismiss(p);
   if(oldVersion==='1.3')await p.waitForFunction(()=>document.querySelector('#chains-daily').textContent.includes('Воли'));
   assert.equal(await p.evaluate(()=>APP_VERSION),oldVersion);assert.notEqual(await p.evaluate(()=>APP_BUILD),expectedBuild);await p.evaluate(()=>PlanSync.beforeUpdate());const before=await docs(p);
-  servedOverrides.clear();if(diaryVersion||['1.0','1.1','1.2','1.3','1.3.2'].includes(oldVersion))await p.reload();else await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip').textContent==='ОБНОВИТЬ');
+  servedOverrides.clear();if(diaryVersion||['1.0','1.1','1.2','1.3','1.3.2'].includes(oldVersion))await p.reload();else await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.waitForFunction(()=>document.querySelector('.pl-chip')?.textContent==='ОБНОВИТЬ');
   await shellMenu(p);await p.locator('.pl-chip').click();await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();
-  await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),currentVersion);
+  await p.waitForFunction(build=>window.APP_BUILD===build&&/^РАНГ \d+$/.test(document.querySelector('#citadel-live-rank')?.textContent),expectedBuild);await dismiss(p);assert.equal(await p.evaluate(()=>APP_VERSION),currentVersion);
   if(oldVersion==='1.3'){
     const daily=await p.locator('#chains-daily').textContent();
     assert.match(daily,/1 \/ 15/);assert.match(daily,/осколок/);assert.doesNotMatch(daily,/Воли|Воля/);
     assert.doesNotMatch(await p.locator('#chains-profile').textContent(),/Воля/);
   }
-  const migrated=await docs(p);assert.deepEqual(migrated,expectedEconomyUpgrade(before,migrated),'only the existing rank-seeding migration may change economy metadata');assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
+  if(diaryVersion)await p.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.unlocked.refectory01?.presented);
+  const migrated=await docs(p),expected=expectedEconomyUpgrade(before,migrated);
+  if(diaryVersion&&!before['cfg/realm-achievements']){
+    const {u,d}=migrated['cfg/realm-achievements'],at=d.unlocked.refectory01.at;
+    assert(at>0&&u>=at);
+    expected['cfg/realm-achievements']={u,d:{version:1,unlocked:{refectory01:{version:1,at,presented:true}}}};
+  }
+  assert.deepEqual(migrated,expected,'an upgrade preserves records and economy apart from the existing rank migration and one earned meal receipt');
+  assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
   await context.setOffline(true);await p.reload();await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);assert.deepEqual(await docs(p),migrated);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.equal(await p.locator('[data-croom="archive"] .citadel-room-name').textContent(),'Неизведанная комната');assert.equal(await p.locator('[data-croom="rest"]').getAttribute('data-revealed'),'true');await context.close();
   }
  });

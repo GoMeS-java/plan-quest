@@ -8,6 +8,67 @@
   const dateText = date => date.split('-').reverse().join('.');
   const copy = value => JSON.parse(JSON.stringify(value));
   const fatSecretEndpoint = 'https://vkach-fatsecret-api.ugghhtb.workers.dev';
+  // FatSecret Basic usually indexes English product names. Keep this small
+  // dictionary local: nutrition data still comes from FatSecret, never here.
+  const foodNamesRu = [
+    [/курин(?:ое|ая|ый|ого|ую)?\s*филе|филе\s*куриц[ыа]?|курин(?:ая|ую)?\s*грудк[ауы]/g, 'chicken breast'],
+    [/индейк[ауы]|индюш(?:иное|ачье)?\s*филе/g, 'turkey'],
+    [/говядин[ауы]|говяж(?:ье|ий|ая)/g, 'beef'],
+    [/свинин[ауы]/g, 'pork'],
+    [/гречк[ауые]|гречнев(?:ая|ую|ой)/g, 'buckwheat'],
+    [/творог[а-я]*/g, 'cottage cheese'],
+    [/яйц[аоы]|яиц[ао]/g, 'egg'],
+    [/молок[оа]|молочн(?:ый|ое)/g, 'milk'],
+    [/кефир[а-я]*/g, 'kefir'],
+    [/йогурт[а-я]*/g, 'yogurt'],
+    [/сыр[а-я]*/g, 'cheese'],
+    [/масл[оа]/g, 'butter'],
+    [/куриц[аыуе]|цыпл[её]нок/g, 'chicken'],
+    [/филе/g, 'fillet'],
+    [/рыб[аыуе]/g, 'fish'],
+    [/лосос[ья]|с[её]мг[ауы]/g, 'salmon'],
+    [/тун[её]ц|тунц[аыу]/g, 'tuna'],
+    [/картофел[ья]|картошк[ауы]/g, 'potato'],
+    [/помидор[а-я]*|томат[а-я]*/g, 'tomato'],
+    [/огур[её]ц|огурц[а-я]*/g, 'cucumber'],
+    [/морков[ьи]|морковк[ауы]/g, 'carrot'],
+    [/капуст[ауые]/g, 'cabbage'],
+    [/лук[а-я]*/g, 'onion'],
+    [/яблок[оиа]|яблочн(?:ый|ое)/g, 'apple'],
+    [/банан[а-я]*/g, 'banana'],
+    [/апельсин[а-я]*/g, 'orange'],
+    [/рис[а-я]*/g, 'rice'],
+    [/овсянк[ауы]|овсян(?:ая|ые|ой)/g, 'oatmeal'],
+    [/макарон[а-я]*|паст[ауы]/g, 'pasta'],
+    [/хлеб[а-я]*/g, 'bread'],
+    [/батон[а-я]*/g, 'white bread'],
+    [/печень[а-я]*/g, 'liver'],
+    [/орех[а-я]*/g, 'nuts'],
+    [/миндал[ья]/g, 'almond'],
+    [/арахис[а-я]*/g, 'peanut'],
+    [/шоколад[а-я]*/g, 'chocolate'],
+    [/сахар[а-я]*/g, 'sugar'],
+    [/м[её]д[а-я]*/g, 'honey'],
+    [/соль/g, 'salt'],
+    [/кофе/g, 'coffee'],
+    [/чай/g, 'tea'],
+    [/суп[а-я]*/g, 'soup'],
+    [/салат[а-я]*/g, 'salad'],
+    [/котлет[а-я]*/g, 'cutlet'],
+    [/вар[её]н(?:ый|ая|ое|ые)|отварн(?:ый|ая|ое|ые)/g, 'boiled'],
+    [/жарен(?:ый|ая|ое|ые)/g, 'fried'],
+    [/запеч[её]н(?:ый|ая|ое|ые)/g, 'baked'],
+    [/без\s*кож[иы]/g, 'skinless'],
+  ];
+
+  function translateFoodSearch(term) {
+    if (!/[а-яё]/i.test(term)) return term;
+    if (/^филе$/i.test(term.trim())) return 'chicken breast';
+    let translated = term.toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');
+    for (const [pattern, english] of foodNamesRu) translated = translated.replace(pattern, ' ' + english + ' ');
+    // Unknown Cyrillic words should not become misleading English guesses.
+    return translated.replace(/[а-яё]+/g, ' ').replace(/\s+/g, ' ').trim() || term;
+  }
 
   function element(tag, text, className) {
     const node = document.createElement(tag);
@@ -75,7 +136,7 @@
     const panel = element('section', null, 'food-entry food-remote-search');
     const query = element('input');
     query.type = 'search';
-    query.placeholder = 'Название продукта или бренд';
+    query.placeholder = 'Продукт по-русски или бренд';
     query.maxLength = 80;
     query.setAttribute('aria-label', 'Поиск в FatSecret');
     const message = element('p', 'Найди продукт — КБЖУ заполнится автоматически.', 'hint');
@@ -97,9 +158,13 @@
       results.replaceChildren();
       message.textContent = 'Ищу в FatSecret…';
       try {
-        const { foods } = await get('/search?q=' + encodeURIComponent(term));
+        const english = translateFoodSearch(term);
+        let { foods } = await get('/search?q=' + encodeURIComponent(english));
+        if (!foods.length && english !== term) ({ foods } = await get('/search?q=' + encodeURIComponent(term)));
         if (request !== serial) return;
-        message.textContent = foods.length ? 'Выбери продукт из списка.' : 'Ничего не найдено. Попробуй другое название.';
+        message.textContent = foods.length
+          ? (english !== term ? 'Поиск по-английски: ' + english + '. Выбери продукт.' : 'Выбери продукт из списка.')
+          : 'Ничего не найдено. Попробуй другое название.';
         foods.forEach(food => {
           const label = food.name + (food.brand ? ' · ' + food.brand : '');
           results.appendChild(button(label, async () => {
@@ -696,5 +761,5 @@
     return Object.freeze({ open, close, connect, summary, calorieLine, goal, flush });
   }
 
-  root.VkachFoodUI = Object.freeze({ mount });
+  root.VkachFoodUI = Object.freeze({ mount, translateFoodSearch });
 })(globalThis);

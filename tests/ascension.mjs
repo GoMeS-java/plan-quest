@@ -20,6 +20,14 @@ assert.equal(model.view(ledger,progress([]))[0].nodes[0].state,'open','a saved u
 const sealed=model.view(ledger,unlocked)[0].nodes[2];
 assert.equal(sealed.name,'Тайна Заклятия');
 assert(!JSON.stringify(sealed).includes('Сила под сводами'));
+const veteran={rank:7,advancedExercise:true,studyAspect:true,chainsAspect:true,marks:new Set([
+  'ascent-body','ascent-walk','ascent-rhythm','ascent-chains','ascent-forge','ascent-goal',
+  'rebuild01','rebuild03','rebuild11',...Array.from({length:11},(_,i)=>'past-'+i)
+])};
+assert.equal(model.reconcile(tx,veteran,200).length,11);
+assert.equal(ledger.nodes['body-1'],100);
+assert.deepEqual(model.view(ledger,veteran).map(branch=>branch.nodes.filter(node=>node.state==='open').length),[3,3,3,3,3]);
+assert.deepEqual(model.reconcile(tx,veteran,300),[]);
 
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.png':'image/png'};
 const root=resolve('android-test');
@@ -93,8 +101,16 @@ try {
   const points=distance=>[{x:mid.x-distance,y:mid.y,id:1},{x:mid.x+distance,y:mid.y,id:2}];
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points(25)});
   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(55)});
+  const pinched=await stage.getAttribute('transform');
+  assert.notEqual(pinched,'translate(0 0) scale(1)','two fingers zoom the map');
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(55).map(p=>({...p,x:p.x+20,y:p.y+12}))});
+  await page.waitForFunction(previous=>document.querySelector('.ascension-stage').getAttribute('transform')!==previous,pinched,{timeout:5000});
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  assert.notEqual(await stage.getAttribute('transform'),'translate(0 0) scale(1)','two fingers zoom the map');
+  await page.setViewportSize({width:800,height:360});
+  const landscape=await dialog.boundingBox();
+  assert(landscape.x>=0&&landscape.y>=0&&landscape.x+landscape.width<=800&&landscape.y+landscape.height<=360);
+  await dialog.getByRole('button',{name:'Закрыть древо'}).waitFor();
+  await page.setViewportSize({width:360,height:800});
   await page.goBack();
   await dialog.waitFor({state:'hidden'});
   assert(await trophy.isVisible(),'Android back returns to the collection');
@@ -120,6 +136,7 @@ try {
   await trophy.waitFor({state:'hidden'});
   await page.evaluate(()=>document.querySelector('#gear').click());
   const settings=page.locator('#push-settings');
+  assert(await settings.locator('#push-test').isDisabled());
   await settings.locator('summary').tap();
   assert(await settings.getByRole('button',{name:'Отправить тест'}).isDisabled());
   await settings.getByRole('checkbox',{name:'Дневник питания'}).check();

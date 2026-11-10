@@ -11,7 +11,7 @@
     "test:appearance": "node tests/appearance.mjs",
     "test:shelter": "node tests/shelter-items.mjs",
     "test:chains": "node tests/chains.mjs",
-    "test:stage-one": "node tests/progression-contract.mjs && node tests/food.mjs && node tests/stage-one.mjs",
+    "test:stage-one": "node tests/progression-contract.mjs && node tests/food.mjs && node tests/food-search-ru.mjs && node tests/stage-one.mjs",
     "test:stage-two": "node tests/stage-two.mjs",
     "test:stage-three": "node tests/stage-three.mjs",
     "test:cloud": "node tests/cloud-final.mjs && node tests/cloud-browser.mjs",
