@@ -869,7 +869,7 @@ html,body{overflow-anchor:none}
       <div class="profile-section-title">СТАТИСТИКА ПУТИ</div>
       <div class="profile-stats profile-history"><div><small>Дней с записями</small><b id="profile-days">—</b></div><div><small>Отметок заданий</small><b id="profile-checks">—</b></div><div><small>Получено достижений</small><b id="profile-ach-count">—</b></div></div>
       <section class="profile-journey" aria-label="Последние семь дней"><div class="profile-section-title">ПОСЛЕДНИЕ СЕМЬ ДНЕЙ <small id="profile-week-summary"></small></div><div id="profile-week" class="profile-week"></div><p id="profile-body-history" class="hint"></p><div class="profile-actions"><button type="button" data-profile-path="today">К ЗАДАНИЯМ</button><button type="button" data-profile-path="week">К ХРОНИКЕ НЕДЕЛИ</button></div></section>
-      <section class="profile-journey" aria-label="Снимки мира"><div class="profile-section-title">СНИМКИ МИРА <small id="world-history-count"></small></div><p id="world-history-latest" class="hint">После загрузки игра запишет облик героя, состояние Цитадели и открытые печати.</p><p id="world-history-note" class="hint"></p></section>
+      <section class="profile-journey" aria-label="Снимки мира"><div class="profile-section-title">СНИМКИ МИРА <small id="world-history-count"></small></div><p id="world-history-latest" class="hint">После загрузки игра запишет облик героя, состояние Цитадели и открытые печати.</p><p id="world-history-note" class="hint"></p><div class="profile-actions"><button type="button" id="world-chronicle-open">ОТКРЫТЬ ЛЕТОПИСЬ</button></div></section>
       <div class="profile-section-title">ПОЛУЧЕННЫЕ ОФОРМЛЕНИЯ</div><div id="profile-collections" class="profile-collections"></div>
       <div class="profile-actions"><button type="button" id="profile-title-open">ВЫБРАТЬ ЗВАНИЕ</button><button type="button" id="profile-gear-open">ГАРДЕРОБ</button></div>
       <div id="profile-titles" class="profile-picker" hidden></div>
@@ -1035,7 +1035,8 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="hint"><b>1.6 · Пробуждение мира, предварительная сборка.</b> Игра сохраняет снимки героя и Цитадели. Восстановленные комнаты зажигают огни на горизонте.</div>
+    <div class="hint"><b>1.7 · Живые корни.</b> Древо Судьбы отращивает побеги и меняет кору по мере развития. Ветка Капитала откликается на финансовый прогресс. Летопись Спящего открывается из профиля.</div>
+    <div class="hint"><b>1.6 · Пробуждение мира.</b> Игра сохраняет снимки героя и Цитадели. Восстановленные комнаты зажигают огни на горизонте.</div>
     <div class="hint"><b>1.5.1 · Капризы Заклятия.</b> Цитадель и Древо Судьбы встречают одну магическую погоду. Обстановка меняется сама, а выбранный пейзаж сохраняется.</div>
     <div class="hint"><b>1.5 · Тайна Заклятия.</b> В коллекции появился раздел «Тайны». Некоторые печати откликаются на новые записи, а Древо Судьбы постепенно раскрывает скрытые ответвления.</div>
     <div class="hint"><b>1.4 · Путь Восхождения.</b> Сохранённые дела открывают новые отметины и узлы древа. Трапезная понимает распространённые русские названия продуктов, а расписание фоновых уведомлений доступно в настройках.</div>
@@ -1153,7 +1154,7 @@ html,body{overflow-anchor:none}
   </header>
   <div class="destiny-world-content">
     <div class="destiny-world-view">
-      <svg class="destiny-world-art" viewBox="0 0 800 900" role="group" aria-label="Скованное Древо и башни Цитадели за туманом">
+      <svg class="destiny-world-art" viewBox="0 0 800 900" role="group" aria-label="Древо Судьбы и башни Цитадели">
         <g class="destiny-world-far" aria-hidden="true"></g>
         <g class="destiny-world-near"></g>
       </svg>
@@ -1175,6 +1176,15 @@ html,body{overflow-anchor:none}
       </section>
     </div>
   </div>
+</dialog>
+<dialog id="world-chronicle" aria-labelledby="world-chronicle-title">
+  <header class="destiny-world-head"><div><small>ПАМЯТЬ ЦИТАДЕЛИ</small><h2 id="world-chronicle-title">Летопись Спящего</h2></div><button type="button" id="world-chronicle-close" aria-label="Закрыть летопись">✕</button></header>
+  <div class="chronicle-controls">
+    <label>Показать <select id="chronicle-filter"><option value="all">Все записи</option><option value="frame">Снимки мира</option><option value="activity">Активность</option><option value="weight">Замеры веса</option><option value="room">Цитадель</option><option value="seal">Печати</option><option value="mark">Достижения</option><option value="goal">Цели</option></select></label>
+    <label>Период <select id="chronicle-period"><option value="30">30 дней</option><option value="7">7 дней</option><option value="all">Всё время</option></select></label>
+  </div>
+  <div id="chronicle-entries"></div>
+  <button type="button" id="chronicle-more" hidden>Показать ещё</button>
 </dialog>
 <div id="destiny-travel-fog" aria-hidden="true" hidden></div>
 <script src="realm-achievements.js"></script>
@@ -5715,14 +5725,45 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
     else if(!document.hidden)citadelHeroAnimation?.play();
     citadelLifeTick();
   });
-  var destinyStamp='';
+  var destinyProjection=null;
+  function destinyGrowth(today,capital,progress){
+    var from=addDays(today,-13),now=Date.now(),walk=stepInfo().goals,chains=VkachChainsUI.getProgress().byDay;
+    var days={body:new Set(),will:new Set(),mind:new Set(),path:new Set(),citadel:new Set()};
+    new Set(Object.keys(S.days).concat(Object.keys(S.per),Object.keys(chains))).forEach(function(date){
+      if(!VkachAscension.actualDay(date,today))return;
+      var row=S.days[date],activity=VkachWorldHistory.activity(date,row,S.per[date],now);
+      if(activity.steps>=(walk[mondayKey(date)]||5000)||activity.sets)days.body.add(date);
+      if(activity.tasks>=4||chains[date]>0)days.will.add(date);
+      if(date>=NEW_Q&&row?.q?.[7]===true)days.mind.add(date);
+      if(activity.tasks>=2||Object.values(row?.forgeDone||{}).includes(true))days.path.add(date);
+    });
+    (S.gg||[]).concat(S.spont||[]).forEach(function(goal){
+      var date=goal.completedAt?dkey(new Date(goal.completedAt)):goal.date;
+      if(goal.done===true&&VkachAscension.actualDay(date,today))days.path.add(date);
+    });
+    Object.values(S.weeks).forEach(function(week){
+      Object.values(week?.forgeDone||{}).forEach(function(date){
+        if(VkachAscension.actualDay(date,today))days.path.add(date);
+      });
+    });
+    S.buys.forEach(function(row){
+      if(row.kind==='citadel-room'&&row.ts>0&&row.ts<=now&&row.level<=citadelRoomLevel(row.room))days.citadel.add(dkey(new Date(row.ts)));
+    });
+    var growth=Object.fromEntries(Object.entries(days).map(function(pair){
+      return [pair[0],{days:pair[1].size,recent:[...pair[1]].filter(function(date){return date>=from;}).length}];
+    }));
+    growth.body.days+=progress.advancedExercise?3:progress.exerciseAspect?1:0;
+    growth.mind.days+=progress.studyAspect?3:0;
+    growth.will.days+=progress.chainsAspect?3:0;
+    growth.capital=capital;
+    return growth;
+  }
   function syncDestiny(ledger,progress){
     if(!destinyScene)return;
     var levels=citadelRooms.map(function(room){return citadelRoomLevel(room);});
-    var stamp=JSON.stringify([ledger?.nodes,levels]);
-    if(stamp===destinyStamp)return;
-    destinyStamp=stamp;
-    destinyScene.sync(VkachDestinyWorld.project(VkachAscension.view(ledger,progress),levels));
+    destinyProjection=VkachDestinyWorld.project(VkachAscension.view(ledger,progress),levels,
+      destinyGrowth(dkey(new Date()),progress.capital,progress));
+    destinyScene.sync(destinyProjection);
   }
   var worldHistoryBusy=false,worldHistoryIssue='',worldHistoryAttempt='';
   function renderWorldHistory(){
@@ -5737,13 +5778,96 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
       worldHistoryIssue==='unsupported'?'Снимок этого дня записан более новой версией игры.':
       latest?'Первый снимок от '+frames.at(-1).date.split('-').reverse().join('.')+'. С этой даты записываются изменения облика мира.':'';
   }
+  var chronicle=$('world-chronicle'),chronicleDays=[],chronicleLimit=20,chronicleNames={};
+  var chronicleBranches={body:'Тело',will:'Воля',mind:'Разум',path:'Путь',citadel:'Цитадель',capital:'Капитал'};
+  function chronicleText(event){
+    if(event.kind==='activity')return 'Активность · '+fmt(event.steps)+' шагов · '+event.sets+' подходов · '+event.tasks+' отметок';
+    if(event.kind==='weight')return 'Замер веса · '+event.kg+' кг';
+    if(event.kind==='room')return 'Цитадель · '+(CitadelWorld.names[event.room]||'Комната')+' · ступень '+event.level;
+    if(event.kind==='seal')return 'Печать · '+(chronicleNames[event.id]||'Открыта');
+    if(event.kind==='mark')return 'Достижение · '+(chronicleNames[event.id]||'Получено');
+    return 'Отмечено выполнение цели';
+  }
+  function chronicleFrame(frame){
+    var details=el('details','chronicle-frame');
+    var rooms=Object.values(frame.rooms||{}).filter(function(level){return level>1;}).length;
+    details.appendChild(el('summary',null,'Снимок мира · ранг '+(frame.hero?.[0]||1)+' · комнат улучшено '+rooms));
+    details.appendChild(el('p',null,'Стадия облика '+(frame.hero?.[1]||0)+' · печатей '+(frame.seals?.length||0)+' · достижений '+(frame.marks?.length||0)));
+    var tree=VkachWorldHistory.treeState(frame.tree);
+    if(tree){
+      var list=el('ul','chronicle-tree');
+      Object.entries(tree).forEach(function(pair){
+        var li=el('li',null,chronicleBranches[pair[0]]);
+        var meter=el('progress');meter.max=12;meter.value=pair[1][0];
+        meter.setAttribute('aria-label',chronicleBranches[pair[0]]+' · состояние древесины');
+        li.appendChild(meter);list.appendChild(li);
+      });
+      details.appendChild(list);
+    }else details.appendChild(el('p','hint','Облик Древа на эту дату неизвестен.'));
+    return details;
+  }
+  function renderChronicle(reset){
+    var host=$('chronicle-entries'),filter=$('chronicle-filter').value,period=$('chronicle-period').value;
+    var since=period==='all'?'':addDays(dkey(new Date()),1-Number(period));
+    if(reset){chronicleLimit=20;clear(host);chronicle.scrollTop=0;}
+    var selected=chronicleDays.filter(function(day){
+      return day.date>=since&&(filter==='all'||(filter==='frame'?day.frame:day.events.some(function(event){return event.kind===filter;})));
+    });
+    selected.slice(host.children.length,chronicleLimit).forEach(function(day){
+      var article=el('article','chronicle-day'),heading=el('h3',null,parseKey(day.date).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}));
+      article.appendChild(heading);
+      if(day.frame&&(filter==='all'||filter==='frame'))article.appendChild(chronicleFrame(day.frame));
+      if(!day.frame&&filter==='all')article.appendChild(el('p','hint','На этот день сохранились записи. Облик мира неизвестен.'));
+      var events=day.events.filter(function(event){return filter==='all'||filter===event.kind;});
+      if(events.length){
+        var list=el('ul','chronicle-events');
+        events.forEach(function(event){list.appendChild(el('li',null,chronicleText(event)));});
+        article.appendChild(list);
+      }
+      host.appendChild(article);
+    });
+    if(!selected.length&&!host.children.length)host.appendChild(el('p','chronicle-empty','За этот период подходящих записей нет.'));
+    $('chronicle-more').hidden=selected.length<=chronicleLimit;
+  }
+  function openChronicle(){
+    if(!loaded||chronicle.open)return;
+    var docs=PlanSync._docs(),marks=achievementOwnedRows(),now=Date.now();
+    var rows=VkachAscension.view(docs[VkachAscension.path]?.d,ascensionProgress(docs[VkachRealm.path]?.d));
+    chronicleNames=Object.fromEntries(marks.map(function(mark){return ['mark/'+mark.id,mark.name];}).concat(
+      rows.flatMap(function(row){return row.nodes.filter(function(node){return node.state==='open'&&node.at<=now;})
+        .map(function(node){return ['seal/'+node.id,node.name];});})
+    ));
+    chronicleDays=VkachWorldHistory.timeline(docs,marks,dkey(new Date(now)),function(at){return dkey(new Date(at));},now);
+    chronicle.showModal();
+    renderChronicle(true);
+  }
+  $('world-chronicle-open').onclick=function(){
+    if(!loaded||chronicle.open)return;
+    history.pushState(Object.assign({},history.state,{chronicle:true}),'');
+    openChronicle();
+  };
+  function closeChronicle(){if(history.state?.chronicle)history.back();else chronicle.close();}
+  $('world-chronicle-close').onclick=closeChronicle;
+  chronicle.addEventListener('cancel',function(event){event.preventDefault();closeChronicle();});
+  chronicle.addEventListener('keydown',function(event){if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeChronicle();}});
+  $('chronicle-filter').onchange=$('chronicle-period').onchange=function(){renderChronicle(true);};
+  $('chronicle-more').onclick=function(){
+    var index=$('chronicle-entries').children.length;
+    chronicleLimit+=20;renderChronicle(false);
+    var next=$('chronicle-entries').children[index];
+    if(next){next.tabIndex=-1;next.focus();}
+  };
+  window.addEventListener('popstate',function(event){
+    if(event.state?.chronicle){openChronicle();event.stopImmediatePropagation();}
+    else if(chronicle.open){chronicle.close();event.stopImmediatePropagation();}
+  },true);
   function recordWorldHistory(){
     if(!loaded||!lastGI||document.hidden||worldHistoryBusy||ascensionBusy)return;
     var now=Date.now(),day=dkey(new Date(now)),docs=PlanSync._docs(),outfit=outfitFrom(allItems(),outfitIds());
     var marks=achievementOwnedRows().filter(function(row){return row.date&&row.date<=day;}).map(function(row){return row.id;});
-    var ledger=docs[VkachAscension.path]?.d,nodes=ledger?.nodes||{};
-    var seals=VkachAscension.view(ledger,ascensionProgress(docs[VkachRealm.path]?.d)).flatMap(function(row){
-      return row.nodes.filter(function(node){return node.state==='open'&&nodes[node.id]<=now;}).map(function(node){return node.id;});
+    var nodes=docs[VkachAscension.path]?.d?.nodes||{};
+    var seals=(destinyProjection?.branches||[]).flatMap(function(row){
+      return row.nodes.concat(row.extra).filter(function(node){return node.open&&nodes[node.id]<=now;}).map(function(node){return node.id;});
     });
     var weight=bodyMeasurements().at(-1),rooms=citadelRooms.map(function(room){return [room,citadelRoomLevel(room)];});
     var interior=rooms.flatMap(function(pair){
@@ -5754,6 +5878,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
       rankProgress:[lastPI?.P,lastPI?.need],
       clothes:['top','bottom','outer'].map(function(slot){var item=outfit[slot];return [item,item?.id];}),
       look:['bg','aura','frame'].map(lookId),echo:legendActive()?.id,rooms:rooms,interior:interior,seals:seals,marks:marks,
+      tree:destinyProjection?VkachDestinyWorld.snapshot(destinyProjection):null,
       activity:VkachWorldHistory.activity(day,docs['days/'+day]?.d,docs['per/'+day]?.d,now),
       weight:weight?{date:weight.date,kg:Number(weight.kg)}:null
     });
@@ -5773,13 +5898,14 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
     });
   }
   var ascensionDialog=$('ascension'),ascensionUI=VkachAscension.mount(ascensionDialog),ascensionBusy=false;
-  function ascensionProgress(realm){
+  function ascensionProgress(realm,read){
     var skills=SK_KEYS.map(function(key){return lastGI?.ups[key]?.at(-1)?.lvl||0;});
     var today=dkey(new Date());
     return {rank:lastPI?.L||1,marks:new Set(achievementOwnedRows().filter(function(row){return row.date&&row.date<=today;}).map(function(row){return row.id;})),
       receipts:new Map(VkachRealm.owned(realm).filter(function(row){return row.at<=Date.now();}).map(function(row){return [row.id,row.at];})),
       exerciseAspect:skills.some(function(level){return level>0;}),advancedExercise:skills.some(function(level){return level>=3;}),
-      studyAspect:!!lastGI?.nups.n_eng?.length,chainsAspect:!!lastGI?.chainsAspect};
+      studyAspect:!!lastGI?.nups.n_eng?.length,chainsAspect:!!lastGI?.chainsAspect,
+      capital:VkachAscension.capital(read||realmRead(),today,addDays(today,-13),forgeGoalDefaults['goal-money'])};
   }
   function ascensionSync(){
     if(!loaded||!lastGI)return;
@@ -5788,7 +5914,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
     if(ascensionDialog.open)ascensionUI.render(VkachAscension.view(ledger,progress));
     if(ascensionBusy||!VkachAscension.reached(ledger,progress).length)return;
     ascensionBusy=true;
-    enqueue(function(){return db.runTransaction(function(tx){return VkachAscension.reconcile(tx,ascensionProgress(tx.get(VkachRealm.path)),Date.now());});})
+    enqueue(function(){return db.runTransaction(function(tx){return VkachAscension.reconcile(tx,ascensionProgress(tx.get(VkachRealm.path),tx),Date.now());});})
       .then(function(ids){
         ascensionUI.reveal(ids);
         var saved=PlanSync._docs()[VkachAscension.path]?.d;

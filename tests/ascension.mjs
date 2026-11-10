@@ -26,14 +26,36 @@ const veteran={rank:7,advancedExercise:true,studyAspect:true,chainsAspect:true,m
 ])};
 assert.equal(model.reconcile(tx,veteran,200).length,11);
 assert.equal(ledger.nodes['body-1'],100);
-assert.deepEqual(model.view(ledger,veteran).map(branch=>branch.nodes.filter(node=>node.state==='open').length),[3,3,3,3,3]);
+assert.deepEqual(model.view(ledger,veteran).map(branch=>branch.nodes.filter(node=>node.state==='open').length),[3,3,3,3,3,0]);
 assert.deepEqual(model.reconcile(tx,veteran,300),[]);
 const withReceipt={...veteran,receipts:new Map([['mystery-road',300]])};
-assert.equal(model.view(ledger,withReceipt).length,5,'even a qualifying receipt is invisible until the node is persisted');
+assert.equal(model.view(ledger,withReceipt).length,6,'even a qualifying receipt is invisible until the node is persisted');
 assert.deepEqual(model.reconcile(tx,withReceipt,300),['body-hidden-1']);
 assert.deepEqual(model.view(ledger,progress([])).at(-1).nodes.map(node=>node.state),['open','next']);
 assert.equal(model.view(ledger,progress([])).at(-1).nodes[1].name,'Печать в тумане');
 assert.deepEqual(model.reconcile(tx,progress([]),400),[],'editing the source does not close a secret branch');
+
+const today='2026-12-22', recent='2026-12-09', goal={source:'capital',start:0,target:10000};
+const empty={tx:[],items:[],jar:[]}, debt=(date,amt,kind='out')=>({date,amt,kind,acc:'card',cat:'Долг',counted:true});
+const capital=(lists=empty,opening,configured)=>model.capital({
+  get:path=>path==='cfg/opening'?opening:configured,list:name=>lists[name]||[]
+},today,recent,goal);
+assert.equal(capital().first,false,'a blank profile has no invented balance');
+assert.equal(capital({...empty,tx:[debt('2026-12-20',1e6,'in')]},{cash:0,card:0}).milestone,false,'loans alone do not count as savings');
+assert.equal(capital({...empty,tx:[debt('2026-12-20',1e6,'in')],items:[{list:'debts',dir:'owe',amt:1e6,hold:true}]},{cash:0,card:0}).first,false);
+const deposits=Array.from({length:21},(_,i)=>({date:'2026-12-'+String(i+1).padStart(2,'0'),a:100}));
+assert.equal(capital({...empty,jar:deposits}).milestone,true);
+assert.equal(capital({...empty,jar:Array.from({length:21},()=>deposits[0])}).first,false,'repeating a deposit on the same date cannot unlock a seal');
+assert.equal(capital({...empty,jar:deposits.concat({date:'2026-12-22',a:-2100})}).first,false,'a withdrawn reserve is not current savings');
+assert.equal(capital({...empty,tx:[debt('2026-12-20',200),debt('2026-12-21',150),debt('2026-12-25',1000)]}).first,true);
+assert.equal(capital({...empty,tx:[debt('2026-12-20',200),debt('2026-12-21',150,'in')]}).first,false);
+assert.equal(capital(empty,{cash:0,card:4000}).steady,true);
+assert.equal(capital(empty,{cash:0,card:4000},{...goal,target:200000}).first,false);
+let wealth;
+const wealthTx={get:()=>wealth,set:(_,value)=>{wealth=value;}};
+assert.deepEqual(model.reconcile(wealthTx,{...progress([]),capital:capital({...empty,jar:deposits})},500),
+  ['capital-1','capital-2','capital-3']);
+assert.equal(model.view(model.merge(wealth,{nodes:{'capital-1':700}}),progress([])).find(row=>row.id==='capital').nodes[0].at,500);
 
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.png':'image/png'};
 const root=resolve('android-test');
@@ -83,7 +105,7 @@ try {
   await page.screenshot({path:resolve(shots,'01-achievements.png'),animations:'disabled'});
   await page.locator('#ascension-open').tap();
   const dialog=page.locator('#ascension[open]');
-  assert.equal(await dialog.locator('.ascension-seal').count(),15);
+  assert.equal(await dialog.locator('.ascension-seal').count(),18);
   assert.equal(await dialog.locator('[data-node="will-1"]').getAttribute('class'),'ascension-seal open');
   await dialog.locator('[data-node="will-1"] .ascension-hit').tap();
   assert.equal(await dialog.locator('.ascension-node-title').textContent(),'Своя воля');

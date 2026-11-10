@@ -9,13 +9,17 @@ import '../src/destiny-world.js';
 const blank={rank:1,marks:new Set()};
 const model=(nodes,levels=[])=>VkachDestinyWorld.project(VkachAscension.view({nodes},blank),levels);
 const baseline=model({});
-assert.deepEqual(baseline.branches.map(row=>row.state),[0,0,0,0,0]);
+assert.deepEqual(baseline.branches.map(row=>row.state),[0,0,0,0,0,0]);
 assert(baseline.branches.every(row=>row.extra.length===0));
 assert.equal(baseline.lamps,1);
 assert.equal(baseline.restoration,0);
 assert.equal(model({'body-1':123},[1,2,3]).branches[0].state,1);
 assert.equal(model({'body-1':123,'body-2':124,'body-3':125}).branches[0].state,2);
 assert.equal(model({'body-hidden-1':123}).branches[0].extra.length,2);
+const branch=recent=>VkachDestinyWorld.project(VkachAscension.view(null,blank),[],{body:{days:9,recent}}).branches[0];
+assert.equal(branch(0).tier,3,'real activity changes wood before a seal');
+assert.equal(branch(8).tier,branch(0).tier,'inactivity does not remove wood');
+assert(branch(8).warmth>branch(0).warmth);
 
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.png':'image/png','.webp':'image/webp'};
 const root=resolve('android-test');
@@ -99,6 +103,8 @@ try{
   const tab=dialog.getByRole('button',{name:'ЦИТАДЕЛЬ',exact:true});
   const before=await snapshot();
   await open();
+  assert.equal(await dialog.locator('.destiny-branches button').count(),6);
+  assert.equal(await map.locator('.destiny-wood[data-direction="capital"][data-tier="0"]').count(),1);
   assert.equal(await map.locator('image[href$="destiny-valley.svg"]').count(),1);
   for(const asset of ['destiny-tree.svg','destiny-valley.svg']){
     const response=await page.request.get(url+'/assets/citadel/'+asset);
@@ -150,7 +156,7 @@ try{
   await page.evaluate(()=>PlanDB.doc('buys/citadel-rest-2').set({
     kind:'citadel-room',currency:'abyss',room:'rest',level:2,cost:5,ts:Date.now()
   }));
-  await page.waitForFunction(()=>document.querySelector('.destiny-horizon [data-direction="citadel"]').dataset.state==='1');
+  await page.waitForFunction(()=>document.querySelector('.destiny-horizon .destiny-veins[data-direction="citadel"]').dataset.state==='1');
   await dismiss();
   await open();
   assert.equal(await chain.getAttribute('data-state'),'1');
@@ -196,6 +202,30 @@ try{
   await dismiss();
   await screenshot('05-citadel-awakened');
 
+  await page.evaluate(async()=>{
+    await PlanDB.runTransaction(tx=>{
+      for(let i=1;i<=20;i++){
+        const date='2026-12-'+String(i).padStart(2,'0');
+        tx.set('jar/living-'+i,{date,a:500,ts:Date.now()-5000});
+        tx.set('days/'+date,{q:[true,true,true,true,false,false,false,true],steps:6500});
+      }
+      tx.set('jar/living-last',{date:'2026-11-30',a:500,ts:Date.now()-5000});
+    });
+  });
+  await page.waitForFunction(()=>Object.keys(PlanSync._docs()['cfg/ascension']?.d.nodes||{}).includes('capital-3')&&
+    Object.values(PlanSync._docs()).some(row=>row.d?.frame?.tree?.capital?.[0]===12));
+  await dismiss();
+  await open();
+  const gold=map.locator('.destiny-wood[data-direction="capital"]');
+  assert.equal(await gold.getAttribute('data-tier'),'12');
+  assert(await gold.locator('.destiny-crown.gold').count()>5);
+  assert(await map.locator('.destiny-wood[data-direction="body"] .destiny-new-wood').count()>0);
+  assert(await map.locator('.destiny-living-wood *').count()<220,'decoration has a fixed mobile rendering budget');
+  await dialog.getByRole('button',{name:'КАПИТАЛ',exact:true}).click();
+  await screenshot('06-living-roots-capital');
+  await returnHome();
+  await dismiss();
+
   const earned=await snapshot();
   await page.emulateMedia({reducedMotion:'reduce'});
   await open(true);
@@ -208,19 +238,30 @@ try{
   await page.waitForFunction(()=>navigator.serviceWorker.controller);
   await context.setOffline(true);
   await page.reload();
-  await page.waitForFunction(()=>document.querySelector('.destiny-horizon [data-direction="citadel"]')?.dataset.state==='2');
+  await page.waitForFunction(()=>document.querySelector('.destiny-horizon .destiny-veins[data-direction="citadel"]')?.dataset.state==='2');
   await dismiss();
   await open();
   assert.equal(await chain.getAttribute('data-state'),'2');
+  assert.equal(await gold.getAttribute('data-tier'),'12','capital form survives an offline reload');
   assert.equal(await dialog.locator('.is-breaking').count(),0);
   assert.equal(await map.locator('.destiny-window.is-lit').count(),7);
+  const body=map.locator('.destiny-wood[data-direction="body"]');
+  const bodyTier=await body.getAttribute('data-tier');
+  await page.clock.setSystemTime(new Date('2027-01-06T12:00:00Z'));
+  await page.clock.runFor(1250);
+  await page.waitForFunction(()=>document.querySelector('#destiny-world .destiny-wood[data-direction="body"]').style.getPropertyValue('--warmth')==='0.26');
+  assert.equal(await body.getAttribute('data-tier'),bodyTier);
+  assert.equal(await gold.getAttribute('data-tier'),'12','inactivity leaves earned form in place');
+  await page.evaluate(()=>PlanDB.doc('days/2027-01-06').set({steps:30000}));
+  await page.waitForFunction(()=>Number(document.querySelector('#destiny-world .destiny-wood[data-direction="body"]').style.getPropertyValue('--warmth'))>.26);
   await returnHome();
+  await dismiss();
   const room=home.locator('[data-croom="rest"]');
   await room.click();
   await page.locator('#citadel-interior:not([hidden])').waitFor();
   assert.equal(await page.locator('#citadel-interior-stage').getAttribute('data-room'),'rest');
   assert.deepEqual(errors,[]);
-  console.log('PASS Destiny World views, confirmed progression, one-time chains, pinch/pan, back/forward, reduced motion, 320–430 px and offline reload');
+  console.log('PASS six living branches, capital, inactivity and return, one-time chains, mobile gestures, reduced motion and offline reload');
 }finally{
   await browser?.close();
   server.close();

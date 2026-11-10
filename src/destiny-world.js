@@ -16,7 +16,56 @@
       chain:[[314,481],[444,549],[592,450]]},
     citadel: {points:[[391,581],[375,673],[308,761]], vein:'M417 493l-16 43-10 45-7 55-9 37-29 42-38 46-51 41',
       horizonVein:'M415 514l-8-54 11-34-9-35 13-33-5-24 13-22',
-      chain:[[249,703],[370,696],[484,642]], fork:'M375 673l-55 17-56 47-52 26', forkPoints:[[320,690],[264,737]]}
+      chain:[[249,703],[370,696],[484,642]], fork:'M375 673l-55 17-56 47-52 26', forkPoints:[[320,690],[264,737]]},
+    capital: {points:[[473,612],[543,727],[631,800]], vein:'M413 548Q459 568 473 612L484 666Q498 705 543 727L580 766 631 800 707 837',
+      chain:[[443,658],[565,656],[631,760]]}
+  };
+  // Ribbons follow the old wood; each new bough has its own silhouette and crown.
+  const forms = {
+    body:{wood:'M348 531Q340 438 295 405L244 380 171 353 108 335 163 363 232 389 283 421Q326 462 333 539Z',
+      boughs:[
+        ['M257 390Q223 352 184 334L137 307Q201 323 239 353L277 400Z',159,319,-24],
+        ['M221 383Q191 390 152 393L101 371Q153 375 179 376L242 381Z',124,379,-52],
+        ['M182 338Q157 309 149 282L162 291 178 313 201 349Z',157,295,-44]
+      ],kind:'leaf'},
+    will:{wood:'M391 485Q374 415 400 350Q423 290 467 263L524 237 590 205 532 244 476 280Q423 324 416 373L421 497Z',
+      boughs:[
+        ['M462 281Q486 229 509 202L526 185Q510 222 484 266L478 281Z',516,198,24],
+        ['M509 260Q547 262 592 239L628 228 606 245 572 262 501 272Z',604,241,48],
+        ['M542 235L581 201 598 166 597 198 567 234 552 241Z',596,184,20]
+      ],kind:'ember'},
+    mind:{wood:'M375 466L355 425 335 345Q311 291 282 250L224 174 260 205 302 252 353 329 375 393 397 468Z',
+      boughs:[
+        ['M310 299L269 281 236 247 256 259 285 267 328 307Z',246,258,-25],
+        ['M292 269L302 229 286 187 307 210 315 240 308 289Z',300,207,6],
+        ['M258 227L225 218 197 192 218 201 249 210 273 242Z',209,199,-32]
+      ],kind:'crystal'},
+    path:{wood:'M394 567Q411 507 450 471L508 454 560 455 626 438 709 414 676 434 622 452 563 470 518 475 465 493Q438 515 418 572Z',
+      boughs:[
+        ['M491 475Q523 505 578 506L620 492Q592 517 548 516L475 488Z',587,507,62],
+        ['M579 461Q612 477 653 469L689 449Q665 479 626 486L558 475Z',662,467,40],
+        ['M419 547Q437 586 459 608L511 628 487 630 454 617 410 574Z',484,624,63]
+      ],kind:'flower'},
+    citadel:{wood:'M408 506L423 529 400 583 396 643 381 690 347 738 285 785 316 748 342 716 366 669 369 635 375 576Z',
+      boughs:[
+        ['M373 637L348 663 314 680 273 681 289 694 331 695 361 678 383 652Z',302,685,-20],
+        ['M354 715L322 725 273 741 241 774 264 766 301 751 344 744Z',266,757,-28],
+        ['M391 601L414 617 417 658 405 649 399 627 380 623Z',408,635,12]
+      ],kind:'stone'},
+    capital:{wood:'M422 541Q462 564 482 610L497 671Q516 710 548 716L587 755 638 789 718 833 646 810 566 774 530 743Q482 723 468 674L454 619Q440 583 407 559Z',
+      boughs:[
+        ['M498 702Q539 701 572 682L611 663 588 687 543 718 509 724Z',585,679,58],
+        ['M556 740Q600 734 636 743L678 754 641 758 589 752 573 760Z',652,752,60],
+        ['M610 784Q642 776 680 790L720 806 681 802 650 801 626 801Z',695,799,66]
+      ],kind:'gold'}
+  };
+  const motifs={
+    leaf:'M0 7Q-15-9-10-25Q4-19 5-8Q12-21 24-23Q24-8 5 2L1 11Z',
+    ember:'M0 7Q-11-1-5-14L0-7Q9-17 6-27Q21-9 11 2L3 8Z',
+    crystal:'M-9 7L-11-8-4-20 3-10 6-23 14-31 21-17 15 3 5 9ZM-4-20L-3 6M14-31L12 4',
+    flower:'M0 8V-7M0-5Q-18-4-11-15Q-7-19-3-14Q-6-27 4-26Q13-24 7-15Q20-23 21-13Q20-4 5-7Z',
+    stone:'M-17 6V-8H-10V-16H-4V-10H3V-24H9V-15H15V3ZM-7 3V-3H-2V3M5-3V-9H9V-3',
+    gold:'M1 11L-4 2Q-17-5-14-23Q3-21 5-8Q12-23 28-25Q24-8 8 2L3 11Z'
   };
   const stone = 'M0-18L13-12 18 0 12 13 0 18-13 12-18 0-12-13Z';
   const windows = [[661,390],[628,420],[690,433],[599,445],[718,455],[661,406],[633,438],[683,453],[611,466],[710,477],[652,425],[672,436],[637,471],[681,480],[623,483],[700,466]];
@@ -26,7 +75,7 @@
     return node;
   };
 
-  function project(rows, roomLevels) {
+  function project(rows, roomLevels, growth={}) {
     const branches = Object.entries(layout).map(([id, shape]) => {
       const main = rows.find(row => row.id === id);
       const fork = shape.forkPoints && rows.find(row => row.from && row.id.startsWith(id + '-'));
@@ -37,12 +86,42 @@
         id:node.id, name:node.name, description:node.description, open:node.state === 'open', point:shape.forkPoints[i]
       }));
       const opened = nodes.filter(node => node.open).length;
-      return {id,label:main?.label || '',glyph:main?.glyph || '',state:opened===3?2:opened>0?1:0,opened,nodes,extra};
+      const evidence=growth[id]||{};
+      const tier=Math.min(12,opened*4+[2,5,9].filter(days=>evidence.days>=days).length);
+      const warmth=Math.min(4,Math.max(0,Math.ceil((evidence.recent||0)/2)));
+      return {id,label:main?.label || '',glyph:main?.glyph || '',state:opened===3?2:opened>0?1:0,opened,tier,warmth,nodes,extra};
     });
     const levels = roomLevels.filter(level => level === 2 || level === 3);
     const lamps = Math.min(windows.length, 1 + levels.reduce((count,level) => count + level - 1,0));
     const restoration=lamps>=12?3:lamps>=6?2:lamps>=2?1:0;
     return {branches,lamps,restoration};
+  }
+
+  function snapshot(model) {
+    return Object.fromEntries(model.branches.map(({id,tier,warmth})=>[id,[tier,warmth]]));
+  }
+
+  function drawWood(branch) {
+    const {wood,boughs,kind}=forms[branch.id], shape=layout[branch.id];
+    const group=svg('g',{class:'destiny-wood','data-direction':branch.id,'data-tier':branch.tier,'aria-hidden':'true'});
+    group.style.setProperty('--bark-light',String(.20+branch.tier*.06));
+    group.style.setProperty('--warmth',String(.26+branch.warmth*.18));
+    group.append(svg('path',{d:wood,class:'destiny-cambium'}),
+      svg('path',{d:shape.vein,class:'destiny-grain'}));
+    for(const [index,[trace,x,y,angle]] of boughs.entries()){
+      if(branch.tier<1+index*4)break;
+      const bough=svg('g',{class:'destiny-bough'});
+      bough.append(svg('path',{d:trace,class:'destiny-new-wood'}));
+      const leaves=Math.min(4,Math.max(0,branch.tier-index*3-1));
+      for(let n=0;n<leaves;n++){
+        const scale=.50+(branch.tier-n)*.055;
+        const crown=svg('g',{transform:`translate(${x+n*9} ${y+(n%2?-11:5)}) rotate(${angle+n*21}) scale(${scale})`});
+        crown.append(svg('path',{d:motifs[kind],class:'destiny-crown '+kind}));
+        bough.append(crown);
+      }
+      group.append(bough);
+    }
+    return group;
   }
 
   function artImage(name) {
@@ -51,6 +130,7 @@
 
   function drawVeins(layer, branch, shape, distant) {
     const lines=svg('g',{class:'destiny-veins','data-direction':branch.id,'data-state':branch.state});
+    lines.style.setProperty('--vein-life',String(.54+branch.warmth*.115));
     const trace=distant&&shape.horizonVein?shape.horizonVein:shape.vein;
     lines.append(svg('path',{d:trace,class:'destiny-vein-glow'}),svg('path',{d:trace,class:'destiny-vein-core'}));
     if(branch.state===2)lines.append(svg('path',{d:trace,class:'destiny-vein-sparks'}));
@@ -83,7 +163,10 @@
     horizon.append(layer);
     return model=>{
       layer.replaceChildren();
-      for(const branch of model.branches)drawVeins(layer,branch,layout[branch.id],true);
+      for(const branch of model.branches){
+        layer.append(drawWood(branch));
+        drawVeins(layer,branch,layout[branch.id],true);
+      }
     };
   }
 
@@ -159,19 +242,19 @@
     skyline.append(nearLights);
     far.append(artImage('destiny-valley.svg'),renewal,lights,
       svg('path',{class:'destiny-haze',d:'M34 553q176-28 313 0t418-51m-752 86q197-30 351 0t424-39M57 621q174-25 315 5t375-33'}));
-    const veins=svg('g'), chains=svg('g'), seals=svg('g',{class:'destiny-world-seals'});
+    const wood=svg('g',{class:'destiny-living-wood'}), veins=svg('g'), chains=svg('g'), seals=svg('g',{class:'destiny-world-seals'});
     const embers=svg('g',{class:'destiny-embers','aria-hidden':'true'});
     for(const [x,y] of [[89,633],[153,720],[193,488],[267,588],[310,536],[347,648],[455,702],[517,587],[556,690],[614,517],[687,641],[733,583]]){
       embers.append(svg('path',{d:'M'+x+' '+y+'l2-4 2 4-2 3z'}));
     }
-    near.append(artImage('destiny-tree.svg'),veins,chains,seals,embers);
+    near.append(artImage('destiny-tree.svg'),wood,veins,chains,seals,embers);
     const reset=cameraFor(map,near,far,dialog);
     const close=dialog.querySelector('.destiny-world-back');
     const tabs=dialog.querySelector('.destiny-branches'), nodeList=dialog.querySelector('.destiny-node-list');
     const heading=dialog.querySelector('.destiny-branch-title'), phase=dialog.querySelector('.destiny-branch-phase');
     const desc=dialog.querySelector('.destiny-node-description'), status=dialog.querySelector('.destiny-status');
     const fog=document.getElementById('destiny-travel-fog');
-    const released=new Set(), pending=new Set(), visuals=new Map();
+    const pending=new Map(), visuals=new Map();
     let model=null, signature='', branchId='body', nodeId='', timer=0, travelling=false, opener=null;
 
     for(const [id,shape] of Object.entries(layout)){
@@ -192,7 +275,8 @@
       const selected=nodes.find(node=>node.id===(target||nodeId))||nodes.find(node=>node.open)||nodes[0];
       nodeId=selected?.id||'';
       heading.textContent=branch.label;
-      phase.textContent=states[branch.state]+' · '+branch.opened+' / '+branch.nodes.length+' печатей';
+      const growth=['Сухая кора','Первые побеги','Живая древесина','Крона пробуждена'][Math.ceil(branch.tier/4)];
+      phase.textContent=states[branch.state]+' · '+branch.opened+' / '+branch.nodes.length+' печатей · '+growth;
       desc.textContent=selected ? selected.name+' · '+(selected.open?'Открыто. ':'')+selected.description : 'Записи проявятся, когда загрузится профиль.';
       tabs.querySelectorAll('button').forEach(tab=>tab.setAttribute('aria-pressed',String(tab.dataset.direction===id)));
       seals.querySelectorAll('[role="button"]').forEach(seal=>seal.setAttribute('aria-pressed',String(seal.dataset.node===nodeId)));
@@ -210,13 +294,15 @@
 
     function playPending() {
       if(!dialog.open||document.hidden)return;
-      for(const id of pending){
-        const {chain,line}=visuals.get(id);
+      if(!reduce.matches&&pending.size>1)wood.classList.add('is-awakening');
+      for(const [id,event] of pending){
+        const {chain,line,bark}=visuals.get(id);
         if(!reduce.matches){
-          chain.classList.add('is-breaking');
-          line.classList.add('is-surging');
+          if(event.release)chain.classList.add('is-breaking');
+          if(event.seal)line.classList.add('is-surging');
+          bark.classList.add('is-growing');
         }
-        status.textContent='Цепь разомкнулась · '+model.branches.find(branch=>branch.id===id).label;
+        status.textContent=(event.release?'Цепь разомкнулась':event.seal?'Печать пробудила древесину':'Появились новые побеги')+' · '+model.branches.find(branch=>branch.id===id).label;
       }
       pending.clear();
     }
@@ -226,8 +312,12 @@
     veins.addEventListener('animationend',event=>{
       if(event.animationName==='destiny-vein-surge')event.target.closest('.is-surging')?.classList.remove('is-surging');
     });
+    wood.addEventListener('animationend',event=>{
+      if(event.animationName==='destiny-grow')event.target.classList.remove('is-growing');
+      if(event.animationName==='destiny-awakening')wood.classList.remove('is-awakening');
+    });
     function stopRelease(){
-      dialog.querySelectorAll('.is-breaking,.is-surging').forEach(el=>el.classList.remove('is-breaking','is-surging'));
+      dialog.querySelectorAll('.is-breaking,.is-surging,.is-growing,.is-awakening').forEach(el=>el.classList.remove('is-breaking','is-surging','is-growing','is-awakening'));
     }
     reduce.addEventListener('change',()=>{if(reduce.matches)stopRelease();});
 
@@ -241,21 +331,31 @@
       // Commit animation only for a new change seen in this session, never for a loaded snapshot.
       for(const branch of next.branches){
         const previous=model?.branches.find(row=>row.id===branch.id);
-        if(branch.state===2&&!released.has(branch.id)){
-          if(previous&&previous.state<2)pending.add(branch.id);
-          released.add(branch.id);
+        if(previous&&(branch.opened>previous.opened||branch.tier>previous.tier||
+            branch.extra.some(node=>node.open&&!previous.extra.some(old=>old.id===node.id&&old.open)))){
+          const prior=pending.get(branch.id);
+          pending.set(branch.id,{release:prior?.release||branch.state===2&&previous.state<2,
+            seal:prior?.seal||branch.opened>previous.opened||branch.extra.length>previous.extra.length});
         }
         const visual=visuals.get(branch.id);
         visual.tab.textContent=branch.label;
         visual.tab.dataset.state=branch.state;
         visual.chain.dataset.state=branch.state;
+        visual.chain.style.setProperty('--wear',String(branch.tier/12));
+        const links=visual.chain.querySelectorAll('.destiny-chain-link');
+        links.forEach((link,index)=>link.classList.toggle('is-eroded',
+          branch.tier>=4&&Math.abs(index-(links.length-1)/2)<(branch.tier-3)/4));
       }
       model=next;
       veins.replaceChildren();
+      wood.replaceChildren();
+      embers.style.opacity=String(.10+next.branches.reduce((sum,branch)=>sum+branch.warmth,0)*.018);
       const focus=seals.contains(document.activeElement)?document.activeElement.dataset.node:null;
       seals.replaceChildren();
       for(const branch of next.branches){
         const shape=layout[branch.id],visual=visuals.get(branch.id);
+        visual.bark=drawWood(branch);
+        wood.append(visual.bark);
         visual.line=drawVeins(veins,branch,shape);
         for(const node of branch.nodes.concat(branch.extra)){
           const seal=svg('g',{class:'destiny-seal'+(node.open?' is-open':''),'data-direction':branch.id,
@@ -327,7 +427,10 @@
     close.onclick=back;
     dialog.addEventListener('cancel',event=>{event.preventDefault();back();});
     dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();back();}});
-    document.addEventListener('visibilitychange',playPending);
+    document.addEventListener('visibilitychange',()=>{
+      dialog.classList.toggle('is-background',document.hidden);
+      if(document.hidden)stopRelease();else playPending();
+    });
     window.addEventListener('popstate',event=>{
       if(event.state?.destinyWorld&&model){
         event.stopImmediatePropagation();
@@ -340,5 +443,5 @@
     return {sync,open};
   }
 
-  root.VkachDestinyWorld=Object.freeze({project,mount});
+  root.VkachDestinyWorld=Object.freeze({project,mount,snapshot});
 })(globalThis);

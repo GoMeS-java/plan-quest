@@ -100,6 +100,7 @@ try{
   assert.deepEqual((await frames()).map(frame=>frame.date),[nextDay,day]);
   assert.deepEqual((await frames())[1],captured);
   const backup=await page.evaluate(()=>PlanSync.backupFor(PlanSync._docs()));
+  assert.equal(backup.docs[path].d.version,2,'older clients cannot overwrite recorded wood');
   assert.equal(backup.docs[path].d.frame.rooms.rest,2);
   assert.equal(backup.docs[secondPath].d.frame.rooms.rest,2);
 
@@ -115,6 +116,18 @@ try{
   const dir=resolve(process.env.WORLD_HISTORY_SHOTS||'test-results/world-history');
   await mkdir(dir,{recursive:true});
   await panel.screenshot({path:resolve(dir,'01-profile-world-history.png'),animations:'disabled'});
+  await panel.getByRole('button',{name:'ОТКРЫТЬ ЛЕТОПИСЬ'}).click();
+  const chronicle=page.getByRole('dialog',{name:'Летопись Спящего'});
+  await chronicle.waitFor();
+  await chronicle.locator('.chronicle-frame summary').first().click();
+  assert.equal(await chronicle.locator('.chronicle-frame[open] .chronicle-tree progress').count(),6);
+  await chronicle.screenshot({path:resolve(dir,'02-sleepers-chronicle.png'),animations:'disabled'});
+  await chronicle.getByLabel('Показать').selectOption('weight');
+  assert.equal(await chronicle.locator('.chronicle-frame').count(),0);
+  assert.match(await chronicle.innerText(),/145.3 кг/);
+  await page.goBack();
+  await chronicle.waitFor({state:'hidden'});
+  assert.equal(await panel.getByRole('button',{name:'ОТКРЫТЬ ЛЕТОПИСЬ'}).evaluate(node=>node===document.activeElement),true);
   await page.evaluate(()=>PlanDB.doc('goals/synthetic').set({name:'Проверить новый зал',done:false,ts:Date.now()}));
   await page.waitForFunction(()=>document.querySelector('#gg-list .q'));
   await page.evaluate(()=>document.querySelector('#gg-list .q').click());
@@ -132,6 +145,12 @@ try{
   const merged=await frames();
   assert.equal(merged.length,3);
   assert.deepEqual(merged[1],captured,'observation timestamp wins over a rewritten record timestamp');
+  await panel.getByRole('button',{name:'ОТКРЫТЬ ЛЕТОПИСЬ'}).click();
+  await chronicle.getByLabel('Показать').selectOption('frame');
+  await chronicle.locator('.chronicle-frame summary').last().click();
+  assert.match(await chronicle.locator('.chronicle-frame').last().innerText(),/Облик Древа на эту дату неизвестен/);
+  await page.keyboard.press('Escape');
+  await chronicle.waitFor({state:'hidden'});
   await page.reload();
   await page.waitForFunction(()=>VkachWorldHistory.frames(PlanSync._docs()).length===3);
   assert.deepEqual(errors,[]);
