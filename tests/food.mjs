@@ -142,4 +142,15 @@ const unknownName = read('catalog').find(row => row.lastUsed === 16);
 assert.equal(model.fromCatalog(unknownName).mode, 'unknown');
 assert.equal(model.fromCatalog(unknownName).grams, 50.5);
 assert.equal(model.library([recipeMeal], read('catalog')).filter(row => row.name === cooked.name).length, 1);
+
+// Two offline profiles with the same renamed product remember the old variant under one ID.
+const synced = new Map(storage);
+const rememberOldVariant = (id, now) => model.finishMeal(tx, model.putDraft(tx,
+  { ...draft, id, items: [honey] }, null, now), now).items[0].source;
+const variantA = rememberOldVariant('offline-device-a', 38);
+storage.clear();
+for (const [path, row] of synced) storage.set(path, row);
+const variantB = rememberOldVariant('offline-device-b', 39);
+assert.notEqual(variantA, renamed.id);
+assert.equal(variantA, variantB);
 console.log('Food model: draft conflicts, idempotent meals, portions, history, catalog deduplication, edits, favorites and recipes');

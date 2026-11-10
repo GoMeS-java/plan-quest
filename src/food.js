@@ -198,6 +198,15 @@
     return 'remembered-' + hash.toString(16);
   }
 
+  function availableProductId(tx, key) {
+    let id = productId(key);
+    // An edited product keeps its original ID for existing meal references.
+    for (let slot = 1; tx.get(collections.catalog + '/' + id); slot++) {
+      id = productId(JSON.stringify([key, slot]));
+    }
+    return id;
+  }
+
   function rememberedProduct(item, id, lastUsed) {
     return { id, type: 'product', name: item.name, note: '', base: item.base, values: item.values,
       estimated: item.mode === 'estimate', automatic: true, favorite: false, lastGrams: item.grams, lastUsed };
@@ -214,8 +223,7 @@
       const keepSource = readable('catalog', source) && (source.type === 'recipe' || productKey(source) === key ||
         (prior?.source === source.id && productKey(prior) === key));
       const match = keepSource ? source : catalog.get(key);
-      let id = match?.id ?? productId(key);
-      if (!match && tx.get(collections.catalog + '/' + id)) id = makeId();
+      const id = match?.id ?? availableProductId(tx, key);
       const path = collections.catalog + '/' + id;
       const current = match && tx.get(path);
       const data = current ? { ...current, lastGrams: item.grams, lastUsed: Math.max(now, current.lastUsed || 0) }
@@ -342,8 +350,7 @@
     const key = productKey(item);
     const existing = productIndex(tx.list(collections.catalog)).get(key);
     if (existing?.favorite) return existing;
-    let id = existing?.id ?? productId(key);
-    if (!existing && tx.get(collections.catalog + '/' + id)) id = makeId();
+    const id = existing?.id ?? availableProductId(tx, key);
     const { history, ...data } = item;
     const row = stamp({ ...(existing ?? { ...data, id }), favorite: true }, existing, now);
     tx.set(collections.catalog + '/' + id, row);
