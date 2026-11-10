@@ -5780,9 +5780,15 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
   var chronicle=$('world-chronicle'),chronicleDays=[],chronicleLimit=20,chronicleNames={};
   var chronicleBranches={body:'Тело',will:'Воля',mind:'Разум',path:'Путь',citadel:'Цитадель',capital:'Капитал'};
+  var chroniclePlural=new Intl.PluralRules('ru');
+  function chronicleCount(value,one,few,many){
+    var form=chroniclePlural.select(value);
+    return fmt(value)+' '+(form==='one'?one:form==='few'?few:many);
+  }
   function chronicleText(event){
-    if(event.kind==='activity')return 'Активность · '+fmt(event.steps)+' шагов · '+event.sets+' подходов · '+event.tasks+' отметок';
-    if(event.kind==='weight')return 'Замер веса · '+event.kg+' кг';
+    if(event.kind==='activity')return 'Активность · '+chronicleCount(event.steps,'шаг','шага','шагов')+' · '+
+      chronicleCount(event.sets,'подход','подхода','подходов')+' · '+chronicleCount(event.tasks,'отметка','отметки','отметок');
+    if(event.kind==='weight')return 'Замер веса · '+event.kg.toLocaleString('ru-RU')+' кг';
     if(event.kind==='room')return 'Цитадель · '+(CitadelWorld.names[event.room]||'Комната')+' · ступень '+event.level;
     if(event.kind==='seal')return 'Печать · '+(chronicleNames[event.id]||'Открыта');
     if(event.kind==='mark')return 'Достижение · '+(chronicleNames[event.id]||'Получено');
@@ -5791,8 +5797,11 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   function chronicleFrame(frame){
     var details=el('details','chronicle-frame');
     var rooms=Object.values(frame.rooms||{}).filter(function(level){return level>1;}).length;
-    details.appendChild(el('summary',null,'Снимок мира · ранг '+(frame.hero?.[0]||1)+' · комнат улучшено '+rooms));
-    details.appendChild(el('p',null,'Стадия облика '+(frame.hero?.[1]||0)+' · печатей '+(frame.seals?.length||0)+' · достижений '+(frame.marks?.length||0)));
+    details.appendChild(el('summary',null,'Снимок мира · ранг '+(frame.hero?.[0]||1)+' · '+
+      chronicleCount(rooms,'улучшенная комната','улучшенные комнаты','улучшенных комнат')));
+    details.appendChild(el('p',null,'Стадия облика '+(frame.hero?.[1]||0)+' · '+
+      chronicleCount(frame.seals?.length||0,'печать','печати','печатей')+' · '+
+      chronicleCount(frame.marks?.length||0,'достижение','достижения','достижений')));
     var tree=VkachWorldHistory.treeState(frame.tree);
     if(tree){
       var list=el('ul','chronicle-tree');

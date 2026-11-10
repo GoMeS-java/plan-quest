@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {createServer} from 'node:http';
 import {mkdir, readFile} from 'node:fs/promises';
 import {extname, resolve, sep} from 'node:path';
 import {chromium} from 'playwright';
+import vm from 'node:vm';
 import '../src/world-history.js';
 
 const day='2026-12-20', nextDay='2026-12-21', oldDay='2026-12-19';
@@ -17,6 +19,11 @@ const a=obs(first,{rooms:{rest:1}}), b=obs(first,{rooms:{rest:3}});
 assert.deepEqual(history.merge(a,b),history.merge(b,a));
 assert.equal(history.merge(obs(first+2,b.frame),a).frame,b.frame);
 assert.equal(history.merge({version:2,at:first-100},a).version,2);
+const olderClient={TextEncoder};
+vm.runInNewContext(execFileSync('git',['show','e054337:src/world-history.js'],{encoding:'utf8'}),olderClient);
+const recentTree={version:2,at:first,frame:{tree:{}}};
+assert.equal(olderClient.VkachWorldHistory.capture({get:()=>recentTree},day,second,a.frame),'unsupported');
+assert.equal(olderClient.VkachWorldHistory.merge(recentTree,obs(second,a.frame)),recentTree);
 
 const recorded={
   ['days/'+oldDay]:{d:{steps:500,q:[true,false]},u:first},
@@ -124,7 +131,7 @@ try{
   await chronicle.screenshot({path:resolve(dir,'02-sleepers-chronicle.png'),animations:'disabled'});
   await chronicle.getByLabel('Показать').selectOption('weight');
   assert.equal(await chronicle.locator('.chronicle-frame').count(),0);
-  assert.match(await chronicle.innerText(),/145.3 кг/);
+  assert.match(await chronicle.innerText(),/145,3 кг/);
   await page.goBack();
   await chronicle.waitFor({state:'hidden'});
   assert.equal(await panel.getByRole('button',{name:'ОТКРЫТЬ ЛЕТОПИСЬ'}).evaluate(node=>node===document.activeElement),true);
