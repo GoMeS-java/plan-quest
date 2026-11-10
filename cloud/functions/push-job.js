@@ -31,8 +31,10 @@ async function dispatchCategories(db, uid, devices, version, revision, policy, s
       if (!claim.committed) continue;
       offered.add(category);
       const latest = (await subscription.get()).val();
+      // The category and its evidence were evaluated against this exact head.
+      if ((await version.get()).val()!==revision) return;
       if (latest?.token!==proof.token || latest.timezone!==proof.timezone ||
-          !dueCategories(policy,latest,(await version.get()).val(),clock()).some(row=>row.category===category&&row.day===day)) continue;
+          !dueCategories(policy,latest,revision,clock()).some(row=>row.category===category&&row.day===day)) continue;
       await deliver(subscription,latest,{vkach:'2',id:idFor(),device,category,day,policy:item.policy,
         timezone:latest.timezone,revision:String(revision),sentAt:String(now)},send,clock);
     }

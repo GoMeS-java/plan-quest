@@ -237,6 +237,22 @@ assert.equal(await testDevice(schedulerDb,'owner','bad/path',send,clock,idFor),f
 assert.equal(await testDevice(schedulerDb,'owner',pushDevice,send,clock,idFor),true);
 assert.equal(await testDevice(schedulerDb,'owner',pushDevice,send,clock,idFor),false,'tests are rate limited per account');
 assert.equal(categorySends.at(-1).data.category,'test');
+cloudTree.subscriptions={owner:{[pushDevice]:v2proof}};
+cloudTree.vaults.owner.head=v2head;
+cloudTree['push-deliveries']={owner:{}};
+const racingDb={ref(path){
+  const original=schedulerDb.ref(path);
+  if(path!=='subscriptions/owner/'+pushDevice)return original;
+  return {...original,get:()=>{
+    cloudTree.vaults.owner.head={revision:6,payload:JSON.stringify({v:2,format:'vkach-backup',
+      docs:{'cfg/push-reminders':{d:{...config,times:{}}}}})};
+    cloudTree.subscriptions.owner[pushDevice]={...v2proof,revision:6,needed:false};
+    return original.get();
+  }};
+}};
+const beforeRace=categorySends.length;
+await dispatchDue(racingDb,send,clock,idFor);
+assert.equal(categorySends.length,beforeRace,'updated device proof cannot revive a reminder from an obsolete snapshot');
 
 const worker = await readFile(new URL('../src/sw.template.js',import.meta.url),'utf8');
 const listeners = {}, cache = new Map(), shown = [];
