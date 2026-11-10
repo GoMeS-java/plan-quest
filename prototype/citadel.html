@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Цитадель · Прототип</title>
+<link rel="stylesheet" href="../src/citadel-weather.css">
 <style>
 :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#100c18;color:#e7dcf6}
 *{box-sizing:border-box}body{margin:0;padding:16px}.wrap{max-width:900px;margin:auto}
@@ -37,23 +38,14 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 #room-scene[data-phase="night"],#room-scene[data-phase="deep-night"]{filter:brightness(.7)}
 #room-scene[data-phase="morning"]{filter:sepia(.12) brightness(1.12)}
 #room-scene[data-phase="evening"]{filter:sepia(.22) brightness(.9)}
-#room-scene[data-weather="rain"]:before{box-shadow:0 0 22px #5675a6,inset 0 0 18px #6682b5}
-#room-scene[data-weather="snow"]:before{box-shadow:0 0 22px #b5d6ff,inset 0 0 18px #a5c8ee}
+#room-scene:is([data-weather="drizzle"],[data-weather="downpour"],[data-weather="thunder"]):before{box-shadow:0 0 22px #5675a6,inset 0 0 18px #6682b5}
+#room-scene:is([data-weather="flurries"],[data-weather="snowfall"],[data-weather="blizzard"]):before{box-shadow:0 0 22px #b5d6ff,inset 0 0 18px #a5c8ee}
 #room-scene[data-weather="clear"]:before{box-shadow:0 0 22px #e4b477,inset 0 0 18px #d4a668}
 #room-scene[data-weather="fog"]:before{box-shadow:0 0 24px #a29cac,inset 0 0 18px #9c91ac}
 #atmosphere select,#atmosphere button{padding:7px}
 
 #room-scene{isolation:isolate}
 #scene-weather{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
-#scene-weather i{position:absolute;top:-20%;left:var(--x);width:2px;height:24px;background:#a6c5f7a8;transform:rotate(16deg);animation:rainfall var(--dur) linear infinite;animation-delay:var(--delay)}
-#scene-weather.snow i{width:5px;height:5px;border-radius:50%;background:#e2efff;transform:none;animation-name:snowfall}
-#scene-weather.fog{background:linear-gradient(90deg,#b6aec021,transparent,#b6aec025);animation:fogmove 9s ease-in-out infinite alternate}
-#scene-weather.clear{background:radial-gradient(ellipse at 50% 20%,#e7b87d2e,transparent 60%)}
-#room-scene.reduce-motion #scene-weather i,#room-scene.reduce-motion #scene-weather{animation:none!important}
-#room-scene.reduce-motion #scene-weather i{top:var(--y)}
-@keyframes rainfall{to{top:120%;transform:translateX(-30px) rotate(16deg)}}
-@keyframes snowfall{to{top:120%;transform:translateX(20px)}}
-@keyframes fogmove{to{opacity:.3;transform:translateX(12px)}}
 #scene-hero{z-index:3;box-shadow:inset 0 -9px #100c19}
 #scene-hero:before{content:'';position:absolute;top:5px;left:6px;width:14px;height:12px;background:#bfa0d8;box-shadow:0 0 0 2px #1c1428}
 #scene-hero:after{content:'';position:absolute;bottom:4px;left:4px;width:7px;height:10px;background:#160f20;box-shadow:12px 0 #160f20}
@@ -65,8 +57,8 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
  body{padding:8px}.wrap{max-width:100%}h1{font-size:22px;margin:6px 0}h1+p{font-size:13px;line-height:1.4;margin:5px 0 10px}
  .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.toolbar button{padding:9px 5px;font-size:13px}
  #atmosphere{padding:10px;gap:7px;margin-top:8px;font-size:13px}
- #atmosphere label{font-size:13px}#atmosphere select,#atmosphere button,#weather-city{font-size:13px!important;padding:6px!important}
- #atmosphere #weather-city{max-width:120px!important}#atmosphere small{font-size:11px}
+ #atmosphere label{font-size:13px}#atmosphere select,#atmosphere button{font-size:13px!important;padding:6px!important}
+ #atmosphere small{font-size:11px}
  #castle{padding:5px;border-width:2px;min-height:150px}
  #castle .floor{grid-template-columns:repeat(6,minmax(0,1fr));min-width:0;gap:2px;padding:3px;margin:5px 0;border-bottom-width:5px}
  #castle .room,#castle .empty{min-width:0;min-height:85px;padding:12px 2px 4px;border-width:1px}
@@ -155,16 +147,16 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 </style></head><body><main class="wrap">
 <h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
 <div class="toolbar"><button id="overview" class="active">Обзор</button><button id="walk">Прогулка</button><button id="add-floor">Открыть этаж (демо)</button><button id="reset">Сбросить прототип</button></div>
-<div id="atmosphere" class="panel"><strong id="phase-label">Атмосфера</strong><label>Режим <select id="weather-mode"><option value="fantasy">Магический</option><option value="hybrid">Гибрид</option></select></label><label>Город <input id="weather-city" placeholder="Например, Москва" maxlength="100" style="max-width:150px;background:#2c203c;color:#eee0ff;padding:8px;border:1px solid #8064a5"></label><button id="refresh-weather">Обновить</button><small id="weather-info" role="status"></small><label>Погода <select id="weather"><option value="rain">Дождь</option><option value="clear">Ясно</option><option value="snow">Снег</option><option value="fog">Туман</option></select></label><label><input type="checkbox" id="day-night" checked> Смена времени суток</label><label><input type="checkbox" id="reduce-motion"> Без анимации</label></div><div class="castle-tools"><strong>План замка</strong><button id="castle-zoom" type="button" aria-pressed="false">Увеличить план</button><small id="castle-hint">Нажми на комнату для выбора</small></div><div id="castle" aria-label="План Цитадели"></div>
+<div id="atmosphere" class="panel"><strong id="phase-label">Атмосфера</strong><small id="weather-info" role="status"></small><label><input type="checkbox" id="day-night" checked> Смена времени суток</label><label><input type="checkbox" id="reduce-motion"> Без анимации</label></div><div class="castle-tools"><strong>План замка</strong><button id="castle-zoom" type="button" aria-pressed="false">Увеличить план</button><small id="castle-hint">Нажми на комнату для выбора</small></div><div id="castle" aria-label="План Цитадели"></div>
 <div class="panel" id="appearance-panel"><h2>Мой облик</h2><p id="body-note">Данные о теле поступают из вкладки «Тело» основной игры. Здесь ничего вводить не нужно.</p></div><div class="panel"><h2 id="selection-title">Редактор комнат</h2><p id="selection-description">Выбери свободную ячейку для строительства или существующую комнату.</p>
 <div class="controls"><label>Комната <select id="kind"></select></label><button id="build">Построить</button><button id="expand">Расширить на 1</button><button id="go">Направить героя</button></div><div class="controls"><label>Мебель <select id="furniture"></select></label><label>Место <select id="slot"></select></label><button id="place">Разместить</button><button id="remove">Убрать последнюю</button></div><div class="controls"><button id="prev">← Назад</button><button id="next">Вперёд →</button></div><div class="panel"><h2>Обитатели Цитадели</h2><p id="rank-info">Ранг Цитадели: 1</p><label><input id="demo-toggle" type="checkbox"> Режим проверки</label> <label>Ранг <input id="demo-level" type="number" min="1" max="100" value="1" disabled style="width:72px;background:#2c203c;color:#eee0ff;border:1px solid #8064a5;padding:7px"></label><p><small>В обычном режиме используется максимальный ранг из «Заклятия», если игра запускалась на этом же сайте и устройстве.</small></p><div id="npcs" class="npcbar"></div><p id="dialogue">Выбери жителя, чтобы поговорить.</p></div><div id="status" role="status"></div>
 <small>Размеры помещений различаются. Занятые ячейки и закрытые этажи недоступны. Состояние сохраняется только в браузере прототипа.</small></div>
-</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" data-room="throne" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-weather" aria-hidden="true"></div><div id="scene-decoration" aria-hidden="true"></div><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script src="../src/citadel.js"></script><script src="../src/citadel-life.js"></script><script src="../src/citadel-weather.js"></script><script>
+</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" data-room="throne" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-weather" class="world-weather" aria-hidden="true"></div><div id="scene-decoration" aria-hidden="true"></div><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script src="config.js"></script><script src="../src/citadel.js"></script><script src="../src/citadel-life.js"></script><script src="../src/citadel-weather.js"></script><script>
 (function(){
 'use strict';
 var model=window.Citadel, state=model.load(), selected=null, mode='overview';
 var symbols={throne:'♛',quarters:'☾',study:'✒',wardrobe:'♧',gallery:'✧',lounge:'♨',training:'⚔',archive:'▤',treasury:'◆',workshop:'⚒'};
-var weatherApi=window.CitadelWeather;var weatherRefreshBusy=false;var life=window.CitadelLife;var sceneRoomId=null,heroX=45;var demoLevel=1;var demoEnabled=false;/* Реальный облик: отдельные добровольные данные, без связи с уровнем. */
+var weatherApi=window.CitadelWeather;var life=window.CitadelLife;var sceneRoomId=null,heroX=45;var demoLevel=1;var demoEnabled=false;/* Реальный облик: отдельные добровольные данные, без связи с уровнем. */
 var appearanceKey='plan.citadel.appearance.v1';
 function appearance(){try{var v=JSON.parse(localStorage.getItem(appearanceKey)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return {};}}
 function appearanceScale(){var a=liveCitadel||{},base=Number(a.baseline),current=Number(a.current);if(!base||!current||base<30||current<30||base>500||current>500)return 1;return Math.max(.82,Math.min(1.18,Math.sqrt(current/base)));}
@@ -173,36 +165,17 @@ var liveCitadel=null;window.addEventListener('message',function(e){if(e.source!=
 Object.keys(model.rooms).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=model.rooms[k].name+' ('+model.rooms[k].size+')';kind.appendChild(o);});
 function announce(t){status.textContent=t;}
 function commit(next){state=next;model.save(state);render();}
-function drawWeather(){
- var layer=document.getElementById('scene-weather'),scene=document.getElementById('room-scene'),weather=effectiveWeather();
- layer.className=weather;layer.textContent='';
- scene.classList.toggle('reduce-motion',!!state.settings.reducedMotion);
- if(weather!=='rain'&&weather!=='snow')return;
- var count=state.settings.reducedMotion?10:weather==='rain'?28:16;
- for(var i=0;i<count;i++){var drop=document.createElement('i');drop.style.setProperty('--x',((i*37+11)%97)+'%');drop.style.setProperty('--y',((i*29+13)%88)+'%');drop.style.setProperty('--dur',(weather==='rain'?1.3+(i%6)*.16:4+(i%7)*.6)+'s');drop.style.setProperty('--delay',(-i*.27)+'s');layer.appendChild(drop);}
-}
-async function autoRefreshWeather(){
- if(weatherRefreshBusy||state.weather.mode!=='hybrid')return;
- var city=weatherApi.savedCity();if(!city)return;
- var cache=weatherApi.cached();if(cache&&Date.now()-cache.fetchedAt<30*60*1000)return;
- weatherRefreshBusy=true;
- try{await weatherApi.lookup(city);render();}
- catch(e){var info=document.getElementById('weather-info');info.textContent='Нет связи. Используются последние данные или магическая погода.';}
- finally{weatherRefreshBusy=false;}
-}
-function effectiveWeather(){
- if(state.weather.mode==='hybrid'){var cache=weatherApi.cached();if(cache)return cache.weather;}
- return state.weather.selected;
-}
 function applyAtmosphere(){
- var env=model.environment(Date.now(),state),phase=state.settings.dayNight?env.phase:'day';
- castle.dataset.phase=phase;document.getElementById('room-scene').dataset.phase=phase;
- document.getElementById('room-scene').dataset.weather=effectiveWeather();
- document.getElementById('phase-label').textContent=({morning:'Утро',day:'День',evening:'Вечер',night:'Ночь','deep-night':'Глубокая ночь'})[phase]+' · местное время';
- document.getElementById('weather').value=state.weather.selected;document.getElementById('weather').disabled=state.weather.mode==='hybrid';document.getElementById('weather-mode').value=state.weather.mode||'fantasy';var cache=weatherApi.cached();document.getElementById('weather-info').textContent=state.weather.mode==='hybrid'?(cache?'Последние данные: '+cache.city+' · '+new Date(cache.fetchedAt).toLocaleString('ru-RU'):'Нет данных. Укажи город и нажми «Обновить».'):'Магическая погода выбирается вручную.';
+ var phase=state.settings.dayNight?weatherApi.phaseAt(Date.now()):'day';
+ document.documentElement.dataset.worldPhase=phase;
+ var scene=document.getElementById('room-scene');
+ castle.dataset.phase=phase;
+ scene.dataset.phase=phase;
+ scene.classList.toggle('reduce-motion',!!state.settings.reducedMotion);
+ document.getElementById('phase-label').textContent=weatherApi.phaseLabel(phase)+' · местное время';
  document.getElementById('day-night').checked=state.settings.dayNight;
  document.getElementById('reduce-motion').checked=state.settings.reducedMotion;
- document.getElementById('scene-hero').style.animation=state.settings.reducedMotion?'none':'';drawWeather();
+ document.getElementById('scene-hero').style.animation=state.settings.reducedMotion?'none':'';
 }
 function render(){
 castle.textContent='';applyAtmosphere();castle.classList.toggle('mode-walk',mode==='walk');
@@ -258,9 +231,6 @@ document.getElementById('move-right').onclick=function(){sceneMove(heroX+12);};
 document.getElementById('room-scene').onclick=function(e){if(e.target.closest('button'))return;var rect=this.getBoundingClientRect();sceneMove((e.clientX-rect.left)/rect.width*100);};
 document.getElementById('scene-talk').onclick=function(){var n=life.residents(state,Date.now(),rank()).find(function(n){return n.roomId===sceneRoomId;});document.getElementById('scene-status').textContent=n?n.name+': «'+life.dialogue(n.id,n.activity)+'»':'Здесь пока не с кем поговорить.';};
 document.addEventListener('keydown',function(e){if(document.getElementById('room-view').hidden)return;if(e.key==='Escape')document.getElementById('close-room').click();if(e.key==='ArrowLeft')sceneMove(heroX-8);if(e.key==='ArrowRight')sceneMove(heroX+8);});
-document.getElementById('weather-mode').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.weather.mode=this.value;commit(next);if(next.weather.mode==='hybrid')autoRefreshWeather();};
-document.getElementById('refresh-weather').onclick=async function(){var city=document.getElementById('weather-city').value.trim();var button=this;button.disabled=true;document.getElementById('weather-info').textContent='Загружаю погоду…';try{var result=await weatherApi.lookup(city);var next=JSON.parse(JSON.stringify(state));next.weather.mode='hybrid';commit(next);document.getElementById('weather-info').textContent='Погода обновлена: '+result.city;}catch(e){document.getElementById('weather-info').textContent=e.message+' Используются сохранённые данные или магическая погода.';}finally{button.disabled=false;}};
-document.getElementById('weather').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.weather.selected=this.value;commit(next);};
 document.getElementById('day-night').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.settings.dayNight=this.checked;commit(next);};
 document.getElementById('reduce-motion').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.settings.reducedMotion=this.checked;commit(next);};
 document.getElementById('castle-zoom').onclick=function(){var zoomed=castle.classList.toggle('zoomed');this.textContent=zoomed?'Уместить весь план':'Увеличить план';this.setAttribute('aria-pressed',String(zoomed));document.getElementById('castle-hint').textContent=zoomed?'Проведи пальцем влево или вправо':'Нажми на комнату для выбора';};
@@ -268,8 +238,13 @@ document.getElementById('overview').onclick=function(){mode='overview';render();
 document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Нажми на комнату, чтобы войти внутрь и перемещаться по интерьеру.');render();};
 document.getElementById('add-floor').onclick=function(){var next=JSON.parse(JSON.stringify(state));var f=next.floors.find(function(x){return !x.unlocked;});if(f)f.unlocked=true;else next.floors.push({id:'f'+next.floors.length,capacity:6,unlocked:true});commit(next);announce('Этаж открыт в демонстрационном режиме.');};
 document.getElementById('reset').onclick=function(){if(!confirm('Сбросить только прототип Цитадели?'))return;selected=null;commit(model.initial());announce('Прототип сброшен.');};
-document.getElementById('weather-city').value=weatherApi.savedCity();
 try{render();}catch(error){castle.textContent='Ошибка отрисовки Цитадели: '+(error&&error.message||String(error));castle.style.color='#ffb5b5';console.error('Citadel render failed',error);}
-autoRefreshWeather();document.addEventListener('visibilitychange',function(){if(!document.hidden)autoRefreshWeather();});
+var paint=weatherApi.mount([document.getElementById('scene-weather')]);
+weatherApi.start(function(event){
+ document.getElementById('weather-info').textContent=weatherApi.label(event.type);
+ document.getElementById('room-scene').dataset.weather=event.type;
+ paint(event);
+ applyAtmosphere();
+});
 })();
 </script></body></html>

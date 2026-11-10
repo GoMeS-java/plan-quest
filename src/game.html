@@ -198,7 +198,6 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .stage[data-bg="winter"] .window { background: linear-gradient(#b9cde0, #e6eef6); }
 .stage[data-bg="winter"] .moon { background: #fff7d8; }
 .stage[data-bg="winter"] .star { background: #ffffff; }
-.stage[data-bg="winter"]::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(2px 2px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 70px 110px, #fff, transparent), radial-gradient(3px 3px at 130px 60px, #fff, transparent), radial-gradient(2px 2px at 170px 150px, #fff, transparent); background-size: 200px 200px; animation: snow 9s linear infinite; }
 .stage[data-bg="city"] { --wall: #2c2a3d; --floor: #201e2e; }
 .stage[data-bg="city"] .window { background: linear-gradient(#2a2f6b, #8a4f9a 62%, #e1769a) 0 0 / 100% 100%, linear-gradient(#171a35, #171a35); }
 .stage[data-bg="city"] .window .moon { top: 10px; left: 56px; }
@@ -216,7 +215,6 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .stage[data-bg="library"] { --wall: #3a2b21; --floor: #2a1f17; }
 .stage[data-bg="library"]::before { content: ""; position: absolute; inset: 0 0 26% 0; opacity: .5; background: repeating-linear-gradient(0deg, transparent 0 62px, #5a4330 62px 68px), repeating-linear-gradient(90deg, #7a3b2e 0 7px, #2f5d4a 7px 12px, #c49a3a 12px 16px, #3d4f7a 16px 23px, #8a5a8f 23px 27px, #a35a3a 27px 31px); pointer-events: none; }
 @keyframes twinkle { 50% { opacity: .55; } }
-@keyframes snow { to { background-position: 40px 200px; } }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { font-family: var(--font-display); font-size: 8px; padding: 8px 10px; background: var(--panel-2); color: var(--fg); border: 3px solid var(--line); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .chip[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
@@ -274,11 +272,8 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 @keyframes moonpulse { to { box-shadow: 0 0 22px 10px rgba(230,230,190,.75), inset -5px -3px 0 #cfcaa6; } }
 
 .stage[data-bg="storm"] { --wall: #0c0f22; --floor: #070914; }
-.stage[data-bg="storm"] .window { background: linear-gradient(#05060f, #1d2552); animation: stormsky 5s infinite; }
+.stage[data-bg="storm"] .window { background: linear-gradient(#05060f, #1d2552); }
 .stage[data-bg="storm"] .moon, .stage[data-bg="storm"] .star { display: none; }
-.stage[data-bg="storm"]::before { content: ""; position: absolute; inset: 0 0 26% 0; pointer-events: none; background: linear-gradient(115deg, transparent 0 48%, rgba(220,230,255,.95) 49%, transparent 50%) 62% 0 / 40px 60% no-repeat, rgba(190,205,255,0); animation: lightning 5s infinite; }
-@keyframes lightning { 0%, 46%, 52%, 100% { background-color: rgba(190,205,255,0); opacity: 0; } 47% { opacity: 1; background-color: rgba(190,205,255,.35); } 49% { opacity: .2; } 50% { opacity: 1; background-color: rgba(190,205,255,.5); } }
-@keyframes stormsky { 0%, 46%, 52%, 100% { filter: none; } 47%, 50% { filter: brightness(2.4); } }
 :root[data-aura="nebula"] .hero canvas { animation: bob 1.6s steps(1) infinite, nebula 6s linear infinite; }
 @keyframes nebula { 0% { filter: drop-shadow(0 0 12px rgba(180,120,255,.9)) drop-shadow(0 0 22px rgba(80,200,255,.5)); } 33% { filter: drop-shadow(0 0 14px rgba(80,200,255,.9)) drop-shadow(0 0 22px rgba(255,100,200,.5)); } 66% { filter: drop-shadow(0 0 14px rgba(255,100,200,.9)) drop-shadow(0 0 22px rgba(180,120,255,.5)); } 100% { filter: drop-shadow(0 0 12px rgba(180,120,255,.9)) drop-shadow(0 0 22px rgba(80,200,255,.5)); } }
 /* ---- оформление, фаза 2 ---- */
@@ -310,8 +305,6 @@ h1, h2, .px { font-family: var(--font-display); font-weight: 400; text-wrap: bal
 .stage[data-bg="rain"] { --wall: #323a44; --floor: #242a32; }
 .stage[data-bg="rain"] .window { background: linear-gradient(#6b7886, #aab4c0); }
 .stage[data-bg="rain"] .moon, .stage[data-bg="rain"] .star { display: none; }
-.stage[data-bg="rain"]::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: repeating-linear-gradient(100deg, transparent 0 9px, rgba(200,220,255,.3) 9px 10px); background-size: 40px 80px; animation: rain .5s linear infinite; }
-@keyframes rain { to { background-position: -20px 80px; } }
 .stage[data-frame="gold"] { border-color: #e8b13c; box-shadow: inset 0 0 0 3px #7a5510; }
 .stage[data-frame="double"] { border: 8px double var(--gold); }
 .stage[data-frame="dash"] { border: 4px dashed var(--gold); }
@@ -688,6 +681,7 @@ html,body{overflow-anchor:none}
 </style>
 <link rel="stylesheet" href="citadel-art.css">
 <link rel="stylesheet" href="chains.css">
+<link rel="stylesheet" href="citadel-weather.css">
 <link rel="stylesheet" href="rpg-ui.css">
 
 <div class="app">
@@ -720,7 +714,7 @@ html,body{overflow-anchor:none}
     <div id="ttimer" hidden></div>
   </div>
 
-  <details class="citadel-integrated" id="citadel-home"><summary>♜ ЦИТАДЕЛЬ <span id="citadel-summary">ТВОЁ УБЕЖИЩЕ</span></summary><div class="citadel-inside"><div class="citadel-roadmap"><div class="citadel-roadmap-top"><strong>ЦИТАДЕЛЬ СПЯЩЕГО</strong><span>ТВОЙ ДОМ</span></div><div class="citadel-roadmap-current">Исследуй комнаты, общайся с жителями и следи за своим путём.</div></div><div class="citadel-vitals"><span id="citadel-live-rank">РАНГ …</span><span id="citadel-live-body">ТЕЛО …</span><span id="citadel-live-points">ОСКОЛКИ …</span><span id="citadel-live-cash">ФИНАНСЫ …</span><span id="citadel-live-gear">ЭКИПИРОВКА …</span></div><div class="hero-progress" id="citadel-hero-progress"><span id="citadel-rank-progress"></span><progress id="citadel-rank-meter" max="1" value="0" aria-label="Осколки до следующего ранга"></progress><p id="citadel-progress-feedback" role="status" aria-live="polite">Дела дня развивают героя по существующим правилам.</p><details class="citadel-progress-sources"><summary>Как дела развивают героя</summary><p>Задания, привычки и активность отражаются в осколках и ранге по прежним правилам. Недельные записи и взвешивания учитываются в общем пути.</p><p>Внешность следует записям веса, одежда — выбранной «Оболочке». Ранг открывает Цитадель; её обустройство оплачивается Эссенцией Бездны. Ядра души остаются для «Воспоминаний».</p><p>Финансы показывают настоящие остатки и расходы. Просмотр записей и осмотр комнат не дают наград.</p><nav aria-label="Открыть записи прогресса"><button type="button" data-progress-tab="today">Дела и привычки</button><button type="button" data-progress-tab="week">Неделя</button><button type="button" data-progress-tab="diet">Вес</button><button type="button" data-progress-tab="money">Финансы</button></nav></details></div><nav class="citadel-art-nav" aria-label="Разделы Цитадели"><button type="button" data-art-view="overview" aria-pressed="true">♜ Обзор</button><button type="button" data-art-view="room" aria-pressed="false">⌂ Комната</button><button type="button" data-art-view="upgrades" aria-pressed="false">⚒ Улучшить</button><button type="button" data-art-view="people" aria-pressed="false">♟ Жители</button></nav><div class="citadel-castle" id="citadel-castle" aria-label="Разрез Цитадели"><div class="citadel-sky"><span class="citadel-battlements" aria-hidden="true"></span><span class="citadel-moon" aria-hidden="true"></span><i></i><i></i><i></i><div class="citadel-skyline">ЦИТАДЕЛЬ СПЯЩЕГО</div><button id="fate-hourglass" type="button" aria-label="Песочные часы судьбы"></button></div>
+  <details class="citadel-integrated" id="citadel-home"><summary>♜ ЦИТАДЕЛЬ <span id="citadel-summary">ТВОЁ УБЕЖИЩЕ</span></summary><div class="citadel-inside"><div class="citadel-roadmap"><div class="citadel-roadmap-top"><strong>ЦИТАДЕЛЬ СПЯЩЕГО</strong><span>ТВОЙ ДОМ</span></div><div class="citadel-roadmap-current">Исследуй комнаты, общайся с жителями и следи за своим путём.</div></div><div class="citadel-vitals"><span id="citadel-live-rank">РАНГ …</span><span id="citadel-live-body">ТЕЛО …</span><span id="citadel-live-points">ОСКОЛКИ …</span><span id="citadel-live-cash">ФИНАНСЫ …</span><span id="citadel-live-gear">ЭКИПИРОВКА …</span></div><div class="hero-progress" id="citadel-hero-progress"><span id="citadel-rank-progress"></span><progress id="citadel-rank-meter" max="1" value="0" aria-label="Осколки до следующего ранга"></progress><p id="citadel-progress-feedback" role="status" aria-live="polite">Дела дня развивают героя по существующим правилам.</p><details class="citadel-progress-sources"><summary>Как дела развивают героя</summary><p>Задания, привычки и активность отражаются в осколках и ранге по прежним правилам. Недельные записи и взвешивания учитываются в общем пути.</p><p>Внешность следует записям веса, одежда — выбранной «Оболочке». Ранг открывает Цитадель; её обустройство оплачивается Эссенцией Бездны. Ядра души остаются для «Воспоминаний».</p><p>Финансы показывают настоящие остатки и расходы. Просмотр записей и осмотр комнат не дают наград.</p><nav aria-label="Открыть записи прогресса"><button type="button" data-progress-tab="today">Дела и привычки</button><button type="button" data-progress-tab="week">Неделя</button><button type="button" data-progress-tab="diet">Вес</button><button type="button" data-progress-tab="money">Финансы</button></nav></details></div><nav class="citadel-art-nav" aria-label="Разделы Цитадели"><button type="button" data-art-view="overview" aria-pressed="true">♜ Обзор</button><button type="button" data-art-view="room" aria-pressed="false">⌂ Комната</button><button type="button" data-art-view="upgrades" aria-pressed="false">⚒ Улучшить</button><button type="button" data-art-view="people" aria-pressed="false">♟ Жители</button></nav><div class="citadel-castle" id="citadel-castle" aria-label="Разрез Цитадели"><div class="citadel-sky"><span class="citadel-battlements" aria-hidden="true"></span><span class="citadel-moon" aria-hidden="true"></span><i></i><i></i><i></i><div class="world-weather citadel-world-weather" aria-hidden="true"></div><div class="citadel-skyline">ЦИТАДЕЛЬ СПЯЩЕГО<small class="world-weather-label"></small></div><button id="fate-hourglass" type="button" aria-label="Песочные часы судьбы"></button></div>
 <div class="citadel-floor-label">ВЕРХНИЙ ЯРУС <span>III</span></div><div class="citadel-floor"><button type="button" class="citadel-room citadel-throne" data-croom="throne"><span class="citadel-window"></span><span class="citadel-sconce" aria-hidden="true"></span><span class="citadel-prop citadel-prop-throne"></span><span class="citadel-room-name">ТРОННЫЙ ЗАЛ</span></button><button type="button" class="citadel-room citadel-observatory is-locked" data-croom="observatory" data-min-rank="5"><span class="citadel-window"></span><span class="citadel-prop citadel-prop-scope"></span><span class="citadel-room-name">Неизведанная комната</span><i class="citadel-lock">ЗАКРЫТО</i><span class="citadel-sconce" aria-hidden="true"></span></button></div>
 <div class="citadel-corridor" data-cnode="hall-0"><span>↔ ВЕРХНЯЯ ГАЛЕРЕЯ</span><i class="citadel-stairs" aria-hidden="true"></i><span>↕ ЛЕСТНИЦА</span></div>
 <div class="citadel-floor-label">СРЕДНИЙ ЯРУС <span>II</span></div><div class="citadel-floor"><button type="button" class="citadel-room citadel-rest" data-croom="rest"><span class="citadel-window"></span><span class="citadel-prop citadel-prop-bed"></span><span class="citadel-room-name">ЛИЧНЫЕ ПОКОИ</span><span class="citadel-sconce" aria-hidden="true"></span></button><button type="button" class="citadel-room citadel-study" data-croom="study"><span class="citadel-window"></span><span class="citadel-prop citadel-prop-books"></span><span class="citadel-room-name">КАБИНЕТ</span><span class="citadel-sconce" aria-hidden="true"></span></button></div>
@@ -1040,6 +1034,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
+    <div class="hint"><b>1.5.1 · Капризы Заклятия.</b> Цитадель и Древо Судьбы встречают одну магическую погоду. Обстановка меняется сама, а выбранный пейзаж сохраняется.</div>
     <div class="hint"><b>1.5 · Тайна Заклятия.</b> В коллекции появился раздел «Тайны». Некоторые печати откликаются на новые записи, а Древо Судьбы постепенно раскрывает скрытые ответвления.</div>
     <div class="hint"><b>1.4 · Путь Восхождения.</b> Сохранённые дела открывают новые отметины и узлы древа. Трапезная понимает распространённые русские названия продуктов, а расписание фоновых уведомлений доступно в настройках.</div>
     <div class="release-stamp"><b>Версия __VER__</b><span>Сборка __BUILD__</span></div>
@@ -1151,7 +1146,7 @@ html,body{overflow-anchor:none}
 </dialog>
 <dialog id="destiny-world" aria-labelledby="destiny-world-title">
   <header class="destiny-world-head">
-    <div><small>МИР ЗА ПРЕДЕЛАМИ СНА</small><h2 id="destiny-world-title">Древо Судьбы</h2></div>
+    <div><small>МИР ЗА ПРЕДЕЛАМИ СНА</small><h2 id="destiny-world-title">Древо Судьбы</h2><p class="destiny-weather-label"></p></div>
     <button type="button" class="destiny-world-back">← В Цитадель</button>
   </header>
   <div class="destiny-world-content">
@@ -1160,6 +1155,7 @@ html,body{overflow-anchor:none}
         <g class="destiny-world-far" aria-hidden="true"></g>
         <g class="destiny-world-near"></g>
       </svg>
+      <div class="world-weather destiny-weather" aria-hidden="true"></div>
       <span class="destiny-landmark" aria-hidden="true">БАШНИ СПЯЩЕГО</span>
       <div class="destiny-camera" role="group" aria-label="Камера Древа">
         <button type="button" data-destiny-zoom="out" aria-label="Отдалить Древо">−</button>
@@ -1182,6 +1178,7 @@ html,body{overflow-anchor:none}
 <script src="realm-achievements.js"></script>
 <script src="ascension.js"></script>
 <script src="destiny-world.js"></script>
+<script src="citadel-weather.js"></script>
 <script src="shelter-items.js"></script>
 <script src="forge-awards.js"></script>
 <script src="forge-art.js"></script>
@@ -5214,7 +5211,7 @@ function citadelRoomActions(){
 }
 // One shared light layer per existing scene; no timers, input or save writes.
 document.querySelectorAll('[data-croom],#citadel-interior-stage').forEach(function(scene){var daylight=document.createElement('span');daylight.className='citadel-daylight';daylight.setAttribute('aria-hidden','true');scene.appendChild(daylight);var light=document.createElement('span');light.className='citadel-room-light';light.setAttribute('aria-hidden','true');var source=document.createElement('i');source.className='citadel-light-source';light.appendChild(source);scene.appendChild(light);});
-document.querySelectorAll('.citadel-daylight,.stage .window').forEach(function(layer){['citadel-window-weather','citadel-window-frost','citadel-realm-detail'].forEach(function(name){var ice=document.createElement('i');ice.className=name;ice.setAttribute('aria-hidden','true');layer.appendChild(ice);});});
+document.querySelectorAll('.citadel-daylight,.stage .window').forEach(function(layer){['citadel-window-weather','citadel-window-frost','citadel-realm-detail'].forEach(function(name){var ice=document.createElement('i');ice.className=name+(name==='citadel-window-weather'?' world-weather':'');ice.setAttribute('aria-hidden','true');layer.appendChild(ice);});});
 document.querySelectorAll('.hero').forEach(function(host){var aura=document.createElement('span');aura.className='shared-aura-layer';aura.setAttribute('aria-hidden','true');host.appendChild(aura);});
 document.querySelectorAll('.stage').forEach(function(host){var frame=document.createElement('span');frame.className='reward-frame';frame.setAttribute('aria-hidden','true');host.appendChild(frame);});
 var citadelWalkStage=$('citadel-interior-stage');citadelWalkStage.tabIndex=0;citadelWalkStage.setAttribute('role','group');citadelWalkStage.setAttribute('aria-label','Комната. Нажми на пол или используй стрелки, чтобы пройти.');
@@ -5597,7 +5594,25 @@ function citadelRoomJournal() {
  var button=$('citadel-room-journal-open');button.textContent=tab==='shop'?'ОТКРЫТЬ ВОСПОМИНАНИЯ':tab==='wardrobe'?'ОТКРЫТЬ ОБОЛОЧКУ':tab==='week'?'ОТКРЫТЬ ХРОНИКУ':tab==='goals'?'ОТКРЫТЬ ПУТЬ':'ОТКРЫТЬ ЗАДАНИЯ';button.onclick=function(){citadelNavigate(tab,target);};
 }
 
-function syncCitadelTime(){var hour=new Date().getHours(),phase=hour>=6&&hour<12?'УТРО':hour>=12&&hour<18?'ДЕНЬ':hour>=18&&hour<23?'ВЕЧЕР':'НОЧЬ',castle=$('citadel-castle');if(castle)castle.dataset.phase=phase;$('citadel-interior-stage').dataset.phase=phase;$('citadel-time').textContent=phase+' · '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+function syncCitadelTime(){
+ var now=new Date(),phase=CitadelWeather.phaseAt(now),label=CitadelWeather.phaseLabel(phase);
+ document.documentElement.dataset.worldPhase=phase;
+ $('citadel-castle').dataset.phase=label;
+ $('citadel-interior-stage').dataset.phase=label;
+ $('citadel-time').textContent=label+' · '+now.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+}
+var showWorldWeather=CitadelWeather.mount(document.querySelectorAll('.world-weather'));
+var citadelWeatherLabel=document.querySelector('.world-weather-label'),destinyWeatherLabel=document.querySelector('.destiny-weather-label');
+CitadelWeather.start(function(event,phase){
+ var root=document.documentElement,name=CitadelWeather.label(event.type);
+ root.dataset.worldWeather=event.type;
+ root.dataset.worldWeatherId=event.id;
+ root.dataset.worldWeatherIntensity=event.intensity;
+ citadelWeatherLabel.textContent='· '+name;
+ destinyWeatherLabel.textContent=name+' · '+CitadelWeather.phaseLabel(phase).toLowerCase();
+ showWorldWeather(event);
+ syncCitadelTime();
+});
 // Four visual frames derive from the equipped shared hero. No second movement loop.
 var citadelHeroSource='',citadelHeroSheet='';
 function citadelHeroFrames(copy){

@@ -1,0 +1,128 @@
+/* Shared weather paint. Two fixed slots crossfade in place on each surface. */
+.world-weather{position:absolute;inset:0;overflow:hidden;pointer-events:none;isolation:isolate}
+.citadel-world-weather{z-index:1}
+.destiny-world-view>.world-weather{z-index:1}
+.destiny-world-view :is(.destiny-camera,.destiny-landmark){z-index:2}
+.citadel-window-weather{position:absolute;inset:0;z-index:2;mask:var(--window-mask,var(--aperture-mask)) center/100% 100% no-repeat;mask-mode:luminance}
+.stage .window .citadel-window-weather{mask:none}
+.citadel-skyline .world-weather-label{display:inline-block;margin-inline-start:.55em;color:#f0dbe7;letter-spacing:0;font-size:10px;font-weight:500}
+.destiny-weather-label{color:#d5b6cb;font:11px/1.3 system-ui,sans-serif;margin:4px 0 0}
+.world-weather-slot,.world-weather-slot:before,.world-weather-slot:after{position:absolute;inset:0;pointer-events:none}
+.world-weather-slot{
+  --weather-veil:0;--weather-particle-opacity:.68;--weather-rate:1;--weather-speed:4s;
+  --weather-x:0px;--weather-y:36px;--weather-tile:88px 72px;
+  opacity:0;visibility:hidden;transition:opacity .62s ease,visibility 0s linear .62s
+}
+.world-weather-slot.is-current{opacity:1;visibility:visible;transition-delay:0s}
+.world-weather-slot[data-intensity="1"]{--weather-particle-opacity:.48;--weather-rate:1.3}
+.world-weather-slot[data-intensity="3"]{--weather-particle-opacity:.96;--weather-rate:.72}
+.world-weather-slot:before{
+  content:'';opacity:var(--weather-veil);
+  background:
+    radial-gradient(ellipse at 15% 12%,var(--weather-cloud,#8b83a4a8),transparent 63%),
+    radial-gradient(ellipse at 82% 20%,var(--weather-cloud,#756e8ea3),transparent 66%),
+    linear-gradient(180deg,var(--weather-shadow,#201b3857),transparent 74%)
+}
+.world-weather-particles{
+  position:absolute;inset:-48px;opacity:var(--weather-particle-opacity);
+  background-image:var(--weather-texture,none),var(--weather-extra,none);background-size:var(--weather-tile);background-position:0 0,29px 14px;
+  animation:world-weather-flow calc(var(--weather-speed) * var(--weather-rate)) linear var(--weather-offset,0s) infinite;
+}
+.world-weather-slot:is([data-kind="clear"],[data-kind="clouds"],[data-kind="fog"]) .world-weather-particles{display:none}
+.world-weather-slot[data-intensity="3"]:is([data-kind="downpour"],[data-kind="thunder"],[data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"]){--weather-extra:var(--weather-texture)}
+@keyframes world-weather-flow{from{transform:translate(calc(-1 * var(--weather-x)),calc(-1 * var(--weather-y)))}to{transform:translate(var(--weather-x),var(--weather-y))}}
+.world-weather-slot[data-kind="clear"]:before{opacity:.38;background:radial-gradient(ellipse at 73% 14%,#dcc4b33d,transparent 63%)}
+.world-weather-slot[data-kind="clouds"]{--weather-veil:.59;--weather-cloud:#7f748bb5;--weather-shadow:#1c193e78}
+.world-weather-slot[data-kind="clouds"][data-intensity="3"]{--weather-veil:.87}
+.world-weather-slot:is([data-kind="drizzle"],[data-kind="downpour"],[data-kind="thunder"]){
+  --weather-texture:url('assets/citadel/weather-rain.svg');--weather-cloud:#586885ab;--weather-y:36px;--weather-speed:.85s;--weather-veil:.6
+}
+.world-weather-slot[data-kind="drizzle"]{--weather-tile:88px 72px;--weather-speed:1.6s;--weather-veil:.38}
+.world-weather-slot:is([data-kind="downpour"],[data-kind="thunder"]){--weather-tile:55px 54px;--weather-y:27px}
+.world-weather-slot[data-kind="thunder"]{--weather-veil:.86;--weather-cloud:#515178b9;--weather-shadow:#221735c2}
+.world-weather-slot:is([data-kind="flurries"],[data-kind="snowfall"],[data-kind="blizzard"]){
+  --weather-texture:url('assets/citadel/weather-snow.svg');--weather-y:36px;--weather-speed:5.5s;--weather-veil:.47;--weather-cloud:#a2bdd899
+}
+.world-weather-slot[data-kind="flurries"]{--weather-veil:.24}
+.world-weather-slot[data-kind="snowfall"]{--weather-tile:68px 64px;--weather-y:32px;--weather-speed:3.8s}
+.world-weather-slot[data-kind="blizzard"]{
+  --weather-veil:.87;--weather-x:36px;--weather-y:27px;--weather-tile:72px 54px;--weather-speed:1.7s;--weather-cloud:#a4c2d2bd
+}
+.world-weather-slot[data-kind="fog"]:before,
+.world-weather-slot[data-kind="blizzard"]:after{
+  content:'';background:
+    radial-gradient(ellipse at 21% 69%,#c4c6dc86,transparent 68%),
+    radial-gradient(ellipse at 84% 53%,#b4accaa6,transparent 64%),
+    linear-gradient(180deg,#36304932,transparent 38%,#9195b073 77%,#77788e41);
+  animation:world-weather-mist 7s ease-in-out var(--weather-offset,0s) infinite alternate
+}
+.world-weather-slot[data-kind="fog"]{--weather-veil:.76}
+.world-weather-slot[data-kind="fog"]:before{opacity:var(--weather-particle-opacity)}
+.world-weather-slot[data-kind="blizzard"]:after{opacity:.53}
+@keyframes world-weather-mist{from{transform:translateX(-2%) scale(1.09)}to{transform:translateX(2%) scale(1.11)}}
+
+.world-weather-slot[data-kind="spellstorm"]{
+  --weather-veil:.92;--weather-cloud:#8750b095;--weather-shadow:#3d214eab;--weather-speed:3.6s;
+  --weather-x:43px;--weather-y:28px;--weather-tile:86px 56px;
+  --weather-texture:radial-gradient(2px 2px at 8px 12px,#ffd1fa 80%,transparent),radial-gradient(1.5px 2px at 56px 43px,#c6a5f6 80%,transparent)
+}
+.world-weather-slot[data-kind="spellstorm"]:before{
+  background:
+    repeating-linear-gradient(115deg,transparent 0 49%,#dba1ff4f 53%,#9d74c534 56%,transparent 66% 100%),
+    radial-gradient(ellipse at 20% 20%,#7d3da4b0,transparent 70%),
+    radial-gradient(ellipse at 83% 62%,#a14d967d,transparent 71%);
+  animation:world-weather-mist 4.8s ease-in-out var(--weather-offset,0s) infinite alternate
+}
+.world-weather-slot:is([data-kind="thunder"],[data-kind="spellstorm"]):after{
+  content:'';inset:0 15% 5% 20%;opacity:0;
+  background:linear-gradient(145deg,transparent 18%,#ecedffba 42%,#ffdbf5a8 65%,transparent 86%);
+  clip-path:polygon(58% 0,51% 24%,60% 23%,49% 46%,55% 45%,38% 87%,48% 52%,42% 54%,52% 31%,46% 32%);
+  animation:world-weather-bolt 12s steps(1,end) var(--weather-offset,0s) infinite
+}
+.world-weather-slot[data-kind="spellstorm"]:after{background:#db9cf0;inset:0 7% 7% 13%}
+@keyframes world-weather-bolt{0%,83%,86%,100%{opacity:0}84%{opacity:.74}}
+:root[data-world-weather="spellstorm"] #destiny-world .destiny-seal.is-open .destiny-rune{stroke:#f4c3fc}
+:root[data-world-weather="spellstorm"] #destiny-world .destiny-seal.is-open .destiny-stone{stroke:#d297df}
+
+:root[data-citadel-bg="forest"] .world-weather-slot:is([data-kind="drizzle"],[data-kind="downpour"],[data-kind="thunder"]){
+  --weather-cloud:#668f8390;--weather-shadow:#20383d82
+}
+:root[data-citadel-bg="forest"] .world-weather-slot:is([data-kind="drizzle"],[data-kind="downpour"]):before{
+  background:radial-gradient(ellipse at 18% 86%,#b8d8c6a8,transparent 66%),radial-gradient(ellipse at 82% 67%,#76978d8a,transparent 62%),linear-gradient(180deg,#16382e5d,transparent)
+}
+:root:is([data-citadel-bg="abyss"],[data-citadel-bg="watch"],[data-citadel-bg="storm"]) .world-weather-slot[data-kind="thunder"]{
+  --weather-cloud:#33375ac9;--weather-shadow:#171026b8
+}
+:root[data-citadel-bg="winter"] .world-weather-slot:is([data-kind="flurries"],[data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"],[data-kind="thunder"]){
+  --weather-texture:url('assets/citadel/weather-snow.svg');--weather-cloud:#b0d1e5bc
+}
+:root[data-citadel-bg="winter"] .world-weather-slot:is([data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"],[data-kind="thunder"]){
+  --weather-x:28px;--weather-y:24px;--weather-tile:56px 48px;--weather-speed:2s
+}
+:root[data-citadel-bg="winter"] .citadel-world-weather .world-weather-slot:is([data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"],[data-kind="thunder"]){
+  --weather-speed:4.6s;--weather-particle-opacity:.78
+}
+:root[data-citadel-bg="winter"] .citadel-window-weather .world-weather-slot:is([data-kind="flurries"],[data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"],[data-kind="thunder"]){
+  --weather-x:28px;--weather-y:24px;--weather-tile:56px 48px;--weather-speed:1.4s;--weather-veil:.82;--weather-particle-opacity:.96
+}
+:root[data-citadel-bg="winter"] .world-weather-slot:is([data-kind="spellstorm"],[data-kind="thunder"]):before{
+  background:radial-gradient(ellipse at 19% 64%,#c2e4f0aa,transparent 65%),radial-gradient(ellipse at 83% 46%,#947dbbba,transparent 74%)
+}
+
+.world-weather:after{content:'';position:absolute;inset:0;pointer-events:none;transition:background-color .45s}
+:root[data-world-phase="morning"] .world-weather:after{background-color:#e6b7901a}
+:root[data-world-phase="day"] .world-weather:after{background-color:#bed8f018}
+:root[data-world-phase="evening"] .world-weather:after{background-color:#ac718622}
+:root[data-world-phase="night"] .world-weather:after{background-color:#1c214829}
+.world-weather-slot:not(.is-current) :is(.world-weather-particles),.world-weather-slot:not(.is-current):before,.world-weather-slot:not(.is-current):after,
+.citadel-suspended .world-weather-slot :is(.world-weather-particles),.citadel-suspended .world-weather-slot:before,.citadel-suspended .world-weather-slot:after,
+:root[data-destiny-scene] #citadel-home .world-weather-particles,:root[data-destiny-scene] #citadel-home .world-weather-slot:before,:root[data-destiny-scene] #citadel-home .world-weather-slot:after{
+  animation-play-state:paused!important
+}
+.citadel-room .world-weather-particles,.citadel-room .world-weather-slot:before,.citadel-room .world-weather-slot:after{animation:none!important}
+#citadel-home:not([data-ui-view="overview"]) .citadel-sky .world-weather,
+#destiny-world:not([open]) .world-weather,#citadel-interior[hidden] .world-weather{display:none}
+@media(prefers-reduced-motion:reduce){
+  .world-weather:after,.world-weather-slot,.world-weather-particles,.world-weather-slot:before,.world-weather-slot:after{animation:none!important;transition:none!important}
+}
+.reduce-motion .world-weather-slot,.reduce-motion .world-weather-particles,.reduce-motion .world-weather-slot:before,.reduce-motion .world-weather-slot:after{animation:none!important;transition:none!important}

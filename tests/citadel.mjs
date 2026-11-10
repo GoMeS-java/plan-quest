@@ -34,6 +34,10 @@ let ordinal=0,passed=0,currentCheck='setup';
 async function check(name,fn){if(ordinal++%totalShards!==shard-1)return;if(process.env.TEST_FILTER&&!new RegExp(process.env.TEST_FILTER).test(name))return;currentCheck=name;await fn();passed++;console.log('PASS',name);}
 const date='2026-10-30';
 const initial={'cfg/opening':{cash:1200.5,card:3400},'weights/test':{kg:143.7,date,ts:1},['days/'+date]:{q:[false,false,false,false,false,false,false,false,false,false],steps:1200,kcal:2100},'spont/old':{name:'Synthetic task',date,done:false,heavy:true,ts:1},'cfg/outfit':{outer:'none'}};
+function weatherFixture(day,type='blizzard',intensity=3){
+ const startedAt=Date.parse(day+'T13:59:00+03:00');
+ return {'plan.world-weather.v1':JSON.stringify({version:1,id:'fixture-weather',type,intensity,startedAt,endsAt:startedAt+45*60_000})};
+}
 // Computed keys are assigned separately to remain compatible with plain JavaScript.
 async function open({width=390,height=844,mobile=width<600,seed=initial,legacy={},base=false,day=date,sw=false,failUpgrade=false,shell=false,slowCPU=false,fresh=false}={}){
  const context=await browser.newContext({viewport:{width,height},isMobile:mobile,hasTouch:mobile,timezoneId:'Europe/Moscow',reducedMotion:'reduce',serviceWorkers:sw?'allow':'block'});
@@ -772,7 +776,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'visual fixtures and selection cannot grant achievements or rewards');await context.close();
  });
  await check('1.1 winter fills top and bottom panes while preserving frames and foreground at every stage',async()=>{
-  const day='2027-09-15';const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter'}},day,width:1280,height:940,mobile:false});
+  const day='2027-09-15';const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter'}},legacy:weatherFixture(day),day,width:1280,height:940,mobile:false});
   const pixels=await p.evaluate(async()=>{
    async function mask(level){const img=new Image();img.src='assets/citadel/rest-windows-'+level+'.svg';await img.decode();const c=document.createElement('canvas');c.width=480;c.height=320;const x=c.getContext('2d');x.drawImage(img,0,0,480,320);return x.getImageData(0,0,480,320).data;}
    const a=await mask(1),b=await mask(3);let top=0,bottom=0,occluded=0;const upper=[],lower=[];for(let y=31;y<176;y++)for(let x=106;x<150;x++){const i=(y*480+x)*4;if(b[i]>240){if(y<39)top++;if(y>143)bottom++;if(y>40&&y<58)upper.push([x,y]);if(y>147&&y<162)lower.push([x,y]);}}for(let i=0;i<a.length;i+=4)if(a[i]>240&&b[i]<10)occluded++;return {top,bottom,occluded,mullion:b[(119*480+128)*4],points:[upper[Math.floor(upper.length/2)],lower[Math.floor(lower.length/2)]]};
@@ -787,22 +791,26 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert(colors.every(c=>c[2]>=c[0]),'upper and lower glass must show cold exterior colors, never yellow letterboxing');await context.close();
  });
  await check('1.1 earned winter taiga has quiet roof snow, window blizzard and frost with reduced motion',async()=>{
-  const day='2027-09-15',seed={...landscapeSeed(),'cfg/rare':{z02:day}};const {page:p,context}=await open({shell:true,seed,day,width:1280,height:940,mobile:false});
+  const day='2027-09-15',seed={...landscapeSeed(),'cfg/rare':{z02:day}};const {page:p,context}=await open({shell:true,seed,legacy:weatherFixture(day),day,width:1280,height:940,mobile:false});
   await p.emulateMedia({reducedMotion:'no-preference'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="b_winter"]').click();await p.clock.runFor(80);await waitForIdle(p);await castle(p);
   const sky=p.locator('.citadel-sky');assert((await sky.evaluate(n=>getComputedStyle(n).backgroundImage)).includes('realm-winter.svg'));
-  const outside=await p.locator('.citadel-realm-particles').evaluate(n=>({name:getComputedStyle(n).animationName,duration:getComputedStyle(n).animationDuration,snow:getComputedStyle(n,'::before').backgroundImage}));assert.equal(outside.name,'citadelQuietSnow');assert.equal(outside.duration,'18s');assert(outside.snow.includes('snow-roof.svg'));
+  const outside=p.locator('.citadel-world-weather .is-current .world-weather-particles');
+  const exterior=await outside.evaluate(n=>({name:getComputedStyle(n).animationName,duration:parseFloat(getComputedStyle(n).animationDuration)}));assert.equal(exterior.name,'world-weather-flow');
+  assert((await p.locator('.citadel-realm-particles').evaluate(n=>getComputedStyle(n,'::before').backgroundImage)).includes('snow-roof.svg'));
   await sky.screenshot({path:resolve(out,'v11-winter-castle-desktop.png')});
   for(let frame=0;frame<8;frame++){await p.waitForTimeout(180);await sky.screenshot({path:resolve(out,'v11-winter-sky-frame-'+frame+'.png')});}
   await p.evaluate(async()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();await __qa.upgrade('rest',1);await __qa.idle();await __qa.upgrade('rest',2);await __qa.idle();});
-  const stage=p.locator('#citadel-interior-stage');const weather=stage.locator('.citadel-window-weather');const snow=await weather.evaluate(n=>({mask:getComputedStyle(n).maskImage,name:getComputedStyle(n).animationName,duration:getComputedStyle(n).animationDuration,pointer:getComputedStyle(n).pointerEvents}));assert(snow.mask.includes('rest-windows-3.svg'));assert.equal(snow.name,'citadelWindowBlizzard');assert.equal(snow.duration,'1.8s');assert.equal(snow.pointer,'none');assert((await stage.locator('.citadel-window-frost').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('rest-frost-3.svg'));
+  const stage=p.locator('#citadel-interior-stage');const weather=stage.locator('.citadel-window-weather');const drops=weather.locator('.is-current .world-weather-particles');
+  assert((await weather.evaluate(n=>getComputedStyle(n).maskImage)).includes('rest-windows-3.svg'));
+  const snow=await drops.evaluate(n=>({name:getComputedStyle(n).animationName,duration:parseFloat(getComputedStyle(n).animationDuration),pointer:getComputedStyle(n).pointerEvents}));assert.equal(snow.name,'world-weather-flow');assert(snow.duration<exterior.duration);assert.equal(snow.pointer,'none');assert((await stage.locator('.citadel-window-frost').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('rest-frost-3.svg'));
   await stage.screenshot({path:resolve(out,'v11-winter-room-desktop.png')});
   for(let frame=0;frame<8;frame++){await p.waitForTimeout(180);await stage.screenshot({path:resolve(out,'v11-winter-room-frame-'+frame+'.png')});}
-  await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await weather.evaluate(n=>getComputedStyle(n).animationName),'none');assert.equal(await p.locator('.citadel-realm-particles').evaluate(n=>getComputedStyle(n).animationName),'none');
-  await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('#citadel-home').evaluate(n=>n.classList.add('citadel-suspended'));assert.equal(await weather.evaluate(n=>getComputedStyle(n).animationPlayState),'paused');await p.locator('#citadel-home').evaluate(n=>n.classList.remove('citadel-suspended'));
+  await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await drops.evaluate(n=>getComputedStyle(n).animationName),'none');assert.equal(await outside.evaluate(n=>getComputedStyle(n).animationName),'none');
+  await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('#citadel-home').evaluate(n=>n.classList.add('citadel-suspended'));assert.equal(await drops.evaluate(n=>getComputedStyle(n).animationPlayState),'paused');await p.locator('#citadel-home').evaluate(n=>n.classList.remove('citadel-suspended'));
   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'winter');await context.close();
  });
  await check('1.1 winter frost and blizzard stay in real apertures across rooms and Android widths',async()=>{
-  const day='2027-09-15';const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter'}},day});const before=await docs(p);
+  const day='2027-09-15';const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter'}},legacy:weatherFixture(day),day});const before=await docs(p);
   for(const room of ['rest','throne','study','archive','forge','observatory','gatehouse','refectory','cloister','vault']){
    await p.evaluate(room=>{__qa.move(room);document.querySelector('#citadel-enter').click();},room);const layer=p.locator('#citadel-interior-stage .citadel-daylight');
    if(room==='vault')assert.equal(await layer.evaluate(n=>getComputedStyle(n).display),'none','closed vault has no invented window');else{assert((await layer.locator('.citadel-window-weather').evaluate(n=>getComputedStyle(n).maskImage)).includes(room+'-windows-1.svg'));assert((await layer.locator('.citadel-window-frost').evaluate(n=>getComputedStyle(n).backgroundImage)).includes(room+'-frost-1.svg'));}
@@ -3086,8 +3094,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  async function checkPwaUpgrade(versions){
   for(const [oldVersion,previous] of versions){
-  const diaryVersion=['1.3.3','1.3.4','1.3.5','1.4','1.4.1'].includes(oldVersion);
-  const workspaceVersion=['1.3.4','1.3.5','1.4','1.4.1'].includes(oldVersion);
+  const diaryVersion=['1.3.3','1.3.4','1.3.5','1.4','1.4.1','1.5'].includes(oldVersion);
+  const workspaceVersion=['1.3.4','1.3.5','1.4','1.4.1','1.5'].includes(oldVersion);
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(['1.3','1.3.2'].includes(oldVersion)?['chains.js','chains-ui.js','chains.css']:[]),...(diaryVersion?['food.js','food-ui.js']:[]),...(workspaceVersion?['room-workspace.js']:[]),...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   for(const name of ['realm-achievements.js','ascension.js']){
     const available=execFileSync('git',['ls-tree',previous,'--','docs/'+name],{encoding:'utf8'});
@@ -3133,7 +3141,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.deepEqual(migrated,expected,'an upgrade preserves records and adds only the expected migration fields and earned meal receipt');
   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
   await context.setOffline(true);await p.reload();await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);assert.deepEqual(await docs(p),migrated);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.equal(await p.locator('[data-croom="archive"] .citadel-room-name').textContent(),'Неизведанная комната');assert.equal(await p.locator('[data-croom="rest"]').getAttribute('data-revealed'),'true');
-  if(oldVersion==='1.4'||oldVersion==='1.4.1'){
+  if(oldVersion==='1.4'||oldVersion==='1.4.1'||oldVersion==='1.5'){
     await dismiss(p);
     await p.evaluate(()=>window.__citadelShell.openFood(false));
     const food=p.locator('#food');
@@ -3154,8 +3162,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   ['1.3.2','6e803409efc1afd695401f2959b0895039287e58'],['1.3.3','212442e'],['1.3.4','1babd748d46766a396aa6a9c92ea0e8ecb0da279'],
   ['1.3.5','03f3e1c1c3c0ed08f938f61129dc534c10d5b1cc']
  ]));
- await check('1.4 and 1.4.1 to current PWA upgrade preserves saves and exposes old products offline',()=>checkPwaUpgrade([
-  ['1.4','769c9e00a878e8caaf3bb78c913bc9ccefe6fe8b'],['1.4.1','d933f63a0f3805b32d13eb8c634d614cec934283']
+ await check('1.4, 1.4.1 and 1.5 to current PWA upgrade preserves saves and exposes old products offline',()=>checkPwaUpgrade([
+  ['1.4','769c9e00a878e8caaf3bb78c913bc9ccefe6fe8b'],['1.4.1','d933f63a0f3805b32d13eb8c634d614cec934283'],['1.5','8fb197e0a50726ce1ddd67647f2fb9f350a94007']
  ]));
  await check('0.68 to 0.69 PWA update replaces cached UI while preserving synthetic saves',async()=>{
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','fbe6f935569a798b5b9ed3109b7a260668e8b96a:docs/'+name]));

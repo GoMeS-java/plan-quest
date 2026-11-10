@@ -120,8 +120,12 @@ console.log('PASS spell stages, redacted previews, existing saves, edit/delete, 
 
 const approved=execFileSync('git',['show','2c1ff84:src/rpg-ui.css'],{encoding:'utf8'});
 // The resident renderer owns its frame and sizing rules. Keep the scenery snapshot strict.
-const base=css=>css.replace(/\r\n/g,'\n').split('\n.profile-system-hub')[0].split('\n').filter(line=>
+const base=css=>css.replace(/\r\n/g,'\n').replace('.citadel-window-weather,.citadel-window-frost{','.citadel-window-frost{').split('\n.profile-system-hub')[0].split('\n').filter(line=>
  !line.startsWith('@keyframes citadelInterior') &&
+ !/citadelWindow|citadelQuietSnow|citadelNearSnow|citadel-window-weather|stage\[data-bg="winter"\]::before/.test(line) &&
+ !line.startsWith(':root[data-citadel-bg="winter"] .citadel-realm-particles') &&
+ !line.startsWith(':root[data-realm-landscape]:not(') &&
+ !line.startsWith('/* Quiet snowfall outside;') && !line.startsWith('/* Winter framing follows') &&
  !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person') &&
  !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:max(22px,7.5%)') &&
  !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:var(--citadel-room-actor-width)') &&
