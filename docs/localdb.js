@@ -109,20 +109,28 @@
   function mutate(fn) {
     function commit() {
       if (upgradeBlocked) throw storageError();
-      var previous=persistedDocs(), next = clone(previous), changed = false;
+      var previous=persistedDocs(), next = clone(previous), changed = false, checkpointNeeded = false;
       var tx = {
         get: function (p) { return next[p] && clone(next[p].d); },
         list: function (c) { return Object.keys(next).filter(function (p) { return colOf(p) === c && next[p].d != null; }).map(function (p) { return Object.assign({}, clone(next[p].d), { id: idOf(p) }); }); },
-        set: function (p, d) { next[p] = { d: clone(d), u: Math.max(Date.now(), (next[p] && next[p].u || 0) + 1) }; changed = true; },
+        set: function (p, d) {
+          next[p] = { d: clone(d), u: Math.max(Date.now(), (next[p] && next[p].u || 0) + 1) };
+          changed = true;
+          if(!historyPath(p))checkpointNeeded = true;
+        },
         delete: function (p) { tx.set(p, null); }
       };
       var result = fn(tx);
       if (result && typeof result.then === 'function') throw new Error('Transaction callback must be synchronous');
       if (changed) {
         validDocs(next);
-        if (Object.keys(previous).length && !jset(CHECKPOINT, {v:1,docs:previous,savedAt:Date.now()})) { writeFailure=true; renderChip(); throw storageError(); }
-        if (!jset(KEY, { v: 1, docs: next })) { writeFailure = true; renderChip(); var error = new Error('Storage unavailable'); error.code = 'quota_exceeded'; throw error; }
-        docs = next; writeFailure = false; dirty = true; revision++; notify(); renderChip(); scheduleSync();
+        // A derived observation must not replace the copy from before the gameplay change it records.
+        if (checkpointNeeded && Object.keys(previous).length && !jset(CHECKPOINT, {v:1,docs:previous,savedAt:Date.now()})) { writeFailure=true; renderChip(); throw storageError(); }
+        if (!jset(KEY, { v: 1, docs: next })) {
+          if(checkpointNeeded){writeFailure = true; renderChip();}
+          var error = new Error('Storage unavailable'); error.code = 'quota_exceeded'; throw error;
+        }
+        docs = next; if(checkpointNeeded)writeFailure = false; dirty = true; revision++; notify(); renderChip(); scheduleSync();
       }
       return result;
     }

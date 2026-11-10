@@ -1310,7 +1310,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const divergent=structuredClone((await docs(p))['cfg/fate']);for(const r of Object.values(divergent.d.entries))for(const piece of Object.values(r.pieces))piece.presented=false;divergent.u+=1000;
   await p.evaluate(record=>PlanSync.importObj({v:1,docs:{'cfg/fate':record}}),divergent);await p.waitForTimeout(60);assert.deepEqual((await docs(p))['cfg/fate'].d,before);
   const older=structuredClone(divergent);older.u=0;older.d.active='';await p.evaluate(record=>PlanSync.importObj({v:1,docs:{'cfg/fate':record}}),older);await p.waitForTimeout(40);assert.equal((await docs(p))['cfg/fate'].d.active,before.active);
-  for(const [path,record]of Object.entries(old.docs))assert.deepEqual((await docs(p))[path].d,record.d);await context.close();
+  await p.waitForFunction(echo=>VkachWorldHistory.frames(PlanSync._docs())[0]?.echo===echo,before.active);
+  const after=await docs(p);
+  for(const [path,record]of Object.entries(old.docs)){
+   if(path.startsWith('world-history/'))restoredRecord(path,after[path],{d:{...record.d,frame:{...record.d.frame,echo:before.active}}});
+   else assert.deepEqual(after[path].d,record.d,path);
+  }
+  await context.close();
  });
  await check('0.79 conflict choices retain discoveries from both devices even with an older remote ledger',async()=>{
   for(const choice of ['local','remote']){
@@ -2842,7 +2848,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   const first=await speak('Хранительница');const second=await speak('Хранительница');assert.notEqual(first,second,'explicit conversations should vary');
   await p.evaluate(()=>__qa.render());assert.equal(await p.locator('#citadel-npc-dialogue').innerText(),second,'idle renders must not rotate speech');
   await p.locator('#qlist button.q').first().click();await waitForIdle(p);await p.waitForTimeout(70);await dismiss(p);
-  assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/ещё одно дело завершено/);
+  assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/ещё одно дело завершено|Твоё сегодняшнее дело стало частью пути/);
+  assert.equal((await docs(p))['days/'+day].d.q[0],true);
   const changed=structuredClone((await docs(p))['days/'+day].d);changed.q[7]=true;await write(p,'days/'+day,changed);
   assert.match(await p.locator('#citadel-npc-dialogue').innerText(),/Недельные записи продвинулись/);
   await p.evaluate(()=>{__qa.upgrade('forge',1);return __qa.idle();});await p.waitForFunction(()=>__qa.roomLevel('forge')===2);
@@ -2968,6 +2975,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('0.71 rolling checkpoint preserves the previous snapshot and fails closed when full',async()=>{
   const {page:p,context}=await open();const before=await docs(p);
   await write(p,'weights/checkpoint',{kg:100,date,ts:2});
+  await p.waitForFunction(()=>VkachWorldHistory.frames(PlanSync._docs())[0]?.weight?.[1]===100);
   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.checkpoint.v1')).docs),before);
   const durable=await docs(p);
   assert(await p.evaluate(async()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='plan.checkpoint.v1')throw new DOMException('Synthetic quota','QuotaExceededError');return original.call(this,k,v);};try{try{const db=window.PlanDB;await db.doc('weights/checkpoint').set({kg:110});return false;}catch{return true;}}finally{Storage.prototype.setItem=original;}}));
