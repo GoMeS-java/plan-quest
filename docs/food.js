@@ -161,6 +161,80 @@
     if (old?.complete) tx.set(path, stamp({ date, complete: false }, old, now));
   }
 
+  function searchName(value) {
+    return value.normalize('NFC').toLowerCase().replace(/ё/g, 'е').trim().replace(/\s+/g, ' ');
+  }
+
+  function catalogMode(row) {
+    if (keys.every(key => row.values[key] == null)) return 'unknown';
+    return row.estimated || keys.some(key => row.values[key] == null) ? 'estimate' : 'exact';
+  }
+
+  function productKey(row) {
+    const mode = row.mode ?? catalogMode(row);
+    // Compare equivalent bases without changing the values stored for calculations.
+    const perGram = keys.map(key => mode === 'unknown' || row.values[key] == null
+      ? null : (row.values[key] / row.base).toPrecision(14));
+    return JSON.stringify([searchName(row.name), mode, perGram]);
+  }
+
+  function productIndex(catalog) {
+    const index = new Map();
+    for (const row of catalog) {
+      if (row.type !== 'product' || !readable('catalog', row)) continue;
+      const key = productKey(row);
+      const current = index.get(key);
+      if (!current || (current.automatic && !row.automatic)) index.set(key, row);
+    }
+    return index;
+  }
+
+  function productId(key) {
+    // Stable across devices so two offline saves of the same food share a document.
+    let hash = 0xcbf29ce484222325n;
+    for (let i = 0; i < key.length; i++) {
+      hash = BigInt.asUintN(64, (hash ^ BigInt(key.charCodeAt(i))) * 0x100000001b3n);
+    }
+    return 'remembered-' + hash.toString(16);
+  }
+
+  function availableProductId(tx, key) {
+    let id = productId(key);
+    // An edited product keeps its original ID for existing meal references.
+    for (let slot = 1; tx.get(collections.catalog + '/' + id); slot++) {
+      id = productId(JSON.stringify([key, slot]));
+    }
+    return id;
+  }
+
+  function rememberedProduct(item, id, lastUsed) {
+    return { id, type: 'product', name: item.name, note: '', base: item.base, values: item.values,
+      estimated: item.mode === 'estimate', automatic: true, favorite: false, lastGrams: item.grams, lastUsed };
+  }
+
+  function rememberItems(tx, items, previous, now) {
+    const catalog = productIndex(tx.list(collections.catalog));
+    const priorItems = new Map((previous?.items ?? []).map(item => [item.id, item]));
+    return items.map(item => {
+      const prior = priorItems.get(item.id);
+      if (same(item, prior)) return item;
+      const key = productKey(item);
+      const source = item.source && tx.get(collections.catalog + '/' + item.source);
+      const keepSource = readable('catalog', source) && (source.type === 'recipe' || productKey(source) === key ||
+        (prior?.source === source.id && productKey(prior) === key));
+      const match = keepSource ? source : catalog.get(key);
+      const id = match?.id ?? availableProductId(tx, key);
+      const path = collections.catalog + '/' + id;
+      const current = match && tx.get(path);
+      const data = current ? { ...current, lastGrams: item.grams, lastUsed: Math.max(now, current.lastUsed || 0) }
+        : rememberedProduct(item, id, now);
+      const row = stamp(data, current, now);
+      tx.set(path, row);
+      if (!match) catalog.set(key, row);
+      return { ...item, source: id };
+    });
+  }
+
   function finishMeal(tx, draft, now = Date.now()) {
     const data = prepareDraft(draft);
     const mealPath = collections.meals + '/' + data.id;
@@ -170,20 +244,15 @@
     guarded(tx, path, draft);
     if (data.edit && (!previous || previous.deleted || previous.updated !== data.edit.updated)) throw conflict();
     if (!data.items.length) throw problem('Добавь хотя бы одну позицию.');
-    const items = data.items.map(position);
-    if (new Set(items.map(row => row.id)).size !== items.length) throw problem('В черновике повторились идентификаторы.');
+    const validated = data.items.map(position);
+    if (new Set(validated.map(row => row.id)).size !== validated.length) throw problem('В черновике повторились идентификаторы.');
+    const items = rememberItems(tx, validated, previous, now);
     const row = stamp({ id: data.id, date: data.date, kind: data.kind, items, deleted: false }, previous, now);
     const portionsChanged = previous && items.some(item => previous.items.some(old => old.id === item.id && old.grams !== item.grams));
     tx.set(mealPath, row);
     tx.delete(path);
     reopenDay(tx, data.date, now);
     log(tx, row, previous ? (portionsChanged ? 'portion' : 'edit') : 'create', now);
-    for (const item of items) {
-      if (!item.source) continue;
-      const sourcePath = collections.catalog + '/' + item.source;
-      const source = tx.get(sourcePath);
-      if (source) tx.set(sourcePath, stamp({ ...source, lastGrams: item.grams, lastUsed: now }, source, now));
-    }
     return row;
   }
 
@@ -221,14 +290,26 @@
 
   function saveCatalog(tx, input, previous, now = Date.now()) {
     if (!validId(input.id) || !['product', 'recipe'].includes(input.type)) throw problem('Некорректный продукт.');
-    const path = collections.catalog + '/' + input.id;
-    const old = guarded(tx, path, previous);
     const facts = input.type === 'product'
       ? { base: mass(input.base), values: nutrients(input.values), estimated: Boolean(input.estimated) }
       : recipe(input.ingredients, input.recipeMode, input.base, input.overrides);
+    const title = name(input.name);
+    let path = collections.catalog + '/' + input.id;
+    let old = guarded(tx, path, previous);
+    if (input.type === 'product') {
+      const key = productKey({ name: title, ...facts });
+      const match = productIndex(tx.list(collections.catalog).filter(row => row.id !== input.id)).get(key);
+      if (match && (!old || productKey(old) !== key)) {
+        if (old || !match.automatic) throw problem('Такой продукт уже есть в Книге Трапезной.');
+        path = collections.catalog + '/' + match.id;
+        old = tx.get(path);
+      }
+    }
     const row = stamp({
-      id: input.id, type: input.type, name: name(input.name), note: String(input.note ?? '').trim().slice(0, 300),
-      favorite: Boolean(input.favorite), lastGrams: old?.lastGrams ?? null, lastUsed: old?.lastUsed ?? null, ...facts
+      id: old?.id ?? input.id, type: input.type, name: title, note: String(input.note ?? '').trim().slice(0, 300),
+      favorite: Boolean(input.favorite || (!previous && old?.favorite)),
+      lastGrams: old?.lastGrams ?? (input.history ? mass(input.lastGrams) : null),
+      lastUsed: old?.lastUsed ?? (input.history ? input.lastUsed : null), ...facts
     }, old, now);
     tx.set(path, row);
     return row;
@@ -243,9 +324,37 @@
   }
 
   function fromCatalog(row, id = makeId()) {
-    const mode = keys.every(key => row.values[key] == null) ? 'unknown'
-      : row.estimated || keys.some(key => row.values[key] == null) ? 'estimate' : 'exact';
-    return { id, name: row.name, source: row.id, base: row.base, grams: row.lastGrams ?? row.base, mode, values: { ...row.values } };
+    return { id, name: row.name, source: row.history ? null : row.id, base: row.base,
+      grams: row.lastGrams ?? row.base, mode: catalogMode(row), values: { ...row.values } };
+  }
+
+  function library(meals, catalog) {
+    const products = productIndex(catalog);
+    const tracked = new Set(catalog.map(row => row.id));
+    const history = new Map();
+    // Old meals contribute a read-only view. Opening the library does not migrate the diary.
+    for (const meal of meals) {
+      if (meal?.deleted || !readable('meals', meal)) continue;
+      for (const item of meal.items) {
+        if (tracked.has(item.source)) continue;
+        const key = productKey(item);
+        const lastUsed = meal.updated || meal.created || 0;
+        if (products.has(key) || (history.has(key) && history.get(key).lastUsed > lastUsed)) continue;
+        history.set(key, { ...rememberedProduct(item, item.id, lastUsed), history: true });
+      }
+    }
+    return [...products.values(), ...catalog.filter(row => row.type === 'recipe'), ...history.values()];
+  }
+
+  function favoriteFromHistory(tx, item, now = Date.now()) {
+    const key = productKey(item);
+    const existing = productIndex(tx.list(collections.catalog)).get(key);
+    if (existing?.favorite) return existing;
+    const id = existing?.id ?? availableProductId(tx, key);
+    const { history, ...data } = item;
+    const row = stamp({ ...(existing ?? { ...data, id }), favorite: true }, existing, now);
+    tx.set(collections.catalog + '/' + id, row);
+    return row;
   }
 
   function validFacts(values) {
@@ -296,6 +405,7 @@
 
   root.VkachFood = Object.freeze({
     start, kinds, modes, keys, collections, limit, validDate, checkKey, makeId, mass, position, portion, totals,
-    suggestedCalories, putDraft, clearDraft, finishMeal, setDeleted, setComplete, recipe, saveCatalog, favorite, fromCatalog, setGoal, read, savedMeal
+    suggestedCalories, putDraft, clearDraft, finishMeal, setDeleted, setComplete, recipe, saveCatalog, favorite,
+    fromCatalog, library, searchName, favoriteFromHistory, setGoal, read, savedMeal
   });
 })(globalThis);

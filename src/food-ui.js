@@ -208,11 +208,42 @@
     return grid;
   }
 
-  function itemsEditor(items, catalog, changed, rerender, massLabel, remoteAdd) {
+  function librarySearch(library, choose, catalogView = false) {
+    const panel = element('section', null, 'food-library-search');
+    const results = element('div', null, 'food-stack');
+    const message = element('p', null, 'hint');
+    message.setAttribute('role', 'status');
+    const indexed = library.map(row => ({ row, name: model.searchName(row.name) }));
+    const suggestions = indexed.filter(({ row }) => row.favorite || row.lastUsed);
+    function show(value) {
+      const term = model.searchName(value);
+      const matches = term ? indexed.filter(entry => entry.name.includes(term)) : suggestions;
+      const limit = term ? 12 : 5;
+      results.replaceChildren(...matches.slice(0, limit).map(({ row }) => {
+        const result = button(row.name, () => choose(row), 'food-library-result');
+        const grams = row.lastGrams ?? row.base;
+        const kcal = row.values.kcal == null ? 'Калорийность неизвестна' :
+          (row.estimated ? '≈ ' : '') + format.format(row.values.kcal * grams / row.base) + ' ккал';
+        result.appendChild(element('small', [row.favorite ? '★' : '', row.type === 'recipe' ? 'Рецепт' :
+          row.history ? 'Из истории' : '', format.format(grams) + ' г', kcal].filter(Boolean).join(' · ')));
+        return result;
+      }));
+      message.textContent = term ? (!matches.length ? 'В личной базе ничего не найдено.' :
+        matches.length > limit ? 'Уточни название, чтобы увидеть остальные продукты.' : '') :
+        matches.length ? 'Избранное и недавние продукты' : 'Здесь появятся продукты из сохранённых приёмов пищи.';
+    }
+    panel.append(input(catalogView ? 'Найти продукт для редактирования' : 'Поиск в Книге Трапезной', '', show,
+      { type: 'search', maxLength: 120 }), message, results);
+    show('');
+    return panel;
+  }
+
+  function itemsEditor(items, catalog, changed, rerender, massLabel, mealAdd) {
     const list = element('div', null, 'food-stack');
-    if (remoteAdd) list.appendChild(remoteFoodSearch(remoteAdd));
+    if (mealAdd) list.append(librarySearch(catalog, row => mealAdd(model.fromCatalog(row), true)), remoteFoodSearch(mealAdd));
     items.forEach((row, index) => {
       const section = element('div', null, 'food-entry');
+      section.dataset.foodPosition = row.id;
       const update = (key, value) => { row[key] = value; changed(); };
       const heading = element('div', null, 'food-row');
       heading.append(element('strong', 'Позиция ' + (index + 1)), button('Убрать', () => {
@@ -240,10 +271,12 @@
     };
     const addButtons = element('div', null, 'food-row');
     addButtons.append(button('Своя позиция', () => add(blank())));
-    if (catalog.length) {
-      const options = catalog.map(row => [row.id, (row.favorite ? '★ ' : '') + row.name]);
+    if (!mealAdd) list.prepend(librarySearch(catalog, row => add(model.fromCatalog(row))));
+    const savedChoices = catalog.filter(row => !row.history && !row.automatic);
+    if (savedChoices.length) {
+      const options = savedChoices.map(row => [row.id, (row.favorite ? '★ ' : '') + row.name]);
       list.appendChild(select('Из продуктов и рецептов', [['', 'Выбери позицию'], ...options], '', id => {
-        const row = catalog.find(item => item.id === id);
+        const row = savedChoices.find(item => item.id === id);
         if (row) add(model.fromCatalog(row));
       }));
     }
@@ -321,7 +354,7 @@
     }
 
     function catalog() {
-      return get('catalog').slice().sort((a, b) => Number(b.favorite) - Number(a.favorite) ||
+      return model.library(get('meals'), get('catalog')).sort((a, b) => Number(b.favorite) - Number(a.favorite) ||
         (b.lastUsed || 0) - (a.lastUsed || 0) || a.name.localeCompare(b.name, 'ru'));
     }
 
@@ -535,7 +568,7 @@
         updateDraft();
         updatePreview();
       }
-      const addRemote = position => {
+      const addPosition = (position, showPortion = false) => {
         if (editor !== current) return;
         const blankIndex = draft.items.findIndex(item => !item.name && !item.grams);
         if (blankIndex >= 0) draft.items.splice(blankIndex, 1, position);
@@ -543,9 +576,11 @@
         else { report('Максимум 24 позиции в одном приёме пищи.'); return; }
         changed();
         render();
+        if (showPortion) body.querySelector(`[data-food-position="${position.id}"]`).scrollIntoView({ block: 'nearest' });
       };
-      body.append(element('h2', model.kinds[draft.kind] + ' · ' + dateText(draft.date)), preview,
-        itemsEditor(draft.items, catalog(), changed, render, 'Масса порции, г', addRemote));
+      const title = element('h2', model.kinds[draft.kind] + ' · ' + dateText(draft.date));
+      title.tabIndex = -1;
+      body.append(title, preview, itemsEditor(draft.items, catalog(), changed, render, 'Масса порции, г', addPosition));
       updatePreview();
       body.append(button('Выйти из черновика', async () => { if (await leaveEditor()) render(); }),
         button('Удалить черновик', () => run(async () => {
@@ -577,10 +612,12 @@
     }
 
     function editCatalog(type, previous = null) {
-      catalogEditor = { previous, data: previous ? copy(previous) : {
+      const data = previous ? copy(previous) : {
         id: model.makeId(), type, name: '', base: type === 'product' ? '100' : '', values: {},
         note: '', recipeMode: 'simple', ingredients: [], overrides: {}, favorite: false
-      } };
+      };
+      if (previous?.history) data.id = model.makeId();
+      catalogEditor = { previous: previous?.history ? null : previous, data };
       report('');
       render(true);
     }
@@ -646,22 +683,31 @@
     function renderCatalog() {
       const list = catalog();
       const group = (title, entries) => {
-        const rows = entries.map(row => {
-          const node = element('div', null, 'food-catalog-row');
-          const estimated = row.estimated || model.keys.some(key => row.values[key] == null);
-          const kcal = row.values.kcal == null ? 'ккал неизвестны' : (estimated ? '≈ ' : '') + format.format(row.values.kcal) + ' ккал';
-          node.append(element('strong', row.name), element('small', format.format(row.base) + ' г · ' + kcal + (row.note ? ' · ' + row.note : '')),
-            button('Редактировать ' + row.name, () => editCatalog(row.type, row)),
-            button(row.favorite ? 'Убрать из избранного' : 'В избранное', () => run(
-              () => transact(tx => model.favorite(tx, row)), () => render()
-            )));
-          return node;
+        const panel = disclosure(title + ' · ' + entries.length);
+        panel.addEventListener('toggle', () => {
+          if (!panel.open || panel.childElementCount > 1) return;
+          const rows = entries.map(row => {
+            const node = element('div', null, 'food-catalog-row');
+            const estimated = row.estimated || model.keys.some(key => row.values[key] == null);
+            const kcal = row.values.kcal == null ? 'ккал неизвестны' :
+              (estimated ? '≈ ' : '') + format.format(row.values.kcal) + ' ккал на ' + format.format(row.base) + ' г';
+            const detail = [kcal, row.lastGrams ? 'Порция ' + format.format(row.lastGrams) + ' г' : '', row.note].filter(Boolean);
+            node.append(element('strong', row.name), element('small', detail.join(' · ')),
+              button('Редактировать ' + row.name, () => editCatalog(row.type, row)),
+              button(row.favorite ? 'Убрать из избранного' : 'В избранное', () => run(
+                () => transact(tx => row.history ? model.favoriteFromHistory(tx, row) : model.favorite(tx, row)), () => render()
+              )));
+            return node;
+          });
+          panel.append(...rows);
         });
-        body.appendChild(disclosure(title + ' · ' + rows.length, ...rows));
+        body.appendChild(panel);
       };
+      body.append(element('h2', 'Книга Трапезной'), librarySearch(list, row => editCatalog(row.type, row), true));
       group('Избранное', list.filter(row => row.favorite));
-      group('Недавние', list.filter(row => row.lastUsed).slice(0, 6));
-      group('Свои продукты', list.filter(row => row.type === 'product'));
+      group('Недавние', list.filter(row => row.lastUsed).sort((a, b) => b.lastUsed - a.lastUsed).slice(0, 6));
+      group('Свои продукты', get('catalog').filter(row => row.type === 'product').sort((a, b) => a.name.localeCompare(b.name, 'ru')));
+      group('Продукты из истории', list.filter(row => row.history));
       group('Домашние блюда и рецепты', list.filter(row => row.type === 'recipe'));
       body.appendChild(button('Создать рецепт', () => editCatalog('recipe')));
       let target = goal();
@@ -702,7 +748,8 @@
       }
       footer.hidden = !footer.childElementCount;
       scroller.scrollTop = focus ? 0 : scroll;
-      if (focus) (body.querySelector('input,button') || navigation.querySelector('[aria-pressed="true"]'))?.focus({ preventScroll: true });
+      if (focus) (body.querySelector(editor ? 'h2' : 'input,button') ||
+        navigation.querySelector('[aria-pressed="true"]'))?.focus({ preventScroll: true });
     }
 
     function chooseMeal() {

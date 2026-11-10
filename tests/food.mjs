@@ -5,6 +5,7 @@ const model = globalThis.VkachFood;
 const storage = new Map();
 const tx = {
   get(path) { return structuredClone(storage.get(path)); },
+  list(collection) { return structuredClone([...storage].filter(([path]) => path.startsWith(collection + '/')).map(([, row]) => row)); },
   set(path, row) { storage.set(path, structuredClone(row)); },
   delete(path) { storage.delete(path); },
 };
@@ -40,6 +41,8 @@ assert.equal(read('drafts').length, 2);
 assert.equal(read('meals').length, 1);
 assert.equal(read('events').length, 1);
 assert.equal(model.suggestedCalories(saved.items), 161);
+assert.equal(read('catalog').length, 2);
+assert.equal(tx.get('food-catalog/' + saved.items[0].source).lastGrams, 50.5);
 assert.deepEqual(model.read({
   'food-meals/meal-1': { d: saved },
   'food-meals/damaged': { d: { ...saved, items: null } },
@@ -103,4 +106,51 @@ assert.throws(() => model.setGoal(tx, '0'));
 assert.equal(model.setGoal(tx, '2600', 30).kcal, 2600);
 assert.equal(read('settings')[0].kcal, 2600);
 assert.equal(tx.get('days/' + today).kcal, 1500);
-console.log('Food model: dates, portions, unknowns, draft conflicts, duplicate protection, edits, deletion, favorites and recipes');
+
+const oldItem = model.position({ ...one, id: 'old-item', name: '  Мёд  цветочный  ', grams: 35 });
+const oldMeal = { ...saved, items: [oldItem], updated: 1 };
+const [historical] = model.library([oldMeal, { ...oldMeal, deleted: true, updated: 2 }], []);
+assert(historical.history);
+assert.equal(historical.lastGrams, 35);
+assert.equal(model.searchName(historical.name), 'мед цветочный');
+assert.equal(model.fromCatalog(historical).source, null);
+assert.equal(oldMeal.items[0].source, null);
+const pinned = model.favoriteFromHistory(tx, historical, 31);
+assert(pinned.favorite);
+assert.deepEqual(model.favoriteFromHistory(tx, historical, 32), pinned);
+const honey = { ...one, id: 'honey', name: 'МЕД ЦВЕТОЧНЫЙ', base: 50, grams: 180,
+  values: { kcal: 100, protein: 0, fat: 5, carbs: 15 } };
+const honeyDraft = model.putDraft(tx, { ...draft, id: 'meal-honey', items: [honey] }, null, 33);
+const honeyMeal = model.finishMeal(tx, honeyDraft, 34);
+assert.equal(honeyMeal.items[0].source, pinned.id);
+assert.equal(model.suggestedCalories(honeyMeal.items), 360);
+const current = tx.get('food-catalog/' + pinned.id);
+assert.equal(current.lastGrams, 180);
+assert.equal(current.base, 100);
+assert.deepEqual(current.values, values);
+assert.equal(model.library([oldMeal, honeyMeal], [current]).length, 1);
+const renamed = model.saveCatalog(tx, { ...current, name: 'Мёд липовый', values: { ...values, kcal: 250 } }, current, 35);
+assert.equal(model.fromCatalog(renamed).grams, 180);
+assert.equal(model.suggestedCalories(honeyMeal.items), 360);
+assert.equal(model.library([honeyMeal], [renamed]).length, 1);
+const reweighed = model.putDraft(tx, { ...honeyDraft, edit: { id: honeyMeal.id, updated: honeyMeal.updated },
+  items: [{ ...honeyMeal.items[0], grams: 90 }] }, null, 36);
+assert.equal(model.finishMeal(tx, reweighed, 37).items[0].source, renamed.id);
+assert.equal(tx.get('food-catalog/' + renamed.id).values.kcal, 250);
+
+const unknownName = read('catalog').find(row => row.lastUsed === 16);
+assert.equal(model.fromCatalog(unknownName).mode, 'unknown');
+assert.equal(model.fromCatalog(unknownName).grams, 50.5);
+assert.equal(model.library([recipeMeal], read('catalog')).filter(row => row.name === cooked.name).length, 1);
+
+// Two offline profiles with the same renamed product remember the old variant under one ID.
+const synced = new Map(storage);
+const rememberOldVariant = (id, now) => model.finishMeal(tx, model.putDraft(tx,
+  { ...draft, id, items: [honey] }, null, now), now).items[0].source;
+const variantA = rememberOldVariant('offline-device-a', 38);
+storage.clear();
+for (const [path, row] of synced) storage.set(path, row);
+const variantB = rememberOldVariant('offline-device-b', 39);
+assert.notEqual(variantA, renamed.id);
+assert.equal(variantA, variantB);
+console.log('Food model: draft conflicts, idempotent meals, portions, history, catalog deduplication, edits, favorites and recipes');
