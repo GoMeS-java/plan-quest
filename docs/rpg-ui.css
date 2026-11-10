@@ -479,16 +479,12 @@ body.citadel-shell-active #citadel-home :is([data-croom="observatory"],[data-roo
 body.citadel-shell-active #citadel-home :is([data-croom="gatehouse"],[data-room="gatehouse"]){--aperture-mask:url('assets/citadel/gatehouse-apertures.svg');--beam-mask:url('assets/citadel/gatehouse-daylight.svg')}
 body.citadel-shell-active #citadel-home :is([data-croom="refectory"],[data-room="refectory"]){--aperture-mask:url('assets/citadel/refectory-apertures.svg');--beam-mask:url('assets/citadel/refectory-daylight.svg')}
 body.citadel-shell-active #citadel-home :is([data-croom="cloister"],[data-room="cloister"]){--aperture-mask:url('assets/citadel/cloister-apertures.svg');--beam-mask:url('assets/citadel/cloister-daylight.svg')}
-:root:is([data-citadel-bg="rain"],[data-citadel-bg="storm"]) body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:.32;background:repeating-linear-gradient(107deg,transparent 0 22px,#c0d8ee 23px 24px,transparent 25px 48px);background-size:64px 96px;animation:citadelWindowRain 1.4s linear infinite}
-:root[data-citadel-bg="winter"] body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:.6;background-image:radial-gradient(1px 2px at 12px 18px,#eef7ff 99%,transparent),radial-gradient(1px 1px at 32px 52px,#c8d9ed 99%,transparent);background-size:57px 78px;animation:citadelWindowSnow 12s linear infinite}
 :root:is([data-citadel-bg="rain"],[data-citadel-bg="storm"],[data-citadel-bg="winter"]) body.citadel-shell-active #citadel-home .citadel-daylight:before{opacity:calc(var(--daylight)*.45)}
 :root:is([data-citadel-bg="aurora"],[data-citadel-bg="space"],[data-citadel-bg="abyss"]) body.citadel-shell-active #citadel-home .citadel-daylight:before{--day-rgb:158,154,214}
 :root:is([data-citadel-bg="sunset"],[data-citadel-bg="sunrise"],[data-citadel-bg="dawn"]) body.citadel-shell-active #citadel-home .citadel-daylight:before{--day-rgb:239,178,136}
 body.citadel-shell-active #citadel-home .citadel-room :is(.citadel-daylight:after,.citadel-room-light){animation:none!important}
 body.citadel-shell-active #citadel-home :is([data-room="vault"],[data-croom="vault"]) .citadel-daylight{display:none}
 @keyframes citadelHearthLight{0%,100%{opacity:calc(var(--local-power)*var(--light-power)*.86)}47%{opacity:calc(var(--local-power)*var(--light-power))}73%{opacity:calc(var(--local-power)*var(--light-power)*.92)}}
-@keyframes citadelWindowRain{to{background-position:-24px 96px}}
-@keyframes citadelWindowSnow{to{background-position:18px 78px}}
 @media(prefers-reduced-motion:reduce){body.citadel-shell-active #citadel-home :is(.citadel-daylight:after,.citadel-room-light){animation:none!important}}
 
 /* 1.1: the hero's record is a view over existing quests and appearance. */
@@ -600,11 +596,9 @@ body.citadel-shell-active .achievement-showcase-actions button{padding:6px 3px;m
 :root[data-citadel-bg="attic"]{--realm-landscape:url('assets/citadel/realm-attic.svg')}
 :root[data-citadel-bg="chamber"]{--realm-landscape:url('assets/citadel/realm-chamber.svg')}
 
-/* Quiet snowfall outside; fast snow and frost are clipped to the actual glazing. */
-.citadel-window-weather,.citadel-window-frost{display:none;position:absolute;inset:0;pointer-events:none;image-rendering:pixelated}
-:root[data-citadel-bg="winter"] .citadel-window-weather{display:block;mask:var(--window-mask,var(--aperture-mask)) center/100% 100% no-repeat;mask-mode:luminance;opacity:.82;background-image:radial-gradient(1px 1px at 9px 11px,#f4f7f7 99%,transparent),radial-gradient(3px 1px at 29px 17px,#deebf1 99%,transparent),linear-gradient(154deg,transparent 37%,#edf4f566 47%,transparent 57%);background-size:23px 31px,47px 39px,151px 83px;animation:citadelWindowBlizzard 1.8s linear infinite;z-index:2}
+/* Winter framing follows the earned landscape across all weather. */
+.citadel-window-frost{display:none;position:absolute;inset:0;pointer-events:none;image-rendering:pixelated}
 :root[data-citadel-bg="winter"] .citadel-window-frost{display:block;background:var(--frost-art) center/100% 100% no-repeat;opacity:.9;z-index:3}
-:root:is([data-citadel-bg="rain"],[data-citadel-bg="storm"]) .citadel-window-weather{display:block;mask:var(--window-mask,var(--aperture-mask)) center/100% 100% no-repeat;mask-mode:luminance;opacity:.32;background:repeating-linear-gradient(107deg,transparent 0 22px,#c0d8ee 23px 24px,transparent 25px 48px);background-size:64px 96px;animation:citadelWindowRain 1.4s linear infinite;z-index:2}
 body.citadel-shell-active #citadel-home :is([data-croom="rest"],[data-room="rest"]){--frost-art:url('assets/citadel/rest-frost.svg')}
 body.citadel-shell-active #citadel-home :is([data-croom="study"],[data-room="study"]){--frost-art:url('assets/citadel/study-frost.svg')}
 body.citadel-shell-active #citadel-home :is([data-croom="archive"],[data-room="archive"]){--frost-art:url('assets/citadel/archive-frost.svg')}
@@ -614,23 +608,12 @@ body.citadel-shell-active #citadel-home :is([data-croom="observatory"],[data-roo
 body.citadel-shell-active #citadel-home :is([data-croom="gatehouse"],[data-room="gatehouse"]){--frost-art:url('assets/citadel/gatehouse-frost.svg')}
 body.citadel-shell-active #citadel-home :is([data-croom="refectory"],[data-room="refectory"]){--frost-art:url('assets/citadel/refectory-frost.svg')}
 body.citadel-shell-active #citadel-home :is([data-croom="cloister"],[data-room="cloister"]){--frost-art:url('assets/citadel/cloister-frost.svg')}
-:root[data-citadel-bg="winter"] .citadel-realm-particles{opacity:1;background-image:radial-gradient(1px 1px at 14px 17px,#dae6ee 99%,transparent),radial-gradient(1px 2px at 51px 37px,#fff 99%,transparent),radial-gradient(2px 2px at 91px 9px,#f4f8fa 99%,transparent);background-size:83px 113px,127px 151px,173px 137px;animation:citadelQuietSnow 18s linear infinite}
-:root[data-citadel-bg="winter"] .citadel-realm-particles:before{opacity:1;background:url('assets/citadel/snow-roof.svg') center/100% 100% no-repeat}
-:root[data-citadel-bg="winter"] .citadel-realm-particles:after{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(2px 2px at 24px 22px,#fff 99%,transparent),radial-gradient(1px 1px at 102px 61px,#f2f6fa 99%,transparent);background-size:149px 131px,179px 163px;opacity:.7;animation:citadelNearSnow 12s linear infinite}
-.stage[data-bg="winter"]::before{background:none;animation:none}
-:root[data-citadel-bg="winter"] .stage .window .citadel-window-weather{mask:none}
 :root[data-citadel-bg="winter"] .stage .window .citadel-window-frost{background:none;box-shadow:inset 0 0 0 2px #e0edf2,inset 0 0 12px 4px #ccdfef88}
-.citadel-room .citadel-window-weather{animation:none!important}
-.citadel-suspended :is(.citadel-window-weather,.citadel-realm-particles,.citadel-realm-particles:after){animation-play-state:paused!important}
-@keyframes citadelWindowBlizzard{to{background-position:-138px 93px,-188px 78px,-302px 166px}}
-@keyframes citadelQuietSnow{to{background-position:8px 113px,-9px 151px,11px 137px}}
-@keyframes citadelNearSnow{to{background-position:-5px 131px,7px 163px}}
-@media(prefers-reduced-motion:reduce){.citadel-window-weather,.citadel-realm-particles,.citadel-realm-particles:after{animation:none!important}}
 :root[data-citadel-bg="winter"] body.citadel-shell-active #citadel-home .citadel-daylight:after{opacity:1}
 
 /* Each owned environment has two small, independently timed native pixel layers. */
 .citadel-realm-detail{display:none;position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
-:root[data-realm-landscape]:not([data-citadel-bg="winter"]) .citadel-realm-detail{display:block}
+:root[data-realm-landscape]:not([data-citadel-bg="winter"],[data-citadel-bg="rain"],[data-citadel-bg="storm"]) .citadel-realm-detail{display:block}
 .citadel-realm-detail:before,.citadel-realm-detail:after{content:'';position:absolute;inset:0;pointer-events:none;background:var(--realm-life-a) center 60%/cover no-repeat;image-rendering:pixelated;animation:var(--realm-motion-a,realmTwinkle) var(--realm-speed-a,6s) ease-in-out infinite alternate;opacity:.6}
 .citadel-realm-detail:after{background-image:var(--realm-life-b);animation-name:var(--realm-motion-b,realmTwinkle);animation-duration:var(--realm-speed-b,9s);animation-delay:-2s}
 .citadel-daylight .citadel-realm-detail{z-index:1;mask:var(--window-mask,var(--aperture-mask)) center/100% 100% no-repeat;mask-mode:luminance}
@@ -1291,7 +1274,7 @@ body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
   -webkit-tap-highlight-color:transparent
 }
 .destiny-landmark{position:absolute;right:5%;top:58%;max-width:30%;pointer-events:none;color:#e7c9c6;font-size:8px;letter-spacing:.10em;text-shadow:1px 1px #110e19,0 0 6px #110e19}
-.destiny-world-art:not([data-zoom="1"])+.destiny-landmark{display:none}
+.destiny-world-art:not([data-zoom="1"])~.destiny-landmark{display:none}
 .destiny-camera{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
 #destiny-world .destiny-camera button{font-size:19px;background:#21192edb}
 .destiny-world-panel{padding:10px;border-top:1px solid #53425b;background:linear-gradient(153deg,#21192e,#16131f)}

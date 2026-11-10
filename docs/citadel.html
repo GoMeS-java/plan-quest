@@ -2,6 +2,136 @@
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Цитадель · Прототип</title>
 <style>
+/* Shared weather paint. Two fixed slots crossfade in place on each surface. */
+.world-weather{position:absolute;inset:0;overflow:hidden;pointer-events:none;isolation:isolate}
+.citadel-world-weather{z-index:1}
+.destiny-world-view>.world-weather{z-index:1}
+.destiny-world-view :is(.destiny-camera,.destiny-landmark){z-index:2}
+.citadel-window-weather{position:absolute;inset:0;z-index:2;mask:var(--window-mask,var(--aperture-mask)) center/100% 100% no-repeat;mask-mode:luminance}
+.stage .window .citadel-window-weather{mask:none}
+.citadel-skyline .world-weather-label{display:inline-block;margin-inline-start:.55em;color:#f0dbe7;letter-spacing:0;font-size:10px;font-weight:500}
+.destiny-weather-label{color:#d5b6cb;font:11px/1.3 system-ui,sans-serif;margin:4px 0 0}
+.world-weather-slot,.world-weather-slot:before,.world-weather-slot:after{position:absolute;inset:0;pointer-events:none}
+.world-weather-slot{
+  --weather-veil:0;--weather-particle-opacity:.68;--weather-rate:1;--weather-speed:4s;
+  --weather-x:0px;--weather-y:36px;--weather-tile:88px 72px;
+  opacity:0;visibility:hidden;transition:opacity .62s ease,visibility 0s linear .62s
+}
+.world-weather-slot.is-current{opacity:1;visibility:visible;transition-delay:0s}
+.world-weather-slot[data-intensity="1"]{--weather-particle-opacity:.48;--weather-rate:1.3}
+.world-weather-slot[data-intensity="3"]{--weather-particle-opacity:.96;--weather-rate:.72}
+.world-weather-slot:before{
+  content:'';opacity:var(--weather-veil);
+  background:
+    radial-gradient(ellipse at 15% 12%,var(--weather-cloud,#8b83a4a8),transparent 63%),
+    radial-gradient(ellipse at 82% 20%,var(--weather-cloud,#756e8ea3),transparent 66%),
+    linear-gradient(180deg,var(--weather-shadow,#201b3857),transparent 74%)
+}
+.world-weather-particles{
+  position:absolute;inset:-48px;opacity:var(--weather-particle-opacity);
+  background-image:var(--weather-texture,none),var(--weather-extra,none);background-size:var(--weather-tile);background-position:0 0,29px 14px;
+  animation:world-weather-flow calc(var(--weather-speed) * var(--weather-rate)) linear var(--weather-offset,0s) infinite;
+}
+.world-weather-slot:is([data-kind="clear"],[data-kind="clouds"],[data-kind="fog"]) .world-weather-particles{display:none}
+.world-weather-slot[data-intensity="3"]:is([data-kind="downpour"],[data-kind="thunder"],[data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"]){--weather-extra:var(--weather-texture)}
+@keyframes world-weather-flow{from{transform:translate(calc(-1 * var(--weather-x)),calc(-1 * var(--weather-y)))}to{transform:translate(var(--weather-x),var(--weather-y))}}
+.world-weather-slot[data-kind="clear"]:before{opacity:.38;background:radial-gradient(ellipse at 73% 14%,#dcc4b33d,transparent 63%)}
+.world-weather-slot[data-kind="clouds"]{--weather-veil:.59;--weather-cloud:#7f748bb5;--weather-shadow:#1c193e78}
+.world-weather-slot[data-kind="clouds"][data-intensity="3"]{--weather-veil:.87}
+.world-weather-slot:is([data-kind="drizzle"],[data-kind="downpour"],[data-kind="thunder"]){
+  --weather-texture:url('assets/citadel/weather-rain.svg');--weather-cloud:#586885ab;--weather-y:36px;--weather-speed:.85s;--weather-veil:.6
+}
+.world-weather-slot[data-kind="drizzle"]{--weather-tile:88px 72px;--weather-speed:1.6s;--weather-veil:.38}
+.world-weather-slot:is([data-kind="downpour"],[data-kind="thunder"]){--weather-tile:55px 54px;--weather-y:27px}
+.world-weather-slot[data-kind="thunder"]{--weather-veil:.86;--weather-cloud:#515178b9;--weather-shadow:#221735c2}
+.world-weather-slot:is([data-kind="flurries"],[data-kind="snowfall"],[data-kind="blizzard"]){
+  --weather-texture:url('assets/citadel/weather-snow.svg');--weather-y:36px;--weather-speed:5.5s;--weather-veil:.47;--weather-cloud:#a2bdd899
+}
+.world-weather-slot[data-kind="flurries"]{--weather-veil:.24}
+.world-weather-slot[data-kind="snowfall"]{--weather-tile:68px 64px;--weather-y:32px;--weather-speed:3.8s}
+.world-weather-slot[data-kind="blizzard"]{
+  --weather-veil:.87;--weather-x:36px;--weather-y:27px;--weather-tile:72px 54px;--weather-speed:1.7s;--weather-cloud:#a4c2d2bd
+}
+.world-weather-slot[data-kind="fog"]:before,
+.world-weather-slot[data-kind="blizzard"]:after{
+  content:'';background:
+    radial-gradient(ellipse at 21% 69%,#c4c6dc86,transparent 68%),
+    radial-gradient(ellipse at 84% 53%,#b4accaa6,transparent 64%),
+    linear-gradient(180deg,#36304932,transparent 38%,#9195b073 77%,#77788e41);
+  animation:world-weather-mist 7s ease-in-out var(--weather-offset,0s) infinite alternate
+}
+.world-weather-slot[data-kind="fog"]{--weather-veil:.76}
+.world-weather-slot[data-kind="fog"]:before{opacity:var(--weather-particle-opacity)}
+.world-weather-slot[data-kind="blizzard"]:after{opacity:.53}
+@keyframes world-weather-mist{from{transform:translateX(-2%) scale(1.09)}to{transform:translateX(2%) scale(1.11)}}
+
+.world-weather-slot[data-kind="spellstorm"]{
+  --weather-veil:.92;--weather-cloud:#8750b095;--weather-shadow:#3d214eab;--weather-speed:3.6s;
+  --weather-x:43px;--weather-y:28px;--weather-tile:86px 56px;
+  --weather-texture:radial-gradient(2px 2px at 8px 12px,#ffd1fa 80%,transparent),radial-gradient(1.5px 2px at 56px 43px,#c6a5f6 80%,transparent)
+}
+.world-weather-slot[data-kind="spellstorm"]:before{
+  background:
+    repeating-linear-gradient(115deg,transparent 0 49%,#dba1ff4f 53%,#9d74c534 56%,transparent 66% 100%),
+    radial-gradient(ellipse at 20% 20%,#7d3da4b0,transparent 70%),
+    radial-gradient(ellipse at 83% 62%,#a14d967d,transparent 71%);
+  animation:world-weather-mist 4.8s ease-in-out var(--weather-offset,0s) infinite alternate
+}
+.world-weather-slot:is([data-kind="thunder"],[data-kind="spellstorm"]):after{
+  content:'';inset:0 15% 5% 20%;opacity:0;
+  background:linear-gradient(145deg,transparent 18%,#ecedffba 42%,#ffdbf5a8 65%,transparent 86%);
+  clip-path:polygon(58% 0,51% 24%,60% 23%,49% 46%,55% 45%,38% 87%,48% 52%,42% 54%,52% 31%,46% 32%);
+  animation:world-weather-bolt 12s steps(1,end) var(--weather-offset,0s) infinite
+}
+.world-weather-slot[data-kind="spellstorm"]:after{background:#db9cf0;inset:0 7% 7% 13%}
+@keyframes world-weather-bolt{0%,83%,86%,100%{opacity:0}84%{opacity:.74}}
+:root[data-world-weather="spellstorm"] #destiny-world .destiny-seal.is-open .destiny-rune{stroke:#f4c3fc}
+:root[data-world-weather="spellstorm"] #destiny-world .destiny-seal.is-open .destiny-stone{stroke:#d297df}
+
+:root[data-citadel-bg="forest"] .world-weather-slot:is([data-kind="drizzle"],[data-kind="downpour"],[data-kind="thunder"]){
+  --weather-cloud:#668f8390;--weather-shadow:#20383d82
+}
+:root[data-citadel-bg="forest"] .world-weather-slot:is([data-kind="drizzle"],[data-kind="downpour"]):before{
+  background:radial-gradient(ellipse at 18% 86%,#b8d8c6a8,transparent 66%),radial-gradient(ellipse at 82% 67%,#76978d8a,transparent 62%),linear-gradient(180deg,#16382e5d,transparent)
+}
+:root:is([data-citadel-bg="abyss"],[data-citadel-bg="watch"],[data-citadel-bg="storm"]) .world-weather-slot[data-kind="thunder"]{
+  --weather-cloud:#33375ac9;--weather-shadow:#171026b8
+}
+:root[data-citadel-bg="winter"] .world-weather-slot:is([data-kind="flurries"],[data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"],[data-kind="thunder"]){
+  --weather-texture:url('assets/citadel/weather-snow.svg');--weather-cloud:#b0d1e5bc
+}
+:root[data-citadel-bg="winter"] .world-weather-slot:is([data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"],[data-kind="thunder"]){
+  --weather-x:28px;--weather-y:24px;--weather-tile:56px 48px;--weather-speed:2s
+}
+:root[data-citadel-bg="winter"] .citadel-world-weather .world-weather-slot:is([data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"],[data-kind="thunder"]){
+  --weather-speed:4.6s;--weather-particle-opacity:.78
+}
+:root[data-citadel-bg="winter"] .citadel-window-weather .world-weather-slot:is([data-kind="flurries"],[data-kind="snowfall"],[data-kind="blizzard"],[data-kind="spellstorm"],[data-kind="thunder"]){
+  --weather-x:28px;--weather-y:24px;--weather-tile:56px 48px;--weather-speed:1.4s;--weather-veil:.82;--weather-particle-opacity:.96
+}
+:root[data-citadel-bg="winter"] .world-weather-slot:is([data-kind="spellstorm"],[data-kind="thunder"]):before{
+  background:radial-gradient(ellipse at 19% 64%,#c2e4f0aa,transparent 65%),radial-gradient(ellipse at 83% 46%,#947dbbba,transparent 74%)
+}
+
+.world-weather:after{content:'';position:absolute;inset:0;pointer-events:none;transition:background-color .45s}
+:root[data-world-phase="morning"] .world-weather:after{background-color:#e6b7901a}
+:root[data-world-phase="day"] .world-weather:after{background-color:#bed8f018}
+:root[data-world-phase="evening"] .world-weather:after{background-color:#ac718622}
+:root[data-world-phase="night"] .world-weather:after{background-color:#1c214829}
+.world-weather-slot:not(.is-current) :is(.world-weather-particles),.world-weather-slot:not(.is-current):before,.world-weather-slot:not(.is-current):after,
+.citadel-suspended .world-weather-slot :is(.world-weather-particles),.citadel-suspended .world-weather-slot:before,.citadel-suspended .world-weather-slot:after,
+:root[data-destiny-scene] #citadel-home .world-weather-particles,:root[data-destiny-scene] #citadel-home .world-weather-slot:before,:root[data-destiny-scene] #citadel-home .world-weather-slot:after{
+  animation-play-state:paused!important
+}
+.citadel-room .world-weather-particles,.citadel-room .world-weather-slot:before,.citadel-room .world-weather-slot:after{animation:none!important}
+#citadel-home:not([data-ui-view="overview"]) .citadel-sky .world-weather,
+#destiny-world:not([open]) .world-weather,#citadel-interior[hidden] .world-weather{display:none}
+@media(prefers-reduced-motion:reduce){
+  .world-weather:after,.world-weather-slot,.world-weather-particles,.world-weather-slot:before,.world-weather-slot:after{animation:none!important;transition:none!important}
+}
+.reduce-motion .world-weather-slot,.reduce-motion .world-weather-particles,.reduce-motion .world-weather-slot:before,.reduce-motion .world-weather-slot:after{animation:none!important;transition:none!important}
+</style>
+<style>
 :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#100c18;color:#e7dcf6}
 *{box-sizing:border-box}body{margin:0;padding:16px}.wrap{max-width:900px;margin:auto}
 h1{font-size:24px;margin:8px 0}p{color:#b9a9cf}.toolbar,.controls{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
@@ -37,23 +167,14 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 #room-scene[data-phase="night"],#room-scene[data-phase="deep-night"]{filter:brightness(.7)}
 #room-scene[data-phase="morning"]{filter:sepia(.12) brightness(1.12)}
 #room-scene[data-phase="evening"]{filter:sepia(.22) brightness(.9)}
-#room-scene[data-weather="rain"]:before{box-shadow:0 0 22px #5675a6,inset 0 0 18px #6682b5}
-#room-scene[data-weather="snow"]:before{box-shadow:0 0 22px #b5d6ff,inset 0 0 18px #a5c8ee}
+#room-scene:is([data-weather="drizzle"],[data-weather="downpour"],[data-weather="thunder"]):before{box-shadow:0 0 22px #5675a6,inset 0 0 18px #6682b5}
+#room-scene:is([data-weather="flurries"],[data-weather="snowfall"],[data-weather="blizzard"]):before{box-shadow:0 0 22px #b5d6ff,inset 0 0 18px #a5c8ee}
 #room-scene[data-weather="clear"]:before{box-shadow:0 0 22px #e4b477,inset 0 0 18px #d4a668}
 #room-scene[data-weather="fog"]:before{box-shadow:0 0 24px #a29cac,inset 0 0 18px #9c91ac}
 #atmosphere select,#atmosphere button{padding:7px}
 
 #room-scene{isolation:isolate}
 #scene-weather{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
-#scene-weather i{position:absolute;top:-20%;left:var(--x);width:2px;height:24px;background:#a6c5f7a8;transform:rotate(16deg);animation:rainfall var(--dur) linear infinite;animation-delay:var(--delay)}
-#scene-weather.snow i{width:5px;height:5px;border-radius:50%;background:#e2efff;transform:none;animation-name:snowfall}
-#scene-weather.fog{background:linear-gradient(90deg,#b6aec021,transparent,#b6aec025);animation:fogmove 9s ease-in-out infinite alternate}
-#scene-weather.clear{background:radial-gradient(ellipse at 50% 20%,#e7b87d2e,transparent 60%)}
-#room-scene.reduce-motion #scene-weather i,#room-scene.reduce-motion #scene-weather{animation:none!important}
-#room-scene.reduce-motion #scene-weather i{top:var(--y)}
-@keyframes rainfall{to{top:120%;transform:translateX(-30px) rotate(16deg)}}
-@keyframes snowfall{to{top:120%;transform:translateX(20px)}}
-@keyframes fogmove{to{opacity:.3;transform:translateX(12px)}}
 #scene-hero{z-index:3;box-shadow:inset 0 -9px #100c19}
 #scene-hero:before{content:'';position:absolute;top:5px;left:6px;width:14px;height:12px;background:#bfa0d8;box-shadow:0 0 0 2px #1c1428}
 #scene-hero:after{content:'';position:absolute;bottom:4px;left:4px;width:7px;height:10px;background:#160f20;box-shadow:12px 0 #160f20}
@@ -65,8 +186,8 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
  body{padding:8px}.wrap{max-width:100%}h1{font-size:22px;margin:6px 0}h1+p{font-size:13px;line-height:1.4;margin:5px 0 10px}
  .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.toolbar button{padding:9px 5px;font-size:13px}
  #atmosphere{padding:10px;gap:7px;margin-top:8px;font-size:13px}
- #atmosphere label{font-size:13px}#atmosphere select,#atmosphere button,#weather-city{font-size:13px!important;padding:6px!important}
- #atmosphere #weather-city{max-width:120px!important}#atmosphere small{font-size:11px}
+ #atmosphere label{font-size:13px}#atmosphere select,#atmosphere button{font-size:13px!important;padding:6px!important}
+ #atmosphere small{font-size:11px}
  #castle{padding:5px;border-width:2px;min-height:150px}
  #castle .floor{grid-template-columns:repeat(6,minmax(0,1fr));min-width:0;gap:2px;padding:3px;margin:5px 0;border-bottom-width:5px}
  #castle .room,#castle .empty{min-width:0;min-height:85px;padding:12px 2px 4px;border-width:1px}
@@ -155,11 +276,11 @@ small{color:#ad9dbf}#status{min-height:24px;color:#dec58f}.mode-walk .room{opaci
 </style><meta name="theme-color" content="#100c18"></head><body><main class="wrap">
 <h1>♜ Цитадель Спящего</h1><p>Экспериментальная сцена. Отдельный прототип: не затрагивает задания, достижения и облачную синхронизацию.</p>
 <div class="toolbar"><button id="overview" class="active">Обзор</button><button id="walk">Прогулка</button><button id="add-floor">Открыть этаж (демо)</button><button id="reset">Сбросить прототип</button></div>
-<div id="atmosphere" class="panel"><strong id="phase-label">Атмосфера</strong><label>Режим <select id="weather-mode"><option value="fantasy">Магический</option><option value="hybrid">Гибрид</option></select></label><label>Город <input id="weather-city" placeholder="Например, Москва" maxlength="100" style="max-width:150px;background:#2c203c;color:#eee0ff;padding:8px;border:1px solid #8064a5"></label><button id="refresh-weather">Обновить</button><small id="weather-info" role="status"></small><label>Погода <select id="weather"><option value="rain">Дождь</option><option value="clear">Ясно</option><option value="snow">Снег</option><option value="fog">Туман</option></select></label><label><input type="checkbox" id="day-night" checked> Смена времени суток</label><label><input type="checkbox" id="reduce-motion"> Без анимации</label></div><div class="castle-tools"><strong>План замка</strong><button id="castle-zoom" type="button" aria-pressed="false">Увеличить план</button><small id="castle-hint">Нажми на комнату для выбора</small></div><div id="castle" aria-label="План Цитадели"></div>
+<div id="atmosphere" class="panel"><strong id="phase-label">Атмосфера</strong><small id="weather-info" role="status"></small><label><input type="checkbox" id="day-night" checked> Смена времени суток</label><label><input type="checkbox" id="reduce-motion"> Без анимации</label></div><div class="castle-tools"><strong>План замка</strong><button id="castle-zoom" type="button" aria-pressed="false">Увеличить план</button><small id="castle-hint">Нажми на комнату для выбора</small></div><div id="castle" aria-label="План Цитадели"></div>
 <div class="panel" id="appearance-panel"><h2>Мой облик</h2><p id="body-note">Данные о теле поступают из вкладки «Тело» основной игры. Здесь ничего вводить не нужно.</p></div><div class="panel"><h2 id="selection-title">Редактор комнат</h2><p id="selection-description">Выбери свободную ячейку для строительства или существующую комнату.</p>
 <div class="controls"><label>Комната <select id="kind"></select></label><button id="build">Построить</button><button id="expand">Расширить на 1</button><button id="go">Направить героя</button></div><div class="controls"><label>Мебель <select id="furniture"></select></label><label>Место <select id="slot"></select></label><button id="place">Разместить</button><button id="remove">Убрать последнюю</button></div><div class="controls"><button id="prev">← Назад</button><button id="next">Вперёд →</button></div><div class="panel"><h2>Обитатели Цитадели</h2><p id="rank-info">Ранг Цитадели: 1</p><label><input id="demo-toggle" type="checkbox"> Режим проверки</label> <label>Ранг <input id="demo-level" type="number" min="1" max="100" value="1" disabled style="width:72px;background:#2c203c;color:#eee0ff;border:1px solid #8064a5;padding:7px"></label><p><small>В обычном режиме используется максимальный ранг из «Заклятия», если игра запускалась на этом же сайте и устройстве.</small></p><div id="npcs" class="npcbar"></div><p id="dialogue">Выбери жителя, чтобы поговорить.</p></div><div id="status" role="status"></div>
 <small>Размеры помещений различаются. Занятые ячейки и закрытые этажи недоступны. Состояние сохраняется только в браузере прототипа.</small></div>
-</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" data-room="throne" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-weather" aria-hidden="true"></div><div id="scene-decoration" aria-hidden="true"></div><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script>
+</main><div id="room-view" hidden role="dialog" aria-modal="true" aria-labelledby="room-heading"><div id="room-dialog"><div class="controls" style="justify-content:space-between;align-items:center"><h2 id="room-heading">Комната</h2><button id="close-room">Закрыть ✕</button></div><div id="room-scene" data-room="throne" aria-label="Интерьер комнаты, нажмите для перемещения героя"><div id="scene-weather" class="world-weather" aria-hidden="true"></div><div id="scene-decoration" aria-hidden="true"></div><div id="scene-items"></div><div id="scene-npcs"></div><div id="scene-hero"></div></div><div class="scene-controls"><button id="move-left">←</button><button id="move-right">→</button><button id="scene-talk">Поговорить</button></div><p id="scene-status" role="status">Нажми на пол комнаты, чтобы подойти к выбранному месту.</p></div></div><script src="config.js"></script><script>
 /* Цитадель Спящего: независимая модель мира, без изменения текущих сохранений. */
 (function (root) {
   'use strict';
@@ -320,46 +441,163 @@ root.CitadelLife=Object.freeze({route:route,residents:residents,dialogue:dialogu
 })(window);
 
 </script><script>
-/* Опциональная реальная погода: без геолокации, с офлайн-резервом. */
-(function(root){
-'use strict';
-var CACHE_KEY='plan.citadel.weather.v1';var CITY_KEY='plan.citadel.weather.city.v1';
-function mapCode(code){
- if(code===0||code===1)return 'clear';
- if(code===2||code===3||code===45||code===48)return 'fog';
- if(code===51||code===53||code===55||code===56||code===57||code===61||code===63||code===65||code===66||code===67||code===80||code===81||code===82||code===95||code===96||code===99)return 'rain';
- if(code===71||code===73||code===75||code===77||code===85||code===86)return 'snow';
- return 'fog';
-}
-function cached(){
- try{var value=JSON.parse(root.localStorage.getItem(CACHE_KEY)||'null');return value&&typeof value.weather==='string'?value:null;}catch(_){return null;}
-}
-function save(data){try{root.localStorage.setItem(CACHE_KEY,JSON.stringify(data));}catch(_){}}
-async function lookup(city){
- city=String(city||'').trim();
- if(city.length<2||city.length>100)throw Error('Укажи название города (2–100 символов).');
- var geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=ru&format=json');
- if(!geo.ok)throw Error('Не удалось найти город.');
- var places=await geo.json();
- if(!places.results||!places.results.length)throw Error('Город не найден.');
- var place=places.results[0];
- var forecast=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(place.latitude)+'&longitude='+encodeURIComponent(place.longitude)+'&current=weather_code&timezone=auto');
- if(!forecast.ok)throw Error('Сервис погоды недоступен.');
- var data=await forecast.json();
- if(!data.current||!Number.isFinite(Number(data.current.weather_code)))throw Error('Нет данных о погоде.');
- var result={city:place.name,country:place.country||'',weather:mapCode(Number(data.current.weather_code)),code:Number(data.current.weather_code),fetchedAt:Date.now()};
- save(result);try{root.localStorage.setItem(CITY_KEY,city);}catch(_){}return result;
-}
-function savedCity(){try{return root.localStorage.getItem(CITY_KEY)||'';}catch(_){return '';}}
-root.CitadelWeather=Object.freeze({lookup:lookup,cached:cached,mapCode:mapCode,savedCity:savedCity});
-})(window);
+/* A weather event belongs to the world, never to a save or a room. */
+(function (root) {
+  'use strict';
+
+  const minute = 60_000;
+  const events = {
+    clear:       {label:'Ясное небо', weight:23, levels:[1]},
+    clouds:      {label:'Облачность', weight:16, levels:[1,2,3]},
+    drizzle:     {label:'Лёгкий дождь', weight:12, levels:[1,2]},
+    downpour:    {label:'Сильный дождь', weight:8, levels:[2,3]},
+    thunder:     {label:'Гроза', weight:5, levels:[1,2,3]},
+    flurries:    {label:'Лёгкий снег', weight:9, levels:[1,2]},
+    snowfall:    {label:'Снегопад', weight:8, levels:[2,3]},
+    blizzard:    {label:'Метель', weight:4, levels:[2,3]},
+    fog:         {label:'Густой туман', weight:9, levels:[1,2,3]},
+    'spellstorm':{label:'Магическая буря', weight:2, levels:[1,2,3]}
+  };
+  const phases={morning:'УТРО',day:'ДЕНЬ',evening:'ВЕЧЕР',night:'НОЧЬ'};
+  const storageKey = () => root.PLAN_CONFIG?.testMode ? 'plan.android-test.world-weather.v1' : 'plan.world-weather.v1';
+  function phaseAt(now) {
+    const hour=new Date(now).getHours();
+    return hour<6||hour>=23?'night':hour<12?'morning':hour<18?'day':'evening';
+  }
+
+  function valid(event) {
+    return event?.version===1 && typeof event.id==='string' && /^[a-z0-9-]{1,90}$/.test(event.id) &&
+      Object.hasOwn(events,event.type) && events[event.type].levels.includes(event.intensity) &&
+      Number.isSafeInteger(event.startedAt) && Number.isSafeInteger(event.endsAt) &&
+      event.endsAt-event.startedAt>=15*minute && event.endsAt-event.startedAt<=45*minute;
+  }
+  const active=(event,now)=>valid(event)&&event.startedAt<=now&&event.endsAt>now;
+
+  function draw(startedAt, random = Math.random, lastType, length) {
+    const entries=Object.entries(events).filter(([type])=>type!==lastType);
+    let ticket=random()*entries.reduce((sum,[,entry])=>sum+entry.weight,0);
+    const [type,entry]=entries.find(([,row])=>(ticket-=row.weight)<0) || entries.at(-1);
+    const intensity=entry.levels[Math.floor(random()*entry.levels.length)];
+    const duration=length??(15+Math.floor(random()*31))*minute;
+    return {version:1,id:'w-'+startedAt.toString(36)+'-'+Math.floor(random()*0x100000000).toString(36),
+      type,intensity,startedAt,endsAt:startedAt+duration};
+  }
+
+  function seeded(seed) {
+    return () => {
+      seed=(seed+0x6d2b79f5)|0;
+      let value=Math.imul(seed^(seed>>>15),seed|1);
+      value^=value+Math.imul(value^(value>>>7),value|61);
+      return ((value^(value>>>14))>>>0)/0x100000000;
+    };
+  }
+
+  // A shared UTC schedule keeps file previews and browsers without Web Locks in agreement.
+  function scheduled(now) {
+    const hour=Math.floor(now/(60*minute));
+    const start=hour*60*minute;
+    const split=(15+Math.floor(seeded(hour)()*31))*minute;
+    const first=draw(start,seeded(hour*2+17231),null,split);
+    return now<first.endsAt?first:draw(first.endsAt,seeded(hour*2+17232),first.type,60*minute-split);
+  }
+
+  function start(onUpdate) {
+    const key=storageKey();
+    let timer=0, pending=null, current='', stopped=false, request=0;
+    function read() {
+      try {const event=JSON.parse(root.localStorage.getItem(key));return valid(event)?event:null;}
+      catch (_) {return null;}
+    }
+    function persist(event) {
+      try {root.localStorage.setItem(key,JSON.stringify(event));return true;}
+      catch (_) {return false;}
+    }
+    function fallback() {
+      const now=Date.now(), saved=read();
+      if(active(saved,now))return saved;
+      const event=scheduled(now);
+      persist(event);
+      return event;
+    }
+    async function acquire() {
+      try {
+        if(root.navigator?.locks?.request)return await root.navigator.locks.request(key,()=>{
+          const now=Date.now(), saved=read();
+          if(active(saved,now))return saved;
+          const event=draw(now,Math.random,saved?.type);
+          return persist(event)?event:scheduled(now);
+        });
+      } catch (_) { /* Local schedule also works if the lock is unavailable. */ }
+      return fallback();
+    }
+    async function refresh() {
+      const ticket=++request;
+      clearTimeout(timer);
+      const saved=read(), now=Date.now();
+      const event=active(saved,now)?saved:await (pending??=acquire().finally(()=>{pending=null;}));
+      if(stopped||ticket!==request)return;
+      const at=Date.now(), phase=phaseAt(at), stamp=event.id+'|'+phase;
+      if(current!==stamp){
+        current=stamp;
+        onUpdate(event,phase);
+      }
+      if(!root.document.hidden){
+        const nextMinute=(Math.floor(at/minute)+1)*minute;
+        timer=setTimeout(refresh,Math.max(1,Math.min(event.endsAt,nextMinute)-at));
+      }
+    }
+    const onStorage=event=>{if(event.key===key||event.key===null)refresh();};
+    root.addEventListener('storage',onStorage);
+    root.addEventListener('pageshow',refresh);
+    root.document.addEventListener('visibilitychange',refresh);
+    refresh();
+    return ()=>{
+      stopped=true;
+      clearTimeout(timer);
+      root.removeEventListener('storage',onStorage);
+      root.removeEventListener('pageshow',refresh);
+      root.document.removeEventListener('visibilitychange',refresh);
+    };
+  }
+
+  function mount(surfaces) {
+    const layers=Array.from(surfaces,surface=>{
+      const slots=[0,1].map(()=>{
+        const layer=root.document.createElement('div');
+        layer.className='world-weather-slot';
+        const particles=root.document.createElement('div');
+        particles.className='world-weather-particles';
+        layer.append(particles);
+        surface.append(layer);
+        return layer;
+      });
+      return slots;
+    });
+    let previous='', slot=0;
+    return (event)=>{
+      if(previous===event.id)return;
+      previous=event.id;
+      slot=1-slot;
+      for(const pair of layers){
+        const layer=pair[slot];
+        layer.dataset.kind=event.type;
+        layer.dataset.intensity=event.intensity;
+        layer.style.setProperty('--weather-offset',-(Math.max(0,Date.now()-event.startedAt)%12000)+'ms');
+        pair[1-slot].classList.remove('is-current');
+        layer.classList.add('is-current');
+      }
+    };
+  }
+
+  root.CitadelWeather=Object.freeze({active,draw,mount,phaseAt,phaseLabel:phase=>phases[phase],label:type=>events[type]?.label,scheduled,start});
+})(globalThis);
 
 </script><script>
 (function(){
 'use strict';
 var model=window.Citadel, state=model.load(), selected=null, mode='overview';
 var symbols={throne:'♛',quarters:'☾',study:'✒',wardrobe:'♧',gallery:'✧',lounge:'♨',training:'⚔',archive:'▤',treasury:'◆',workshop:'⚒'};
-var weatherApi=window.CitadelWeather;var weatherRefreshBusy=false;var life=window.CitadelLife;var sceneRoomId=null,heroX=45;var demoLevel=1;var demoEnabled=false;/* Реальный облик: отдельные добровольные данные, без связи с уровнем. */
+var weatherApi=window.CitadelWeather;var life=window.CitadelLife;var sceneRoomId=null,heroX=45;var demoLevel=1;var demoEnabled=false;/* Реальный облик: отдельные добровольные данные, без связи с уровнем. */
 var appearanceKey='plan.citadel.appearance.v1';
 function appearance(){try{var v=JSON.parse(localStorage.getItem(appearanceKey)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return {};}}
 function appearanceScale(){var a=liveCitadel||{},base=Number(a.baseline),current=Number(a.current);if(!base||!current||base<30||current<30||base>500||current>500)return 1;return Math.max(.82,Math.min(1.18,Math.sqrt(current/base)));}
@@ -368,36 +606,17 @@ var liveCitadel=null;window.addEventListener('message',function(e){if(e.source!=
 Object.keys(model.rooms).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=model.rooms[k].name+' ('+model.rooms[k].size+')';kind.appendChild(o);});
 function announce(t){status.textContent=t;}
 function commit(next){state=next;model.save(state);render();}
-function drawWeather(){
- var layer=document.getElementById('scene-weather'),scene=document.getElementById('room-scene'),weather=effectiveWeather();
- layer.className=weather;layer.textContent='';
- scene.classList.toggle('reduce-motion',!!state.settings.reducedMotion);
- if(weather!=='rain'&&weather!=='snow')return;
- var count=state.settings.reducedMotion?10:weather==='rain'?28:16;
- for(var i=0;i<count;i++){var drop=document.createElement('i');drop.style.setProperty('--x',((i*37+11)%97)+'%');drop.style.setProperty('--y',((i*29+13)%88)+'%');drop.style.setProperty('--dur',(weather==='rain'?1.3+(i%6)*.16:4+(i%7)*.6)+'s');drop.style.setProperty('--delay',(-i*.27)+'s');layer.appendChild(drop);}
-}
-async function autoRefreshWeather(){
- if(weatherRefreshBusy||state.weather.mode!=='hybrid')return;
- var city=weatherApi.savedCity();if(!city)return;
- var cache=weatherApi.cached();if(cache&&Date.now()-cache.fetchedAt<30*60*1000)return;
- weatherRefreshBusy=true;
- try{await weatherApi.lookup(city);render();}
- catch(e){var info=document.getElementById('weather-info');info.textContent='Нет связи. Используются последние данные или магическая погода.';}
- finally{weatherRefreshBusy=false;}
-}
-function effectiveWeather(){
- if(state.weather.mode==='hybrid'){var cache=weatherApi.cached();if(cache)return cache.weather;}
- return state.weather.selected;
-}
 function applyAtmosphere(){
- var env=model.environment(Date.now(),state),phase=state.settings.dayNight?env.phase:'day';
- castle.dataset.phase=phase;document.getElementById('room-scene').dataset.phase=phase;
- document.getElementById('room-scene').dataset.weather=effectiveWeather();
- document.getElementById('phase-label').textContent=({morning:'Утро',day:'День',evening:'Вечер',night:'Ночь','deep-night':'Глубокая ночь'})[phase]+' · местное время';
- document.getElementById('weather').value=state.weather.selected;document.getElementById('weather').disabled=state.weather.mode==='hybrid';document.getElementById('weather-mode').value=state.weather.mode||'fantasy';var cache=weatherApi.cached();document.getElementById('weather-info').textContent=state.weather.mode==='hybrid'?(cache?'Последние данные: '+cache.city+' · '+new Date(cache.fetchedAt).toLocaleString('ru-RU'):'Нет данных. Укажи город и нажми «Обновить».'):'Магическая погода выбирается вручную.';
+ var phase=state.settings.dayNight?weatherApi.phaseAt(Date.now()):'day';
+ document.documentElement.dataset.worldPhase=phase;
+ var scene=document.getElementById('room-scene');
+ castle.dataset.phase=phase;
+ scene.dataset.phase=phase;
+ scene.classList.toggle('reduce-motion',!!state.settings.reducedMotion);
+ document.getElementById('phase-label').textContent=weatherApi.phaseLabel(phase)+' · местное время';
  document.getElementById('day-night').checked=state.settings.dayNight;
  document.getElementById('reduce-motion').checked=state.settings.reducedMotion;
- document.getElementById('scene-hero').style.animation=state.settings.reducedMotion?'none':'';drawWeather();
+ document.getElementById('scene-hero').style.animation=state.settings.reducedMotion?'none':'';
 }
 function render(){
 castle.textContent='';applyAtmosphere();castle.classList.toggle('mode-walk',mode==='walk');
@@ -453,9 +672,6 @@ document.getElementById('move-right').onclick=function(){sceneMove(heroX+12);};
 document.getElementById('room-scene').onclick=function(e){if(e.target.closest('button'))return;var rect=this.getBoundingClientRect();sceneMove((e.clientX-rect.left)/rect.width*100);};
 document.getElementById('scene-talk').onclick=function(){var n=life.residents(state,Date.now(),rank()).find(function(n){return n.roomId===sceneRoomId;});document.getElementById('scene-status').textContent=n?n.name+': «'+life.dialogue(n.id,n.activity)+'»':'Здесь пока не с кем поговорить.';};
 document.addEventListener('keydown',function(e){if(document.getElementById('room-view').hidden)return;if(e.key==='Escape')document.getElementById('close-room').click();if(e.key==='ArrowLeft')sceneMove(heroX-8);if(e.key==='ArrowRight')sceneMove(heroX+8);});
-document.getElementById('weather-mode').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.weather.mode=this.value;commit(next);if(next.weather.mode==='hybrid')autoRefreshWeather();};
-document.getElementById('refresh-weather').onclick=async function(){var city=document.getElementById('weather-city').value.trim();var button=this;button.disabled=true;document.getElementById('weather-info').textContent='Загружаю погоду…';try{var result=await weatherApi.lookup(city);var next=JSON.parse(JSON.stringify(state));next.weather.mode='hybrid';commit(next);document.getElementById('weather-info').textContent='Погода обновлена: '+result.city;}catch(e){document.getElementById('weather-info').textContent=e.message+' Используются сохранённые данные или магическая погода.';}finally{button.disabled=false;}};
-document.getElementById('weather').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.weather.selected=this.value;commit(next);};
 document.getElementById('day-night').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.settings.dayNight=this.checked;commit(next);};
 document.getElementById('reduce-motion').onchange=function(){var next=JSON.parse(JSON.stringify(state));next.settings.reducedMotion=this.checked;commit(next);};
 document.getElementById('castle-zoom').onclick=function(){var zoomed=castle.classList.toggle('zoomed');this.textContent=zoomed?'Уместить весь план':'Увеличить план';this.setAttribute('aria-pressed',String(zoomed));document.getElementById('castle-hint').textContent=zoomed?'Проведи пальцем влево или вправо':'Нажми на комнату для выбора';};
@@ -463,8 +679,13 @@ document.getElementById('overview').onclick=function(){mode='overview';render();
 document.getElementById('walk').onclick=function(){mode='walk';announce('Режим прогулки: выбери комнату и нажми «Направить героя». Нажми на комнату, чтобы войти внутрь и перемещаться по интерьеру.');render();};
 document.getElementById('add-floor').onclick=function(){var next=JSON.parse(JSON.stringify(state));var f=next.floors.find(function(x){return !x.unlocked;});if(f)f.unlocked=true;else next.floors.push({id:'f'+next.floors.length,capacity:6,unlocked:true});commit(next);announce('Этаж открыт в демонстрационном режиме.');};
 document.getElementById('reset').onclick=function(){if(!confirm('Сбросить только прототип Цитадели?'))return;selected=null;commit(model.initial());announce('Прототип сброшен.');};
-document.getElementById('weather-city').value=weatherApi.savedCity();
 try{render();}catch(error){castle.textContent='Ошибка отрисовки Цитадели: '+(error&&error.message||String(error));castle.style.color='#ffb5b5';console.error('Citadel render failed',error);}
-autoRefreshWeather();document.addEventListener('visibilitychange',function(){if(!document.hidden)autoRefreshWeather();});
+var paint=weatherApi.mount([document.getElementById('scene-weather')]);
+weatherApi.start(function(event){
+ document.getElementById('weather-info').textContent=weatherApi.label(event.type);
+ document.getElementById('room-scene').dataset.weather=event.type;
+ paint(event);
+ applyAtmosphere();
+});
 })();
 </script></body></html>
