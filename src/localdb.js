@@ -135,6 +135,7 @@
     if (e.key === META) { meta = jget(META, {}) || {}; renderChip(); }
     if (e.key === TOKEN_KEY) { readToken(); renderChip(); }
     if (e.key === CLOUD_META && firebaseConfigured) { renderChip(); scheduleCloud(); }
+    if (e.key === PUSH_KEY && firebaseConfigured) { refreshPushLocal(); renderChip(); scheduleCloud(); }
     if (e.key === KEY) { try { docs = persistedDocs(); dirty = true; revision++; notify(); scheduleSync(); } catch (_) { corruptRaw = e.newValue; upgradeBlocked = true; } renderChip(); }
   });
 
@@ -201,10 +202,11 @@
   }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
   // Discovery receipts are monotonic; preference follows the selected snapshot.
-  var discoveryPaths = ['cfg/fate','cfg/legends','cfg/realm-achievements','cfg/shelter-items','cfg/forge-discoveries','cfg/chains-discoveries'];
+  var discoveryPaths = ['cfg/fate','cfg/legends','cfg/realm-achievements','cfg/shelter-items','cfg/forge-discoveries','cfg/chains-discoveries','cfg/ascension'];
   function retainDiscovery(path, local, incoming) {
     if(!local && !incoming)return null;
     if(path==='cfg/chains-discoveries')return window.VkachChains.mergeAwards(local,incoming);
+    if(path==='cfg/ascension')return window.VkachAscension.merge(local,incoming);
     var engine=path==='cfg/forge-discoveries'?window.VkachForgeAwards:path==='cfg/shelter-items'?window.VkachShelter:path==='cfg/fate'?window.VkachFate:path==='cfg/realm-achievements'?window.VkachRealm:window.VkachLegends;
     if(!engine||!engine.merge)throw new Error('Discovery engine unavailable');
     return engine.merge(local,incoming);
@@ -439,9 +441,11 @@
 
   var firebaseCloud, firebaseTransport, firebaseConnecting=false, cloudTimer, cloudRetry=false, firebaseError='', archivedCloud=null;
   var firebaseQueue=Promise.resolve();
-  var pushTimer, remindersForPush, pushStatus='', lastPushProof='', lastPushAt=0;
+  var pushTimer, remindersForPush, dailyForPush, pushStatus='', lastPushProof='', lastPushAt=0, lastPushTokenCheck=0;
   var pushQueues={remote:Promise.resolve(),worker:Promise.resolve()};
   var PUSH_KEY = PREFIX + 'push136.v1';
+  var PUSH_SETTINGS_PATH = 'cfg/push-reminders';
+  var registeredPush = null, registeredPushRevision = 0;
   function firebaseMeta() { return jget(CLOUD_META,{}) || {}; }
   function firebaseSerial(fn) {
     if (navigator.locks) return navigator.locks.request(KEY+'.firebase',fn);
@@ -496,7 +500,7 @@
       firebaseCloud=window.VkachCloudSync.create({
         meta:firebaseMeta,
         setMeta:function (value) { if (!jset(CLOUD_META,value)) throw storageError(); },
-        changed:renderChip, schedule:scheduleCloud,
+        changed:function(){refreshPushLocal();renderChip();}, schedule:scheduleCloud,
         serial:firebaseSerial,
         blocked:function () { return upgradeBlocked || Boolean(pendingConflict); },
         read:function () { return exclusive(persistedDocs); },
@@ -521,7 +525,13 @@
       'Не удалось подключиться к Firebase. Данные доступны на устройстве.';
     renderChip();
   }
-  function bindReminders(controller) { remindersForPush=controller; }
+  function bindReminders(controller,dailyNeeded) { remindersForPush=controller;dailyForPush=dailyNeeded; }
+  function reminderProof() {
+    var legacy=remindersForPush.pushState(),config=docs[PUSH_SETTINGS_PATH]?.d;
+    if (!config) return legacy;
+    return {day:legacy.day,at:config.times?.daily || '00:00',quietFrom:config.quietFrom,quietTo:config.quietTo,
+      needed:Boolean(config.times?.daily && dailyForPush?.())};
+  }
   function pushSerial(kind,fn) {
     if (navigator.locks) return navigator.locks.request(KEY+'.push-'+kind,fn);
     var next=pushQueues[kind].then(fn,fn);
@@ -544,17 +554,23 @@
   }
   async function enablePush() {
     var state=firebaseCloud?.state(), uid=state?.user?.uid;
-    if (!uid || !state.enabled || !firebaseMeta().revision || !firebaseTransport.online() || !CFG.cloud.vapidKey ||
-        !('Notification' in window) || !('PushManager' in window)) throw new Error('Push unavailable');
+    if (!uid || !pushConnection().ready) throw new Error('Push unavailable');
     if (await Notification.requestPermission() !== 'granted') throw new Error('Push permission');
     var subscription=await pushSerial('remote',async function () {
       if (!firebaseCloud.state().enabled || firebaseCloud.state().user?.uid!==uid) throw new Error('Push unavailable');
       var registration = await workerPushState(()=>null);
       if (!registration?.active) throw new Error('Worker inactive');
-      var prior = jget(PUSH_KEY,null), token = await firebaseTransport.pushToken(registration);
+      var prior = jget(PUSH_KEY,null);
+      if (prior && prior.uid!==uid) {
+        await firebaseTransport.deletePushToken();
+        if (!currentSubscription(prior) || firebaseCloud.state().user?.uid!==uid) throw new Error('Push unavailable');
+      }
+      var token = await firebaseTransport.pushToken(registration);
       if (!token || !currentSubscription(prior) || firebaseCloud.state().user?.uid!==uid || !firebaseCloud.state().enabled) throw new Error('Push unavailable');
       var next={uid,device:prior?.uid===uid?prior.device:crypto.randomUUID(),token,consent:crypto.randomUUID(),enabled:true};
       if (!jset(PUSH_KEY,next)) throw storageError();
+      registeredPush=null;
+      lastPushTokenCheck=Date.now(); lastPushProof=''; lastPushAt=0;
       return next;
     });
     try { await refreshPush(); }
@@ -571,7 +587,7 @@
       await workerPushState(()=>null).catch(()=>{});
       throw storageError();
     }
-    lastPushProof=''; lastPushAt=0;
+    registeredPush=null; lastPushProof=''; lastPushAt=0; lastPushTokenCheck=0;
     var cleared=await workerPushState(pushMarker).then(()=>true,()=>false);
     var removed=false;
     if (firebaseTransport.online()) {
@@ -597,31 +613,78 @@
   }
   function pushMarker() {
     var subscription=jget(PUSH_KEY,null), info=firebaseMeta(), state=firebaseCloud?.state();
-    if (!subscription?.enabled || !remindersForPush || !state?.enabled || state.review) return null;
-    var proof=remindersForPush.pushState();
-    return {device:subscription.device,day:proof.day,revision:info.revision,needed:proof.needed};
+    if (!subscription?.enabled || !remindersForPush || !state?.enabled || state.review ||
+        state.user?.uid!==subscription.uid || !('Notification' in window) || Notification.permission!=='granted') return null;
+    var proof=reminderProof(),config=docs[PUSH_SETTINGS_PATH]?.d;
+    return {device:subscription.device,day:proof.day,revision:info.revision,needed:proof.needed,policy:config?.id || null,
+      timezone:Intl.DateTimeFormat().resolvedOptions().timeZone};
   }
   function refreshPushLocal() {
     if (jget(PUSH_KEY,null)) workerPushState(pushMarker).catch(function () {});
   }
   async function refreshPush() {
     var subscription=jget(PUSH_KEY,null);
-    if (!subscription || !remindersForPush || !firebaseTransport.online() || firebaseCloud.state().user?.uid!==subscription.uid) return;
-    if (!subscription.enabled) return disablePush();
+    if (!subscription || !remindersForPush || !firebaseTransport?.online() || firebaseCloud.state().user?.uid!==subscription.uid) return;
+    if (!subscription.enabled || !('Notification' in window) || Notification.permission!=='granted') return disablePush();
+    var registrationChanged=false;
     await pushSerial('remote',async function () {
       var info=firebaseMeta(), state=firebaseCloud.state();
       if (!currentSubscription(subscription) || !state.enabled || !info.revision || state.review) return;
-      var local=persistedDocs(), localRevision=revision, proof=remindersForPush.pushState();
+      if (Date.now()-lastPushTokenCheck>=86400000) {
+        var registration=await navigator.serviceWorker.getRegistration();
+        if (!registration?.active) return;
+        var token=await firebaseTransport.pushToken(registration);
+        if (!token || !currentSubscription(subscription) || firebaseCloud.state().user?.uid!==subscription.uid) return;
+        if (token!==subscription.token) {
+          subscription={...subscription,token};
+          if (!jset(PUSH_KEY,subscription)) throw storageError();
+        }
+        lastPushTokenCheck=Date.now();
+      }
+      var local=persistedDocs(), localRevision=revision, proof=reminderProof();
       if (await digest(local) !== info.base || !currentSubscription(subscription) || !firebaseCloud.state().enabled ||
           firebaseMeta().revision !== info.revision || localRevision !== revision || firebaseCloud.state().review) return;
       var payload={...proof,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,revision:info.revision,token:subscription.token};
       var stamp=JSON.stringify(payload);
-      if (stamp!==lastPushProof || Date.now()-lastPushAt>=3600000) {
+      if (!same(registeredPush,subscription) || stamp!==lastPushProof || Date.now()-lastPushAt>=3600000) {
         await firebaseTransport.subscription(subscription.uid,subscription.device,payload);
-        if (currentSubscription(subscription)) { lastPushProof=stamp; lastPushAt=Date.now(); }
+        if (currentSubscription(subscription)) {
+          registrationChanged=!same(registeredPush,subscription)||registeredPushRevision!==info.revision;
+          registeredPush=subscription; registeredPushRevision=info.revision;
+          lastPushProof=stamp; lastPushAt=Date.now();
+        }
       }
     });
-    refreshPushLocal();
+    await workerPushState(pushMarker);
+    if (registrationChanged) renderChip();
+  }
+  function pushConnection() {
+    var state=firebaseCloud?.state(), subscription=jget(PUSH_KEY,null);
+    var active=Boolean(subscription?.enabled && subscription.uid===state?.user?.uid);
+    var configured=Boolean(firebaseConfigured && CFG.cloud.vapidKey);
+    var supported='Notification' in window && 'PushManager' in window && 'serviceWorker' in navigator;
+    var ready=Boolean(configured && supported && Notification.permission!=='denied' &&
+      state?.enabled && firebaseMeta().revision && !state.review && firebaseTransport?.online());
+    var canTest=Boolean(active && ready && Notification.permission==='granted' &&
+      same(registeredPush,subscription) && registeredPushRevision===firebaseMeta().revision);
+    var description=pushStatus;
+    if (!configured) description='На этом сайте Firebase Push не подключён.';
+    else if (!supported) description='Этот браузер не поддерживает фоновые уведомления.';
+    else if (Notification.permission==='denied') description='Разрешение отключено в настройках Chrome или Android.';
+    else if (!state?.user) description='Войди в Google через «Аккаунт и сохранения».';
+    else if (!navigator.onLine) description='Нет сети. Настройки сохраняются на устройстве.';
+    else if (!ready) description='Ожидается успешная синхронизация с Firebase.';
+    else if (active) description=canTest?'Устройство зарегистрировано в Firebase.':'Уведомления включены. Подписка обновляется.';
+    else if (!description) description='Уведомления на этом устройстве отключены.';
+    return {active,ready,canTest,description,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone};
+  }
+  async function testPush() {
+    var subscription=jget(PUSH_KEY,null);
+    if (!pushConnection().canTest) return false;
+    await refreshPush();
+    var current=jget(PUSH_KEY,null);
+    if (!pushConnection().canTest || current.uid!==subscription.uid || current.device!==subscription.device) return false;
+    return firebaseTransport.testPush(current.uid,current.device);
   }
   async function pushShownToday(date) {
     if (!firebaseConfigured || !jget(PUSH_KEY,null)?.enabled) return false;
@@ -871,6 +934,7 @@
     return 'синхронизировано ' + Math.round(h / 24) + ' дн назад';
   }
   function renderChip() {
+    if (document.getElementById('push-settings')?.open) window.dispatchEvent(new Event('vkach-push-state'));
     if (!chip) return;
     var txt, cls;
     if (upgradeBlocked || writeFailure || pendingConflict) { txt = '!'; cls = 'warn'; }
@@ -1047,7 +1111,7 @@
           }
         }
       }
-      if (CFG.cloud.vapidKey && !state.blocked) renderPushSettings(panel,state);
+      if (CFG.cloud.vapidKey && !state.blocked) renderPushSettings(panel);
     }
     menu.append(panel);
   }
@@ -1071,8 +1135,8 @@
     compare.append(dataButton('Отложить решение',()=>{conflictDeferred=true;renderMenu();}));
     panel.append(compare);
   }
-  function renderPushSettings(panel,state) {
-    var subscription=jget(PUSH_KEY,null), enabled=Boolean(subscription?.enabled && subscription.uid===state.user.uid);
+  function renderPushSettings(panel) {
+    var connection=pushConnection(), enabled=connection.active;
     panel.append(el('p','pl-s',pushStatus || (enabled?'Фоновые уведомления включены':'Фоновые уведомления отключены')));
     var button=dataButton(enabled?'Отключить Push':'Включить Push',function () {
       button.disabled=true;
@@ -1081,7 +1145,7 @@
         renderChip();
       });
     });
-    button.disabled=!enabled && (!state.enabled || !firebaseMeta().revision);
+    button.disabled=!enabled && !connection.ready;
     panel.append(button);
   }
   function renderMenu() {
@@ -1215,6 +1279,14 @@
     archiveChange(jget(RECOVERY,null));
     ui(); registerSW();
     startFirebase();
+    if (firebaseConfigured && navigator.permissions?.query) {
+      navigator.permissions.query({name:'notifications'}).then(function (permission) {
+        permission.addEventListener('change',function () {
+          refreshPushLocal(); renderChip();
+          refreshPush().catch(function () {});
+        });
+      }).catch(function () {});
+    }
     window.addEventListener('online', function () {
       renderChip();
       if (firebaseConfigured) { if (firebaseCloud) scheduleCloud(); else startFirebase(); }
@@ -1222,6 +1294,10 @@
     });
     window.addEventListener('offline', renderChip);
     document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && firebaseConfigured) {
+        refreshPushLocal();
+        if (firebaseCloud) scheduleCloud();
+      }
       if (!document.hidden && meta.signed && navigator.onLine) sync(false);
     });
     setInterval(function () {
@@ -1235,5 +1311,7 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
-  window.PlanSync = { sync: sync, importObj: importObj, exportBackup: exportBackup, backupFor: backupFor, validateBackup: validateBackup, openData: openData, resolveConflict: resolveConflict, bindReminders:bindReminders, pushShownToday:pushShownToday, _docs: function () { return docs; }, _merge: merge };
+  window.PlanSync = { sync: sync, importObj: importObj, exportBackup: exportBackup, backupFor: backupFor, validateBackup: validateBackup, openData: openData, resolveConflict: resolveConflict, bindReminders:bindReminders, pushShownToday:pushShownToday,
+    pushSettings:Object.freeze({path:PUSH_SETTINGS_PATH,connection:pushConnection,enable:enablePush,disable:disablePush,test:testPush}),
+    _docs: function () { return docs; }, _merge: merge };
 })();

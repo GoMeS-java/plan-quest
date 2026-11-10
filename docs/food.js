@@ -292,9 +292,10 @@
       .filter(([path, row]) => path.startsWith(prefix) && readable(group, row.d))
       .map(([, row]) => row.d);
   }
+  const savedMeal = row => row?.deleted === false && readable('meals', row);
 
   root.VkachFood = Object.freeze({
     start, kinds, modes, keys, collections, limit, validDate, checkKey, makeId, mass, position, portion, totals,
-    suggestedCalories, putDraft, clearDraft, finishMeal, setDeleted, setComplete, recipe, saveCatalog, favorite, fromCatalog, setGoal, read
+    suggestedCalories, putDraft, clearDraft, finishMeal, setDeleted, setComplete, recipe, saveCatalog, favorite, fromCatalog, setGoal, read, savedMeal
   });
 })(globalThis);

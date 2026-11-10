@@ -74,6 +74,13 @@
       async subscription(uid,device,proof) {
         checkUser(uid);
         return db.set(ref('subscriptions/'+uid+'/'+device),proof ? {...proof,observedAt:db.serverTimestamp()} : null);
+      },
+      async testPush(uid,device) {
+        checkUser(uid);
+        const api=await sdk('functions');
+        checkUser(uid);
+        const call=api.httpsCallable(api.getFunctions(project),'sendCitadelTestPush',{timeout:15000});
+        return (await call({device})).data?.accepted===true;
       }
     };
   }

@@ -988,6 +988,7 @@ html,body{overflow-anchor:none}
   <div class="sbox">
     <div class="shead"><b>АСПЕКТЫ И ОТМЕТИНЫ</b><button class="gear" id="trophy-x" type="button" aria-label="Закрыть">&#10005;</button></div>
     <p class="achievement-intro">Здесь хранится то, что уже стало частью твоего пути.</p>
+    <button type="button" id="ascension-open" class="btn">✧ Путь Восхождения</button>
     <nav id="achievement-filters" class="achievement-filters" aria-label="Категории коллекции"></nav>
     <h2 id="aspect-h">АСПЕКТЫ</h2>
     <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -1003,6 +1004,29 @@ html,body{overflow-anchor:none}
     <h2>ОБУЧЕНИЕ</h2><p class="hint">Заклятие проведёт тебя по настоящим разделам. Можно остановиться в любой момент.</p><div class="row"><button class="btn" id="awakening-start" type="button">НАЧАТЬ ОБУЧЕНИЕ</button><button class="btn alt" id="awakening-restart" type="button" hidden>ПРОЙТИ ЗАНОВО</button><button class="btn alt" id="awakening-update-start" type="button">НОВОЕ ОФОРМЛЕНИЕ</button></div>
     <button class="btn" id="data-management" type="button">АККАУНТ И СОХРАНЕНИЯ</button>
     <details id="room-reminders" class="goal"><summary>Напоминания в игре</summary></details>
+    <details id="push-settings" class="goal">
+      <summary>Фоновые уведомления</summary>
+      <p class="hint" id="push-connection" role="status"></p>
+      <div class="row push-controls">
+        <button type="button" class="btn" id="push-toggle" disabled>Включить Push</button>
+        <button type="button" class="btn" id="push-test" disabled>Отправить тест</button>
+      </div>
+      <form id="push-schedule">
+        <p class="hint">Выбери категории и местное время. Недельные итоги приходят в воскресенье.</p>
+        <div class="push-category"><label><input type="checkbox" name="daily"> Дела дня</label><input type="time" name="daily-at" value="18:00" aria-label="Время дел дня"></div>
+        <div class="push-category"><label><input type="checkbox" name="food"> Дневник питания</label><input type="time" name="food-at" value="19:00" aria-label="Время напоминания о питании"></div>
+        <div class="push-category"><label><input type="checkbox" name="chains"> Разрыв Оков</label><input type="time" name="chains-at" value="10:00" aria-label="Время напоминания о плане"></div>
+        <div class="push-category"><label><input type="checkbox" name="achievements"> Достижения</label><input type="time" name="achievements-at" value="09:00" aria-label="Время уведомления о достижениях"></div>
+        <div class="push-category"><label><input type="checkbox" name="weekly"> Итоги недели</label><input type="time" name="weekly-at" value="20:00" aria-label="Время итогов недели"></div>
+        <div class="push-category"><label><input type="checkbox" name="quiet"> Часы тишины</label></div>
+        <div class="push-quiet">
+          <label>С <input type="time" name="quietFrom" value="23:00" aria-label="Начало тишины"></label>
+          <label>До <input type="time" name="quietTo" value="08:00" aria-label="Конец тишины"></label>
+        </div>
+        <button type="submit" class="btn">Сохранить расписание</button>
+      </form>
+      <p class="hint" id="push-feedback" role="status"></p>
+    </details>
     <h2>ЭФФЕКТЫ</h2>
     <div class="goal settings-effects">
       <div class="row">
@@ -1016,7 +1040,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="hint"><b>1.3.7 · Живая Трапезная.</b> Поиск продуктов FatSecret, порции и КБЖУ; управление картой Цитадели убрано в компактное меню. Начисления и сохранения прежние.</div>
+    <div class="hint"><b>1.4 · Путь Восхождения.</b> Сохранённые дела открывают новые отметины и узлы древа. Трапезная понимает распространённые русские названия продуктов, а расписание фоновых уведомлений доступно в настройках.</div>
     <div class="release-stamp"><b>Версия __VER__</b><span>Сборка __BUILD__</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.3.3</b> · Пробуждение Цитадели. Меню комнат, поиск и дневник питания с рецептами.</div><div class="hint"><b>1.3.2</b> · Живая Цитадель. Жители снова ходят, работают и реагируют на разговор. У каждого движения отдельный кадр.<br><b>1.3.1</b> · Разрыв оков использует общие осколки и скрытый аспект. Исправлена загрузка сборки при обновлении.<br><b>1.3</b> · Разрыв оков: дневник, осколки за соблюдение лимита, скрытые отметины и Песочные часы судьбы.<br><b>1.2</b> · Кузница судьбы: настройка заданий, целей и открытых аспектов.<br><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
@@ -1100,7 +1124,31 @@ html,body{overflow-anchor:none}
 <section id="room-workspace" class="food-panel room-workspace" hidden></section>
 <dialog id="fate-forge-dialog" aria-labelledby="fate-forge-title"><header><strong id="fate-forge-title">КУЗНИЦА СУДЬБЫ · I</strong><button id="fate-forge-close" type="button" aria-label="Закрыть Кузницу">✕</button></header><div class="forge-editor"><nav class="row" aria-label="Стадии Кузницы"><button type="button" class="btn" id="fate-forge-tasks-tab" aria-pressed="true">I · Задания</button><button type="button" class="btn" id="fate-forge-goals-tab" aria-pressed="false">II · Путь</button><button type="button" class="btn" id="fate-forge-aspects-tab" aria-pressed="false">III · Аспекты</button></nav><p id="fate-forge-stage-note" class="hint">Редактор целей открывается после первого улучшения Мастерской.</p><div id="fate-forge-tasks"><label>Раздел <select id="fate-forge-group"><option value="daily">Основные</option><option value="weekly">Еженедельные</option><option value="periodic">Периодические</option></select></label><div id="fate-forge-list"></div><button class="btn" id="fate-forge-add" type="button">Добавить задание</button><form id="fate-forge-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Расписание <select name="schedule"><option value="daily">Каждый день</option><option value="alternate">Через день</option></select></label><button class="btn" type="submit">Сохранить</button><button class="btn" id="fate-forge-archive" type="button">Убрать из задач</button></form></div><div id="fate-forge-goals" hidden><div id="fate-forge-goal-list"></div><button id="fate-forge-goal-add" class="btn" type="button">Добавить цель</button><form id="fate-forge-goal-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Источник прогресса <select name="source"><option value="manual">Ручной ввод</option><option value="capital">Капитал из финансов</option><option value="weight">Вес из журнала</option><option value="english">Отметки английского</option></select></label><label>Целевое значение <input name="target" type="number" min="0.01" max="1000000000" step="0.01" required></label><p id="fate-forge-goal-preview" aria-live="polite"></p><button class="btn" type="submit">Сохранить цель</button></form></div><div id="fate-forge-aspects" hidden><p class="hint">Здесь только открытые аспекты. При замене прежний бонус действует до конца дня.</p><div id="fate-forge-aspect-list"></div></div><p id="fate-forge-feedback" role="status"></p></div></dialog>
 
+<dialog id="ascension" aria-labelledby="ascension-title">
+  <header class="ascension-header">
+    <div><small>ДРЕВО РАЗВИТИЯ</small><h2 id="ascension-title">Путь Восхождения</h2></div>
+    <button type="button" id="ascension-close" aria-label="Закрыть древо">✕</button>
+  </header>
+  <div class="ascension-scroll">
+    <div class="ascension-tools">
+      <span>Открыто <b class="ascension-counter">0 / 15</b></span>
+      <div role="group" aria-label="Масштаб древа">
+        <button type="button" data-ascension-zoom="out" aria-label="Уменьшить">−</button>
+        <button type="button" data-ascension-zoom="reset" aria-label="Сбросить масштаб">⟲</button>
+        <button type="button" data-ascension-zoom="in" aria-label="Увеличить">+</button>
+      </div>
+    </div>
+    <svg viewBox="0 0 360 360" role="group" aria-label="Карта пяти направлений">
+      <g class="ascension-stage"></g>
+    </svg>
+    <article class="ascension-node" aria-live="polite">
+      <small class="ascension-node-state"></small><h3 class="ascension-node-title"></h3><p class="ascension-node-detail"></p>
+    </article>
+    <p class="ascension-help">Коснись печати, чтобы узнать о ней. Приближай двумя пальцами и перемещай увеличенную карту.</p>
+  </div>
+</dialog>
 <script src="realm-achievements.js"></script>
+<script src="ascension.js"></script>
 <script src="shelter-items.js"></script>
 <script src="forge-awards.js"></script>
 <script src="forge-art.js"></script>
@@ -1343,7 +1391,7 @@ html,body{overflow-anchor:none}
     records:function(){return PlanSync._docs();},
     transact:function(fn){return db.runTransaction(fn);},
     notify:toast,
-    changed:function(){refreshFoodSuggestion();window.__citadelShell?.refreshToday();}
+    changed:function(){refreshFoodSuggestion();window.__citadelShell?.refreshToday();requestProfileRender();}
   });
   var roomWorkspace = VkachRoomWorkspace.mount($('room-workspace'), {
     today:function(){return dkey(new Date());},
@@ -1390,7 +1438,75 @@ html,body{overflow-anchor:none}
       return dayCount(date,stepInfo())<reqTotal(date);
     }
   });
-  window.PlanSync.bindReminders?.(roomReminders);
+  window.PlanSync.bindReminders(roomReminders,function(){
+    var date=dkey(new Date());
+    return loaded&&dayCount(date,stepInfo())<reqTotal(date);
+  });
+  (function mountPushSettings(){
+    var host=$('push-settings'),form=$('push-schedule'),feedback=$('push-feedback');
+    var toggle=$('push-toggle'),test=$('push-test'),api=PlanSync.pushSettings,busy=false;
+    var keys=['daily','food','chains','achievements','weekly'],timePattern=/^([01]\d|2[0-3]):[0-5]\d$/;
+    var saved=function(){return PlanSync._docs()[api.path]?.d;};
+    function draw(){
+      var connection=api.connection();
+      $('push-connection').textContent=connection.description+' Часовой пояс: '+connection.timezone+'.';
+      toggle.textContent=connection.active?'Отключить Push':'Включить Push';
+      toggle.disabled=busy||!connection.active&&!connection.ready;
+      test.disabled=busy||!connection.canTest;
+    }
+    function inputs(){
+      keys.forEach(function(key){form.elements[key+'-at'].disabled=!form.elements[key].checked;});
+      form.elements.quietFrom.disabled=form.elements.quietTo.disabled=!form.elements.quiet.checked;
+    }
+    host.addEventListener('toggle',function(){
+      if(!host.open)return;
+      var config=saved();
+      form.reset();
+      keys.forEach(function(key){
+        var at=config?.times?.[key];
+        form.elements[key].checked=timePattern.test(at);
+        if(timePattern.test(at))form.elements[key+'-at'].value=at;
+      });
+      form.elements.quiet.checked=!config||config.quietFrom!==config.quietTo;
+      if(config&&config.quietFrom!==config.quietTo){
+        form.elements.quietFrom.value=config.quietFrom;form.elements.quietTo.value=config.quietTo;
+      }
+      feedback.textContent='';inputs();draw();
+    });
+    window.addEventListener('vkach-push-state',draw);
+    form.addEventListener('change',inputs);
+    form.addEventListener('submit',function(event){
+      event.preventDefault();
+      if(!db||!loaded||busy)return;
+      var times={};
+      keys.forEach(function(key){if(form.elements[key].checked)times[key]=form.elements[key+'-at'].value;});
+      var from=form.elements.quiet.checked?form.elements.quietFrom.value:'00:00';
+      var to=form.elements.quiet.checked?form.elements.quietTo.value:'00:00';
+      if(![...Object.values(times),from,to].every(function(time){return timePattern.test(time);})||
+          form.elements.quiet.checked&&from===to){feedback.textContent='Проверь время и укажи разные границы часов тишины.';return;}
+      var save=form.querySelector('[type="submit"]');save.disabled=true;
+      enqueue(function(){return db.runTransaction(function(tx){
+        var previous=tx.get(api.path);
+        tx.set(api.path,{version:1,id:crypto.randomUUID(),times,quietFrom:from,quietTo:to,
+          achievementsSince:times.achievements?(previous?.times?.achievements&&previous.achievementsSince||Date.now()):null});
+      });}).then(function(){feedback.textContent='Расписание сохранено. Устройство получит новые настройки после синхронизации.';},
+        function(){feedback.textContent='Не удалось сохранить расписание. Попробуй ещё раз.';}).finally(function(){save.disabled=false;draw();});
+    });
+    async function action(run,success,failure){
+      busy=true;feedback.textContent='';draw();
+      try{var result=await run();feedback.textContent=result===false?failure:success;}
+      catch(_){feedback.textContent=failure;}
+      finally{busy=false;draw();}
+    }
+    toggle.onclick=function(){
+      var active=api.connection().active;
+      action(active?api.disable:api.enable,active?'Уведомления отключены на этом устройстве.':'Разрешение и подписка сохранены.',
+        'Проверь сеть, синхронизацию и разрешение на уведомления.');
+    };
+    test.onclick=function(){action(api.test,'Firebase принял тест. Проверь системные уведомления.',
+      'Тест не отправлен. Проверь подключение и повтори через минуту.');};
+    draw();
+  })();
   function roomDailyIds(day){
     var active=activeIdx(day);
     return day>=NEW_Q&&forgeEnabled('daily-8',day)?active.concat(8):active;
@@ -4573,6 +4689,8 @@ html,body{overflow-anchor:none}
     $('ac-copy').textContent = 'СКОПИРОВАТЬ СВОДКУ';
     $('achup').dataset.event = /^a:/.test(e.id||'')?'achievement':'notice';
     $('achup').classList.toggle('red', !!e.red);
+    $('achup').dataset.rarity=e.rarity||'';
+    if(e.rarity)$('achup').style.setProperty('--rarity',achievementRarity(e.rarity)[1]);
     $('achup').hidden = false;
     $('ac-ok').focus();
     burst();
@@ -4619,17 +4737,22 @@ html,body{overflow-anchor:none}
       if(!Object.prototype.hasOwnProperty.call(dates,def.id)||!dates[def.id])return;
       rows.push({id:def.id,kind:group[1],name:def.title||(def.t==='Скрытая отметина'?def.d:def.t)||def.d||'Полученная отметина',description:def.d||'',date:achievementStamp(dates[def.id]),points:Number(def.pts)||0,cos:group[1]==='superrare'?def.cos:cosOf(def.id),title:def.title||'',room:group[1]==='superrare'?(ROOM_OF[def.id]||''):''});
     });});
-    if(typeof realmOwned==='function')realmOwned().forEach(function(d){rows.push({id:d.id,kind:d.kind,name:d.name,description:'Заклятие сохранило итог твоего пути в Перестройке.',date:dkey(new Date(d.at)),points:0,cos:d.cos[0]||'',cosmetics:d.cos,clothes:d.clothes,title:d.title,room:''});});
+    if(typeof realmOwned==='function')realmOwned().forEach(function(d){rows.push({id:d.id,kind:d.kind,name:d.name,description:d.text||'Заклятие сохранило итог твоего пути в Цитадели.',date:dkey(new Date(d.at)),points:0,cos:d.cos[0]||'',cosmetics:d.cos,clothes:d.clothes,title:d.title,room:''});});
     if(typeof forgeOwned==='function')forgeOwned().forEach(function(row){
       rows.push({id:row.id,kind:row.kind,name:row.name,date:row.date,description:'Путь Кузницы · '+row.task,points:0,cos:row.background});
     });
     if(typeof VkachChainsUI!=='undefined')VkachChainsUI.owned().forEach(function(row){rows.push(row);});
     return rows.sort(function(a,b){return b.date.localeCompare(a.date)||a.id.localeCompare(b.id);});
   }
+  var achievementRarities={
+    mark:['Обычная','#c4afcb'],uncommon:['Необычная','#a3d4b0'],rare:['Редкая','#8cc8f1'],
+    epic:['Эпическая','#d1a3ff'],legendary:['Легендарная','#f1cd87'],superrare:['Суперредкая','#ffa6ad']
+  };
+  function achievementRarity(kind){return achievementRarities[kind]||achievementRarities.mark;}
   function achievementSigil(canvas,row){
     canvas.width=64;canvas.height=64;var ctx=canvas.getContext('2d');if(!ctx)return;
     var seed=2166136261;for(var i=0;i<row.id.length;i++){seed^=row.id.charCodeAt(i);seed=Math.imul(seed,16777619)>>>0;}
-    var color=row.kind==='superrare'?'#e4bd87':'#b8a0cf';ctx.fillStyle='#171322';ctx.fillRect(0,0,64,64);
+    var color=achievementRarity(row.kind)[1];ctx.fillStyle='#171322';ctx.fillRect(0,0,64,64);
     ctx.strokeStyle=color;ctx.lineWidth=2;ctx.strokeRect(5,5,54,54);if(row.kind==='superrare'){ctx.strokeRect(9,9,46,46);ctx.fillStyle='#806147';[[2,2],[56,2],[2,56],[56,56]].forEach(function(p){ctx.fillRect(p[0],p[1],6,6);});}
     var shields=['01111111110','01222222210','01211111210','01211211210','01212221210','01211211210','00121112100','00122222100','00012221000','00001210000','00000100000'];
     var blade=['00001210000','00001210000','00001210000','00001210000','00001210000','00111211100','00001110000','00001110000','00001210000','00001210000','00001110000'];
@@ -4657,9 +4780,9 @@ html,body{overflow-anchor:none}
     var rows=achievementOwnedRows(),grid=el('div','achievement-grid');grid.id='achievement-grid';box.appendChild(grid);
     if(!rows.length)grid.appendChild(el('p','hint achievement-empty','Полученные отметины появятся здесь. Закрытые страницы остаются тайной.'));
     var chosen=profileSelected();rows.forEach(function(row){
-      var card=el('article','achievement-card');card.dataset.achievement=row.id;card.dataset.rarity=row.kind;
+      var card=el('article','achievement-card');card.dataset.achievement=row.id;card.dataset.rarity=row.kind;card.style.setProperty('--rarity',achievementRarity(row.kind)[1]);
       var emblem=el('canvas','achievement-emblem');emblem.setAttribute('aria-hidden','true');achievementSigil(emblem,row);card.appendChild(emblem);
-      card.appendChild(el('span','achievement-rarity',row.kind==='superrare'?'СУПЕРРЕДКАЯ':row.kind==='rare'?'РЕДКАЯ':'ОТМЕТИНА'));card.appendChild(el('h3',null,row.name));card.appendChild(el('time','achievement-date',row.date?'Получено '+row.date.split('-').reverse().join('.'):'Дата получения не записана'));
+      card.appendChild(el('span','achievement-rarity',achievementRarity(row.kind)[0].toUpperCase()));card.appendChild(el('h3',null,row.name));card.appendChild(el('time','achievement-date',row.date?'Получено '+row.date.split('-').reverse().join('.'):'Дата получения не записана'));
       var selected=chosen.map(function(id,i){return id===row.id?i+1:0;}).filter(Boolean);if(selected.length)card.appendChild(el('span','achievement-featured','На витрине · место '+selected[0]));
       var details=el('details','achievement-card-details');details.appendChild(el('summary',null,'ПОДРОБНЕЕ'));if(row.description&&row.description!==row.name)details.appendChild(el('p',null,row.description));
       var rewards=[];if(row.points)rewards.push('+'+row.points+' осколков');if(row.title)rewards.push('Титул «'+row.title+'»');if(row.id!=='z33'&&row.cos&&COS[row.cos])rewards.push('Оформление «'+COS[row.cos].n+'»');if(row.id!=='z33'&&row.room&&ROOM_ITEMS[row.room])rewards.push('Предмет «'+ROOM_ITEMS[row.room].n+'»');
@@ -5508,16 +5631,63 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
 
   function realmOwned(){return window.VkachRealm?VkachRealm.owned(S.realm):[];}
-  function realmInputSignature(){if(!window.PlanSync)return '';var records=PlanSync._docs();return JSON.stringify(Object.keys(records).filter(function(k){return /^(days|spont|buys|weights|wardrobe)\//.test(k)||['cfg/look','cfg/outfit','cfg/citadel'].includes(k);}).sort().map(function(k){return [k,records[k].d];}));}
+  var ascensionDialog=$('ascension'),ascensionUI=VkachAscension.mount(ascensionDialog),ascensionBusy=false;
+  function ascensionProgress(){
+    var skills=SK_KEYS.map(function(key){return lastGI?.ups[key]?.at(-1)?.lvl||0;});
+    var today=dkey(new Date());
+    return {rank:lastPI?.L||1,marks:new Set(achievementOwnedRows().filter(function(row){return row.date&&row.date<=today;}).map(function(row){return row.id;})),
+      exerciseAspect:skills.some(function(level){return level>0;}),advancedExercise:skills.some(function(level){return level>=3;}),
+      studyAspect:!!lastGI?.nups.n_eng?.length,chainsAspect:!!lastGI?.chainsAspect};
+  }
+  function ascensionSync(){
+    if(!loaded||!lastGI)return;
+    var ledger=PlanSync._docs()[VkachAscension.path]?.d,progress=ascensionProgress();
+    if(ascensionDialog.open)ascensionUI.render(VkachAscension.view(ledger,progress));
+    if(ascensionBusy||!VkachAscension.reached(ledger,progress).length)return;
+    ascensionBusy=true;
+    enqueue(function(){return db.runTransaction(function(tx){return VkachAscension.reconcile(tx,ascensionProgress(),Date.now());});})
+      .catch(function(){}).finally(function(){ascensionBusy=false;});
+  }
+  $('ascension-open').onclick=function(){
+    if(ascensionDialog.open)return;
+    ascensionUI.render(VkachAscension.view(PlanSync._docs()[VkachAscension.path]?.d,ascensionProgress()));
+    history.pushState(Object.assign({},history.state,{ascension:true}),'');
+    ascensionDialog.showModal();
+  };
+  $('ascension-close').onclick=function(){if(history.state?.ascension)history.back();else ascensionDialog.close();};
+  ascensionDialog.addEventListener('cancel',function(event){event.preventDefault();$('ascension-close').click();});
+  window.addEventListener('popstate',function(event){
+    if(!ascensionDialog.open||event.state?.ascension)return;
+    ascensionDialog.close();
+    event.stopImmediatePropagation();
+  },true);
+  function realmInputSignature(){
+    if(!window.PlanSync)return '';
+    var records=PlanSync._docs(),keys=Object.keys(records).filter(function(k){
+      return /^(days|spont|buys|weights|wardrobe|per|food-meals|goals|forge-tasks)\//.test(k)||
+        ['cfg/look','cfg/outfit','cfg/citadel','cfg/realm-achievements','cfg/forge-discoveries','cfg/chains-discoveries'].includes(k);
+    });
+    return JSON.stringify([dkey(new Date()),keys.sort().map(function(k){return [k,records[k].d];})]);
+  }
   function realmIdle(){return !realmBusy&&(realmFailed||realmSignature===realmInputSignature());}
   function realmSync(){
     if(!loaded||!db||!window.VkachRealm||realmBusy)return;
     var signature=realmInputSignature();if(signature===realmSignature)return;realmSignature=signature;realmFailed=false;
-    var proof={marks:Object.keys(lastGI&&lastGI.ach||{}),cos:Object.keys(unlockedCos()||{})};
+    var proof={marks:Object.keys(lastGI&&lastGI.ach||{}),cos:Object.keys(unlockedCos()||{}),calorieTarget:nutritionDailyGoal,
+      exerciseThresholds:Object.fromEntries(SK_KEYS.map(function(key){return [key,SK[key].th[0]];}))};
     var snapshot=PlanSync._docs(),read={get:function(p){return snapshot[p]&&snapshot[p].d;},list:function(c){return Object.keys(snapshot).filter(function(p){return p.startsWith(c+'/')&&snapshot[p].d;}).map(function(p){return Object.assign({},snapshot[p].d,{id:p.slice(c.length+1)});});}};
     if(!VkachRealm.needs(read,dkey(new Date()),proof))return;realmBusy=true;
     enqueue(function(){return db.runTransaction(function(tx){VkachRealm.reconcile(tx,dkey(new Date()),Date.now(),proof);return VkachRealm.claim(tx);});}).then(function(rows){
-      if(rows.length){achQueue.push({id:'a:realm:'+Date.now(),kind:rows.some(function(r){return r.kind==='superrare';})?'СУПЕРРЕДКАЯ ОТМЕТИНА':'НОВЫЕ ОТМЕТИНЫ',big:rows.length===1?rows[0].name:'Цитадель запомнила твой путь',text:'Полученные отметины и награды добавлены в профиль. Открой «Достижения», чтобы рассмотреть их.',red:false});showNextAch();}
+      if(rows.length){
+        var rarest=rows.reduce(function(best,row){
+          var order=Object.keys(achievementRarities);
+          return order.indexOf(row.kind)>order.indexOf(best.kind)?row:best;
+        });
+        achQueue.push({id:'a:realm:'+rarest.id,kind:achievementRarity(rarest.kind)[0].toUpperCase()+' ОТМЕТИНА',
+          rarity:rarest.kind,big:rows.length===1?rarest.name:'Цитадель запомнила твой путь',
+          text:rows.length===1&&rarest.text?rarest.text+' Титул «'+rarest.title+'».':'Новые отметины и награды ждут тебя в разделе «Достижения».'});
+        showNextAch();
+      }
     },function(){realmSignature='';realmFailed=true;}).finally(function(){realmBusy=false;if(!realmFailed)renderAll();});
   }
   function fateOwned(){return window.VkachFate?VkachFate.discovered(S.fate):[];}
@@ -5653,7 +5823,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
 
 function renderAllInner() {
-    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync(); forgeAwardsSync();
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync(); forgeAwardsSync(); ascensionSync();
   }
 
   function renderHourglass() {
@@ -6106,6 +6276,7 @@ function renderAllInner() {
     watchCollection('forge-tasks',function(rows){S.forge=Object.create(null);rows.forEach(function(row){S.forge[row.id]=row;});});
     db.doc(VkachShelter.path).onSnapshot(function(sn){S.shelter=sn.exists?sn.data():null;firstDone('shelter');requestProfileRender();},dbErr);
     db.doc('cfg/realm-achievements').onSnapshot(function(sn){S.realm=sn.exists?sn.data():null;firstDone('realm');requestProfileRender();},dbErr);
+    db.doc(VkachAscension.path).onSnapshot(function(){requestProfileRender();},dbErr);
     db.doc('cfg/fate').onSnapshot(function(sn){S.fate=sn.exists?sn.data():null;firstDone('fate');requestProfileRender();},dbErr);
     db.doc('cfg/legends').onSnapshot(function(sn){S.legends=sn.exists?sn.data():null;firstDone('legends');requestProfileRender();},dbErr);
     watchCollection('tx', function (r) { S.tx = r; });
@@ -6637,7 +6808,7 @@ function renderAllInner() {
       }
     }).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
     window.addEventListener('popstate',function(){if(npcReturning){npcReturning=false;return;}if(menuReturning){menuReturning=false;var destination=menuDestination;menuDestination=null;if(destination)destination();return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcOrigin&&history.state?.citadelOverlay!=='resident'){citadelNpcClose();return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(ascensionDialog.open||$('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
     function updateShellStatus(){if(!loaded)return;restoreView();updateFloors();updateMenuAccess();refreshToday();roomWorkspace.refresh();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}
     new MutationObserver(updateShellStatus).observe($('citadel-live-rank'),{childList:true,characterData:true,subtree:true});
