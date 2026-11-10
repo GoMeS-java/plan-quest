@@ -201,10 +201,11 @@
   }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
   // Discovery receipts are monotonic; preference follows the selected snapshot.
-  var discoveryPaths = ['cfg/fate','cfg/legends','cfg/realm-achievements','cfg/shelter-items','cfg/forge-discoveries','cfg/chains-discoveries'];
+  var discoveryPaths = ['cfg/fate','cfg/legends','cfg/realm-achievements','cfg/shelter-items','cfg/forge-discoveries','cfg/chains-discoveries','cfg/ascension'];
   function retainDiscovery(path, local, incoming) {
     if(!local && !incoming)return null;
     if(path==='cfg/chains-discoveries')return window.VkachChains.mergeAwards(local,incoming);
+    if(path==='cfg/ascension')return window.VkachAscension.merge(local,incoming);
     var engine=path==='cfg/forge-discoveries'?window.VkachForgeAwards:path==='cfg/shelter-items'?window.VkachShelter:path==='cfg/fate'?window.VkachFate:path==='cfg/realm-achievements'?window.VkachRealm:window.VkachLegends;
     if(!engine||!engine.merge)throw new Error('Discovery engine unavailable');
     return engine.merge(local,incoming);

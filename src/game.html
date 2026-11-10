@@ -988,6 +988,7 @@ html,body{overflow-anchor:none}
   <div class="sbox">
     <div class="shead"><b>АСПЕКТЫ И ОТМЕТИНЫ</b><button class="gear" id="trophy-x" type="button" aria-label="Закрыть">&#10005;</button></div>
     <p class="achievement-intro">Здесь хранится то, что уже стало частью твоего пути.</p>
+    <button type="button" id="ascension-open" class="btn">✧ Путь Восхождения</button>
     <nav id="achievement-filters" class="achievement-filters" aria-label="Категории коллекции"></nav>
     <h2 id="aspect-h">АСПЕКТЫ</h2>
     <div id="sklist" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -1100,7 +1101,31 @@ html,body{overflow-anchor:none}
 <section id="room-workspace" class="food-panel room-workspace" hidden></section>
 <dialog id="fate-forge-dialog" aria-labelledby="fate-forge-title"><header><strong id="fate-forge-title">КУЗНИЦА СУДЬБЫ · I</strong><button id="fate-forge-close" type="button" aria-label="Закрыть Кузницу">✕</button></header><div class="forge-editor"><nav class="row" aria-label="Стадии Кузницы"><button type="button" class="btn" id="fate-forge-tasks-tab" aria-pressed="true">I · Задания</button><button type="button" class="btn" id="fate-forge-goals-tab" aria-pressed="false">II · Путь</button><button type="button" class="btn" id="fate-forge-aspects-tab" aria-pressed="false">III · Аспекты</button></nav><p id="fate-forge-stage-note" class="hint">Редактор целей открывается после первого улучшения Мастерской.</p><div id="fate-forge-tasks"><label>Раздел <select id="fate-forge-group"><option value="daily">Основные</option><option value="weekly">Еженедельные</option><option value="periodic">Периодические</option></select></label><div id="fate-forge-list"></div><button class="btn" id="fate-forge-add" type="button">Добавить задание</button><form id="fate-forge-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Расписание <select name="schedule"><option value="daily">Каждый день</option><option value="alternate">Через день</option></select></label><button class="btn" type="submit">Сохранить</button><button class="btn" id="fate-forge-archive" type="button">Убрать из задач</button></form></div><div id="fate-forge-goals" hidden><div id="fate-forge-goal-list"></div><button id="fate-forge-goal-add" class="btn" type="button">Добавить цель</button><form id="fate-forge-goal-form" hidden><label>Название <input name="title" required maxlength="80"></label><label>Источник прогресса <select name="source"><option value="manual">Ручной ввод</option><option value="capital">Капитал из финансов</option><option value="weight">Вес из журнала</option><option value="english">Отметки английского</option></select></label><label>Целевое значение <input name="target" type="number" min="0.01" max="1000000000" step="0.01" required></label><p id="fate-forge-goal-preview" aria-live="polite"></p><button class="btn" type="submit">Сохранить цель</button></form></div><div id="fate-forge-aspects" hidden><p class="hint">Здесь только открытые аспекты. При замене прежний бонус действует до конца дня.</p><div id="fate-forge-aspect-list"></div></div><p id="fate-forge-feedback" role="status"></p></div></dialog>
 
+<dialog id="ascension" aria-labelledby="ascension-title">
+  <header class="ascension-header">
+    <div><small>ДРЕВО РАЗВИТИЯ</small><h2 id="ascension-title">Путь Восхождения</h2></div>
+    <button type="button" id="ascension-close" aria-label="Закрыть древо">✕</button>
+  </header>
+  <div class="ascension-scroll">
+    <div class="ascension-tools">
+      <span>Открыто <b class="ascension-counter">0 / 15</b></span>
+      <div role="group" aria-label="Масштаб древа">
+        <button type="button" data-ascension-zoom="out" aria-label="Уменьшить">−</button>
+        <button type="button" data-ascension-zoom="reset" aria-label="Сбросить масштаб">⟲</button>
+        <button type="button" data-ascension-zoom="in" aria-label="Увеличить">+</button>
+      </div>
+    </div>
+    <svg viewBox="0 0 360 360" role="group" aria-label="Карта пяти направлений">
+      <g class="ascension-stage"></g>
+    </svg>
+    <article class="ascension-node" aria-live="polite">
+      <small class="ascension-node-state"></small><h3 class="ascension-node-title"></h3><p class="ascension-node-detail"></p>
+    </article>
+    <p class="ascension-help">Коснись печати, чтобы узнать о ней. Приближай двумя пальцами и перемещай увеличенную карту.</p>
+  </div>
+</dialog>
 <script src="realm-achievements.js"></script>
+<script src="ascension.js"></script>
 <script src="shelter-items.js"></script>
 <script src="forge-awards.js"></script>
 <script src="forge-art.js"></script>
@@ -5515,6 +5540,36 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
 
   function realmOwned(){return window.VkachRealm?VkachRealm.owned(S.realm):[];}
+  var ascensionDialog=$('ascension'),ascensionUI=VkachAscension.mount(ascensionDialog),ascensionBusy=false;
+  function ascensionProgress(){
+    var skills=SK_KEYS.map(function(key){return lastGI?.ups[key]?.at(-1)?.lvl||0;});
+    var today=dkey(new Date());
+    return {rank:lastPI?.L||1,marks:new Set(achievementOwnedRows().filter(function(row){return row.date&&row.date<=today;}).map(function(row){return row.id;})),
+      exerciseAspect:skills.some(function(level){return level>0;}),advancedExercise:skills.some(function(level){return level>=3;}),
+      studyAspect:!!lastGI?.nups.n_eng?.length,chainsAspect:!!lastGI?.chainsAspect};
+  }
+  function ascensionSync(){
+    if(!loaded||!lastGI)return;
+    var ledger=PlanSync._docs()[VkachAscension.path]?.d,progress=ascensionProgress();
+    if(ascensionDialog.open)ascensionUI.render(VkachAscension.view(ledger,progress));
+    if(ascensionBusy||!VkachAscension.reached(ledger,progress).length)return;
+    ascensionBusy=true;
+    enqueue(function(){return db.runTransaction(function(tx){return VkachAscension.reconcile(tx,ascensionProgress(),Date.now());});})
+      .catch(function(){}).finally(function(){ascensionBusy=false;});
+  }
+  $('ascension-open').onclick=function(){
+    if(ascensionDialog.open)return;
+    ascensionUI.render(VkachAscension.view(PlanSync._docs()[VkachAscension.path]?.d,ascensionProgress()));
+    history.pushState(Object.assign({},history.state,{ascension:true}),'');
+    ascensionDialog.showModal();
+  };
+  $('ascension-close').onclick=function(){if(history.state?.ascension)history.back();else ascensionDialog.close();};
+  ascensionDialog.addEventListener('cancel',function(event){event.preventDefault();$('ascension-close').click();});
+  window.addEventListener('popstate',function(event){
+    if(!ascensionDialog.open||event.state?.ascension)return;
+    ascensionDialog.close();
+    event.stopImmediatePropagation();
+  },true);
   function realmInputSignature(){
     if(!window.PlanSync)return '';
     var records=PlanSync._docs(),keys=Object.keys(records).filter(function(k){
@@ -5676,7 +5731,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
 
 function renderAllInner() {
-    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync(); forgeAwardsSync();
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync(); forgeAwardsSync(); ascensionSync();
   }
 
   function renderHourglass() {
@@ -6129,6 +6184,7 @@ function renderAllInner() {
     watchCollection('forge-tasks',function(rows){S.forge=Object.create(null);rows.forEach(function(row){S.forge[row.id]=row;});});
     db.doc(VkachShelter.path).onSnapshot(function(sn){S.shelter=sn.exists?sn.data():null;firstDone('shelter');requestProfileRender();},dbErr);
     db.doc('cfg/realm-achievements').onSnapshot(function(sn){S.realm=sn.exists?sn.data():null;firstDone('realm');requestProfileRender();},dbErr);
+    db.doc(VkachAscension.path).onSnapshot(function(){requestProfileRender();},dbErr);
     db.doc('cfg/fate').onSnapshot(function(sn){S.fate=sn.exists?sn.data():null;firstDone('fate');requestProfileRender();},dbErr);
     db.doc('cfg/legends').onSnapshot(function(sn){S.legends=sn.exists?sn.data():null;firstDone('legends');requestProfileRender();},dbErr);
     watchCollection('tx', function (r) { S.tx = r; });
