@@ -123,6 +123,8 @@
 :root[data-destiny-scene] #citadel-home .world-weather-particles,:root[data-destiny-scene] #citadel-home .world-weather-slot:before,:root[data-destiny-scene] #citadel-home .world-weather-slot:after{
   animation-play-state:paused!important
 }
+.citadel-suspended .world-weather-slot,.citadel-suspended .world-weather:after,
+:root[data-destiny-scene] #citadel-home .world-weather-slot,:root[data-destiny-scene] #citadel-home .world-weather:after{transition:none!important}
 .citadel-room .world-weather-particles,.citadel-room .world-weather-slot:before,.citadel-room .world-weather-slot:after{animation:none!important}
 #citadel-home:not([data-ui-view="overview"]) .citadel-sky .world-weather,
 #destiny-world:not([open]) .world-weather,#citadel-interior[hidden] .world-weather{display:none}
