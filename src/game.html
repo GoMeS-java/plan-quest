@@ -5738,7 +5738,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
       latest?'Первый снимок от '+frames.at(-1).date.split('-').reverse().join('.')+'. С этой даты записываются изменения облика мира.':'';
   }
   function recordWorldHistory(){
-    if(!loaded||!lastGI||document.hidden||worldHistoryBusy)return;
+    if(!loaded||!lastGI||document.hidden||worldHistoryBusy||ascensionBusy)return;
     var now=Date.now(),day=dkey(new Date(now)),docs=PlanSync._docs(),outfit=outfitFrom(allItems(),outfitIds());
     var marks=achievementOwnedRows().filter(function(row){return row.date&&row.date<=day;}).map(function(row){return row.id;});
     var ledger=docs[VkachAscension.path]?.d,nodes=ledger?.nodes||{};
@@ -5753,7 +5753,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
       rank:lastPI?.L||1,bodyStage:bodyStage(),shape:bodyShape(),
       rankProgress:[lastPI?.P,lastPI?.need],
       clothes:['top','bottom','outer'].map(function(slot){var item=outfit[slot];return [item,item?.id];}),
-      look:['bg','aura','frame'].map(lookId),rooms:rooms,interior:interior,seals:seals,marks:marks,
+      look:['bg','aura','frame'].map(lookId),echo:legendActive()?.id,rooms:rooms,interior:interior,seals:seals,marks:marks,
       activity:VkachWorldHistory.activity(day,docs['days/'+day]?.d,docs['per/'+day]?.d,now),
       weight:weight?{date:weight.date,kg:Number(weight.kg)}:null
     });
@@ -5794,9 +5794,8 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
         var saved=PlanSync._docs()[VkachAscension.path]?.d;
         syncDestiny(saved,progress);
         if(ascensionDialog.open)ascensionUI.render(VkachAscension.view(saved,progress));
-        recordWorldHistory();
       })
-      .catch(function(){}).finally(function(){ascensionBusy=false;});
+      .catch(function(){}).finally(function(){ascensionBusy=false;recordWorldHistory();});
   }
   $('ascension-open').onclick=function(){
     if(ascensionDialog.open)return;

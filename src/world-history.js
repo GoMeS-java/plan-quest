@@ -48,6 +48,7 @@
       rankProgress:input.rankProgress.map(value=>Number.isFinite(value)&&value>=0?value:0),
       clothes:input.clothes.map(([item,id])=>wardrobeEntry(item,id)),
       look:input.look.map(id=>typeof id==='string'&&safeId.test(id)?id:''),
+      echo:typeof input.echo==='string'&&safeId.test(input.echo)?input.echo:'',
       rooms:Object.fromEntries(input.rooms),
       interior:input.interior.filter(parts=>parts.every(id=>typeof id==='string'&&safeId.test(id)))
         .sort(([a],[b])=>a.localeCompare(b,'en')),

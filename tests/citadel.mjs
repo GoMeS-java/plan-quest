@@ -97,6 +97,20 @@ async function shellNav(p,label){
 }
 async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await b.evaluate(n=>{for(let group=n.closest('details');group&&group.id!=='citadel-home';group=group.parentElement.closest('details'))group.open=true;});await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
+function gameplayRecords(records){
+ return Object.fromEntries(Object.entries(records).filter(([path])=>!path.startsWith('world-history/')));
+}
+function appearanceComparison(data){
+ delete data['cfg/look'];delete data['cfg/citadel'];
+ // Cycling through saved appearances updates the observation time, even after restoring the original look.
+ for(const [path,row] of Object.entries(data))if(path.startsWith('world-history/')&&row.d){delete row.d.at;delete row.u;}
+ return data;
+}
+function restoredRecord(path,record,prior){
+ if(!path.startsWith('world-history/'))return assert.deepEqual(record.d,prior.d,path);
+ assert(record.d.at>=prior.d.at,path+' must retain the same or a newer observation');
+ assert.deepEqual(record.d.frame,prior.d.frame,path);
+}
 function expectedFirstRoomUnlocks(before,after){
  const expected=structuredClone(before);
  const previousAwards=expected['cfg/realm-achievements'].d.unlocked;
@@ -108,6 +122,11 @@ function expectedFirstRoomUnlocks(before,after){
  assert(firstRoom>0);
  assert.deepEqual(priorNodes,expected['cfg/ascension']?.d.nodes||{});
  expected['cfg/ascension']={d:{version:1,nodes:{...priorNodes,'citadel-1':firstRoom}},u:after['cfg/ascension'].u};
+ for(const path of Object.keys(expected).filter(path=>path.startsWith('world-history/'))){
+  assert.equal(after[path].d.frame.rooms.rest,3);
+  assert(after[path].d.frame.seals.includes('citadel-1'));
+  expected[path]=after[path];
+ }
  return expected;
 }
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=window.PlanDB;await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
@@ -691,7 +710,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await p.locator('.profile-stage>.reward-frame').evaluate(n=>getComputedStyle(n,'::after').animationName),'none');const count=await p.locator('.profile-stage>.reward-frame').count();await p.evaluate(()=>{__qa.render();__qa.render();});assert.equal(await p.locator('.profile-stage>.reward-frame').count(),count);
   await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.rewardFrame),'');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-frame')),false);assert.equal(await p.locator('.profile-stage>.reward-frame').evaluate(n=>getComputedStyle(n).display),'none');assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'cold');
-  const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'frame presentation cannot grant rewards or change gameplay');await context.close();
+  assert.deepEqual(appearanceComparison(await docs(p)),appearanceComparison(before),'frame presentation cannot grant rewards or change gameplay');await context.close();
  });
  await check('1.1 reward frames still fit the original sanctuary and keep controls accessible',async()=>{
   const {page:p,context}=await open({seed:landscapeSeed(),day:'2027-09-15'});await p.removeLocatorHandler(p.locator('#achup:not([hidden]),#lvup:not([hidden]),#setup:not([hidden]),#trophy:not([hidden]),#legend-scene[open]').first());await p.evaluate(()=>__qa.frameVisualFixture());await p.locator('#gear').click();const sec=p.locator('[data-look-category="frame"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="fr_gold"]').click();await waitForIdle(p);await p.locator('#setup-x').click();const stage=p.locator('.stage');await stage.waitFor({state:'visible'});
@@ -730,13 +749,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await p.locator('.profile-hero-anchor .shared-aura-layer').evaluate(n=>getComputedStyle(n).animationName),'none');const count=await p.locator('.citadel-hero-sprite>.shared-aura-layer').count();await p.evaluate(()=>{__qa.render();__qa.render();});assert.equal(await p.locator('.citadel-hero-sprite>.shared-aura-layer').count(),count);
   await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-aura')),false);
-  const after=await docs(p);for(const data of [before,after]){
-    delete data['cfg/look'];delete data['cfg/citadel'];
-    for(const path of Object.keys(data).filter(path=>path.startsWith('world-history/'))){
-      // A saved appearance legitimately updates the daily observation time.
-      delete data[path].d.at;delete data[path].u;
-    }
-  }assert.deepEqual(after,before,'presentation cannot grant achievements or resources');await context.close();
+  assert.deepEqual(appearanceComparison(await docs(p)),appearanceComparison(before),'presentation cannot grant achievements or resources');await context.close();
  });
  await check('1.1 earned pixel aura follows movement and equipment and survives reload without losing preferences',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="au_warm"]').click();await waitForIdle(p);await p.locator('#setup-x').click();await castle(p);await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});
@@ -779,7 +792,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await p.locator('.citadel-sky>.citadel-realm-detail').evaluate(n=>getComputedStyle(n,'::before').animationName),'none');await p.emulateMedia({reducedMotion:'no-preference'});await p.locator('#citadel-home').evaluate(n=>n.classList.add('citadel-suspended'));assert.equal(await p.locator('.citadel-sky>.citadel-realm-detail').evaluate(n=>getComputedStyle(n,'::before').animationPlayState),'paused');await p.locator('#citadel-home').evaluate(n=>n.classList.remove('citadel-suspended'));
   const count=await p.locator('.citadel-window-weather').count();await p.evaluate(()=>{__qa.render();__qa.render();});assert.equal(await p.locator('.citadel-window-weather').count(),count,'render does not accumulate weather layers');assert.equal(await p.locator('.citadel-sky>.citadel-realm-detail').count(),1);
-  const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'visual fixtures and selection cannot grant achievements or rewards');await context.close();
+  assert.deepEqual(appearanceComparison(await docs(p)),appearanceComparison(before),'visual fixtures and selection cannot grant achievements or rewards');await context.close();
  });
  await check('1.1 winter fills top and bottom panes while preserving frames and foreground at every stage',async()=>{
   const day='2027-09-15';const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/rare':{z02:day},'cfg/look':{bg:'b_winter'}},legacy:weatherFixture(day),day,width:1280,height:940,mobile:false});
@@ -842,7 +855,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());await dismiss(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),key);
   }
   await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.citadelBg),'');assert(!(await p.locator('.citadel-sky').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('realm-'));
-  const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'selection changes no openings, resources, achievements or progress');await context.close();
+  assert.deepEqual(appearanceComparison(await docs(p)),appearanceComparison(before),'selection changes no openings, resources, achievements or progress');await context.close();
  });
  await check('1.1 landscape choices fit mobile and desktop and forged locked selections expose no previews',async()=>{
   const {page:p,context}=await open({shell:true,seed:landscapeSeed(),day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="bg"]');await sec.evaluate(n=>n.closest('details').open=true);
@@ -960,7 +973,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   await waitForIdle(p);const after=await docs(p);
   assert.deepEqual(after['cfg/citadel']?.d,before['cfg/citadel']?.d,'final selected room and decoration remain unchanged');
-  delete before['cfg/citadel'];delete after['cfg/citadel'];assert.deepEqual(after,before,'time and atmosphere do not change gameplay records');
+  delete before['cfg/citadel'];delete after['cfg/citadel'];assert.deepEqual(gameplayRecords(after),gameplayRecords(before),'time and atmosphere do not change gameplay records');
   await p.evaluate(()=>{__qa.move('rest');document.querySelector('#citadel-enter').click();});
   await p.evaluate(()=>{
    document.documentElement.dataset.citadelBg='rain';
@@ -1030,7 +1043,12 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  await check('1.1 restored room responses animate visible light once and respect reduced motion',async()=>{
   const {page:p,context}=await open({shell:true,seed:advancedSeed(),day:'2027-04-16'});await p.locator('[data-croom="rest"]').click();
   for(const tier of [2,3]){
-   await p.evaluate(tier=>__qa.upgrade('rest',tier-1),tier);await p.waitForFunction(tier=>document.querySelector('#citadel-interior-stage').dataset.level===String(tier),tier);await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());const before=await docs(p);
+   await p.evaluate(tier=>__qa.upgrade('rest',tier-1),tier);await p.waitForFunction(tier=>document.querySelector('#citadel-interior-stage').dataset.level===String(tier),tier);await waitForIdle(p);await p.waitForFunction(()=>__qa.cosmeticsIdle());
+   await p.waitForFunction(tier=>{
+    const frame=VkachWorldHistory.frames(PlanSync._docs())[0];
+    return frame?.rooms.rest===tier&&frame.seals.includes('citadel-1');
+   },tier);
+   const before=await docs(p);
    await p.emulateMedia({reducedMotion:'no-preference'});await roomMore(p);await p.locator('[data-room-inspect]').click();await p.locator('[data-room-inspect]').click();
    const response=await p.locator('#citadel-interior-stage').evaluate(n=>{const light=n.querySelector('.citadel-room-light'),old=n.querySelector('.citadel-interior-renovation');return {visible:getComputedStyle(light).display!=='none',light:light.getAnimations().filter(a=>!a.animationName).length,hidden:old.getAnimations().filter(a=>!a.animationName).length};});assert(response.visible);assert.equal(response.light,1);assert.equal(response.hidden,0);
    await p.emulateMedia({reducedMotion:'reduce'});await roomMore(p);await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-stage .citadel-room-light').evaluate(n=>n.getAnimations().filter(a=>!a.animationName).length),0);assert.deepEqual(await docs(p),before,'visual response cannot charge resources');
@@ -1344,7 +1362,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.locator('.legend-entry').getByRole('button',{name:'ПРИМЕНИТЬ ОФОРМЛЕНИЕ'}).click();await waitForIdle(p);await p.waitForTimeout(50);
   await p.reload();await p.waitForFunction(()=>window.__qa?.loading());await dismiss(p);
   assert.equal((await docs(p))['cfg/legends'].d.active,'echo01');assert(await p.locator('#citadel-avatar-canvas').evaluate(n=>n.classList.contains('legend-hero')));
-  for(const [path,record]of Object.entries(before))if(path!=='cfg/legends')assert.deepEqual((await docs(p))[path].d,record.d);
+  const after=await docs(p);
+  for(const [path,record]of Object.entries(before))if(path!=='cfg/legends')restoredRecord(path,after[path],record);
   await context.close();
  });
  await check('0.78 scene timeout, skip, Escape and animation failure always release input',async()=>{
@@ -1693,7 +1712,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await roomMore(p);await p.locator('[data-room-inspect]').click();assert.equal(await p.locator('#citadel-interior-object').getAttribute('data-inspected'),'true');assert.equal(await p.locator('#citadel-interior-stage .citadel-light-source').evaluate(n=>getComputedStyle(n).animationName),'none');
   await p.emulateMedia({reducedMotion:'no-preference'});assert.notEqual(await p.locator('#citadel-interior-stage .citadel-light-source').evaluate(n=>getComputedStyle(n).animationName),'none');await p.emulateMedia({reducedMotion:'reduce'});
   // Return to the original civil time before comparing persisted game state.
-  await p.clock.setSystemTime(new Date('2027-04-16T14:00:00+03:00'));await p.evaluate(()=>__qa.render());assert.deepEqual(await docs(p),before);await context.close();
+  await p.clock.setSystemTime(new Date('2027-04-16T14:00:00+03:00'));await p.evaluate(()=>__qa.render());assert.deepEqual(gameplayRecords(await docs(p)),gameplayRecords(before));await context.close();
  });
 
  await check('0.74 resident arrival clears corridor coordinates and stays inside the destination room',async()=>{
@@ -1782,7 +1801,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.waitForFunction(()=>history.state?.citadelOverlay!=='resident');await p.goBack();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');
   await p.locator('[data-croom="refectory"]').click();await roomMore(p);await p.locator('[data-room-talk="smith"]').click();
   await p.clock.setSystemTime(new Date('2027-04-16T23:00:10+03:00'));await p.evaluate(()=>__qa.render());assert.equal(await p.locator('[data-room-talk]').count(),0);assert(await p.locator('#citadel-room-conversation').isHidden());
-  assert.deepEqual(await docs(p),before);await context.close();
+  assert.deepEqual(gameplayRecords(await docs(p)),gameplayRecords(before));await context.close();
  });
  await check('0.73 walking animation stops for reduced motion and keeps the shared hero on resize',async()=>{
   const {page:p,context}=await open({shell:true});await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});
@@ -2247,7 +2266,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await balance(),essence-17);
   assert.notEqual(await p.locator('.citadel-finish-detail').evaluate(n=>getComputedStyle(n).borderTopWidth),restoredTrim);
   assert(await p.locator('#citadel-upgrade').isDisabled());
-  await p.waitForFunction(()=>__qa.realm.owned().some(row=>row.id==='rebuild02')&&__qa.realm.idle());
+  await p.waitForFunction(()=>__qa.realm.owned().some(row=>row.id==='rebuild02')&&__qa.realm.idle()&&
+    VkachWorldHistory.frames(PlanSync._docs())[0]?.rooms.rest===3);
   const completed=await docs(p);
   for(const [key,value] of Object.entries(expectedFirstRoomUnlocks(original,completed)))assert.deepEqual(completed[key],value,'shell renovation modified '+key);
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-grand-'+width+'x'+height+'.png')});
@@ -2519,7 +2539,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert.equal(await p.evaluate(()=>__qa.points().avail),points.avail);
   await p.locator('#citadel-upgrade').click();await waitForIdle(p);await p.waitForFunction(()=>__qa.roomLevel('rest')===3);
   await p.waitForFunction(()=>__qa.realm.owned().some(row=>row.id==='rebuild02')&&__qa.realm.idle()&&
-    PlanSync._docs()['cfg/ascension']?.d.nodes['citadel-1']);
+    VkachWorldHistory.frames(PlanSync._docs())[0]?.rooms.rest===3);
   const after=await docs(p),now=await p.evaluate(()=>__qa.points());
   assert.deepEqual({...now,avail:points.avail},points,'construction must preserve shop cores');
   assert.equal(now.avail,points.avail);
@@ -2867,7 +2887,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   for(const backup of [copy,{v:1,docs:copy.docs},copy]){
    await write(p,'weights/test',{kg:160,date,ts:1});await write(p,'tx/after-copy',{amt:123.45,kind:'out',acc:'cash',date});
    await p.evaluate(copy=>PlanSync.importObj(copy,true),backup);await p.waitForTimeout(50);
-   const after=await docs(p);for(const [key,value]of Object.entries(before))assert.deepEqual(after[key].d,value.d);
+   const after=await docs(p);for(const [key,value]of Object.entries(before))restoredRecord(key,after[key],value);
    assert.equal(after['tx/after-copy'].d,null);assert.equal(await p.evaluate(()=>__qa.shape()),shape);
   }
   await p.reload();await castle(p);assert.equal(await p.evaluate(()=>__qa.shape()),shape);
@@ -2972,7 +2992,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   p.once('dialog',d=>d.accept());const chooserEvent=p.waitForEvent('filechooser');await menu.getByRole('button',{name:'ВОССТАНОВИТЬ КОПИЮ ИЗ ФАЙЛА',exact:true}).click();const chooser=await chooserEvent;
   await chooser.setFiles({name:'synthetic-backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(copy))});
   await p.waitForFunction(()=>JSON.parse(localStorage.getItem('plan.meta.v1'))?.syncPaused===true);await p.waitForTimeout(70);const after=await docs(p);
-  for(const [path,record]of Object.entries(before))assert.deepEqual(after[path].d,record.d);assert.equal(after['spont/after-backup'].d,null);
+  for(const [path,record]of Object.entries(before))restoredRecord(path,after[path],record);assert.equal(after['spont/after-backup'].d,null);
   assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.meta.v1')).signed),false);
   await p.reload();await castle(p);assert.deepEqual((await docs(p))['days/'+date].d,before['days/'+date].d);await context.close();
  });
@@ -3065,6 +3085,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   if(old?.mysterySince)return;
   expected[path]={u:current.u,d:{...old,version:1,mysterySince:current.d.mysterySince,unlocked:old?.unlocked||{}}};
  }
+ async function firstWorldObservation(p){
+  await p.waitForFunction(()=>VkachWorldHistory.frames(PlanSync._docs()).length===1);
+  await p.evaluate(()=>PlanSync.beforeUpdate());
+  const after=await docs(p), observations=Object.entries(after).filter(([path])=>path.startsWith('world-history/'));
+  assert.equal(observations.length,1,'an upgrade records only its first real day');
+  assert.equal(observations[0][1].d.version,1);
+  return Object.fromEntries(observations);
+ }
  await check('1.3.2 PWA replaces the 1.3.1 cache and retains saves and all poses offline',async()=>{
   for(const file of ['index.html','sw.js','citadel-art.css','rpg-ui.css']){
    servedOverrides.set(resolve(root,file),execFileSync('git',['show','a49d492:docs/'+file]));
@@ -3090,8 +3118,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();
    await p.waitForFunction(v=>window.APP_VERSION===v&&/^РАНГ \d+$/.test(document.querySelector('#citadel-live-rank')?.textContent),currentVersion);
    await p.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.mysterySince);
-   const after=await docs(p),expected=expectedEconomyUpgrade(before,after);
+   const observation=await firstWorldObservation(p),after=await docs(p),expected=expectedEconomyUpgrade(before,after);
    expectMysteryStart(expected,after);
+   Object.assign(expected,observation);
    assert.deepEqual(after,expected);
    assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
    await context.setOffline(true);await p.reload();
@@ -3111,8 +3140,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  async function checkPwaUpgrade(versions){
   for(const [oldVersion,previous] of versions){
-  const diaryVersion=['1.3.3','1.3.4','1.3.5','1.4','1.4.1','1.5'].includes(oldVersion);
-  const workspaceVersion=['1.3.4','1.3.5','1.4','1.4.1','1.5'].includes(oldVersion);
+  const diaryVersion=['1.3.3','1.3.4','1.3.5','1.4','1.4.1','1.5','1.5.1'].includes(oldVersion);
+  const workspaceVersion=['1.3.4','1.3.5','1.4','1.4.1','1.5','1.5.1'].includes(oldVersion);
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(['1.3','1.3.2'].includes(oldVersion)?['chains.js','chains-ui.js','chains.css']:[]),...(diaryVersion?['food.js','food-ui.js']:[]),...(workspaceVersion?['room-workspace.js']:[]),...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
   for(const name of ['realm-achievements.js','ascension.js']){
     const available=execFileSync('git',['ls-tree',previous,'--','docs/'+name],{encoding:'utf8'});
@@ -3148,17 +3177,18 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   if(diaryVersion)await p.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.unlocked.refectory01?.presented);
   await p.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.mysterySince);
-  const migrated=await docs(p),expected=expectedEconomyUpgrade(before,migrated);
+  const observation=await firstWorldObservation(p),migrated=await docs(p),expected=expectedEconomyUpgrade(before,migrated);
   if(diaryVersion&&!before['cfg/realm-achievements']){
     const {u,d}=migrated['cfg/realm-achievements'],at=d.unlocked.refectory01.at;
     assert(at>0&&u>=at);
     expected['cfg/realm-achievements']={u,d:{version:1,unlocked:{refectory01:{version:1,at,presented:true}}}};
   }
   expectMysteryStart(expected,migrated);
+  Object.assign(expected,observation);
   assert.deepEqual(migrated,expected,'an upgrade preserves records and adds only the expected migration fields and earned meal receipt');
   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
   await context.setOffline(true);await p.reload();await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);assert.deepEqual(await docs(p),migrated);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.equal(await p.locator('[data-croom="archive"] .citadel-room-name').textContent(),'Неизведанная комната');assert.equal(await p.locator('[data-croom="rest"]').getAttribute('data-revealed'),'true');
-  if(oldVersion==='1.4'||oldVersion==='1.4.1'||oldVersion==='1.5'){
+  if(['1.4','1.4.1','1.5','1.5.1'].includes(oldVersion)){
     await dismiss(p);
     await p.evaluate(()=>window.__citadelShell.openFood(false));
     const food=p.locator('#food');
@@ -3179,8 +3209,9 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   ['1.3.2','6e803409efc1afd695401f2959b0895039287e58'],['1.3.3','212442e'],['1.3.4','1babd748d46766a396aa6a9c92ea0e8ecb0da279'],
   ['1.3.5','03f3e1c1c3c0ed08f938f61129dc534c10d5b1cc']
  ]));
- await check('1.4, 1.4.1 and 1.5 to current PWA upgrade preserves saves and exposes old products offline',()=>checkPwaUpgrade([
-  ['1.4','769c9e00a878e8caaf3bb78c913bc9ccefe6fe8b'],['1.4.1','d933f63a0f3805b32d13eb8c634d614cec934283'],['1.5','8fb197e0a50726ce1ddd67647f2fb9f350a94007']
+ await check('1.4, 1.4.1, 1.5 and 1.5.1 to current PWA upgrade preserves saves and exposes old products offline',()=>checkPwaUpgrade([
+  ['1.4','769c9e00a878e8caaf3bb78c913bc9ccefe6fe8b'],['1.4.1','d933f63a0f3805b32d13eb8c634d614cec934283'],['1.5','8fb197e0a50726ce1ddd67647f2fb9f350a94007'],
+  ['1.5.1','3f9872ad3bfaffabf6076b35674a6aea6ebbf43c']
  ]));
  await check('0.68 to 0.69 PWA update replaces cached UI while preserving synthetic saves',async()=>{
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','fbe6f935569a798b5b9ed3109b7a260668e8b96a:docs/'+name]));
