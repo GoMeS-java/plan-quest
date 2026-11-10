@@ -28,7 +28,9 @@
   {id:'ascent-body',name:'Камень помнит усилие',title:'ЗАКАЛЁННЫЙ',kind:'uncommon',text:'Ты возвращался к обоим упражнениям снова и снова.',test:s=>s.squatDays>=5&&s.pushupDays>=5},
   {id:'ascent-walk',name:'Следы у северных врат',title:'СТРАННИК',kind:'epic',text:'Записанные шаги сложились в долгую дорогу.',test:s=>s.walkDays>=20&&s.steps>=100000},
   {id:'ascent-rhythm',name:'Семь огней подряд',title:'ХРАНИТЕЛЬ РИТМА',kind:'uncommon',text:'Из ежедневных дел сложилась непрерывная цепочка.',test:s=>s.activeRun>=7},
+  {id:'ascent-week',name:'Архив полных недель',title:'ХРАНИТЕЛЬ ХРОНИКИ',kind:'rare',text:'Учебные дела складывались в завершённые недели.',test:s=>s.studyWeeks>=3},
   {id:'ascent-study',name:'Полночные страницы',title:'УЧЕНИК АРХИВА',kind:'rare',text:'В архиве остались следы регулярных занятий.',test:s=>s.studyDays>=14},
+  {id:'ascent-aspect',name:'Две искры в камне',title:'ПРОБУДИВШИЙ СИЛУ',kind:'rare',text:'Твои подходы пробудили два аспекта упражнений.',test:s=>s.exerciseAspects===2},
   {id:'ascent-diet',name:'Ровное пламя',title:'ХРАНИТЕЛЬ РАВНОВЕСИЯ',kind:'epic',text:'Ты придерживался своей нормы и вёл записи питания.',test:s=>s.calorieDays>=14&&s.foodDays>=7},
   {id:'ascent-weight',name:'Отметки на мерной стене',title:'СВИДЕТЕЛЬ ПЕРЕМЕН',kind:'uncommon',text:'Журнал измерений сохранил изменение за несколько недель.',test:s=>s.weightWeeks>=4&&s.weightChange>=1},
   {id:'ascent-goal',name:'Рубеж на горизонте',title:'ДОСТИГШИЙ РУБЕЖА',kind:'rare',text:'Одна из долгосрочных целей отмечена выполненной.',test:s=>s.goals>=1},
@@ -40,22 +42,31 @@
  function valid(r){return r&&r.version===1&&Number.isFinite(r.at)&&r.at>0;}
  function owned(ledger){var flags=ledger&&ledger.unlocked||{};return defs.filter(d=>Object.prototype.hasOwnProperty.call(flags,d.id)&&valid(flags[d.id])).map(d=>({id:d.id,name:d.name,title:d.title,kind:d.kind||'mark',text:d.text||'',cos:d.cos||[],clothes:d.clothes||'',at:flags[d.id].at,presented:!!flags[d.id].presented}));}
  function timestamp(value,now){return Number.isFinite(value)&&value>0&&value<=now;}
+ function weekStart(date){
+  var time=Date.parse(date);
+  return time-(new Date(time).getUTCDay()+6)%7*86400000;
+ }
  function facts(tx,today,proof,now){
   proof=proof||{};var s={upgrades:0,rooms:0,finished:0,decor:0,active:0,steps:0,heavy:0,weightWeeks:0,foodDays:0,showcase:0,title:false,appearance:0,dressed:false,customEquipped:false},renovated={},weeks={};
   tx.list('buys').forEach(r=>{if(r.kind!=='citadel-room'||r.currency!=='abyss'||rooms.indexOf(r.room)<0||![2,3].includes(r.level)||!(r.cost>0)||r.id!=='citadel-'+r.room+'-'+r.level||!Number.isFinite(r.ts)||r.ts<=0||!Number.isFinite(new Date(r.ts).getTime())||!day(new Date(r.ts).toISOString().slice(0,10),today))return;s.upgrades++;renovated[r.room]=Math.max(renovated[r.room]||1,r.level);});
   s.rooms=Object.keys(renovated).length;s.finished=Object.values(renovated).filter(v=>v===3).length;
-  var activity=[];
+  var activity=[],studyWeeks={};
   s.walkDays=0;s.studyDays=0;s.calorieDays=0;
   tx.list('days').forEach(r=>{
    if(!day(r.id,today))return;
    if(Array.isArray(r.q)){
     if(r.q.some(v=>v===true))s.active++;
     if(r.q.some((v,i)=>v===true&&(i!==3||!r.ex?.cov)))activity.push(Date.parse(r.id));
-    if(r.q[7]===true)s.studyDays++;
-    if(r.q[2]===true&&Number.isFinite(r.kcal)&&r.kcal>0)s.calorieDays++;
+    if(r.q[7]===true&&r.id>='2026-10-26'){
+     var week=weekStart(r.id);
+     studyWeeks[week]=(studyWeeks[week]||0)+1;
+     s.studyDays++;
+    }
+    if(r.q[2]===true&&Number.isFinite(r.kcal)&&r.kcal>0&&r.kcal<=proof.calorieTarget)s.calorieDays++;
    }
    if(Number.isFinite(r.steps)&&r.steps>0){s.steps+=r.steps;if(r.steps>=5000)s.walkDays++;}
   });
+  s.studyWeeks=Object.values(studyWeeks).filter(count=>count===7).length;
   s.activeRun=0;
   var run=0,previous=NaN;
   activity.sort((a,b)=>a-b).forEach(date=>{
@@ -63,16 +74,25 @@
    previous=date;s.activeRun=Math.max(run,s.activeRun);
   });
   s.squatDays=0;s.pushupDays=0;
+  var exerciseKeys=['squat','pushup'],reps={squat:0,pushup:0};
   tx.list('per').forEach(r=>{
    if(!day(r.id,today))return;
-   for(const key of ['squat','pushup']){
-    if(Array.isArray(r[key])&&r[key].some(at=>timestamp(at,now)))s[key+'Days']++;
+   for(const key of exerciseKeys){
+    if(!Array.isArray(r[key]))continue;
+    var sets=0;
+    r[key].forEach((at,i)=>{
+     if(!timestamp(at,now))return;
+     var count=r[key+'R']?.[i];
+     reps[key]+=Number.isFinite(count)&&count>0?count:10;sets++;
+    });
+    if(sets)s[key+'Days']++;
    }
   });
+  s.exerciseAspects=exerciseKeys.filter(key=>reps[key]>=proof.exerciseThresholds?.[key]).length;
   tx.list('spont').forEach(r=>{if(r.done===true&&r.heavy===true&&day(r.date,today))s.heavy++;});
   var weights=tx.list('weights').filter(r=>Number(r.kg)>30&&Number(r.kg)<400&&day(r.date,today)&&(r.ts==null||timestamp(r.ts,now)));
   weights.sort((a,b)=>a.date.localeCompare(b.date)||(a.ts||0)-(b.ts||0));
-  weights.forEach(r=>{var dt=new Date(r.date+'T12:00:00Z');dt.setUTCDate(dt.getUTCDate()-(dt.getUTCDay()+6)%7);weeks[dt.toISOString().slice(0,10)]=true;});
+  weights.forEach(r=>{weeks[weekStart(r.date)]=true;});
   s.weightWeeks=Object.keys(weeks).length;
   s.weightChange=weights.length>1?Math.abs(weights.at(-1).kg-weights[0].kg):0;
   s.goals=tx.list('goals').filter(r=>r.done===true&&timestamp(r.ts,now)&&typeof r.name==='string'&&r.name.trim()).length;
@@ -84,7 +104,9 @@
   var chains=tx.get('cfg/chains-discoveries')||{};
   s.chains=day(chains['chains-rhythm'],today)||day(chains['chains-free'],today);
   // Count completed and still-present meals, not drafts, taps or deleted records.
-  var foodDates=new Set();tx.list('food-meals').forEach(r=>{if(r.deleted!==false||!day(r.date,today)||!Array.isArray(r.items)||!r.items.length)return;foodDates.add(r.date);});s.foodDays=foodDates.size;
+  var foodDates=new Set();
+  tx.list('food-meals').forEach(r=>{if(root.VkachFood?.savedMeal(r)&&day(r.date,today))foodDates.add(r.date);});
+  s.foodDays=foodDates.size;
   var decor=(tx.get('cfg/citadel')||{}).decor||{};rooms.forEach(r=>{if(['banner','lantern','crystal','tapestry'].includes(decor[r]))s.decor++;});
   var wardrobe=tx.list('wardrobe'),outfit=tx.get('cfg/outfit')||{},lookup={};wardrobe.forEach(r=>lookup[r.id]=r);
   s.dressed=['coat_camel','jacket_black','puffer_black','plaid_sherpa'].includes(outfit.outer)||!!(lookup[outfit.outer]&&lookup[outfit.outer].slot==='outer');

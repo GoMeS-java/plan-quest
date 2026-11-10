@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {execFileSync} from 'node:child_process';
-const context=vm.createContext({});vm.runInContext(readFileSync('src/realm-achievements.js','utf8'),context);const api=context.VkachRealm;
+const context=vm.createContext({});
+for(const script of ['food','forge-awards','realm-achievements'])vm.runInContext(readFileSync('src/'+script+'.js','utf8'),context);
+const api=context.VkachRealm;
 function transaction(records){const data=structuredClone(records),writes=[];return {data,writes,get:p=>structuredClone(data[p]),list:prefix=>Object.entries(data).filter(([p])=>p.startsWith(prefix+'/')).map(([p,d])=>({...structuredClone(d),id:p.slice(prefix.length+1)})),set:(p,d)=>{data[p]=structuredClone(d);writes.push(p);}};}
 const empty=transaction({'cfg/look':{showcase:['x01','x02','x03'],title:'x01',bg:'b_forest',frame:'fr_gold',aura:'au_soft'},'cfg/outfit':{outer:'coat_camel'}});api.reconcile(empty,'2027-03-01',1800000000000,{marks:['x01','x02','x03'],cos:['b_forest','fr_gold','au_soft']});assert.equal(empty.writes.length,0,'views and appearance alone never award progress');assert.equal(api.needs(empty,'2027-03-01',{}),false,'unchanged views do not schedule an empty write');
 const records={'cfg/look':empty.data['cfg/look'],'cfg/outfit':{top:'custom',bottom:'pants_brown',outer:'coat_camel'},'cfg/citadel':{decor:{rest:'banner',study:'lantern',forge:'crystal'}},'wardrobe/custom':{slot:'top',shape:'knit',c:{base:'#555577'}}};
@@ -15,22 +17,26 @@ const gift=earned.find(d=>d.clothes).clothes;delete tx.data['wardrobe/'+gift];as
 const merged=api.merge(tx.data['cfg/realm-achievements'],{version:1,unlocked:{},future:'keep'});assert.equal(api.owned(merged).length,earned.length);assert(api.owned(merged).every(d=>d.presented));assert.equal(merged.future,'keep');
 const future=transaction({...records,'buys/citadel-rest-2':{kind:'citadel-room',room:'rest',level:2,currency:'abyss',cost:100,ts:1e100}});assert.doesNotThrow(()=>api.reconcile(future,'2027-03-01',1800000000000,proof));
 const food=transaction({});
+const savedMeal=(id,date,changes={})=>({id,date,kind:'breakfast',version:1,deleted:false,created:1,updated:1,
+  items:[context.VkachFood.position({id:'item',name:'Завтрак',mode:'unknown',grams:100})],...changes});
 food.data['food-drafts/draft']={date:'2027-02-01',items:[{name:'Несохранённая еда'}]};
-food.data['food-meals/deleted']={date:'2027-02-02',deleted:true,items:[{name:'Удалено'}]};
-food.data['food-meals/future']={date:'2027-03-02',deleted:false,items:[{name:'Из будущего'}]};
-food.data['food-meals/empty']={date:'2027-02-03',deleted:false,items:[]};
+food.data['food-meals/deleted']=savedMeal('deleted','2027-02-02',{deleted:true});
+food.data['food-meals/future']=savedMeal('future','2027-03-02');
+food.data['food-meals/empty']=savedMeal('empty','2027-02-03',{items:[]});
+food.data['food-meals/damaged']=savedMeal('damaged','2027-02-04',{items:[{name:'Повреждённая запись'}]});
 api.reconcile(food,'2027-03-01',1800000000000,{});
 assert.equal(api.owned(food.data['cfg/realm-achievements']).length,0,'drafts, empty, deleted and future meals cannot earn a discovery');
 for(let i=0;i<30;i++){
  const date=new Date(Date.UTC(2027,0,i+1)).toISOString().slice(0,10);
- food.data['food-meals/meal-'+i]={date,deleted:false,items:[{name:'Завтрак'}]};
+ food.data['food-meals/meal-'+i]=savedMeal('meal-'+i,date);
 }
+food.data['food-meals/same-day']=savedMeal('same-day','2027-01-01',{kind:'dinner'});
 api.reconcile(food,'2027-03-01',1800000001000,{});
 assert.equal(api.owned(food.data['cfg/realm-achievements']).filter(r=>r.id.startsWith('refectory')).length,3);
 const foodWrites=food.writes.length;api.reconcile(food,'2027-03-01',1800000002000,{});
 assert.equal(food.writes.length,foodWrites,'food achievements are once-only and do not affect balance');
 const ascent=transaction({});
-for(let i=1;i<=14;i++){
+for(let i=1;i<=21;i++){
  const date='2027-02-'+String(i).padStart(2,'0');
  ascent.data['days/'+date]={q:[true,false,true,false,false,false,false,true],kcal:2100,steps:6000};
  ascent.data['per/'+date]={squat:[1800000000000],pushup:[1800000000001]};
@@ -39,12 +45,22 @@ ascent.data['goals/unfinished']={name:'Черновик',done:false,ts:180000000
 ascent.data['goals/future']={name:'Будущее',done:true,ts:1800000100000};
 api.reconcile(ascent,'2027-03-01',1800000000000,{});
 const ascentIds=()=>api.owned(ascent.data['cfg/realm-achievements']).map(row=>row.id);
-assert(ascentIds().includes('ascent-rhythm')&&ascentIds().includes('ascent-study'));
+assert(ascentIds().includes('ascent-rhythm')&&ascentIds().includes('ascent-study')&&ascentIds().includes('ascent-week'));
 assert(!ascentIds().includes('ascent-body'),'future exercise timestamp is ignored even on a past day');
 assert(!ascentIds().includes('ascent-goal'));
+const daily='custom-11111111-2222-4333-8444-555555555555';
+const weekly='custom-99999999-8888-4777-8666-555555555555';
+ascent.data['forge-tasks/'+daily]={kind:'daily'};
+ascent.data['forge-tasks/'+weekly]={kind:'weekly'};
+ascent.data['cfg/forge-discoveries']={unlocked:{['forge-'+daily+'-2']:{date:'2027-02-14',task:'Сохранённый ритм'},
+  ['forge-'+weekly+'-2']:{date:'2027-03-02',task:'Будущий ритм'}}};
+api.reconcile(ascent,'2027-03-01',1800000000000,{});
+assert(!ascentIds().includes('ascent-forge'),'a future Forge receipt cannot earn an achievement');
+ascent.data['cfg/forge-discoveries'].unlocked['forge-'+weekly+'-2'].date='2027-02-22';
 ascent.data['goals/finished']={name:'Завершено',done:true,ts:1799999999999};
-api.reconcile(ascent,'2027-03-01',1800000000001,{});
+api.reconcile(ascent,'2027-03-01',1800000000001,{exerciseThresholds:{squat:87,pushup:73}});
 assert(ascentIds().includes('ascent-body')&&ascentIds().includes('ascent-goal'));
+assert(ascentIds().includes('ascent-forge')&&ascentIds().includes('ascent-aspect'));
 const claimedAscent=api.claim(ascent);
 const restored=api.merge({unlocked:{}},ascent.data['cfg/realm-achievements']);
 assert.equal(api.owned(restored).length,claimedAscent.length);

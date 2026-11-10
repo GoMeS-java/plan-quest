@@ -6,6 +6,14 @@ var FONT_CACHE = CACHE_PREFIX + 'fonts';
 var SHELL = __SHELL__;
 var APP_BUILD = '__APP_BUILD__';
 var pushQueue = Promise.resolve();
+var PUSH_TEXT = Object.freeze({
+  daily:'Открой Цитадель, чтобы проверить незавершённые дела дня.',
+  food:'Если ещё не успел, запиши приём пищи в дневник.',
+  chains:'Проверь текущий дневной лимит в разделе «Разрыв Оков».',
+  achievements:'В Цитадели появилась новая отметина. Загляни в достижения.',
+  weekly:'Открой Цитадель и подведи итоги недели.',
+  test:'Проверка фоновых уведомлений на этом устройстве.'
+});
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (cache) {
@@ -37,33 +45,42 @@ self.addEventListener('push', function (event) {
   if (!event.data) return;
   var data;
   try { data = event.data.json().data; } catch (_) { return; }
-  if (data?.vkach !== '1' || typeof data.id !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(data.id) ||
+  if (!['1','2'].includes(data?.vkach) || typeof data.id !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(data.id) ||
       !(Number(data.expiresAt) > Date.now())) return;
+  var legacy=data.vkach==='1', category=legacy?'daily':data.category, testing=category==='test';
+  if (!Object.hasOwn(PUSH_TEXT,category) || !legacy && !Number.isFinite(Number(data.sentAt))) return;
   pushQueue = pushQueue.catch(function () {}).then(async function () {
     var scope = self.registration.scope, cache = await caches.open('vkach-push-' + scope);
     var stateKey = new URL('__vkach_push_state__',scope);
     async function stillWanted() {
       var response=await cache.match(stateKey), state=response && await response.json();
-      return state?.needed && state.device===data.device && state.day===data.day &&
-        state.revision===Number(data.revision) && Number(data.expiresAt)>Date.now();
+      if (!state || state.device!==data.device || state.revision!==Number(data.revision) ||
+          Number(data.expiresAt)<=Date.now()) return false;
+      if (legacy) return !state.policy && state.needed && state.day===data.day;
+      if (testing) return true;
+      if (!state.policy || state.policy!==data.policy || state.timezone!==data.timezone ||
+          Intl.DateTimeFormat().resolvedOptions().timeZone!==data.timezone) return false;
+      var day=new Intl.DateTimeFormat('sv-SE',{timeZone:state.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(Date.now());
+      return day===data.day && (category!=='daily' || state.needed && state.day===data.day);
     }
     if (!await stillWanted()) return;
     var windows = await self.clients.matchAll({type:'window',includeUncontrolled:true});
-    if (windows.some(client=>client.url.startsWith(scope)&&client.visibilityState==='visible')) return;
-    var key = new URL('__vkach_push_last__',scope);
+    if (legacy && windows.some(client=>client.url.startsWith(scope)&&client.visibilityState==='visible')) return;
+    var key = new URL(legacy?'__vkach_push_last__':'__vkach_push_last_'+category+'__',scope);
     var previous = await cache.match(key);
-    if (previous && (await previous.json()).id === data.id) return;
+    var receipt=previous && await previous.json();
+    if (receipt?.id===data.id || !legacy && receipt?.device===data.device && receipt.at>=Number(data.sentAt)) return;
     if (!await stillWanted()) return;
-    await cache.put(key,new Response(JSON.stringify({id:data.id,day:data.day,device:data.device})));
+    await cache.put(key,new Response(JSON.stringify({id:data.id,day:data.day,device:data.device,at:Number(data.sentAt)||0})));
     await self.registration.showNotification('Вкач', {
-      body:'Открой Цитадель, чтобы проверить дела дня.',
-      icon:new URL('icon-192.png',scope).href, tag:'vkach-daily', renotify:false
+      body:legacy?'Открой Цитадель, чтобы проверить дела дня.':PUSH_TEXT[category],
+      icon:new URL('icon-192.png',scope).href, tag:'vkach-'+category, renotify:false
     });
   });
   event.waitUntil(pushQueue);
 });
 self.addEventListener('notificationclick', function (event) {
-  if (event.notification.tag !== 'vkach-daily') return;
+  if (!Object.keys(PUSH_TEXT).some(category=>event.notification.tag==='vkach-'+category)) return;
   event.notification.close();
   event.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function (clients) {
     var client = clients.find(item=>item.url.startsWith(self.registration.scope));

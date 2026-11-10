@@ -32,14 +32,14 @@ html = ('<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
         '<script>window.APP_VERSION=' + json.dumps(open(f'{SRC}/version.txt', encoding='utf-8').read().strip()) + ';window.APP_BUILD=' + json.dumps(build_id) + ';</script>'
         '<script src="config.js"></script><script src="save-history.js"></script><script src="cloud-sync.js"></script><script src="cloud-firebase.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>\n'
         + head_part + '</head><body>' + body_part + '\n</body></html>\n')
-open(f'{DIST}/index.html', 'w', encoding='utf-8').write(html)
+open(f'{DIST}/index.html', 'w', encoding='utf-8', newline='\n').write(html)
 
 if TEST:
     page = open(f'{DIST}/index.html', encoding='utf-8').read()
     page = re.sub(r'<title>.*?</title>', '<title>Вкач · ТЕСТ</title>', page, count=1)
     page = page.replace('Они доступны на всех твоих устройствах.', 'В тестовой версии они хранятся отдельно на этом устройстве; сохраняйте резервные копии.')
     page = page.replace('<body>', '<body><div role="status" style="padding:6px;background:#30213d;color:#e7c7e9;text-align:center;font:12px sans-serif">ТЕСТОВАЯ ВЕРСИЯ · Отдельные сохранения</div>', 1)
-    open(f'{DIST}/index.html', 'w', encoding='utf-8').write(page)
+    open(f'{DIST}/index.html', 'w', encoding='utf-8', newline='\n').write(page)
 
 # --- pixel-иконка
 # Approved dark-violet pixel hero icon; source is kept with the application.
@@ -63,7 +63,7 @@ for f in ['manifest.json', 'config.js', 'localdb.js', 'save-history.js', 'cloud-
 if TEST:
     manifest = json.load(open(f'{DIST}/manifest.json', encoding='utf-8'))
     manifest.update(name='Вкач · ТЕСТ', short_name='Вкач ТЕСТ', id='./android-test')
-    open(f'{DIST}/manifest.json', 'w', encoding='utf-8').write(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
+    open(f'{DIST}/manifest.json', 'w', encoding='utf-8', newline='\n').write(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
 
 # --- Отдельная тестовая Цитадель (не заменяет основную игру)
 citadel = open('prototype/citadel.html', encoding='utf-8').read()
@@ -73,7 +73,7 @@ for name in ['citadel.js', 'citadel-life.js', 'citadel-weather.js']:
     source = open(f'{SRC}/{name}', encoding='utf-8').read()
     citadel = citadel.replace(f'<script src="../src/{name}"></script>', '<script>\n' + source + '\n</script>')
 citadel = citadel.replace('</head>', '<meta name="theme-color" content="#100c18"></head>')
-open(f'{DIST}/citadel.html', 'w', encoding='utf-8').write(citadel)
+open(f'{DIST}/citadel.html', 'w', encoding='utf-8', newline='\n').write(citadel)
 
 # Original scenery and sprites are first-party offline shell assets.
 shutil.copy(f'{SRC}/citadel-art.css', f'{DIST}/citadel-art.css')
@@ -107,5 +107,5 @@ for f in sorted(set(shell) - {'./'}):
 h.update(open(f'{SRC}/sw.template.js', 'rb').read())
 ver = h.hexdigest()[:10]
 sw = open(f'{SRC}/sw.template.js', encoding='utf-8').read().replace('__VERSION__', ver).replace('__SHELL__', json.dumps(shell)).replace('__APP_BUILD__', build_id)
-open(f'{DIST}/sw.js', 'w', encoding='utf-8').write(sw)
+open(f'{DIST}/sw.js', 'w', encoding='utf-8', newline='\n').write(sw)
 print('built', ver, os.listdir(DIST))

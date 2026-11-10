@@ -1004,6 +1004,29 @@ html,body{overflow-anchor:none}
     <h2>ОБУЧЕНИЕ</h2><p class="hint">Заклятие проведёт тебя по настоящим разделам. Можно остановиться в любой момент.</p><div class="row"><button class="btn" id="awakening-start" type="button">НАЧАТЬ ОБУЧЕНИЕ</button><button class="btn alt" id="awakening-restart" type="button" hidden>ПРОЙТИ ЗАНОВО</button><button class="btn alt" id="awakening-update-start" type="button">НОВОЕ ОФОРМЛЕНИЕ</button></div>
     <button class="btn" id="data-management" type="button">АККАУНТ И СОХРАНЕНИЯ</button>
     <details id="room-reminders" class="goal"><summary>Напоминания в игре</summary></details>
+    <details id="push-settings" class="goal">
+      <summary>Фоновые уведомления</summary>
+      <p class="hint" id="push-connection" role="status"></p>
+      <div class="row push-controls">
+        <button type="button" class="btn" id="push-toggle">Включить Push</button>
+        <button type="button" class="btn" id="push-test">Отправить тест</button>
+      </div>
+      <form id="push-schedule">
+        <p class="hint">Выбери категории и местное время. Недельные итоги приходят в воскресенье.</p>
+        <div class="push-category"><label><input type="checkbox" name="daily"> Дела дня</label><input type="time" name="daily-at" value="18:00" aria-label="Время дел дня"></div>
+        <div class="push-category"><label><input type="checkbox" name="food"> Дневник питания</label><input type="time" name="food-at" value="19:00" aria-label="Время напоминания о питании"></div>
+        <div class="push-category"><label><input type="checkbox" name="chains"> Разрыв Оков</label><input type="time" name="chains-at" value="10:00" aria-label="Время напоминания о плане"></div>
+        <div class="push-category"><label><input type="checkbox" name="achievements"> Достижения</label><input type="time" name="achievements-at" value="09:00" aria-label="Время уведомления о достижениях"></div>
+        <div class="push-category"><label><input type="checkbox" name="weekly"> Итоги недели</label><input type="time" name="weekly-at" value="20:00" aria-label="Время итогов недели"></div>
+        <div class="push-category"><label><input type="checkbox" name="quiet"> Часы тишины</label></div>
+        <div class="push-quiet">
+          <label>С <input type="time" name="quietFrom" value="23:00" aria-label="Начало тишины"></label>
+          <label>До <input type="time" name="quietTo" value="08:00" aria-label="Конец тишины"></label>
+        </div>
+        <button type="submit" class="btn">Сохранить расписание</button>
+      </form>
+      <p class="hint" id="push-feedback" role="status"></p>
+    </details>
     <h2>ЭФФЕКТЫ</h2>
     <div class="goal settings-effects">
       <div class="row">
@@ -1017,7 +1040,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="hint"><b>1.3.7 · Живая Трапезная.</b> Поиск продуктов FatSecret, порции и КБЖУ; управление картой Цитадели убрано в компактное меню. Начисления и сохранения прежние.</div>
+    <div class="hint"><b>1.4 · Путь Восхождения.</b> Сохранённые дела открывают новые отметины и узлы древа. Расписание фоновых уведомлений доступно в настройках.</div>
     <div class="release-stamp"><b>Версия __VER__</b><span>Сборка __BUILD__</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.3.3</b> · Пробуждение Цитадели. Меню комнат, поиск и дневник питания с рецептами.</div><div class="hint"><b>1.3.2</b> · Живая Цитадель. Жители снова ходят, работают и реагируют на разговор. У каждого движения отдельный кадр.<br><b>1.3.1</b> · Разрыв оков использует общие осколки и скрытый аспект. Исправлена загрузка сборки при обновлении.<br><b>1.3</b> · Разрыв оков: дневник, осколки за соблюдение лимита, скрытые отметины и Песочные часы судьбы.<br><b>1.2</b> · Кузница судьбы: настройка заданий, целей и открытых аспектов.<br><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
@@ -1415,7 +1438,74 @@ html,body{overflow-anchor:none}
       return dayCount(date,stepInfo())<reqTotal(date);
     }
   });
-  window.PlanSync.bindReminders?.(roomReminders);
+  window.PlanSync.bindReminders(roomReminders,function(){
+    var date=dkey(new Date());
+    return loaded&&dayCount(date,stepInfo())<reqTotal(date);
+  });
+  (function mountPushSettings(){
+    var host=$('push-settings'),form=$('push-schedule'),feedback=$('push-feedback');
+    var toggle=$('push-toggle'),test=$('push-test'),api=PlanSync.pushSettings,busy=false;
+    var keys=['daily','food','chains','achievements','weekly'],timePattern=/^([01]\d|2[0-3]):[0-5]\d$/;
+    var saved=function(){return PlanSync._docs()[api.path]?.d;};
+    function draw(){
+      var connection=api.connection();
+      $('push-connection').textContent=connection.description+' Часовой пояс: '+connection.timezone+'.';
+      toggle.textContent=connection.active?'Отключить Push':'Включить Push';
+      toggle.disabled=busy||!connection.active&&!connection.ready;
+      test.disabled=busy||!connection.active||!connection.ready;
+    }
+    function inputs(){
+      keys.forEach(function(key){form.elements[key+'-at'].disabled=!form.elements[key].checked;});
+      form.elements.quietFrom.disabled=form.elements.quietTo.disabled=!form.elements.quiet.checked;
+    }
+    host.addEventListener('toggle',function(){
+      if(!host.open)return;
+      var config=saved();
+      form.reset();
+      keys.forEach(function(key){
+        var at=config?.times?.[key];
+        form.elements[key].checked=timePattern.test(at);
+        if(timePattern.test(at))form.elements[key+'-at'].value=at;
+      });
+      form.elements.quiet.checked=!config||config.quietFrom!==config.quietTo;
+      if(config&&config.quietFrom!==config.quietTo){
+        form.elements.quietFrom.value=config.quietFrom;form.elements.quietTo.value=config.quietTo;
+      }
+      feedback.textContent='';inputs();draw();
+    });
+    window.addEventListener('vkach-push-state',draw);
+    form.addEventListener('change',inputs);
+    form.addEventListener('submit',function(event){
+      event.preventDefault();
+      if(!db||!loaded||busy)return;
+      var times={};
+      keys.forEach(function(key){if(form.elements[key].checked)times[key]=form.elements[key+'-at'].value;});
+      var from=form.elements.quiet.checked?form.elements.quietFrom.value:'00:00';
+      var to=form.elements.quiet.checked?form.elements.quietTo.value:'00:00';
+      if(![...Object.values(times),from,to].every(function(time){return timePattern.test(time);})||
+          form.elements.quiet.checked&&from===to){feedback.textContent='Проверь время и укажи разные границы часов тишины.';return;}
+      var save=form.querySelector('[type="submit"]');save.disabled=true;
+      enqueue(function(){return db.runTransaction(function(tx){
+        var previous=tx.get(api.path);
+        tx.set(api.path,{version:1,id:crypto.randomUUID(),times,quietFrom:from,quietTo:to,
+          achievementsSince:times.achievements?(previous?.times?.achievements&&previous.achievementsSince||Date.now()):null});
+      });}).then(function(){feedback.textContent='Расписание сохранено. Устройство получит новые настройки после синхронизации.';},
+        function(){feedback.textContent='Не удалось сохранить расписание. Попробуй ещё раз.';}).finally(function(){save.disabled=false;draw();});
+    });
+    async function action(run,success,failure){
+      busy=true;feedback.textContent='';draw();
+      try{var result=await run();feedback.textContent=result===false?failure:success;}
+      catch(_){feedback.textContent=failure;}
+      finally{busy=false;draw();}
+    }
+    toggle.onclick=function(){
+      var active=api.connection().active;
+      action(active?api.disable:api.enable,active?'Уведомления отключены на этом устройстве.':'Разрешение и подписка сохранены.',
+        'Проверь сеть, синхронизацию и разрешение на уведомления.');
+    };
+    test.onclick=function(){action(api.test,'Firebase принял тест. Проверь системные уведомления.',
+      'Тест не отправлен. Проверь подключение и повтори через минуту.');};
+  })();
   function roomDailyIds(day){
     var active=activeIdx(day);
     return day>=NEW_Q&&forgeEnabled('daily-8',day)?active.concat(8):active;
@@ -5582,7 +5672,8 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   function realmSync(){
     if(!loaded||!db||!window.VkachRealm||realmBusy)return;
     var signature=realmInputSignature();if(signature===realmSignature)return;realmSignature=signature;realmFailed=false;
-    var proof={marks:Object.keys(lastGI&&lastGI.ach||{}),cos:Object.keys(unlockedCos()||{})};
+    var proof={marks:Object.keys(lastGI&&lastGI.ach||{}),cos:Object.keys(unlockedCos()||{}),calorieTarget:nutritionDailyGoal,
+      exerciseThresholds:Object.fromEntries(SK_KEYS.map(function(key){return [key,SK[key].th[0]];}))};
     var snapshot=PlanSync._docs(),read={get:function(p){return snapshot[p]&&snapshot[p].d;},list:function(c){return Object.keys(snapshot).filter(function(p){return p.startsWith(c+'/')&&snapshot[p].d;}).map(function(p){return Object.assign({},snapshot[p].d,{id:p.slice(c.length+1)});});}};
     if(!VkachRealm.needs(read,dkey(new Date()),proof))return;realmBusy=true;
     enqueue(function(){return db.runTransaction(function(tx){VkachRealm.reconcile(tx,dkey(new Date()),Date.now(),proof);return VkachRealm.claim(tx);});}).then(function(rows){
@@ -6716,7 +6807,7 @@ function renderAllInner() {
       }
     }).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
     window.addEventListener('popstate',function(){if(npcReturning){npcReturning=false;return;}if(menuReturning){menuReturning=false;var destination=menuDestination;menuDestination=null;if(destination)destination();return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcOrigin&&history.state?.citadelOverlay!=='resident'){citadelNpcClose();return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(ascensionDialog.open||$('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
     function updateShellStatus(){if(!loaded)return;restoreView();updateFloors();updateMenuAccess();refreshToday();roomWorkspace.refresh();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}
     new MutationObserver(updateShellStatus).observe($('citadel-live-rank'),{childList:true,characterData:true,subtree:true});

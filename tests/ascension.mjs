@@ -63,11 +63,9 @@ try {
   const trophy=page.locator('#trophy');
   await trophy.locator('[data-achievement="ascent-rhythm"]').waitFor();
   assert.equal(await trophy.locator('[data-achievement="ascent-body"]').count(),0);
-  const shots=process.env.ASCENSION_SHOTS;
-  if(shots){
-    await mkdir(shots,{recursive:true});
-    await page.screenshot({path:resolve(shots,'01-achievements.png'),animations:'disabled'});
-  }
+  const shots=process.env.ASCENSION_SHOTS||'test-results/ascension';
+  await mkdir(shots,{recursive:true});
+  await page.screenshot({path:resolve(shots,'01-achievements.png'),animations:'disabled'});
   await page.locator('#ascension-open').tap();
   const dialog=page.locator('#ascension[open]');
   assert.equal(await dialog.locator('.ascension-seal').count(),15);
@@ -77,7 +75,7 @@ try {
   assert(!await dialog.textContent().then(text=>text.includes('Свобода среди руин')));
   const bounds=await dialog.boundingBox();
   assert(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=360&&bounds.y+bounds.height<=800);
-  if(shots)await page.screenshot({path:resolve(shots,'02-ascension.png'),animations:'disabled'});
+  await page.screenshot({path:resolve(shots,'02-ascension.png'),animations:'disabled'});
   await dialog.getByRole('button',{name:'Увеличить'}).tap();
   const stage=dialog.locator('.ascension-stage');
   const before=await stage.getAttribute('transform');
@@ -90,13 +88,63 @@ try {
   assert.notEqual(await stage.getAttribute('transform'),before);
   await dialog.getByRole('button',{name:'Сбросить масштаб'}).tap();
   assert.equal(await stage.getAttribute('transform'),'translate(0 0) scale(1)');
+  const cdp=await context.newCDPSession(page);
+  const mid={x:map.x+map.width/2,y:map.y+map.height/2};
+  const points=distance=>[{x:mid.x-distance,y:mid.y,id:1},{x:mid.x+distance,y:mid.y,id:2}];
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points(25)});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(55)});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  assert.notEqual(await stage.getAttribute('transform'),'translate(0 0) scale(1)','two fingers zoom the map');
   await page.goBack();
   await dialog.waitFor({state:'hidden'});
   assert(await trophy.isVisible(),'Android back returns to the collection');
+  await page.locator('#ascension-open').tap();
+  await page.keyboard.press('Escape');
+  await dialog.waitFor({state:'hidden'});
+  assert(await trophy.isVisible(),'Escape closes the map first');
+
+  await page.evaluate(async()=>{
+    const model=VkachFood;
+    await PlanDB.runTransaction(tx=>{
+      const draft=model.putDraft(tx,{id:'synthetic-meal',date:'2026-11-10',kind:'breakfast',
+        items:[{id:'item',name:'Синтетический завтрак',grams:100,mode:'unknown'}]},null);
+      model.finishMeal(tx,draft);
+    });
+  });
+  await page.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.unlocked.refectory01);
+  await trophy.locator('[data-achievement="refectory01"]').waitFor();
+  await page.evaluate(()=>{
+    for(let i=0;i<12&&!document.querySelector('#achup').hidden;i++)document.querySelector('#ac-ok').click();
+    document.querySelector('#trophy-x').click();
+  });
+  await trophy.waitFor({state:'hidden'});
+  await page.evaluate(()=>document.querySelector('#gear').click());
+  const settings=page.locator('#push-settings');
+  await settings.locator('summary').tap();
+  assert(await settings.getByRole('button',{name:'Отправить тест'}).isDisabled());
+  await settings.getByRole('checkbox',{name:'Дневник питания'}).check();
+  await settings.getByLabel('Время напоминания о питании').fill('19:30');
+  await settings.getByRole('button',{name:'Сохранить расписание'}).tap();
+  await page.waitForFunction(()=>PlanSync._docs()['cfg/push-reminders']?.d.times.food==='19:30');
+  await settings.locator('summary').evaluate(node=>{
+    document.activeElement?.blur();
+    const overlay=node.closest('#setup');
+    overlay.scrollLeft=0;
+    overlay.scrollTop+=node.getBoundingClientRect().top-overlay.querySelector('.shead').getBoundingClientRect().bottom-8;
+  });
+  await page.screenshot({path:resolve(shots,'03-push-settings.png'),animations:'disabled'});
+  for(const width of [320,360,430]){
+    await page.setViewportSize({width,height:800});
+    assert(await settings.evaluate(node=>node.scrollWidth<=node.clientWidth+2),'push inputs fit at '+width);
+  }
+  await page.setViewportSize({width:360,height:800});
+  await page.waitForFunction(()=>navigator.serviceWorker.controller);
+  await context.setOffline(true);
   await page.reload();
   await page.waitForFunction(()=>PlanSync._docs()['cfg/ascension']?.d.nodes['will-1']);
+  assert.equal(await page.evaluate(()=>PlanSync._docs()['cfg/push-reminders'].d.times.food),'19:30');
   assert.deepEqual(errors,[]);
-  console.log('PASS Ascension gates, secrecy, merge, mobile selection, zoom, pan, back and persisted unlocks');
+  console.log('PASS Ascension gates, secrecy, merge, mobile selection, pinch, pan, back, meal unlock, settings and offline restore');
 } finally {
   await browser?.close();
   server.close();

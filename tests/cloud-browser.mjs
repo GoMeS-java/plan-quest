@@ -32,6 +32,13 @@ const sdk={
     export const getToken=async()=>'synthetic-push-token';
     export const deleteToken=async()=>true;
   `,
+  functions:`
+    export const getFunctions=()=>({});
+    export const httpsCallable=(_,name)=>async data=>{
+      if(name!=='sendCitadelTestPush'||!data.device||Object.keys(data).length!==1) throw Error('Invalid test request');
+      return {data:{accepted:true}};
+    };
+  `,
   database:`
     export const getDatabase=()=>({});
     export const ref=(_,path)=>path;
@@ -110,7 +117,9 @@ async function device(amount, offline=false) {
       window.qaOnline=false;
       Object.defineProperty(navigator,'onLine',{get:()=>window.qaOnline});
     }
-    Object.defineProperty(window,'Notification',{value:{requestPermission:async()=>'granted'}});
+    let permission='default';
+    Object.defineProperty(window,'Notification',{value:{get permission(){return permission;},
+      requestPermission:async()=>permission='granted'}});
     if (!('PushManager' in window)) window.PushManager=class {};
     navigator.serviceWorker.getRegistration=async()=>({active:{},scope:location.origin+'/'});
     localStorage.setItem('plan.awakening.v1',JSON.stringify({version:1,step:12,status:'done'}));
@@ -167,11 +176,13 @@ try {
   assert(protectedByBackup);
   assert.equal(vault.head.revision,1);
   await mobileAccountLayout(phone);
+  assert.equal(await phone.page.evaluate(()=>Notification.permission),'default','startup must not request permission');
   await button(phone,'Включить Push').click();
   await phone.menu.getByText('Фоновые уведомления включены на этом устройстве.',{exact:true}).waitFor();
   assert.equal(subscription.token,'synthetic-push-token');
   assert.equal(subscription.revision,1);
   assert(subscription.needed);
+  assert.equal(await phone.page.evaluate(()=>PlanSync.pushSettings.test()),true,'test notification uses the callable for the signed-in device');
   await button(phone,'Отключить Push').scrollIntoViewIfNeeded();
   await shot(phone,'04-push-settings');
   const initialPushUpdates=pushUpdates.length;
@@ -193,6 +204,7 @@ try {
   await finished;
   assert.deepEqual(pushUpdates.slice(initialPushUpdates),[true,false],'a pending refresh must precede removal');
   assert.equal(subscription,null);
+  assert.equal(await phone.page.evaluate(()=>PlanSync.pushSettings.test()),false);
   await button(phone,'Включить Push').scrollIntoViewIfNeeded();
   await shot(phone,'01-cloud-account');
 

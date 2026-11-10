@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import '../src/cloud-sync.js';
-import { isDue } from '../cloud/functions/push-policy.js';
-import { dispatchDue } from '../cloud/functions/push-job.js';
+import { dueCategories, isDue, readPolicy } from '../cloud/functions/push-policy.js';
+import { dispatchDue, testDevice } from '../cloud/functions/push-job.js';
 
 const {configured,decide,nextVault,create} = VkachCloudSync;
 const origin = 'https://qa.example.invalid';
@@ -198,6 +198,45 @@ await simulateScheduler();
 assert.deepEqual(sent,['valid','invalid']);
 assert.equal(cloudTree.subscriptions.expired.a,undefined);
 
+const sunday=Date.parse('2027-04-18T20:15:00+03:00');
+const pushDevice='11111111-2222-4333-8444-555555555555', other='99999999-8888-4777-8666-555555555555';
+const policyId='88888888-7777-4666-8555-444444444444';
+const config={version:1,id:policyId,quietFrom:'23:00',quietTo:'08:00',achievementsSince:sunday-86400000,
+  times:{daily:'18:00',food:'19:00',chains:'08:00',achievements:'09:00',weekly:'20:00'}};
+const policyDocs={'cfg/push-reminders':{d:config},'cfg/realm-achievements':{d:{unlocked:{
+  'ascent-study':{version:1,at:sunday-3600000},'ascent-goal':{version:1,at:sunday+1},
+  'rebuild01':{version:1,at:sunday-2*86400000}
+}}}};
+const v2head={revision:5,savedAt:sunday,payload:JSON.stringify({v:2,format:'vkach-backup',docs:policyDocs})};
+const v2proof={...proof,revision:5,token:'categories-device',observedAt:sunday-9000,day:'2027-04-18'};
+const policy=readPolicy(v2head);
+assert.deepEqual(dueCategories(policy,v2proof,5,sunday).map(row=>row.category),['daily','food','chains','achievements','weekly']);
+assert.deepEqual(dueCategories(policy,v2proof,5,sunday).find(row=>row.category==='achievements').events,['ascent-study']);
+assert.deepEqual(dueCategories(policy,v2proof,4,sunday),[]);
+assert.deepEqual(dueCategories(policy,v2proof,5,sunday+5*3600000),[],'quiet hours continue across midnight');
+const done={...policy,docs:{...policy.docs,'food-meals/meal':{d:{date:v2proof.day,deleted:false,items:[{}]}},
+  'chains/confirm':{d:{date:v2proof.day,kind:'confirm'}}}};
+assert.deepEqual(dueCategories(done,{...v2proof,needed:false},5,sunday).map(row=>row.category),['achievements','weekly']);
+assert(!dueCategories(policy,{...v2proof,timezone:'Pacific/Auckland'},5,sunday).some(row=>row.category==='daily'));
+assert.equal(readPolicy({...v2head,payload:'not json'}),null);
+cloudTree.subscriptions={owner:{[pushDevice]:v2proof,[other]:{...v2proof,token:'older-device',observedAt:sunday-20000}}};
+cloudTree.vaults.owner.head=v2head;
+cloudTree['push-deliveries']={owner:{}};
+const categorySends=[];
+const send=async message=>{categorySends.push(message);};
+const clock=()=>sunday, idFor=()=>`push-${categorySends.length}`;
+await dispatchDue(schedulerDb,send,clock,idFor);
+await dispatchDue(schedulerDb,send,clock,idFor);
+assert.deepEqual(categorySends.map(row=>row.data.category),['daily','food','chains','achievements','weekly']);
+assert(categorySends.every(row=>row.token===v2proof.token&&row.data.policy===policyId&&!row.notification));
+await dispatchDue(schedulerDb,send,()=>sunday+86400000,idFor);
+assert.equal(categorySends.filter(row=>row.data.category==='achievements').length,1,'an achievement is never resent after midnight');
+assert.equal(await testDevice(schedulerDb,'another-account',pushDevice,send,clock,idFor),false);
+assert.equal(await testDevice(schedulerDb,'owner','bad/path',send,clock,idFor),false);
+assert.equal(await testDevice(schedulerDb,'owner',pushDevice,send,clock,idFor),true);
+assert.equal(await testDevice(schedulerDb,'owner',pushDevice,send,clock,idFor),false,'tests are rate limited per account');
+assert.equal(categorySends.at(-1).data.category,'test');
+
 const worker = await readFile(new URL('../src/sw.template.js',import.meta.url),'utf8');
 const listeners = {}, cache = new Map(), shown = [];
 let visible = false;
@@ -233,4 +272,24 @@ assert.equal(shown[0].options.body,'Открой Цитадель, чтобы п
 cache.delete(marker);
 await dispatch({id:'after-disable'});
 assert.equal(shown.length,1);
+const timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+const localDay=new Intl.DateTimeFormat('sv-SE',{year:'numeric',month:'2-digit',day:'2-digit'}).format();
+const v2data={vkach:'2',id:'v2-food',device:data.device,day:localDay,policy:policyId,timezone,category:'food',sentAt:String(Date.now())};
+cache.set(marker,new Response(JSON.stringify({device:data.device,day:localDay,revision:3,needed:false,policy:policyId,timezone})));
+await dispatch({...v2data,device:'foreign'});
+await dispatch({...v2data,policy:'outdated'});
+await dispatch({...v2data,timezone:'bad-timezone'});
+await dispatch({...v2data,category:'daily'});
+assert.equal(shown.length,1);
+await dispatch(v2data);
+await dispatch(v2data);
+await dispatch({...v2data,id:'late-arrival',sentAt:String(Number(v2data.sentAt)-1)});
+assert.equal(shown.length,2);
+assert.equal(shown.at(-1).options.tag,'vkach-food');
+visible=true;
+await dispatch({...v2data,id:'v2-test',category:'test',day:undefined});
+assert.equal(shown.at(-1).options.tag,'vkach-test');
+cache.delete(marker);
+await dispatch({...v2data,id:'test-after-logout',category:'test'});
+assert.equal(shown.length,3);
 console.log('PASS Firebase sync state machine, archive before upload, idempotent retry, conflict review, retention and push policy/worker');

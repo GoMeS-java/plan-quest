@@ -1189,7 +1189,7 @@ body.citadel-shell-active #fate-forge-dialog{
 .ascension-tools{font-size:12px;color:#c6b4cd;padding-bottom:8px}
 .ascension-counter{color:#f0d399}
 #ascension svg{
-  display:block;width:100%;aspect-ratio:1;max-height:53dvh;overflow:hidden;touch-action:none;user-select:none;
+  display:block;width:100%;aspect-ratio:1;max-height:53dvh;overflow:hidden;touch-action:none;user-select:none;-webkit-tap-highlight-color:transparent;
   background:radial-gradient(circle at 50% 54%,#37273b 0,#1d192a 47%,#13111d 79%);
   border:1px solid #54445e;border-radius:8px;box-shadow:inset 0 0 35px #08061099
 }
@@ -1207,6 +1207,7 @@ body.citadel-shell-active #fate-forge-dialog{
 .ascension-glyph{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;pointer-events:none}
 .ascension-seal.locked .ascension-glyph{stroke:#b0a2ba}
 .ascension-seal.next .ascension-stone{stroke:currentColor;stroke-dasharray:2 2}
+.ascension-seal.ready .ascension-stone{stroke-dasharray:none;filter:drop-shadow(0 0 6px currentColor)}
 .ascension-seal.open .ascension-stone{fill:color-mix(in srgb,currentColor 23%,#201a2c);stroke:currentColor;filter:drop-shadow(0 0 4px currentColor)}
 .ascension-seal:is(:focus-visible,[aria-pressed="true"]) .ascension-stone{stroke:#fff1d0;stroke-width:2.4}
 .ascension-seal.fresh .ascension-stone{animation:ascension-light .65s ease-out both}
@@ -1216,3 +1217,12 @@ body.citadel-shell-active #fate-forge-dialog{
 .ascension-node h3{font-size:19px;margin:4px 0}
 .ascension-node p,.ascension-help{margin:0;color:#d4c2d7;font-size:13px}
 .ascension-help{margin:8px 2px 0;color:#b9abc4;font-size:11px}
+
+#push-settings .push-category{display:grid;grid-template-columns:minmax(0,1fr) minmax(96px,34%);align-items:center;gap:8px;padding:5px 0}
+#push-settings label{min-height:44px;display:flex;align-items:center;gap:7px}
+#push-settings .push-controls{flex-wrap:wrap}
+#push-settings .push-controls>*{flex:1 1 115px}
+#push-settings .push-quiet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#push-settings .push-quiet label{display:grid;grid-template-columns:minmax(0,1fr);gap:3px;font-size:12px}
+#push-settings input:disabled{opacity:.48}
+#push-schedule [type="submit"]{margin-top:8px}

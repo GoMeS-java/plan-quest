@@ -4,32 +4,32 @@
   const branches = [
     { id:'body', label:'ТЕЛО', color:'#ed9b88', glyph:'M0-10V9M-7 3H7M-4 9H4',
       labelAt:[180,22], points:[[180,138],[180,91],[180,45]], nodes:[
-        ['Первый подход','Запиши по пять дней приседаний и отжиманий или открой аспект упражнения.',p=>p.exerciseAspect||p.marks.has('ascent-body')],
-        ['Дальний переход','Накопи 100 000 шагов, записав не менее 20 дней по 5 000 шагов.',p=>p.marks.has('ascent-walk')],
+        ['Первый подход','Регулярно записывай приседания и отжимания или развивай аспект упражнения.',p=>p.exerciseAspect||p.marks.has('ascent-body')],
+        ['Дальний переход','Продолжай ходить и записывать шаги изо дня в день.',p=>p.marks.has('ascent-walk')],
         ['Сила под сводами','',p=>p.rank>=6&&p.advancedExercise,true]
       ] },
     { id:'will', label:'ВОЛЯ', color:'#e7c27e', glyph:'M0-10L7 0 0 10-7 0ZM0-4V4',
       labelAt:[314,81], points:[[227,168],[270,141],[311,113]], nodes:[
-        ['Своя воля','Сохрани ежедневный ритм семь дней подряд или продвинься в «Разрыве Оков».',p=>p.marks.has('ascent-rhythm')||p.marks.has('chains-first')],
+        ['Своя воля','Сохраняй ежедневный ритм или продвигайся в «Разрыве Оков».',p=>p.marks.has('ascent-rhythm')||p.marks.has('chains-first')],
         ['Несбитый ритм','Продвинься в «Разрыве Оков» или укрепи свой режим питания.',p=>p.chainsAspect||p.marks.has('ascent-diet')],
         ['Свобода среди руин','',p=>p.marks.has('ascent-chains')||p.marks.has('chains-free'),true]
       ] },
     { id:'mind', label:'РАЗУМ', color:'#bdb0fb', glyph:'M-8-7H-2L0-4 2-7H8V6H2L0 9-2 6H-8ZM0-4V9',
       labelAt:[297,337], points:[[217,229],[251,267],[285,305]], nodes:[
-        ['Ученик архива','Отметь занятия английским в 14 сохранённых днях или открой учебный аспект.',p=>p.studyAspect||p.marks.has('ascent-study')],
+        ['Ученик архива','Регулярно отмечай занятия английским или открой учебный аспект.',p=>p.studyAspect||p.marks.has('ascent-study')],
         ['Собственная формула','Наладь выполнение своих ежедневных и еженедельных дел Кузницы.',p=>p.marks.has('ascent-forge')],
         ['Имя на корешке','Сохрани завершённую долгосрочную цель и достигни пятого ранга.',p=>p.rank>=5&&p.marks.has('ascent-goal')]
       ] },
     { id:'path', label:'ПУТЬ', color:'#9cdbbf', glyph:'M-7 8L0-8 7 8M-4 3H4M-7 8H7',
       labelAt:[63,337], points:[[143,229],[109,267],[75,305]], nodes:[
-        ['След на дороге','Сохрани отметки ежедневных дел семь дней подряд или достигни третьего ранга.',p=>p.rank>=3||p.marks.has('ascent-rhythm')],
+        ['След на дороге','Сохраняй ежедневный ритм или достигни третьего ранга.',p=>p.rank>=3||p.marks.has('ascent-rhythm')],
         ['Дальний рубеж','Отметь долгосрочную цель выполненной и собери не менее десяти достижений.',p=>p.marks.size>=10&&p.marks.has('ascent-goal')],
         ['След сквозь туман','',p=>p.rank>=7&&p.marks.size>=20,true]
       ] },
     { id:'citadel', label:'ЦИТАДЕЛЬ', color:'#92cbe8', glyph:'M-8 8V-6H-4V-1H-2V-8H2V-1H4V-6H8V8ZM-2 8V3H2V8',
       labelAt:[48,81], points:[[133,168],[90,141],[49,113]], nodes:[
         ['Оживший камень','Выполни первое улучшение комнаты Цитадели.',p=>p.marks.has('rebuild01')],
-        ['Свет в окнах','Улучши три разных комнаты Цитадели.',p=>p.marks.has('rebuild03')],
+        ['Свет в окнах','Продолжай обустраивать разные комнаты Цитадели.',p=>p.marks.has('rebuild03')],
         ['Над всеми башнями','',p=>p.marks.has('ascent-citadel')||p.marks.has('rebuild11'),true]
       ] }
   ];
@@ -176,7 +176,8 @@
         for(const node of branch.nodes){
           if(node.at)open++;
           const seal=svgElement('g',{transform:`translate(${node.point.join(' ')})`,role:'button',tabindex:0,
-            'aria-label':branch.label+' · '+node.name,class:'ascension-seal '+node.state+(animate&&node.at&&!previouslyOpen.has(node.id)?' fresh':'')});
+            'aria-label':branch.label+' · '+node.name,class:'ascension-seal '+node.state+(node.ready?' ready':'')+
+              (animate&&node.at&&!previouslyOpen.has(node.id)?' fresh':'')});
           seal.dataset.node=node.id;
           seal.append(svgElement('circle',{r:23,class:'ascension-hit'}),svgElement('path',{d:'M0-17L13-11 16 0 13 11 0 17-13 11-16 0-13-11Z',class:'ascension-stone'}),
             svgElement('path',{d:node.state==='locked'?'M-4-1H4V6H-4ZM-2-1V-5H2V-1':branch.glyph,class:'ascension-glyph'}));
