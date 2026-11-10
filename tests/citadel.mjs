@@ -730,7 +730,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   await p.emulateMedia({reducedMotion:'reduce'});assert.equal(await p.locator('.profile-hero-anchor .shared-aura-layer').evaluate(n=>getComputedStyle(n).animationName),'none');const count=await p.locator('.citadel-hero-sprite>.shared-aura-layer').count();await p.evaluate(()=>{__qa.render();__qa.render();});assert.equal(await p.locator('.citadel-hero-sprite>.shared-aura-layer').count(),count);
   await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id=""]').click();await waitForIdle(p);assert.equal(await p.evaluate(()=>document.documentElement.dataset.aura),'');assert.equal(await p.evaluate(()=>document.documentElement.hasAttribute('data-pixel-aura')),false);
-  const after=await docs(p);for(const data of [before,after]){delete data['cfg/look'];delete data['cfg/citadel'];}assert.deepEqual(after,before,'presentation cannot grant achievements or resources');await context.close();
+  const after=await docs(p);for(const data of [before,after]){
+    delete data['cfg/look'];delete data['cfg/citadel'];
+    for(const path of Object.keys(data).filter(path=>path.startsWith('world-history/'))){
+      // A saved appearance legitimately updates the daily observation time.
+      delete data[path].d.at;delete data[path].u;
+    }
+  }assert.deepEqual(after,before,'presentation cannot grant achievements or resources');await context.close();
  });
  await check('1.1 earned pixel aura follows movement and equipment and survives reload without losing preferences',async()=>{
   const {page:p,context}=await open({shell:true,seed:{...landscapeSeed(),'cfg/look':{futureField:'preserve'}},day:'2027-09-15'});await shellNav(p,'Настройки');const sec=p.locator('[data-look-category="aura"]');await sec.evaluate(n=>n.closest('details').open=true);await sec.locator('[data-look-id="au_warm"]').click();await waitForIdle(p);await p.locator('#setup-x').click();await castle(p);await p.locator('[data-croom="rest"]').click();await p.locator('#citadel-interior').waitFor({state:'visible'});await p.emulateMedia({reducedMotion:'no-preference'});

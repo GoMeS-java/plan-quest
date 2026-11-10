@@ -6117,7 +6117,7 @@ function renderAllInner() {
     items.forEach(function (g) {
       box.appendChild(questButton(g.name, '', g.done ? 'ГОТОВО' : '', !!g.done, function () {
         if (!db) return;
-        enqueue(function () { return db.doc('goals/' + g.id).update({ done: !g.done }); });
+        enqueue(function () { return db.doc('goals/' + g.id).update({ done: !g.done, completedAt: g.done ? null : Date.now() }); });
       }));
     });
   }

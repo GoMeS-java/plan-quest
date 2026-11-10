@@ -115,6 +115,12 @@ try{
   const dir=resolve(process.env.WORLD_HISTORY_SHOTS||'test-results/world-history');
   await mkdir(dir,{recursive:true});
   await panel.screenshot({path:resolve(dir,'01-profile-world-history.png'),animations:'disabled'});
+  await page.evaluate(()=>PlanDB.doc('goals/synthetic').set({name:'Проверить новый зал',done:false,ts:Date.now()}));
+  await page.waitForFunction(()=>document.querySelector('#gg-list .q'));
+  await page.evaluate(()=>document.querySelector('#gg-list .q').click());
+  await page.waitForFunction(()=>PlanSync._docs()['goals/synthetic'].d.completedAt);
+  const goalDate=await page.evaluate(()=>new Date(PlanSync._docs()['goals/synthetic'].d.completedAt).toISOString().slice(0,10));
+  assert.equal(goalDate,nextDay);
 
   await page.evaluate(copy=>PlanSync.importObj(copy,true),old);
   await page.waitForFunction(key=>PlanSync._docs()[key]?.d.frame.rooms.rest===1,secondPath);
