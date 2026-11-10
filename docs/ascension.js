@@ -31,6 +31,12 @@
         ['Оживший камень','Выполни первое улучшение комнаты Цитадели.',p=>p.marks.has('rebuild01')],
         ['Свет в окнах','Продолжай обустраивать разные комнаты Цитадели.',p=>p.marks.has('rebuild03')],
         ['Над всеми башнями','',p=>p.marks.has('ascent-citadel')||p.marks.has('rebuild11'),true]
+      ] },
+    { id:'capital', label:'КАПИТАЛ', color:'#f4cc79', glyph:'M0-10L9-3 6 9H-6L-9-3ZM-9-3H9M0-10L-4-3 0 9 4-3Z',
+      labelAt:[62,173], points:[[132,193],[100,185],[64,176]], nodes:[
+        ['Первый запас','Записывай реальные накопления или погашение долга.',p=>p.capital?.first],
+        ['Крепкий запас','Продолжай пополнять запас, погашать долг или приближаться к финансовой цели.',p=>p.capital?.steady],
+        ['Золото под корой','',p=>p.capital?.milestone,true]
       ] }
   ];
   const offshoots = [
@@ -50,6 +56,46 @@
   const center = [180,194];
   const valid = value => Number.isFinite(value) && value > 0;
   const nodeId = (branch, index) => branch.id+'-'+(index+1);
+  const actualDay=(date,today)=>typeof date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&date<=today&&
+    Number.isFinite(Date.parse(date))&&new Date(date+'T12:00:00Z').toISOString().slice(0,10)===date;
+  const positive=value=>typeof value==='number'&&Number.isFinite(value)&&value>0;
+
+  function capital(read,today,from,defaultGoal) {
+    const opening=read.get('cfg/opening');
+    const hasBalance=Number.isFinite(opening?.cash)&&Number.isFinite(opening?.card);
+    let balance=hasBalance?opening.cash+opening.card:0, jar=0, liabilities=0;
+    const deposits=new Map(),payments=new Map();
+    function add(map,date,amount){map.set(date,(map.get(date)||0)+amount);}
+    for(const entry of read.list('tx')){
+      if(entry.counted!==true||!actualDay(entry.date,today)||!positive(entry.amt)||!['cash','card'].includes(entry.acc))continue;
+      if(entry.kind!=='in'&&entry.kind!=='out')continue;
+      const sign=entry.kind==='in'?1:-1;
+      balance+=sign*entry.amt;
+      if(entry.cat==='Долг'&&!entry.work)add(payments,entry.date,-sign*entry.amt);
+    }
+    for(const entry of read.list('items')){
+      if(entry.list==='debts'&&entry.dir==='owe'&&positive(entry.amt))liabilities+=entry.amt;
+    }
+    for(const entry of read.list('jar')){
+      if(!actualDay(entry.date,today)||!Number.isFinite(entry.a))continue;
+      jar+=entry.a;
+      add(deposits,entry.date,entry.a);
+    }
+    const savingDays=new Set([...deposits].filter(([,amount])=>amount>0).map(([date])=>date));
+    const debtDays=new Set([...payments].filter(([,amount])=>amount>0).map(([date])=>date));
+    const dates=new Set([...savingDays,...debtDays]);
+    const repayments=[...payments.values()].reduce((sum,amount)=>sum+amount,0);
+    balance-=Math.max(liabilities,-repayments);
+    const goal=read.get('forge-tasks/goal-money')||defaultGoal;
+    const ratio=hasBalance&&goal?.source==='capital'&&Number.isFinite(goal.start)&&positive(goal.target-goal.start)&&balance>0
+      ? Math.max(0,Math.min(1,(balance-goal.start)/(goal.target-goal.start))) : 0;
+    return {
+      first:(jar>0&&savingDays.size>=2)||(repayments>0&&debtDays.size>=2)||ratio>=.08,
+      steady:(jar>0&&savingDays.size>=7)||(repayments>0&&debtDays.size>=5)||ratio>=.30,
+      milestone:(jar>0&&savingDays.size>=21)||(repayments>0&&debtDays.size>=12)||ratio>=1,
+      days:dates.size,recent:[...dates].filter(date=>date>=from).length
+    };
+  }
   function reached(ledger, progress) {
     const fresh = [];
     for (const branch of branches) {
@@ -181,7 +227,7 @@
       const node=branch?.nodes.find(node=>node.id===id);
       title.textContent=node?.name||'Печать Восхождения';
       description.textContent=node?.description||'Выбери печать на карте, чтобы рассмотреть её. Узлы загораются по мере твоего продвижения.';
-      state.textContent=node?(node.state==='open'?'ОТКРЫТО':node.ready?'ГОТОВО К ОТКРЫТИЮ':node.state==='next'?'СЛЕДУЮЩИЙ УЗЕЛ':'ЗАКРЫТО'):'ПЯТЬ НАПРАВЛЕНИЙ';
+      state.textContent=node?(node.state==='open'?'ОТКРЫТО':node.ready?'ГОТОВО К ОТКРЫТИЮ':node.state==='next'?'СЛЕДУЮЩИЙ УЗЕЛ':'ЗАКРЫТО'):'ШЕСТЬ НАПРАВЛЕНИЙ';
       state.style.color=branch?.color||'';
       stage.querySelectorAll('[role="button"]').forEach(element=>element.setAttribute('aria-pressed',String(element.dataset.node===id)));
     }
@@ -245,5 +291,5 @@
     }
     return {render,reveal};
   }
-  root.VkachAscension = Object.freeze({path,reached,reconcile,merge,view,mount});
+  root.VkachAscension = Object.freeze({path,reached,reconcile,merge,view,mount,capital,actualDay});
 })(globalThis);
