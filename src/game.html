@@ -5804,8 +5804,8 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
       chronicleCount(frame.marks?.length||0,'достижение','достижения','достижений')));
     var tree=VkachWorldHistory.treeState(frame.tree);
     if(tree){
-      var state=VkachDestinyWorld.historicalAppearance(tree,frame.seals).awakening;
-      details.appendChild(el('p','chronicle-awakening',VkachDestinyWorld.stages[state.stage]+' · '+state.percent+'%'));
+      var state=VkachDestinyWorld.historicalAppearance?.(tree,frame.seals)?.awakening;
+      if(state)details.appendChild(el('p','chronicle-awakening',VkachDestinyWorld.stages[state.stage]+' · '+state.percent+'%'));
       var list=el('ul','chronicle-tree');
       Object.entries(tree).forEach(function(pair){
         var li=el('li',null,chronicleBranches[pair[0]]);

@@ -494,7 +494,7 @@
       signature=stamp;
       syncHorizon(next);
       heart.sync(next);
-      stageLabel.textContent=stages[next.awakening.stage]+' · '+next.awakening.percent+'%';
+      if(stageLabel)stageLabel.textContent=stages[next.awakening.stage]+' · '+next.awakening.percent+'%';
       if(model&&next.awakening.stage>model.awakening.stage)stageWave=true;
       skyline.dataset.restoration=renewal.dataset.restoration=next.restoration;
       Array.from(lights.children).forEach((lamp,index)=>lamp.classList.toggle('is-lit',index<next.lamps));
