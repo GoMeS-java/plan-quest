@@ -1259,3 +1259,127 @@ body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
 #achup.mystery-awakening[data-rarity="legendary"] .lbox{animation-duration:.85s}
 @keyframes mystery-awakening{from{box-shadow:0 0 32px color-mix(in srgb,var(--rarity) 68%,transparent);outline:2px solid var(--rarity);outline-offset:5px}to{outline:2px solid transparent;outline-offset:0}}
 @media(prefers-reduced-motion:reduce){.mystery-card .mystery-seal:after,#achup.mystery-awakening .lbox{animation:none!important}}
+
+/* World beyond the Citadel. Both views use the same tree geometry and vein colors. */
+.destiny-horizon{position:absolute;z-index:0;left:var(--destiny-horizon-x,59%);top:-5px;width:153px;height:132px;transform:translateX(-50%);pointer-events:none;opacity:.86}
+.destiny-horizon image{filter:brightness(.81) saturate(.8)}
+.destiny-horizon .destiny-vein-core{stroke-width:6}
+.destiny-horizon .destiny-vein-glow{stroke-width:20}
+#destiny-world{
+  box-sizing:border-box;width:min(1040px,calc(100vw - 18px));max-width:none;max-height:calc(100dvh - 18px);
+  padding:0;margin:auto;overflow:auto;overscroll-behavior:contain;border:1px solid #655068;border-radius:9px;
+  color:#eddded;background:#171321;box-shadow:0 16px 85px #04030bd9;font:14px/1.42 system-ui,sans-serif
+}
+#destiny-world::backdrop{background:#0a0814e8}
+.destiny-world-head{
+  position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px 10px 15px;border-bottom:1px solid #605065;background:linear-gradient(117deg,#312539,#1b1626)
+}
+.destiny-world-head small{display:block;color:#d3ac89;font-size:9px;font-weight:700;letter-spacing:.15em}
+.destiny-world-head h2{margin:2px 0 0;color:#f0ddca;font:600 clamp(20px,5.8vw,28px)/1.1 Georgia,serif}
+#destiny-world button{
+  min-width:44px;min-height:44px;border:1px solid #6d5676;border-radius:4px;padding:5px 8px;
+  background:linear-gradient(#31263b,#20192b);color:#e4d3e6;font:600 12px/1.25 system-ui,sans-serif;touch-action:manipulation
+}
+#destiny-world button:focus-visible{outline:2px solid #edc7a1;outline-offset:-3px}
+#destiny-world .destiny-world-back{flex:none;color:#f3d9b9}
+.destiny-world-content{display:grid;min-width:0}
+.destiny-world-view{position:relative;min-width:0;overflow:hidden;background:#161423}
+.destiny-world-art{
+  display:block;width:100%;height:min(112.5vw,59dvh);min-height:220px;overflow:hidden;touch-action:none;user-select:none;
+  background:radial-gradient(ellipse at 55% 48%,#32273f,#10111d 72%);
+  -webkit-tap-highlight-color:transparent
+}
+.destiny-landmark{position:absolute;right:5%;top:58%;max-width:30%;pointer-events:none;color:#e7c9c6;font-size:8px;letter-spacing:.10em;text-shadow:1px 1px #110e19,0 0 6px #110e19}
+.destiny-world-art:not([data-zoom="1"])+.destiny-landmark{display:none}
+.destiny-camera{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
+#destiny-world .destiny-camera button{font-size:19px;background:#21192edb}
+.destiny-world-panel{padding:10px;border-top:1px solid #53425b;background:linear-gradient(153deg,#21192e,#16131f)}
+.destiny-branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(55px,1fr));gap:4px}
+#destiny-world .destiny-branches button{min-width:0;padding-inline:3px;font-size:clamp(9px,2.7vw,11px);letter-spacing:.02em;overflow-wrap:anywhere}
+#destiny-world .destiny-branches button[data-state="2"]{color:#d6f6de;border-color:#729b80}
+#destiny-world button[aria-pressed="true"]{border-color:#d5ad7f;background:#473242;color:#ffe1bd}
+.destiny-progress{min-width:0;margin-top:8px;padding:9px 10px;border:1px solid #54445e;border-radius:5px;background:#21192b}
+.destiny-progress-heading{display:flex;align-items:center;flex-wrap:wrap;gap:3px 9px;justify-content:space-between}
+.destiny-progress h3{margin:0;color:#efdac9;font:600 16px Georgia,serif;letter-spacing:.05em}
+.destiny-branch-phase{font-size:11px;color:#ddbea9}
+.destiny-node-list{display:flex;flex-wrap:wrap;gap:4px;margin:7px 0}
+#destiny-world .destiny-node-list button.is-open{color:#d4f4df}
+.destiny-progress p{margin:0;font-size:12px;color:#d4c3d8;overflow-wrap:anywhere}
+.destiny-progress .destiny-status:not(:empty){margin-top:7px;color:#ecd1a2}
+@media(min-width:720px) and (min-height:540px){
+  .destiny-world-content{grid-template-columns:minmax(0,1fr) minmax(240px,30%)}
+  .destiny-world-art{height:min(73dvh,760px)}
+  .destiny-world-panel{border-top:0;border-left:1px solid #53425b}
+  .destiny-branches{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .destiny-branches button:last-child{grid-column:1/-1}
+  .destiny-landmark{right:11%}
+}
+@media(orientation:landscape) and (max-height:530px){
+  .destiny-world-content{grid-template-columns:minmax(0,1fr) minmax(230px,37%)}
+  .destiny-world-art{height:max(220px,calc(100dvh - 86px))}
+  .destiny-world-panel{border-top:0;border-left:1px solid #53425b}
+}
+.destiny-world-art [data-direction],.destiny-horizon [data-direction]{--essence:#b5a0ce;--spark:#e5d1f4}
+:is(.destiny-world-art,.destiny-horizon) [data-direction="body"]{--essence:#c18973;--spark:#ffdbb6}
+:is(.destiny-world-art,.destiny-horizon) [data-direction="will"]{--essence:#c3a472;--spark:#ffdda5}
+:is(.destiny-world-art,.destiny-horizon) [data-direction="mind"]{--essence:#9f91c3;--spark:#ded0f7}
+:is(.destiny-world-art,.destiny-horizon) [data-direction="path"]{--essence:#70ac94;--spark:#c2f1ce}
+:is(.destiny-world-art,.destiny-horizon) [data-direction="citadel"]{--essence:#7c9ab1;--spark:#ceebf2}
+.destiny-veins{fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.destiny-vein-glow{stroke:var(--essence);stroke-width:13;opacity:0}
+.destiny-vein-core{stroke:var(--spark);stroke-width:2.4;opacity:.12}
+.destiny-veins[data-state="1"] .destiny-vein-glow{opacity:.16}
+.destiny-veins[data-state="1"] .destiny-vein-core{opacity:.53}
+.destiny-veins[data-state="2"] .destiny-vein-glow{opacity:.31}
+.destiny-veins[data-state="2"] .destiny-vein-core{opacity:.93}
+.destiny-veins .destiny-secret{opacity:.76;stroke-dasharray:6 5}
+.destiny-vein-glow.destiny-secret{opacity:.25;stroke-dasharray:none}
+.destiny-horizon .destiny-veins[data-state="0"] .destiny-vein-core:not(.destiny-secret){opacity:0}
+.destiny-link-shadow{fill:none;stroke:#080911;stroke-width:7}
+.destiny-link-metal{fill:none;stroke:#807287;stroke-width:3;opacity:.91}
+.destiny-chain{pointer-events:none}
+.destiny-chain[data-state="1"] .destiny-link-metal{stroke:#a6887e}
+.destiny-chain-crack{display:none;fill:none;stroke:#ffd097;stroke-width:1.9}
+.destiny-chain[data-state="1"] .destiny-chain-crack,.destiny-chain.is-breaking .destiny-chain-crack{display:block}
+.destiny-chain[data-state="2"]:not(.is-breaking) .destiny-chain-link{display:none}
+.destiny-chain[data-state="2"] .destiny-chain-tip .destiny-link-metal{stroke:#8d766e;opacity:.62}
+.destiny-chain.is-breaking .destiny-chain-link{animation:destiny-chain-break .7s ease-out both}
+.destiny-veins.is-surging .destiny-vein-core{animation:destiny-vein-surge .8s ease-out both}
+@keyframes destiny-chain-break{0%{opacity:1}21%{opacity:1;translate:0 -4px}100%{opacity:0;translate:0 51px}}
+@keyframes destiny-vein-surge{0%{opacity:.28}45%{opacity:1;stroke-width:8}100%{opacity:.93}}
+.destiny-seal{cursor:pointer;outline:none;color:var(--essence)}
+.destiny-hit{fill:transparent}
+.destiny-stone{fill:#221c2e;stroke:#75617e;stroke-width:2.5}
+.destiny-rune{fill:none;stroke:#b8a8bc;stroke-width:2.3;stroke-linejoin:round;pointer-events:none}
+.destiny-seal.is-open .destiny-stone{fill:#332942;stroke:var(--essence);stroke-width:4}
+.destiny-seal.is-open .destiny-rune{stroke:var(--spark)}
+.destiny-seal:is([aria-pressed="true"],:focus-visible) .destiny-stone{stroke:#ffdeaa;stroke-width:4}
+.destiny-window{fill:#956e65;opacity:.25}
+.destiny-window.is-lit{fill:#ffd59b;opacity:.93}
+.destiny-haze{fill:none;stroke:#c2adc4;stroke-width:8;stroke-linecap:round;opacity:.13;pointer-events:none}
+.destiny-embers{fill:#d6a5aa;opacity:.43;pointer-events:none}
+#destiny-world[open] .destiny-embers{animation:destiny-embers 7s ease-in-out infinite alternate}
+#destiny-world[open] .destiny-haze{animation:destiny-haze 12s ease-in-out infinite alternate}
+@keyframes destiny-embers{to{opacity:.23;translate:0 -12px}}
+@keyframes destiny-haze{to{opacity:.24;translate:16px 0}}
+#destiny-world[open]{animation:destiny-arrive .39s ease-out both}
+#destiny-world[open].is-returning{animation:destiny-return .35s ease-in both}
+#destiny-world[open].is-returning::backdrop{animation:destiny-backdrop .35s ease-in both}
+#destiny-travel-fog[hidden]{display:none}
+#destiny-travel-fog{position:fixed;z-index:110;inset:0;pointer-events:none;background:radial-gradient(ellipse at 68% 40%,#6e557d,#161220 67%);animation:destiny-fog .34s ease-in both}
+.destiny-departure .citadel-viewport{animation:destiny-departure .34s ease-in both}
+.destiny-homecoming .citadel-viewport{animation:destiny-arrive .39s ease-out both}
+@keyframes destiny-fog{from{opacity:0}to{opacity:.86}}
+@keyframes destiny-departure{to{opacity:.3;transform:scale(.93)}}
+@keyframes destiny-arrive{from{opacity:.2;transform:scale(1.02)}to{opacity:1;transform:scale(1)}}
+@keyframes destiny-return{to{opacity:.22;transform:scale(.98)}}
+@keyframes destiny-backdrop{to{background:transparent}}
+:root[data-destiny-scene] :is(.citadel-person,.citadel-hero-sprite,.citadel-window-weather,.citadel-realm-particles,.citadel-realm-detail),
+:root[data-destiny-scene] :is(.citadel-sconce,.citadel-sky,.citadel-realm-particles,.citadel-realm-detail):before,
+:root[data-destiny-scene] :is(.citadel-realm-particles,.citadel-realm-detail):after,
+:root.citadel-suspended #destiny-world *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){
+  #destiny-world[open],#destiny-world[open]::backdrop,#destiny-world[open] :is(.destiny-embers,.destiny-haze,.destiny-chain-link,.destiny-vein-core),
+  #destiny-travel-fog,.destiny-departure .citadel-viewport,.destiny-homecoming .citadel-viewport{animation:none!important}
+}

@@ -1149,8 +1149,39 @@ html,body{overflow-anchor:none}
     <p class="ascension-help">Коснись печати, чтобы узнать о ней. Приближай двумя пальцами и перемещай увеличенную карту.</p>
   </div>
 </dialog>
+<dialog id="destiny-world" aria-labelledby="destiny-world-title">
+  <header class="destiny-world-head">
+    <div><small>МИР ЗА ПРЕДЕЛАМИ СНА</small><h2 id="destiny-world-title">Древо Судьбы</h2></div>
+    <button type="button" class="destiny-world-back">← В Цитадель</button>
+  </header>
+  <div class="destiny-world-content">
+    <div class="destiny-world-view">
+      <svg class="destiny-world-art" viewBox="0 0 800 900" role="group" aria-label="Скованное Древо и башни Цитадели за туманом">
+        <g class="destiny-world-far" aria-hidden="true"></g>
+        <g class="destiny-world-near"></g>
+      </svg>
+      <span class="destiny-landmark" aria-hidden="true">БАШНИ СПЯЩЕГО</span>
+      <div class="destiny-camera" role="group" aria-label="Камера Древа">
+        <button type="button" data-destiny-zoom="out" aria-label="Отдалить Древо">−</button>
+        <button type="button" data-destiny-zoom="reset" aria-label="Вернуться к центру Древа">◎</button>
+        <button type="button" data-destiny-zoom="in" aria-label="Приблизить Древо">+</button>
+      </div>
+    </div>
+    <div class="destiny-world-panel">
+      <nav class="destiny-branches" aria-label="Направления Древа"></nav>
+      <section class="destiny-progress" aria-label="Прогресс выбранной ветви">
+        <div class="destiny-progress-heading"><h3 class="destiny-branch-title"></h3><span class="destiny-branch-phase"></span></div>
+        <div class="destiny-node-list" role="group" aria-label="Печати выбранной ветви"></div>
+        <p class="destiny-node-description" aria-live="polite"></p>
+        <p class="destiny-status" role="status"></p>
+      </section>
+    </div>
+  </div>
+</dialog>
+<div id="destiny-travel-fog" aria-hidden="true" hidden></div>
 <script src="realm-achievements.js"></script>
 <script src="ascension.js"></script>
+<script src="destiny-world.js"></script>
 <script src="shelter-items.js"></script>
 <script src="forge-awards.js"></script>
 <script src="forge-art.js"></script>
@@ -5597,7 +5628,7 @@ function syncCitadelAvatar(){
 // Frequent updates only around actual departures. Idle residents need one wake per minute.
 function citadelLifeTick(){
  clearTimeout(citadelTimeTimer);citadelTimeTimer=0;
- if(document.hidden||!$('citadel-home').open)return;
+ if(document.hidden||!$('citadel-home').open||$('destiny-world').open)return;
  syncCitadelTime();if(loaded){syncCitadelResidents(citadelResidentRank);window.__citadelShell?.refreshToday();}
  var now=new Date(),h=now.getHours(),m=now.getMinutes(),busy=([7,10,18,21,23].indexOf(h)>=0&&m<2)||(h>=10&&h<18&&m>=15&&m<17);
  citadelTimeTimer=setTimeout(citadelLifeTick,busy?1000:60000-now.getSeconds()*1000-now.getMilliseconds());
@@ -5605,7 +5636,7 @@ function citadelLifeTick(){
 document.addEventListener('visibilitychange',function(){
  document.documentElement.classList.toggle('citadel-suspended',document.hidden);
  if(document.hidden)citadelPeople.forEach(function(person){if(person.castleSprite)person.castleSprite._lastPosition=null;});
- if(citadelHeroAnimation){if(document.hidden)citadelHeroAnimation.pause();else citadelHeroAnimation.play();}
+ if(citadelHeroAnimation){if(document.hidden||$('destiny-world').open)citadelHeroAnimation.pause();else citadelHeroAnimation.play();}
  if(loaded&&$('citadel-home').open){citadelLifeTick();if(!document.hidden)citadelPosition();}
 });
 window.addEventListener('pageshow',function(e){if(e.persisted&&loaded)citadelLifeTick();});
@@ -5656,6 +5687,25 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
 
   function realmOwned(){return window.VkachRealm?VkachRealm.owned(S.realm):[];}
+  var destinyHorizon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  destinyHorizon.setAttribute('class','destiny-horizon');
+  destinyHorizon.setAttribute('viewBox','0 0 800 900');
+  destinyHorizon.setAttribute('aria-hidden','true');
+  document.querySelector('.citadel-sky').prepend(destinyHorizon);
+  var destinyDialog=$('destiny-world'),destinyScene=window.VkachDestinyWorld?.mount(destinyDialog,destinyHorizon,$('citadel-home'),function(active){
+    if(active)citadelHeroAnimation?.pause();
+    else if(!document.hidden)citadelHeroAnimation?.play();
+    citadelLifeTick();
+  });
+  var destinyStamp='';
+  function syncDestiny(ledger,progress){
+    if(!destinyScene)return;
+    var levels=citadelRooms.map(function(room){return citadelRoomLevel(room);});
+    var stamp=JSON.stringify([ledger?.nodes,levels]);
+    if(stamp===destinyStamp)return;
+    destinyStamp=stamp;
+    destinyScene.sync(VkachDestinyWorld.project(VkachAscension.view(ledger,progress),levels));
+  }
   var ascensionDialog=$('ascension'),ascensionUI=VkachAscension.mount(ascensionDialog),ascensionBusy=false;
   function ascensionProgress(realm){
     var skills=SK_KEYS.map(function(key){return lastGI?.ups[key]?.at(-1)?.lvl||0;});
@@ -5668,13 +5718,16 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   function ascensionSync(){
     if(!loaded||!lastGI)return;
     var docs=PlanSync._docs(),ledger=docs[VkachAscension.path]?.d,progress=ascensionProgress(docs[VkachRealm.path]?.d);
+    syncDestiny(ledger,progress);
     if(ascensionDialog.open)ascensionUI.render(VkachAscension.view(ledger,progress));
     if(ascensionBusy||!VkachAscension.reached(ledger,progress).length)return;
     ascensionBusy=true;
     enqueue(function(){return db.runTransaction(function(tx){return VkachAscension.reconcile(tx,ascensionProgress(tx.get(VkachRealm.path)),Date.now());});})
       .then(function(ids){
         ascensionUI.reveal(ids);
-        if(ascensionDialog.open)ascensionUI.render(VkachAscension.view(PlanSync._docs()[VkachAscension.path]?.d,progress));
+        var saved=PlanSync._docs()[VkachAscension.path]?.d;
+        syncDestiny(saved,progress);
+        if(ascensionDialog.open)ascensionUI.render(VkachAscension.view(saved,progress));
       })
       .catch(function(){}).finally(function(){ascensionBusy=false;});
   }
@@ -6622,7 +6675,8 @@ function renderAllInner() {
       if(id==='overview'){
         closeSystem();if(history.state?.citadelOverlay==='room')history.back();
         citadelSetArtView('overview');viewport.focus();
-      }else if(id==='food')openFood(true);
+      }else if(id==='destiny')destinyScene?.open(dockMenu);
+      else if(id==='food')openFood(true);
       else if(id==='chains')citadelNavigate('today','chains-daily');
       else if(id==='forge'){
         if(citadelRoomOpen('forge'))forgeOpen(true);
@@ -6638,7 +6692,7 @@ function renderAllInner() {
       b.onclick=function(){selectSection(entry[0],entry[1]);};
       parent.appendChild(b);return b;
     }
-    var destinations=[['overview','Цитадель'],['food','Добавить еду'],['today','Задания'],['money','Финансы'],
+    var destinations=[['overview','Цитадель'],['destiny','Древо Судьбы'],['food','Добавить еду'],['today','Задания'],['money','Финансы'],
       ['chains','Разрыв Оков'],['forge','Кузница судьбы'],['week','Хроника'],['diet','Тело'],['goals','Путь'],
       ['wardrobe','Профиль'],['shop','Воспоминания'],['settings','Настройки'],['achievements','Достижения']].concat(Object.entries(VkachRoomWorkspace.labels));
     var pinsKey=uiPrefix+'citadel.pins.v1',pins=['food','today','money','chains'];
@@ -6722,7 +6776,7 @@ function renderAllInner() {
       var content=document.createElement('div');content.className='citadel-menu-group-items';group.appendChild(content);
       items.forEach(function(entry){navAction(entry,content,false);});allFunctions.appendChild(group);return content;
     }
-    navGroup('ПУТЬ И ПРОГРЕСС',[['overview','Цитадель'],['today','Задания'],['week','Хроника'],['diet','Тело'],['goals','Путь'],['wardrobe','Профиль'],['shop','Воспоминания']]);
+    navGroup('ПУТЬ И ПРОГРЕСС',[['overview','Цитадель'],['destiny','Древо Судьбы'],['today','Задания'],['week','Хроника'],['diet','Тело'],['goals','Путь'],['wardrobe','Профиль'],['shop','Воспоминания']]);
     navGroup('ИНСТРУМЕНТЫ',[['food','Добавить еду'],['chains','Разрыв Оков'],['forge','Кузница судьбы'],['settings','Настройки'],['achievements','Достижения']]);
     navGroup('КАЗНА И ДЕЛА',[['money','Финансы']]);
     navGroup('КОМНАТЫ И ДНЕВНИКИ',Object.entries(VkachRoomWorkspace.labels));
@@ -6786,6 +6840,7 @@ function renderAllInner() {
       var v=viewport.getBoundingClientRect(),left=v.left+viewport.clientLeft,right=left+viewport.clientWidth;
       castle.querySelectorAll('.citadel-floor-caption').forEach(function(n){n.style.transform='translateX('+Math.round(viewport.scrollLeft)+'px)';n.style.maxWidth=Math.max(80,viewport.clientWidth-24)+'px';});
       var sky=castle.querySelector('.citadel-skyline');sky.style.left=(viewport.scrollLeft+24)+'px';sky.style.maxWidth=Math.max(80,viewport.clientWidth-48)+'px';
+      sky.parentElement.style.setProperty('--destiny-horizon-x',Math.round(viewport.scrollLeft*.85+viewport.clientWidth*.59)+'px');
       castle.querySelectorAll('[data-croom]').forEach(function(room){var r=room.getBoundingClientRect(),name=room.querySelector('.citadel-room-name'),visible=Math.min(r.right,right)-Math.max(r.left,left);name.style.left=Math.max(4,left-r.left+6)+'px';name.style.maxWidth=Math.max(0,Math.min(r.right,right)-Math.max(r.left,left)-12)+'px';name.style.visibility=visible<76?'hidden':'visible';});
     }
     function scheduleCaptions(){if(!cameraFrame)cameraFrame=requestAnimationFrame(cameraCaptions);}
@@ -6853,7 +6908,7 @@ function renderAllInner() {
       }
     }).observe(home,{attributes:true,attributeFilter:['data-ui-view']});
     window.addEventListener('popstate',function(){if(npcReturning){npcReturning=false;return;}if(menuReturning){menuReturning=false;var destination=menuDestination;menuDestination=null;if(destination)destination();return;}if(auxiliaryBack){auxiliaryBack=false;return;}if($('citadel-mystery').open){$('citadel-mystery').close();return;}if(home.dataset.menu==='open'){closeMenu(true);returnMenuFocus();return;}if(!$('setup').hidden){$('setup').hidden=true;return;}if(!$('trophy').hidden){$('trophy').hidden=true;return;}if(dialog.open){closeSystem(true);return;}if(drawer){closeDrawer(true);return;}if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;history.pushState(Object.assign({},history.state,{citadelOverlay:'room'}),'');return;}if(citadelNpcOrigin&&history.state?.citadelOverlay!=='resident'){citadelNpcClose();return;}if(home.dataset.uiView!=='overview'&&history.state?.citadelOverlay!=='room'){citadelSetArtView('overview');return;}});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(ascensionDialog.open||$('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(destinyDialog.open||ascensionDialog.open||$('citadel-mystery').open||document.querySelector('dialog.chains-dialog[open]'))return;e.preventDefault();if(home.dataset.menu==='open'){closeMenu();e.stopImmediatePropagation();}else if(!$('setup').hidden){$('setup-x').click();e.stopImmediatePropagation();}else if(!$('trophy').hidden){$('trophy-x').click();e.stopImmediatePropagation();}else if(dialog.open){closeSystem();e.stopImmediatePropagation();}else if(drawer){closeDrawer();e.stopImmediatePropagation();}else if($('shelter-collection').open&&!$('citadel-interior').hidden){if(shelterPreview)shelterCancel();else $('shelter-collection').open=false;e.stopImmediatePropagation();}else if(citadelNpcSelected&&!$('citadel-interior').hidden){citadelNpcClose();e.preventDefault();e.stopImmediatePropagation();}else if(home.dataset.uiView!=='overview'){citadelSetArtView('overview');e.stopImmediatePropagation();}}},true);
     refreshDrawer();
     function updateShellStatus(){if(!loaded)return;restoreView();updateFloors();updateMenuAccess();refreshToday();roomWorkspace.refresh();var p=pointsInfo();shellStatus.textContent=(window.PLAN_CONFIG?.testMode?'ТЕСТ '+window.APP_VERSION+' · ':'')+'Ранг '+p.L;document.querySelectorAll('[data-section]').forEach(function(b){b.setAttribute('aria-current',dialog.open&&moved?b.dataset.section===moved.id?'page':'false':home.dataset.uiView==='overview'&&b.dataset.section==='overview'?'page':'false');});var day=dkey(new Date()),idx=activeIdx(day),record=S.days[day]||{};$('quest-progress').textContent=idx.filter(function(i){return !!(record.q||[])[i];}).length+' / '+idx.length;}
     new MutationObserver(updateShellStatus).observe($('citadel-live-rank'),{childList:true,characterData:true,subtree:true});
