@@ -93,6 +93,19 @@ async function shellNav(p,label){
 }
 async function shellDrawer(p,side){const b=p.locator('.citadel-shell-tail.'+side);if(!(await p.locator('.citadel-shell-nav').isVisible()))await shellMenu(p);await b.evaluate(n=>{for(let group=n.closest('details');group&&group.id!=='citadel-home';group=group.parentElement.closest('details'))group.open=true;});await b.click();}
 async function docs(p){return p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));}
+function expectedFirstRoomUnlocks(before,after){
+ const expected=structuredClone(before);
+ const previousAwards=expected['cfg/realm-achievements'].d.unlocked;
+ const {rebuild01,rebuild02,...retained}=after['cfg/realm-achievements'].d.unlocked;
+ assert.deepEqual(retained,previousAwards);
+ for(const award of [rebuild01,rebuild02])assert(award.version===1&&award.presented&&award.at>0);
+ expected['cfg/realm-achievements']={d:{...expected['cfg/realm-achievements'].d,unlocked:{...previousAwards,rebuild01,rebuild02}},u:after['cfg/realm-achievements'].u};
+ const {['citadel-1']:firstRoom,...priorNodes}=after['cfg/ascension'].d.nodes;
+ assert(firstRoom>0);
+ assert.deepEqual(priorNodes,expected['cfg/ascension']?.d.nodes||{});
+ expected['cfg/ascension']={d:{version:1,nodes:{...priorNodes,'citadel-1':firstRoom}},u:after['cfg/ascension'].u};
+ return expected;
+}
 async function write(p,path,data){await p.evaluate(async({path,data})=>{const db=window.PlanDB;await db.doc(path).set(data);},{path,data});await p.waitForTimeout(40);await dismiss(p);}
 function advancedSeed(){
  const seed=structuredClone(initial);
@@ -766,6 +779,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   });assert(pixels.top>0,'glass above the old mask must be filled');assert(pixels.bottom>100,'lower pane must be filled');assert(pixels.occluded>0,'stage furniture is cut out of the exterior mask');assert.equal(pixels.mullion,0,'mullions are preserved');
   for(const level of [1,2,3]){
    await p.evaluate(async level=>{__qa.move('rest');document.querySelector('#citadel-enter').click();if(level>1){await __qa.upgrade('rest',level-1);await __qa.idle();}},level);
+   await p.waitForFunction(level=>document.querySelector('#citadel-interior-stage')?.dataset.level===String(level),level);
    const sample=await p.locator('#citadel-interior-stage .citadel-daylight').evaluate(n=>({mask:getComputedStyle(n,'::after').maskImage,opacity:getComputedStyle(n,'::after').opacity,weather:getComputedStyle(n.querySelector('.citadel-window-weather')).zIndex,backdrop:getComputedStyle(n,'::after').zIndex}));assert(sample.mask.includes('rest-windows-'+level+'.svg'));assert.equal(sample.opacity,'1','old yellow glass cannot bleed through the winter scene');assert(Number(sample.weather)>Number(sample.backdrop));
   }
   await p.emulateMedia({reducedMotion:'reduce'});const stage=p.locator('#citadel-interior-stage');const geometry=await stage.evaluate(n=>({width:n.clientWidth,height:n.clientHeight,left:n.clientLeft,top:n.clientTop}));const shot=await stage.screenshot({path:resolve(out,'v11-winter-complete-panes.png')});
@@ -2210,17 +2224,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   assert(await p.locator('#citadel-upgrade').isDisabled());
   await p.waitForFunction(()=>__qa.realm.owned().some(row=>row.id==='rebuild02')&&__qa.realm.idle());
   const completed=await docs(p);
-  const expected=structuredClone(original);
-  const previousAwards=expected['cfg/realm-achievements'].d.unlocked;
-  const {rebuild01,rebuild02,...retained}=completed['cfg/realm-achievements'].d.unlocked;
-  assert.deepEqual(retained,previousAwards);
-  for(const award of [rebuild01,rebuild02])assert(award.version===1&&award.presented&&award.at>0);
-  expected['cfg/realm-achievements']={d:{...expected['cfg/realm-achievements'].d,unlocked:{...previousAwards,rebuild01,rebuild02}},u:completed['cfg/realm-achievements'].u};
-  const {['citadel-1']:firstRoom,...priorNodes}=completed['cfg/ascension'].d.nodes;
-  assert(firstRoom>0);
-  assert.deepEqual(priorNodes,expected['cfg/ascension']?.d.nodes||{});
-  expected['cfg/ascension']={d:{version:1,nodes:{...priorNodes,'citadel-1':firstRoom}},u:completed['cfg/ascension'].u};
-  for(const [key,value] of Object.entries(expected))assert.deepEqual(completed[key],value,'shell renovation modified '+key);
+  for(const [key,value] of Object.entries(expectedFirstRoomUnlocks(original,completed)))assert.deepEqual(completed[key],value,'shell renovation modified '+key);
   await p.locator('#citadel-interior-stage').screenshot({path:resolve(out,'progress-rest-grand-'+width+'x'+height+'.png')});
   await p.reload();await p.waitForFunction(()=>!!window.__citadelShell&&document.querySelector('[data-croom="rest"]').dataset.roomLevel==='3');
   assert.equal(await p.evaluate(()=>__qa.roomLevel('rest')),3);
@@ -2489,12 +2493,14 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.evaluate(()=>{__qa.upgrade('rest',1);__qa.upgrade('rest',1);});await waitForIdle(p);
   assert.equal(await p.evaluate(()=>__qa.points().avail),points.avail);
   await p.locator('#citadel-upgrade').click();await waitForIdle(p);await p.waitForFunction(()=>__qa.roomLevel('rest')===3);
+  await p.waitForFunction(()=>__qa.realm.owned().some(row=>row.id==='rebuild02')&&__qa.realm.idle()&&
+    PlanSync._docs()['cfg/ascension']?.d.nodes['citadel-1']);
   const after=await docs(p),now=await p.evaluate(()=>__qa.points());
   assert.deepEqual({...now,avail:points.avail},points,'construction must preserve shop cores');
   assert.equal(now.avail,points.avail);
   assert.equal(after['buys/citadel-rest-3'].d.cost,12);
   assert.equal(after['cfg/abyss-economy'].d.earned,essence);
-  for(const [key,value]of Object.entries(before))assert.deepEqual(after[key],value,'construction modified pre-existing '+key);
+  for(const [key,value]of Object.entries(expectedFirstRoomUnlocks(before,after)))assert.deepEqual(after[key],value,'construction modified pre-existing '+key);
   assert(await p.locator('#citadel-upgrade').isDisabled());assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'3');
   await p.reload();await castle(p);await p.locator('#citadel-enter').click();assert.equal(await p.locator('#citadel-interior-stage').getAttribute('data-level'),'3');
   await p.locator('#citadel-castle').screenshot({path:resolve(out,'citadel-castle-mobile.png')});await p.locator('#citadel-interior').screenshot({path:resolve(out,'citadel-interior-mobile.png')});await p.screenshot({path:resolve(out,'citadel-renovated-mobile.png'),fullPage:true});await p.setViewportSize({width:1280,height:900});await p.screenshot({path:resolve(out,'citadel-renovated-desktop.png'),fullPage:true});await context.close();

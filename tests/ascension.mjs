@@ -101,8 +101,8 @@ try {
   const points=distance=>[{x:mid.x-distance,y:mid.y,id:1},{x:mid.x+distance,y:mid.y,id:2}];
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points(25)});
   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(55)});
+  await page.waitForFunction(()=>document.querySelector('.ascension-stage').getAttribute('transform')!=='translate(0 0) scale(1)');
   const pinched=await stage.getAttribute('transform');
-  assert.notEqual(pinched,'translate(0 0) scale(1)','two fingers zoom the map');
   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(55).map(p=>({...p,x:p.x+20,y:p.y+12}))});
   await page.waitForFunction(previous=>document.querySelector('.ascension-stage').getAttribute('transform')!==previous,pinched,{timeout:5000});
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});

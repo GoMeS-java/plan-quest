@@ -240,6 +240,15 @@ try {
   assert.equal(await phone.page.evaluate(()=>PlanSync.pushSettings.test()),false);
   await phone.page.evaluate(()=>window.qaChangePushPermission('default'));
   await button(phone,'Включить Push').scrollIntoViewIfNeeded();
+  await button(phone,'Включить Push').click();
+  await phone.page.waitForFunction(()=>PlanSync.pushSettings.connection().canTest);
+  await button(phone,'Выйти из Firebase').click();
+  await button(phone,'Войти через Google · Firebase').waitFor();
+  assert.equal(subscription,null,'sign-out clears an enabled Push registration');
+  assert.equal(await phone.page.evaluate(()=>PlanSync.pushSettings.test()),false);
+  await connect(phone);
+  await phone.menu.getByText(/Последнее согласование/).waitFor();
+  assert.equal(writes,1,'reconnection preserves the original cloud revision');
   await shot(phone,'01-cloud-account');
 
   assert(await button(tablet,'Войти через Google · Firebase').isDisabled());
