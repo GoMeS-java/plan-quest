@@ -447,32 +447,26 @@ body.citadel-shell-active .toast{max-width:calc(100vw - 20px);overflow-wrap:anyw
 
 /* Keep the hand-painted castle intact. Earned environments only add sparse atmosphere. */
 .citadel-realm-particles{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;opacity:0}
-:root[data-citadel-bg="winter"] .citadel-realm-particles{opacity:.92;background-image:radial-gradient(2px 2px at 12% 25%,#fff 99%,transparent),radial-gradient(2px 2px at 49% 8%,#d8edff 99%,transparent),radial-gradient(2px 2px at 78% 62%,#fff 99%,transparent),radial-gradient(2px 2px at 92% 33%,#eaf5ff 99%,transparent);background-size:83px 66px,127px 89px,101px 74px,149px 113px;animation:citadelSnow 14s linear infinite}
-:root[data-citadel-bg="winter"] .citadel-realm-particles:before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,transparent 0 2%,#e7f5ff 2% 9%,transparent 9% 13%,#d4e9fa 13% 22%,transparent 22% 35%,#f0f8ff 35% 41%,transparent 41% 49%,#e7f5ff 49% 55%,transparent 55% 70%,#dcefff 70% 79%,transparent 79% 87%,#eef8ff 87% 97%,transparent 97%) center bottom 19%/100% 4px no-repeat,linear-gradient(90deg,transparent 0 4%,#f5faff 4% 10%,transparent 10% 27%,#e2f1ff 27% 34%,transparent 34% 44%,#e4f3ff 44% 57%,transparent 57% 78%,#e9f6ff 78% 91%,transparent 91%) center bottom 10%/100% 3px no-repeat;filter:drop-shadow(0 2px 1px #b1d1f4)}
+:root[data-citadel-bg="winter"] .citadel-realm-particles{opacity:1}
 :root[data-citadel-bg="space"] .citadel-realm-particles{opacity:1}
 :root[data-citadel-bg="space"] .citadel-realm-particles:before,:root[data-citadel-bg="space"] .citadel-realm-particles:after{content:'';position:absolute;top:-15%;left:30%;width:4px;height:34px;transform:rotate(35deg);background:linear-gradient(#d7c2ff00,#b99effaa 36%,#f6d9ff 75%,#fff);box-shadow:0 0 7px #bd83ff;animation:citadelMeteor 7s linear infinite}
 :root[data-citadel-bg="space"] .citadel-realm-particles:after{left:79%;animation-delay:-4s;animation-duration:11s;opacity:.8}
 :root[data-citadel-bg="space"] .citadel-realm-particles>i{position:absolute;left:17%;bottom:12%;width:7px;height:7px;background:#ffdfad;box-shadow:0 0 0 3px #bc80c577,0 0 13px 6px #dc9aff;opacity:0;animation:citadelImpact 7s steps(2,end) infinite}
-:root[data-citadel-bg="rain"] .citadel-realm-particles,:root[data-citadel-bg="storm"] .citadel-realm-particles{opacity:.25;background:repeating-linear-gradient(105deg,transparent 0 39px,#b5c5e266 40px 41px,transparent 42px 78px);animation:citadelRain 8s linear infinite}
 :root[data-citadel-bg="aurora"] .citadel-realm-particles{opacity:.25;background:linear-gradient(105deg,transparent 30%,#65cfbd77 47%,#a76fe577 54%,transparent 70%);animation:citadelGlow 13s ease-in-out infinite alternate}
-@keyframes citadelSnow{to{background-position:22px 140px,-18px 110px,11px 160px,-30px 180px}}
 @keyframes citadelMeteor{0%,68%{transform:translate(0,0) rotate(35deg);opacity:0}70%{opacity:1}84%{transform:translate(-55px,110px) rotate(35deg);opacity:1}86%,100%{transform:translate(-55px,110px) rotate(35deg);opacity:0}}
 @keyframes citadelImpact{0%,82%{opacity:0;transform:scale(.4)}84%{opacity:1;transform:scale(2)}87%{opacity:.8;transform:scale(1.3)}92%,100%{opacity:0;transform:scale(.4)}}
-@keyframes citadelRain{to{background-position:-55px 120px}}
 @keyframes citadelGlow{to{opacity:.1;transform:translateX(15px)}}
 @media(prefers-reduced-motion:reduce){.citadel-realm-particles,.citadel-realm-particles:before,.citadel-realm-particles:after,.citadel-realm-particles>i{animation:none!important}}
 
 /* Snow uses the exact 800x120 roof silhouette coordinates. Never draw bands
    relative to text or the bottom of the sky viewport. */
-:root[data-citadel-bg="winter"] .citadel-realm-particles:before{background:url('assets/citadel/snow-roof.svg') center/100% 100% no-repeat;filter:none;image-rendering:pixelated}
+:root[data-citadel-bg="winter"] .citadel-realm-particles:before{content:'';position:absolute;inset:0;background:url('assets/citadel/snow-roof.svg') center/100% 100% no-repeat;image-rendering:pixelated}
 /* Every previously earned sky has a lightweight, distinct ambient treatment. */
 :root[data-citadel-bg="library"] .citadel-realm-particles,:root[data-citadel-bg="attic"] .citadel-realm-particles{opacity:.55;background-image:radial-gradient(2px 2px at 14% 26%,#f7bf65 99%,transparent),radial-gradient(2px 2px at 76% 45%,#cba774 99%,transparent);background-size:123px 87px,165px 91px;animation:citadelGlow 7s ease-in-out infinite alternate}
 :root[data-citadel-bg="abyss"] .citadel-realm-particles,:root[data-citadel-bg="cave"] .citadel-realm-particles{opacity:.55;background-image:radial-gradient(2px 2px at 32% 66%,#a873f1 99%,transparent),radial-gradient(1px 1px at 74% 24%,#c8a7ff 99%,transparent);background-size:111px 83px,91px 73px;animation:citadelGlow 10s ease-in-out infinite alternate}
 :root[data-citadel-bg="city"] .citadel-realm-particles,:root[data-citadel-bg="watch"] .citadel-realm-particles{opacity:.42;background:radial-gradient(2px 2px at 23% 77%,#ffc47b 99%,transparent),radial-gradient(2px 2px at 81% 61%,#fff1b1 99%,transparent);background-size:137px 77px;animation:citadelGlow 13s ease-in-out infinite alternate}
 :root[data-citadel-bg="forest"] .citadel-realm-particles,:root[data-citadel-bg="peaks"] .citadel-realm-particles{opacity:.48;background-image:radial-gradient(2px 2px at 33% 35%,#9ae9ae 99%,transparent),radial-gradient(1px 1px at 82% 61%,#6fcaad 99%,transparent);background-size:89px 67px,147px 73px;animation:citadelGlow 9s ease-in-out infinite alternate}
 :root[data-citadel-bg="dawn"] .citadel-realm-particles,:root[data-citadel-bg="sunrise"] .citadel-realm-particles,:root[data-citadel-bg="sunset"] .citadel-realm-particles,:root[data-citadel-bg="beach"] .citadel-realm-particles{opacity:.35;background:radial-gradient(ellipse at 75% 25%,#ffe0ac99,transparent 48%);animation:citadelGlow 9s ease-in-out infinite alternate}
-:root[data-citadel-bg="storm"] .citadel-realm-particles:before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 45%,#c8d9ffbb 49%,transparent 52%);opacity:0;animation:citadelLightning 11s steps(1,end) infinite}
-@keyframes citadelLightning{0%,88%,92%,100%{opacity:0}89%,91%{opacity:1}}
 
 /* Перестройка 1.1: keep original arched masonry, but let the whole floor plan
    evolve. Never stack the abandoned bed over the restored furniture. */

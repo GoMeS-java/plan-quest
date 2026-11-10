@@ -33,6 +33,20 @@
         ['Над всеми башнями','',p=>p.marks.has('ascent-citadel')||p.marks.has('rebuild11'),true]
       ] }
   ];
+  const offshoots = [
+    {id:'body-hidden',branch:'body',from:1,points:[[237,75],[255,25]],nodes:[
+      ['Тропа в инее','Путевые записи пробудили первую печать за северным склоном.','mystery-road'],
+      ['Эхо камня','Вторая печать откликнулась на сохранённый след усилия.','mystery-iron']
+    ]},
+    {id:'will-hidden',branch:'will',from:0,points:[[280,194],[330,208]],nodes:[
+      ['Тепло под пеплом','Ритм обычных дел зажёг печать под углями.','mystery-embers'],
+      ['Живой очаг','Завершённые записи Трапезной вернули свет дальней печати.','mystery-hearth']
+    ]},
+    {id:'citadel-hidden',branch:'citadel',from:0,points:[[79,199],[29,220]],nodes:[
+      ['Основание крепости','Старая кладка открыла печать под обжитыми залами.','mystery-stone'],
+      ['Несущие своды','Печать пробудилась, когда свет вернулся в крылья Цитадели.','ascent-citadel']
+    ]}
+  ];
   const center = [180,194];
   const valid = value => Number.isFinite(value) && value > 0;
   const nodeId = (branch, index) => branch.id+'-'+(index+1);
@@ -43,6 +57,14 @@
         const id = nodeId(branch,index);
         if (valid(ledger?.nodes?.[id])) continue;
         if (!node[2](progress)) break;
+        fresh.push(id);
+      }
+    }
+    for (const branch of offshoots) {
+      for (const [index, node] of branch.nodes.entries()) {
+        const id = nodeId(branch,index);
+        if (valid(ledger?.nodes?.[id])) continue;
+        if (!valid(progress.receipts?.get(node[2]))) break;
         fresh.push(id);
       }
     }
@@ -67,7 +89,7 @@
     return {...a,...b,version:1,nodes};
   }
   function view(ledger, progress) {
-    return branches.map(branch=>{
+    const visible=branches.map(branch=>{
       let previous = true;
       const nodes = branch.nodes.map(([name,description,test,hidden],index)=>{
         const id = nodeId(branch,index), at = ledger?.nodes?.[id], open = valid(at);
@@ -80,6 +102,17 @@
       });
       return {id:branch.id,label:branch.label,color:branch.color,glyph:branch.glyph,labelAt:branch.labelAt,nodes};
     });
+    for (const branch of offshoots) {
+      if (!valid(ledger?.nodes?.[nodeId(branch,0)])) continue;
+      const parent=visible.find(row=>row.id===branch.branch);
+      const nodes=branch.nodes.map(([name,description],index)=>{
+        const id=nodeId(branch,index),at=ledger?.nodes?.[id],open=valid(at);
+        return {id,at:open?at:null,state:open?'open':'next',point:branch.points[index],
+          name:open?name:'Печать в тумане',description:open?description:'След ведёт дальше. Печать ждёт отклика Заклятия.'};
+      });
+      visible.push({id:branch.id,label:parent.label,color:parent.color,glyph:parent.glyph,from:parent.nodes[branch.from].point,nodes});
+    }
+    return visible;
   }
 
   const svgElement = (tag,attrs={})=>{
@@ -91,6 +124,8 @@
     const map = dialog.querySelector('svg'), stage=map.querySelector('.ascension-stage');
     const title=dialog.querySelector('.ascension-node-title'), description=dialog.querySelector('.ascension-node-detail');
     const counter=dialog.querySelector('.ascension-counter'), state=dialog.querySelector('.ascension-node-state');
+    const notice=dialog.querySelector('.ascension-reveal');
+    const pending=new Set();
     let x=0,y=0,scale=1,rows=[],selected='',signature='',suppressClick=false;
     const pointers = new Map();
     function camera(nx,ny,nz) {
@@ -153,6 +188,7 @@
     function render(next) {
       const stamp=JSON.stringify(next);
       if(stamp===signature)return;
+      if(!dialog.open&&pending.size)camera(0,0,1);
       const previouslyOpen=new Set(rows.flatMap(branch=>branch.nodes.filter(node=>node.at).map(node=>node.id)));
       const animate=dialog.open&&rows.length>0;
       signature=stamp;rows=next;
@@ -165,19 +201,24 @@
       for(const branch of rows){
         const group=svgElement('g');
         group.style.setProperty('--branch',branch.color);
-        let from=center;
+        const unveiled=branch.from&&pending.has(branch.nodes[0].id);
+        if(branch.from)group.setAttribute('class','ascension-offshoot'+(unveiled?' unveiled':''));
+        let from=branch.from||center;
         for(const {point,state} of branch.nodes){
           const [ax,ay]=from,[bx,by]=point;
           group.append(svgElement('path',{class:'ascension-link '+state,d:`M${ax} ${ay}L${(ax+bx)/2} ${ay+(by-ay)*.35}L${bx} ${by}`}));
           from=point;
         }
-        const label=svgElement('text',{x:branch.labelAt[0],y:branch.labelAt[1],class:'ascension-label'});
-        label.textContent=branch.label;group.append(label);
+        if(branch.labelAt){
+          const label=svgElement('text',{x:branch.labelAt[0],y:branch.labelAt[1],class:'ascension-label'});
+          label.textContent=branch.label;group.append(label);
+        }
         for(const node of branch.nodes){
           if(node.at)open++;
+          const fresh=pending.has(node.id)||(animate&&node.at&&!previouslyOpen.has(node.id));
           const seal=svgElement('g',{transform:`translate(${node.point.join(' ')})`,role:'button',tabindex:0,
             'aria-label':branch.label+' · '+node.name,class:'ascension-seal '+node.state+(node.ready?' ready':'')+
-              (animate&&node.at&&!previouslyOpen.has(node.id)?' fresh':'')});
+              (fresh?' fresh':'')});
           seal.dataset.node=node.id;
           seal.append(svgElement('circle',{r:27,class:'ascension-hit'}),svgElement('path',{d:'M0-17L13-11 16 0 13 11 0 17-13 11-16 0-13-11Z',class:'ascension-stone'}),
             svgElement('path',{d:node.state==='locked'?'M-4-1H4V6H-4ZM-2-1V-5H2V-1':branch.glyph,class:'ascension-glyph'}));
@@ -186,6 +227,7 @@
             if(event.key==='Enter'||event.key===' '){event.preventDefault();select(node.id);}
           });
           group.append(seal);
+          pending.delete(node.id);
         }
         stage.append(group);
       }
@@ -193,8 +235,15 @@
       select(selected);
       if(focused)stage.querySelector('[data-node="'+focused+'"]')?.focus({preventScroll:true});
     }
-    dialog.addEventListener('close',()=>{pointers.clear();suppressClick=false;});
-    return {render};
+    dialog.addEventListener('close',()=>{pointers.clear();suppressClick=false;if(notice)notice.hidden=true;});
+    function reveal(ids) {
+      const awakened=ids.filter(id=>offshoots.some(branch=>nodeId(branch,0)===id));
+      if(!awakened.length)return;
+      for(const id of awakened)pending.add(id);
+      if(notice)notice.hidden=false;
+      signature='';
+    }
+    return {render,reveal};
   }
   root.VkachAscension = Object.freeze({path,reached,reconcile,merge,view,mount});
 })(globalThis);

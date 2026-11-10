@@ -104,7 +104,10 @@ self.addEventListener('fetch', function (e) {
   }
   if (url.origin !== location.origin || !url.href.startsWith(self.registration.scope)) return;      // Google API и вход не трогаем
   e.respondWith(caches.open(CACHE).then(function (c) {
-    if (req.mode === 'navigate') return c.match('index.html');
+    if (req.mode === 'navigate') {
+      var prototype = new URL('citadel.html', self.registration.scope);
+      return c.match(url.pathname === prototype.pathname ? 'citadel.html' : 'index.html');
+    }
     return c.match(req, { ignoreSearch: true }).then(function (hit) {
       if (hit) return hit;
       return fetch(req);

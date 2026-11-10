@@ -19,7 +19,7 @@ g = g.replace('__VER__', open(f'{SRC}/version.txt', encoding='utf-8').read().str
 art_assets = sorted(Path(SRC).glob('assets/citadel/*'))
 art_hash = hashlib.sha256(b''.join(p.read_bytes() for p in art_assets)).hexdigest()
 icon_hash = hashlib.sha256(Path(SRC, 'assets/icon-shadow-v1.png').read_bytes()).hexdigest()
-build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'ascension.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js', 'sw.template.js', 'manifest.json', config_source]) + art_hash + icon_hash + open(f'{SRC}/citadel-art.css', encoding='utf-8').read() + open(f'{SRC}/rpg-ui.css', encoding='utf-8').read() + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
+build_id = hashlib.sha256((g + ''.join(open(f'{SRC}/{name}', encoding='utf-8').read() for name in ['localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'ascension.js', 'destiny-world.js', 'citadel-weather.js', 'citadel-weather.css', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js', 'sw.template.js', 'manifest.json', config_source]) + art_hash + icon_hash + open(f'{SRC}/citadel-art.css', encoding='utf-8').read() + open(f'{SRC}/rpg-ui.css', encoding='utf-8').read() + open(__file__, encoding='utf-8').read()).encode()).hexdigest()[:12]
 g = g.replace('__BUILD__', build_id)
 i = g.index('<link rel="stylesheet" href="rpg-ui.css">') + len('<link rel="stylesheet" href="rpg-ui.css">')
 head_part, body_part = g[:i], g[i:]
@@ -56,7 +56,7 @@ icon(192, .82).save(f'{DIST}/icon-192.png')
 icon(512, .82).save(f'{DIST}/icon-512.png')
 icon(512, .62).save(f'{DIST}/icon-512-maskable.png')
 
-for f in ['manifest.json', 'config.js', 'localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'privacy.html', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'ascension.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js']:
+for f in ['manifest.json', 'config.js', 'localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'privacy.html', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'ascension.js', 'destiny-world.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js']:
     source_name = config_source if f == 'config.js' else f
     shutil.copy(f'{SRC}/{source_name}', f'{DIST}/{f}')
 
@@ -67,6 +67,8 @@ if TEST:
 
 # --- Отдельная тестовая Цитадель (не заменяет основную игру)
 citadel = open('prototype/citadel.html', encoding='utf-8').read()
+weather_css = Path(SRC, 'citadel-weather.css').read_text(encoding='utf-8')
+citadel = citadel.replace('<link rel="stylesheet" href="../src/citadel-weather.css">', '<style>\n' + weather_css + '</style>')
 for name in ['citadel.js', 'citadel-life.js', 'citadel-weather.js']:
     shutil.copy(f'{SRC}/{name}', f'{DIST}/{name}')
     # Встраиваем код в HTML: тестовая страница работает даже из локального ZIP/файла.
@@ -78,6 +80,7 @@ open(f'{DIST}/citadel.html', 'w', encoding='utf-8', newline='\n').write(citadel)
 # Original scenery and sprites are first-party offline shell assets.
 shutil.copy(f'{SRC}/citadel-art.css', f'{DIST}/citadel-art.css')
 shutil.copy(f'{SRC}/rpg-ui.css', f'{DIST}/rpg-ui.css')
+shutil.copy(f'{SRC}/citadel-weather.css', f'{DIST}/citadel-weather.css')
 shutil.copytree(f'{SRC}/assets', f'{DIST}/assets')
 
 # Export one painted pose per SVG. The original sheets remain the art source.
@@ -98,8 +101,8 @@ for actor in ('guardian', 'archivist', 'smith', 'treasurer'):
         ET.ElementTree(image).write(art / f'{actor}-{pose}.svg', encoding='utf-8')
 
 # --- sw.js с версией = хэш содержимого
-shell = ['index.html', 'manifest.json', 'config.js', 'localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'ascension.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
-shell += ['citadel-art.css', 'rpg-ui.css'] + ['assets/citadel/' + name for name in sorted(os.listdir(f'{DIST}/assets/citadel'))]
+shell = ['index.html', 'manifest.json', 'config.js', 'localdb.js', 'save-history.js', 'cloud-sync.js', 'cloud-firebase.js', 'awakening.js', 'citadel-world.js', 'citadel-space.js', 'legends.js', 'fate.js', 'portrait.js', 'realm-achievements.js', 'ascension.js', 'destiny-world.js', 'shelter-items.js', 'forge-awards.js', 'forge-art.js', 'chains.js', 'chains-ui.js', 'chains.css', 'food.js', 'food-ui.js', 'room-workspace.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'citadel.html', 'citadel.js', 'citadel-life.js', 'citadel-weather.js']
+shell += ['citadel-art.css', 'rpg-ui.css', 'citadel-weather.css'] + ['assets/citadel/' + name for name in sorted(os.listdir(f'{DIST}/assets/citadel'))]
 h = hashlib.sha256()
 for f in sorted(set(shell) - {'./'}):
     h.update(open(f'{DIST}/{f}', 'rb').read())

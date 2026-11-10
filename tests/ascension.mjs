@@ -28,6 +28,12 @@ assert.equal(model.reconcile(tx,veteran,200).length,11);
 assert.equal(ledger.nodes['body-1'],100);
 assert.deepEqual(model.view(ledger,veteran).map(branch=>branch.nodes.filter(node=>node.state==='open').length),[3,3,3,3,3]);
 assert.deepEqual(model.reconcile(tx,veteran,300),[]);
+const withReceipt={...veteran,receipts:new Map([['mystery-road',300]])};
+assert.equal(model.view(ledger,withReceipt).length,5,'even a qualifying receipt is invisible until the node is persisted');
+assert.deepEqual(model.reconcile(tx,withReceipt,300),['body-hidden-1']);
+assert.deepEqual(model.view(ledger,progress([])).at(-1).nodes.map(node=>node.state),['open','next']);
+assert.equal(model.view(ledger,progress([])).at(-1).nodes[1].name,'Печать в тумане');
+assert.deepEqual(model.reconcile(tx,progress([]),400),[],'editing the source does not close a secret branch');
 
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.png':'image/png'};
 const root=resolve('android-test');
@@ -56,6 +62,7 @@ try {
     localStorage.setItem('ascension-test','1');
     const docs={};
     for(let day=1;day<=7;day++)docs['days/2026-11-0'+day]={d:{q:[true,false,false,false]},u:1};
+    docs['cfg/realm-achievements']={u:1,d:{version:1,unlocked:{rebuild09:{version:1,at:Date.parse('2026-09-02T09:00Z'),presented:true}}}};
     localStorage.setItem(prefix+'store.v1',JSON.stringify({v:1,docs}));
   });
   const page=await context.newPage(), errors=[];
@@ -114,7 +121,8 @@ try {
   await page.goBack();
   await dialog.waitFor({state:'hidden'});
   assert(await trophy.isVisible(),'Android back returns to the collection');
-  await page.locator('#ascension-open').tap();
+  await page.locator('#ascension-open').click();
+  await dialog.waitFor();
   await page.keyboard.press('Escape');
   await dialog.waitFor({state:'hidden'});
   assert(await trophy.isVisible(),'Escape closes the map first');
@@ -129,6 +137,74 @@ try {
   });
   await page.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.unlocked.refectory01);
   await trophy.locator('[data-achievement="refectory01"]').waitFor();
+  assert.equal(await trophy.locator('[data-achievement="rebuild09"] time').textContent(),'Получено 02.09.2026');
+  const dismiss=()=>page.evaluate(()=>{
+    for(let i=0;i<12&&!document.querySelector('#achup').hidden;i++)document.querySelector('#ac-ok').click();
+    document.querySelector('#lvup').hidden=true;
+  });
+  await dismiss();
+  await trophy.evaluate(node=>{node.scrollTop=0;});
+  await trophy.getByRole('button',{name:'Тайны',exact:true}).tap();
+  const mysteries=trophy.locator('#achievement-mysteries');
+  assert.equal(await mysteries.locator('[data-stage="0"]').count(),5);
+  assert.equal(await mysteries.locator('[data-achievement],[data-rarity],time,button').count(),0);
+  assert.equal(await mysteries.getByText(/Иней на путевых камнях|Отзвук под северным склоном/).count(),0);
+  await page.evaluate(()=>localStorage.setItem('wsum','2026-11-23'));
+  await page.clock.setSystemTime(new Date('2026-11-25T09:00Z'));
+  const recordWalks=(from,to)=>page.evaluate(async ([from,to])=>{
+    await PlanDB.runTransaction(tx=>{
+      for(let i=from;i<=to;i++){
+        const key='days/2026-11-'+i;
+        tx.set(key,{steps:5000,...(i<=13?{q:[false,false,false,false,false,false,false,true]}:{})});
+      }
+    });
+  },[from,to]);
+  await recordWalks(11,13);
+  await mysteries.locator('[data-stage="1"]').first().waitFor();
+  await recordWalks(14,18);
+  await mysteries.locator('[data-stage="2"]').waitFor();
+  for(const width of [320,360,430]){
+    await page.setViewportSize({width,height:800});
+    assert(await mysteries.locator('.mystery-card').evaluateAll(cards=>cards.every(card=>{
+      const {left,right}=card.getBoundingClientRect();
+      return left>=0&&right<=innerWidth&&card.scrollWidth<=card.clientWidth+1;
+    })), 'mystery cards fit at '+width);
+  }
+  await page.setViewportSize({width:360,height:800});
+  await dismiss();
+  await page.clock.runFor(6000);
+  await page.screenshot({path:resolve(shots,'04-mystery-stages.png'),animations:'disabled'});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await mysteries.locator('[data-stage="2"] .mystery-seal').evaluate(seal=>getComputedStyle(seal,'::after').animationName),'none');
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await trophy.locator('#ascension-open').click();
+  await dialog.waitFor();
+  assert.equal(await dialog.locator('.ascension-offshoot').count(),0);
+  await page.keyboard.press('Escape');
+  await dialog.waitFor({state:'hidden'});
+  await recordWalks(19,22);
+  await page.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.unlocked['mystery-road']?.presented&&
+    PlanSync._docs()['cfg/ascension']?.d.nodes['body-hidden-1']);
+  await page.locator('#achup.mystery-awakening:not([hidden])').waitFor();
+  await page.screenshot({path:resolve(shots,'05-mystery-awakening.png'),animations:'disabled'});
+  await dismiss();
+  await trophy.evaluate(node=>{node.scrollTop=0;});
+  await trophy.getByRole('button',{name:'Отметины',exact:true}).tap();
+  const earnedMystery=trophy.locator('[data-achievement="mystery-road"]');
+  await earnedMystery.locator('summary').tap();
+  await earnedMystery.getByText('Направление · Тело',{exact:true}).waitFor();
+  await earnedMystery.getByText('Подтверждено · Записи о ходьбе в разные дни',{exact:true}).waitFor();
+  await trophy.evaluate(node=>{node.scrollTop=0;});
+  await trophy.locator('#ascension-open').click();
+  await dialog.waitFor();
+  await dialog.locator('.ascension-reveal').waitFor();
+  assert.equal(await dialog.locator('.ascension-offshoot').count(),1);
+  assert.equal(await dialog.locator('[data-node="body-hidden-1"].open').count(),1);
+  await page.screenshot({path:resolve(shots,'06-mystery-branch.png'),animations:'disabled'});
+  await page.keyboard.press('Escape');
+  await dialog.waitFor({state:'hidden'});
+  await page.evaluate(()=>PlanDB.doc('days/2026-11-22').delete());
+  assert(await earnedMystery.isVisible(),'an earned mark survives deletion');
   await page.evaluate(()=>{
     for(let i=0;i<12&&!document.querySelector('#achup').hidden;i++)document.querySelector('#ac-ok').click();
     document.querySelector('#trophy-x').click();
@@ -162,9 +238,11 @@ try {
   await context.setOffline(true);
   await page.reload();
   await page.waitForFunction(()=>PlanSync._docs()['cfg/ascension']?.d.nodes['will-1']);
+  assert(await page.evaluate(()=>PlanSync._docs()['cfg/ascension'].d.nodes['body-hidden-1']&&
+    PlanSync._docs()['cfg/realm-achievements'].d.unlocked['mystery-road'].presented));
   assert.equal(await page.evaluate(()=>PlanSync._docs()['cfg/push-reminders'].d.times.food),'19:30');
   assert.deepEqual(errors,[]);
-  console.log('PASS Ascension gates, secrecy, merge, mobile selection, pinch, pan, back, meal unlock, settings and offline restore');
+  console.log('PASS Ascension gates, secrecy, merge, mobile gestures, meal unlock, settings, mystery stages, branches and offline restore');
 } finally {
   await browser?.close();
   server.close();

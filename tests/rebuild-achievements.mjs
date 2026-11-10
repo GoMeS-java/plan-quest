@@ -6,7 +6,7 @@ const context=vm.createContext({});
 for(const script of ['food','forge-awards','realm-achievements'])vm.runInContext(readFileSync('src/'+script+'.js','utf8'),context);
 const api=context.VkachRealm;
 function transaction(records){const data=structuredClone(records),writes=[];return {data,writes,get:p=>structuredClone(data[p]),list:prefix=>Object.entries(data).filter(([p])=>p.startsWith(prefix+'/')).map(([p,d])=>({...structuredClone(d),id:p.slice(prefix.length+1)})),set:(p,d)=>{data[p]=structuredClone(d);writes.push(p);}};}
-const empty=transaction({'cfg/look':{showcase:['x01','x02','x03'],title:'x01',bg:'b_forest',frame:'fr_gold',aura:'au_soft'},'cfg/outfit':{outer:'coat_camel'}});api.reconcile(empty,'2027-03-01',1800000000000,{marks:['x01','x02','x03'],cos:['b_forest','fr_gold','au_soft']});assert.equal(empty.writes.length,0,'views and appearance alone never award progress');assert.equal(api.needs(empty,'2027-03-01',{}),false,'unchanged views do not schedule an empty write');
+const empty=transaction({'cfg/look':{showcase:['x01','x02','x03'],title:'x01',bg:'b_forest',frame:'fr_gold',aura:'au_soft'},'cfg/outfit':{outer:'coat_camel'}});api.reconcile(empty,'2027-03-01',1800000000000,{marks:['x01','x02','x03'],cos:['b_forest','fr_gold','au_soft']});assert.deepEqual(empty.writes,[api.path],'an empty profile only records the feature start date');assert.equal(api.owned(empty.data[api.path]).length,0,'views and appearance alone never award progress');assert.equal(api.needs(empty,'2027-03-01',{}),false,'unchanged views do not schedule an empty write');
 const records={'cfg/look':empty.data['cfg/look'],'cfg/outfit':{top:'custom',bottom:'pants_brown',outer:'coat_camel'},'cfg/citadel':{decor:{rest:'banner',study:'lantern',forge:'crystal'}},'wardrobe/custom':{slot:'top',shape:'knit',c:{base:'#555577'}}};
 for(let i=0;i<100;i++){const d=new Date('2026-10-19T12:00Z');d.setUTCDate(d.getUTCDate()+i);records['days/'+d.toISOString().slice(0,10)]={q:Array(10).fill(true),steps:5000};}
 for(let i=0;i<12;i++){const d=new Date('2026-10-19T12:00Z');d.setUTCDate(d.getUTCDate()+i*7);records['weights/'+i]={kg:150-i/10,date:d.toISOString().slice(0,10)};records['spont/'+i]={done:true,heavy:true,date:'2027-01-25'};}
@@ -68,10 +68,64 @@ assert(api.owned(restored).every(row=>row.presented));
 const source=readFileSync('src/game.html','utf8'),worker=readFileSync('docs/sw.js','utf8');for(const d of earned)for(const id of d.cos)assert(source.includes('COS.'+id+' ='),'every earned cosmetic has a definition');assert(worker.includes('realm-achievements.js'));assert(!/авито|avito/i.test(source),'retired feature has no live UI, handler or watcher');
 console.log('PASS rebuild discoveries: durable facts, no click farming, atomic reward paths, one-time receipts, retained ownership, malformed dates and cached assets');
 
+const oldReceipt={version:1,at:Date.parse('2026-09-02T09:00Z'),presented:true};
+const spell=transaction({[api.path]:{unlocked:{rebuild09:oldReceipt}}});
+const today='2026-11-30', now=Date.parse(today+'T12:00Z');
+const walkDate=i=>'2026-11-'+String(i).padStart(2,'0');
+const walk=i=>{spell.data['days/'+walkDate(i)]={steps:5500};};
+for(let i=1;i<=10;i++)walk(i);
+api.reconcile(spell,'2026-11-10',Date.parse('2026-11-10T12:00Z'),{});
+assert.equal(spell.data[api.path].mysterySince,'2026-11-10');
+assert(!api.owned(spell.data[api.path]).some(row=>row.direction),'old records do not award the new marks');
+const previews=()=>api.previews(spell,today,now);
+assert.equal(previews().length,5);
+assert(previews().every(row=>row.stage===0));
+assert(previews().every(row=>Object.keys(row).sort().join(',')==='hint,stage'),'previews expose no identity, reward or thresholds');
+for(let i=11;i<=13;i++)walk(i);
+assert.equal(previews()[0].stage,1);
+const whisper=previews()[0].hint;
+for(let i=14;i<=18;i++)walk(i);
+assert.equal(previews()[0].stage,2);
+assert.notEqual(previews()[0].hint,whisper);
+delete spell.data['days/2026-11-18'];
+assert.equal(previews()[0].stage,1);
+for(let i=18;i<=22;i++)walk(i);
+spell.data['days/2026-12-01']={steps:100000};
+api.reconcile(spell,today,now,{});
+const received=api.claim(spell).filter(row=>row.direction);
+assert.equal(received.length,1);
+assert.equal(received[0].id,'mystery-road');
+assert.equal(received[0].at,now);
+assert(received[0].action&&received[0].direction);
+assert.equal(previews().length,4);
+for(let i=11;i<=30;i++){
+ walk(i);
+ spell.data['per/'+walkDate(i)]={pushup:[now+1]};
+}
+api.reconcile(spell,today,now,{});
+assert(!api.owned(spell.data[api.path]).some(row=>row.id==='mystery-iron'),'future exercise timestamps cannot awaken an absolute mystery');
+for(let i=11;i<=22;i++)spell.data['per/'+walkDate(i)].pushup=[Date.parse(walkDate(i)+'T09:00Z')];
+api.reconcile(spell,today,now,{});
+assert(api.claim(spell).some(row=>row.id==='mystery-iron'));
+assert.equal(previews().length,4,'absolute mysteries never have a preview');
+const carried=api.merge(spell.data[api.path],{mysterySince:'2026-11-15',unlocked:{rebuild09:oldReceipt}});
+assert.equal(carried.mysterySince,'2026-11-10');
+assert.equal(carried.unlocked.rebuild09.at,oldReceipt.at);
+for(const key of Object.keys(spell.data))if(key.startsWith('days/')||key.startsWith('per/'))delete spell.data[key];
+spell.data[api.path]=carried;
+api.reconcile(spell,today,now+1000,{});
+assert.equal(api.claim(spell).length,0,'a restore and deletion retain discovery and notification receipts');
+assert.equal(api.owned(spell.data[api.path]).filter(row=>row.direction).length,2);
+console.log('PASS spell stages, redacted previews, existing saves, edit/delete, absolute mysteries and receipt merge');
+
 const approved=execFileSync('git',['show','2c1ff84:src/rpg-ui.css'],{encoding:'utf8'});
 // The resident renderer owns its frame and sizing rules. Keep the scenery snapshot strict.
-const base=css=>css.replace(/\r\n/g,'\n').split('\n.profile-system-hub')[0].split('\n').filter(line=>
+const base=css=>css.replace(/\r\n/g,'\n').replace('.citadel-window-weather,.citadel-window-frost{','.citadel-window-frost{').split('\n.profile-system-hub')[0].split('\n').filter(line=>
  !line.startsWith('@keyframes citadelInterior') &&
+ !/citadelWindow|citadelQuietSnow|citadelNearSnow|citadel-window-weather|stage\[data-bg="winter"\]::before/.test(line) &&
+ !line.startsWith(':root[data-citadel-bg="winter"] .citadel-realm-particles') &&
+ !line.startsWith(':root[data-realm-landscape]:not(') &&
+ !line.startsWith('/* Quiet snowfall outside;') && !line.startsWith('/* Winter framing follows') &&
  !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person') &&
  !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:max(22px,7.5%)') &&
  !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:var(--citadel-room-actor-width)') &&
