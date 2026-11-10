@@ -29,12 +29,32 @@ api.reconcile(food,'2027-03-01',1800000001000,{});
 assert.equal(api.owned(food.data['cfg/realm-achievements']).filter(r=>r.id.startsWith('refectory')).length,3);
 const foodWrites=food.writes.length;api.reconcile(food,'2027-03-01',1800000002000,{});
 assert.equal(food.writes.length,foodWrites,'food achievements are once-only and do not affect balance');
+const ascent=transaction({});
+for(let i=1;i<=14;i++){
+ const date='2027-02-'+String(i).padStart(2,'0');
+ ascent.data['days/'+date]={q:[true,false,true,false,false,false,false,true],kcal:2100,steps:6000};
+ ascent.data['per/'+date]={squat:[1800000000000],pushup:[1800000000001]};
+}
+ascent.data['goals/unfinished']={name:'Черновик',done:false,ts:1800000000000};
+ascent.data['goals/future']={name:'Будущее',done:true,ts:1800000100000};
+api.reconcile(ascent,'2027-03-01',1800000000000,{});
+const ascentIds=()=>api.owned(ascent.data['cfg/realm-achievements']).map(row=>row.id);
+assert(ascentIds().includes('ascent-rhythm')&&ascentIds().includes('ascent-study'));
+assert(!ascentIds().includes('ascent-body'),'future exercise timestamp is ignored even on a past day');
+assert(!ascentIds().includes('ascent-goal'));
+ascent.data['goals/finished']={name:'Завершено',done:true,ts:1799999999999};
+api.reconcile(ascent,'2027-03-01',1800000000001,{});
+assert(ascentIds().includes('ascent-body')&&ascentIds().includes('ascent-goal'));
+const claimedAscent=api.claim(ascent);
+const restored=api.merge({unlocked:{}},ascent.data['cfg/realm-achievements']);
+assert.equal(api.owned(restored).length,claimedAscent.length);
+assert(api.owned(restored).every(row=>row.presented));
 const source=readFileSync('src/game.html','utf8'),worker=readFileSync('docs/sw.js','utf8');for(const d of earned)for(const id of d.cos)assert(source.includes('COS.'+id+' ='),'every earned cosmetic has a definition');assert(worker.includes('realm-achievements.js'));assert(!/авито|avito/i.test(source),'retired feature has no live UI, handler or watcher');
 console.log('PASS rebuild discoveries: durable facts, no click farming, atomic reward paths, one-time receipts, retained ownership, malformed dates and cached assets');
 
 const approved=execFileSync('git',['show','2c1ff84:src/rpg-ui.css'],{encoding:'utf8'});
 // The resident renderer owns its frame and sizing rules. Keep the scenery snapshot strict.
-const base=css=>css.split('\n.profile-system-hub')[0].split('\n').filter(line=>
+const base=css=>css.replace(/\r\n/g,'\n').split('\n.profile-system-hub')[0].split('\n').filter(line=>
  !line.startsWith('@keyframes citadelInterior') &&
  !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-person') &&
  !line.startsWith('body.citadel-shell-active #citadel-home .citadel-interior-stage .citadel-hero-sprite{width:max(22px,7.5%)') &&

@@ -1159,3 +1159,11 @@ body.citadel-shell-active #fate-forge-dialog{
   .room-reminder-times{grid-template-columns:repeat(2,minmax(0,1fr))}
   .room-reminder-times label:first-child{grid-column:1/-1}
 }
+
+.achievement-card[data-rarity] .achievement-rarity{color:var(--rarity,#c4afcb)}
+.achievement-card:is([data-rarity="uncommon"],[data-rarity="rare"],[data-rarity="epic"],[data-rarity="legendary"]){
+  border-color:color-mix(in srgb,var(--rarity) 60%,#302239);
+  background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--rarity) 17%,transparent),transparent 68%),linear-gradient(140deg,#302439,#1c1425)
+}
+#achup[data-rarity]:not([data-rarity=""]) .lbox::before{background:linear-gradient(135deg,#fff3df,var(--rarity) 48%,#251923);box-shadow:inset 0 0 0 10px #37283a,inset 0 0 0 13px var(--rarity)}
+#achup:is([data-rarity="epic"],[data-rarity="legendary"],[data-rarity="superrare"]) .lbox{border-color:var(--rarity);box-shadow:0 0 28px color-mix(in srgb,var(--rarity) 30%,transparent)}
