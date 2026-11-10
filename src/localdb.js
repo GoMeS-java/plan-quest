@@ -203,8 +203,11 @@
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
   // Discovery receipts are monotonic; preference follows the selected snapshot.
   var discoveryPaths = ['cfg/fate','cfg/legends','cfg/realm-achievements','cfg/shelter-items','cfg/forge-discoveries','cfg/chains-discoveries','cfg/ascension'];
+  function historyPath(path) { return window.VkachWorldHistory?.isPath(path); }
+  function retained(path) { return discoveryPaths.includes(path)||historyPath(path); }
   function retainDiscovery(path, local, incoming) {
     if(!local && !incoming)return null;
+    if(historyPath(path))return window.VkachWorldHistory.merge(local,incoming);
     if(path==='cfg/chains-discoveries')return window.VkachChains.mergeAwards(local,incoming);
     if(path==='cfg/ascension')return window.VkachAscension.merge(local,incoming);
     var engine=path==='cfg/forge-discoveries'?window.VkachForgeAwards:path==='cfg/shelter-items'?window.VkachShelter:path==='cfg/fate'?window.VkachFate:path==='cfg/realm-achievements'?window.VkachRealm:window.VkachLegends;
@@ -220,9 +223,9 @@
       if (options.expected && !same(local, options.expected)) throw new Error('changed since preview');
       Object.keys(rd).forEach(function (p) {
         var l = local[p], r = rd[p];
-        if(discoveryPaths.includes(p)&&(l&&l.d||r.d)){
+        if(retained(p)&&(l&&l.d||r.d)){
           var fate=retainDiscovery(p,l&&l.d,r.d);
-          if(l&&l.d&&l.u>r.u&&Object.prototype.hasOwnProperty.call(l.d,'active'))fate.active=l.d.active;
+          if(!historyPath(p)&&l&&l.d&&l.u>r.u&&Object.prototype.hasOwnProperty.call(l.d,'active'))fate.active=l.d.active;
           if(!l||!same(l.d,fate)){next[p]={d:fate,u:Math.max(Date.now(),(l&&l.u||0)+1,r.u+1)};changedLocal=true;}
           else if(r.u>l.u){next[p]={d:fate,u:r.u};changedLocal=true;}
           if(!same(r.d,fate))changedRemote=true;
@@ -331,7 +334,7 @@
       if (expected && !same(local, expected)) throw new Error('changed since preview');
       recovery(local, incoming, 'restore');
       Object.keys(Object.assign({}, local, incoming)).forEach(function (p) {
-        next[p] = { d: discoveryPaths.includes(p)&&((local[p]&&local[p].d)||(incoming[p]&&incoming[p].d)) ? retainDiscovery(p,local[p]&&local[p].d,incoming[p]&&incoming[p].d) : incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
+        next[p] = { d: retained(p)&&((local[p]&&local[p].d)||(incoming[p]&&incoming[p].d)) ? retainDiscovery(p,local[p]&&local[p].d,incoming[p]&&incoming[p].d) : incoming[p] ? incoming[p].d : null, u: Math.max(now, (local[p] && local[p].u || 0) + 1, (incoming[p] && incoming[p].u || 0) + 1) };
       });
       // Persist the cloud pause before replacing data, even if later storage fails.
       firebaseCloud?.pause();
@@ -369,6 +372,7 @@
         var combined=retainDiscovery(path,prior&&prior.d,remote[path]&&remote[path].d);if(chosen&&chosen.d&&Object.prototype.hasOwnProperty.call(chosen.d,'active'))combined.active=chosen.d.active;
         next[path]={d:combined,u:Math.max(Date.now(),(prior&&prior.u||0)+1,(chosen&&chosen.u||0)+1)};
       });
+      if(window.VkachWorldHistory)next=VkachWorldHistory.join(VkachWorldHistory.join(next,local),remote);
       meta.accepted = accepted; meta.syncPaused = true;
       if (!jset(META, meta)) throw storageError();
       if (!jset(KEY, { v: 1, docs: next })) throw storageError();
@@ -481,7 +485,7 @@
       if (upgradeBlocked || loadConflict() || !firebaseCloud?.state().enabled) throw storageError();
       var local = persistedDocs();
       if (!same(local,expected)) throw Object.assign(new Error('Local profile changed'),{code:'changed-local'});
-      var next = clone(incoming);
+      var next = clone(window.VkachWorldHistory ? VkachWorldHistory.join(incoming,local) : incoming);
       for (var path of discoveryPaths) {
         if (!local[path]?.d) continue;
         var earned = retainDiscovery(path,local[path].d,next[path]?.d);

@@ -18,6 +18,7 @@ on:
       - 'src/game.html'
       - 'src/localdb.js'
       - 'src/save-history.js'
+      - 'src/world-history.js'
       - 'src/cloud-*.js'
       - 'cloud/**'
       - 'firebase.json'
@@ -140,6 +141,7 @@ jobs:
           node --check docs/food.js
           node --check docs/food-ui.js
           node --check docs/room-workspace.js
+          node --check docs/world-history.js
           python - <<'PY'
           import re
           from pathlib import Path
