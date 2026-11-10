@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import '../src/world-history.js';
 import '../src/cloud-sync.js';
 import { dueCategories, isDue, readPolicy } from '../cloud/functions/push-policy.js';
 import { dispatchDue, testDevice } from '../cloud/functions/push-job.js';
@@ -39,7 +40,7 @@ function device(initial) {
       return records;
     },
     async archive(id,local,remote,reason) { archived.push({id,local,remote,reason}); events.push(reason); },
-    async replace(expected,incoming) { assert.deepEqual(records,expected); records=structuredClone(incoming); events.push('replace'); }
+    async replace(expected,incoming) { assert.deepEqual(records,expected); records=structuredClone(VkachWorldHistory.join(incoming,records)); events.push('replace'); }
   };
   const transport = {
     online:()=>available,
@@ -309,4 +310,37 @@ assert.equal(shown.at(-1).options.tag,'vkach-test');
 cache.delete(marker);
 await dispatch({...v2data,id:'test-after-logout',category:'test'});
 assert.equal(shown.length,3);
-console.log('PASS Firebase sync state machine, archive before upload, idempotent retry, conflict review, retention and push policy/worker');
+vault=null;
+const observed=(day,at,rank)=>({['world-history/2026-12-'+day]:{d:{version:1,at,frame:{hero:[rank]}},u:at}});
+const firstDay=observed('19',100,2), newerFirstDay=observed('19',110,3), secondDay=observed('20',200,4);
+const historyPhone=device({...row(1,1),...firstDay}),historyTablet=device({...row(1,1),...newerFirstDay,...secondDay});
+await historyPhone.sync.signIn();
+await historyPhone.sync.enable();
+await historyTablet.sync.signIn();
+await historyTablet.sync.enable();
+await historyPhone.sync.tick();
+assert.equal(historyTablet.sync.state().review,null,'changes confined to history are merged without a gameplay conflict');
+assert.deepEqual(historyPhone.records(),{...row(1,1),...newerFirstDay,...secondDay});
+const phoneOnly=observed('18',90,2);
+historyPhone.set({...historyPhone.records(),...phoneOnly});
+historyTablet.set({...historyTablet.records(),...row(2,2)});
+await historyTablet.sync.tick();
+await historyPhone.sync.tick();
+assert.equal(historyPhone.sync.state().review,null,'history on one device must not conflict with a gameplay change on another');
+assert.equal(historyPhone.records()['tx/id'].d.amt,2);
+assert.deepEqual(historyPhone.records()['world-history/2026-12-18'],phoneOnly['world-history/2026-12-18']);
+const thirdDay=observed('21',300,5), fourthDay=observed('22',400,6);
+historyPhone.set({...historyPhone.records(),...row(4,4),...thirdDay});
+historyTablet.set({...historyTablet.records(),...row(3,3),...fourthDay});
+await historyPhone.sync.tick();
+await historyTablet.sync.tick();
+assert(historyTablet.sync.state().review);
+await historyTablet.sync.resolve('local');
+await historyPhone.sync.tick();
+assert.equal(historyPhone.records()['tx/id'].d.amt,3,'the chosen gameplay version still wins');
+for(const observation of [newerFirstDay,secondDay,thirdDay,fourthDay]){
+  const [path,record]=Object.entries(observation)[0];
+  assert.deepEqual(historyPhone.records()[path],record);
+  assert.deepEqual(historyTablet.records()[path],record);
+}
+console.log('PASS Firebase sync, retries, version conflicts, independent world-history merge, archive, retention and push policy/worker');

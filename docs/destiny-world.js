@@ -41,7 +41,8 @@
     });
     const levels = roomLevels.filter(level => level === 2 || level === 3);
     const lamps = Math.min(windows.length, 1 + levels.reduce((count,level) => count + level - 1,0));
-    return {branches,lamps};
+    const restoration=lamps>=12?3:lamps>=6?2:lamps>=2?1:0;
+    return {branches,lamps,restoration};
   }
 
   function artImage(name) {
@@ -52,6 +53,7 @@
     const lines=svg('g',{class:'destiny-veins','data-direction':branch.id,'data-state':branch.state});
     const trace=distant&&shape.horizonVein?shape.horizonVein:shape.vein;
     lines.append(svg('path',{d:trace,class:'destiny-vein-glow'}),svg('path',{d:trace,class:'destiny-vein-core'}));
+    if(branch.state===2)lines.append(svg('path',{d:trace,class:'destiny-vein-sparks'}));
     if(branch.extra.length) lines.append(svg('path',{d:shape.fork,class:'destiny-vein-glow destiny-secret'}),svg('path',{d:shape.fork,class:'destiny-vein-core destiny-secret'}));
     layer.append(lines);
     return lines;
@@ -144,7 +146,18 @@
     const far=map.querySelector('.destiny-world-far'), near=map.querySelector('.destiny-world-near');
     const lights=svg('g',{class:'destiny-castle-windows'});
     windows.forEach(([x,y])=>lights.append(svg('path',{d:'M'+x+' '+y+'l2-4 2 4v5h-4z',class:'destiny-window'})));
-    far.append(artImage('destiny-valley.svg'),lights,
+    const renewal=svg('g',{class:'destiny-castle-renewal','aria-hidden':'true'});
+    renewal.append(
+      svg('path',{'data-tier':1,d:'M628 420v20m33-50v36m29 7v22'}),
+      svg('path',{'data-tier':2,d:'M599 445v19m119-10v20M613 472h16m49 5h20'}),
+      svg('path',{'data-tier':3,d:'M650 474v-14l9-7 9 7v14m-34 12h50'})
+    );
+    const skyline=home.querySelector('.citadel-sky');
+    const nearLights=document.createElement('div');
+    nearLights.className='citadel-renewal';
+    nearLights.setAttribute('aria-hidden','true');
+    skyline.append(nearLights);
+    far.append(artImage('destiny-valley.svg'),renewal,lights,
       svg('path',{class:'destiny-haze',d:'M34 553q176-28 313 0t418-51m-752 86q197-30 351 0t424-39M57 621q174-25 315 5t375-33'}));
     const veins=svg('g'), chains=svg('g'), seals=svg('g',{class:'destiny-world-seals'});
     const embers=svg('g',{class:'destiny-embers','aria-hidden':'true'});
@@ -223,6 +236,7 @@
       if(signature===stamp)return;
       signature=stamp;
       syncHorizon(next);
+      skyline.dataset.restoration=renewal.dataset.restoration=next.restoration;
       Array.from(lights.children).forEach((lamp,index)=>lamp.classList.toggle('is-lit',index<next.lamps));
       // Commit animation only for a new change seen in this session, never for a loaded snapshot.
       for(const branch of next.branches){

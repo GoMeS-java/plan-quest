@@ -1316,6 +1316,8 @@ body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
 .destiny-veins[data-state="1"] .destiny-vein-core{opacity:.53}
 .destiny-veins[data-state="2"] .destiny-vein-glow{opacity:.31}
 .destiny-veins[data-state="2"] .destiny-vein-core{opacity:.93}
+.destiny-vein-sparks{stroke:#fff0cf;stroke-width:4.2;stroke-dasharray:1 25;stroke-dashoffset:7;opacity:.74}
+.destiny-horizon .destiny-vein-sparks{stroke-width:9;opacity:.48}
 .destiny-veins .destiny-secret{opacity:.76;stroke-dasharray:6 5}
 .destiny-vein-glow.destiny-secret{opacity:.25;stroke-dasharray:none}
 .destiny-horizon .destiny-veins[data-state="0"] .destiny-vein-core:not(.destiny-secret){opacity:0}
@@ -1340,6 +1342,18 @@ body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
 .destiny-seal:is([aria-pressed="true"],:focus-visible) .destiny-stone{stroke:#ffdeaa;stroke-width:4}
 .destiny-window{fill:#956e65;opacity:.25}
 .destiny-window.is-lit{fill:#ffd59b;opacity:.93}
+.destiny-castle-renewal path{fill:none;stroke:#ffb77b;stroke-width:6;stroke-linecap:round;opacity:0;filter:blur(4px)}
+.destiny-castle-renewal:not([data-restoration="0"]) [data-tier="1"],
+.destiny-castle-renewal:is([data-restoration="2"],[data-restoration="3"]) [data-tier="2"],
+.destiny-castle-renewal[data-restoration="3"] [data-tier="3"]{opacity:.64}
+.citadel-renewal{position:absolute;inset:0;z-index:1;pointer-events:none;--hearth:#eeaa7059;--lights:#ffcc8e;opacity:.9}
+.citadel-sky[data-restoration="1"] .citadel-renewal,
+.citadel-sky[data-restoration="2"] .citadel-renewal,
+.citadel-sky[data-restoration="3"] .citadel-renewal{background:radial-gradient(ellipse at 81% 82%,var(--hearth),transparent 30%)}
+.citadel-renewal::before,.citadel-renewal::after{content:"";display:none;position:absolute;bottom:21%;right:18%;width:2px;height:4px;background:var(--lights);box-shadow:6px 5px #ffc984,12px 2px #f7b87d,0 0 7px 2px #e6a96a}
+.citadel-sky:is([data-restoration="1"],[data-restoration="2"],[data-restoration="3"]) .citadel-renewal::before{display:block}
+.citadel-sky:is([data-restoration="2"],[data-restoration="3"]) .citadel-renewal::after{display:block;right:33%;bottom:16%;box-shadow:-7px 5px #f3b678,10px -4px #ffc984,0 0 8px 3px #e6a96a}
+.citadel-sky[data-restoration="3"] .citadel-renewal{--hearth:#ffba737a}
 .destiny-haze{fill:none;stroke:#c2adc4;stroke-width:8;stroke-linecap:round;opacity:.13;pointer-events:none}
 .destiny-embers{fill:#d6a5aa;opacity:.43;pointer-events:none}
 #destiny-world[open] .destiny-embers{animation:destiny-embers 7s ease-in-out infinite alternate}

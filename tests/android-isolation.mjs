@@ -53,6 +53,7 @@ try{
  await p.evaluate(async()=>{await PlanSync.sync(true);await PlanSync.sync(false);});
  assert(!requests.some(u=>u.includes('accounts.google.com')||u.includes('sheets.googleapis.com')||u.includes('/drive/')),'test must not request OAuth, Drive or Sheets');
  console.log('PASS isolated build never reads production save or uses production auth');passed++;
+ await p.waitForFunction(()=>VkachWorldHistory.frames(PlanSync._docs()).length===1);
  const original=await p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));
  const downloadEvent=p.waitForEvent('download');await p.locator('.pl-menu').getByRole('button',{name:'СОХРАНИТЬ РЕЗЕРВНУЮ КОПИЮ',exact:true}).click();const download=await downloadEvent;
  const backup=JSON.parse(await readFile(await download.path(),'utf8'));assert.equal(backup.v,2);assert.equal(backup.integrity.algorithm,'SHA-256');assert.deepEqual(backup.docs,original);assert(!JSON.stringify(backup).includes('synthetic-production-token'));
@@ -67,6 +68,7 @@ try{
  const offlineHero=await p.locator('#hero').evaluate(c=>c.toDataURL());
  await p.evaluate(()=>PlanDB.doc('cfg/fate').set({version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}}));
  await p.waitForFunction(()=>!!window.VkachFate&&VkachFate.discovered(PlanSync._docs()['cfg/fate']?.d).length>0);
+ await p.waitForFunction(()=>VkachWorldHistory.frames(PlanSync._docs())[0]?.echo==='echo01');
  const saved=await p.evaluate(()=>JSON.parse(JSON.stringify(PlanSync._docs())));await ctx.setOffline(true);await p.reload();await dismiss();await p.waitForFunction(()=>!!window.PlanSync);
  await p.waitForFunction(expected=>document.querySelector('#hero').toDataURL()===expected,offlineHero);
  assert.deepEqual(await p.evaluate(()=>PlanSync._docs()),saved);
@@ -82,7 +84,10 @@ try{
  await p.locator('.pl-chip').click();p.once('dialog',d=>d.accept());const fileEvent=p.waitForEvent('filechooser');await p.locator('.pl-menu').getByRole('button',{name:'ВОССТАНОВИТЬ КОПИЮ ИЗ ФАЙЛА',exact:true}).click();const chooser=await fileEvent;
  await chooser.setFiles({name:'test-copy.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))});await p.waitForFunction(()=>JSON.parse(localStorage.getItem('plan.android-test.meta.v1')).syncPaused===true);
  const restored=await p.evaluate(()=>PlanSync._docs());
- for(const [k,v]of Object.entries(original))if(k!=='cfg/shelter-items')assert.deepEqual(restored[k].d,v.d);
+ for(const [k,v]of Object.entries(original)){
+  if(k.startsWith('world-history/'))assert(restored[k].d.at>=v.d.at,'restore retains a real observation for the same day');
+  else if(k!=='cfg/shelter-items')assert.deepEqual(restored[k].d,v.d);
+ }
  const receipts={...original['cfg/shelter-items']?.d?.owned,...beforeRestore?.owned};
  assert(Object.keys(receipts).every(key=>!!restored['cfg/shelter-items']?.d?.owned?.[key]),'Restore preserves every durable shelter receipt');
  assert.equal(await p.evaluate(()=>localStorage.getItem('plan.store.v1')),production);await ctx.setOffline(false);await p.evaluate(()=>PlanSync.sync(true));

@@ -12,6 +12,7 @@ const baseline=model({});
 assert.deepEqual(baseline.branches.map(row=>row.state),[0,0,0,0,0]);
 assert(baseline.branches.every(row=>row.extra.length===0));
 assert.equal(baseline.lamps,1);
+assert.equal(baseline.restoration,0);
 assert.equal(model({'body-1':123},[1,2,3]).branches[0].state,1);
 assert.equal(model({'body-1':123,'body-2':124,'body-3':125}).branches[0].state,2);
 assert.equal(model({'body-hidden-1':123}).branches[0].extra.length,2);
@@ -105,6 +106,7 @@ try{
   }
   assert.equal(await chain.getAttribute('data-state'),'0');
   assert.equal(await map.locator('.destiny-window.is-lit').count(),1);
+  assert.equal(await home.locator('.citadel-sky').getAttribute('data-restoration'),'0');
   await tab.click();
   assert.match(await dialog.locator('.destiny-branch-phase').textContent(),/Сковано/);
   await screenshot('02-tree-and-citadel');
@@ -154,6 +156,7 @@ try{
   assert.equal(await chain.getAttribute('data-state'),'1');
   assert.equal(await distantCitadelBranch.getAttribute('data-state'),'1');
   assert.equal(await map.locator('.destiny-window.is-lit').count(),2);
+  assert.equal(await map.locator('.destiny-castle-renewal').getAttribute('data-restoration'),'1');
   assert.equal(await chain.locator('.destiny-chain-crack').evaluate(el=>getComputedStyle(el).display),'block');
   await tab.click();
   await screenshot('03-chain-weakened');
@@ -180,6 +183,9 @@ try{
   assert.equal(await chain.getAttribute('data-state'),'2');
   assert.equal(await distantCitadelBranch.getAttribute('data-state'),'2');
   assert.equal(await map.locator('.destiny-window.is-lit').count(),7);
+  assert.equal(await map.locator('.destiny-castle-renewal').getAttribute('data-restoration'),'2');
+  assert.equal(await home.locator('.citadel-sky').getAttribute('data-restoration'),'2');
+  assert.equal(await distantCitadelBranch.locator('.destiny-vein-sparks').count(),1);
   assert.equal(await chain.locator('.destiny-chain-link').first().evaluate(el=>getComputedStyle(el).display),'none');
   await tab.click();
   await dialog.locator('.destiny-node-list button').nth(2).click();

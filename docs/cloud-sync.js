@@ -6,7 +6,9 @@
   const hashPattern = /^[a-f0-9]{64}$/;
   const idPattern = /^[a-zA-Z0-9_-]{1,128}$/;
   const fail = code => Object.assign(new Error(code), {code});
-  const hasRecords = records => Object.values(records).some(row=>row.d!==null);
+  const history = () => root.VkachWorldHistory;
+  const gameplay = records => Object.fromEntries(Object.entries(records).filter(([path])=>!history()?.isPath(path)));
+  const hasRecords = records => Object.values(gameplay(records)).some(row=>row.d!==null);
 
   function configured(config, origin) {
     if (!config || config.enabled !== true || config.origin !== origin || !origin.startsWith('https://')) return false;
@@ -66,14 +68,17 @@
       } catch (_) { throw fail('invalid-remote'); }
     }
 
-    function acknowledge(info, hash, revision) {
-      saveMeta({...info,base:hash,revision,lastSync:Date.now(),pending:null});
+    const gameplayHash = (records, hash) => history() ? bridge.hash(gameplay(records)) : Promise.resolve(hash);
+
+    function acknowledge(info, hash, revision, baseGame) {
+      saveMeta({...info,base:hash,baseGame,revision,lastSync:Date.now(),pending:null});
     }
 
     async function write(uid, local, hash, remote, info) {
       if (!hasRecords(local)) throw fail('empty-local');
       const op = info.pending?.hash === hash ? info.pending.op : crypto.randomUUID();
       const payload = await bridge.encode(local);
+      const gameHash = await gameplayHash(local,hash);
       if (new TextEncoder().encode(payload).byteLength > MAX_PAYLOAD) throw fail('too-large');
       if (!info.firstUpload) await bridge.archive('first-'+op,local,null,'cloud-first');
       ensureActive(uid);
@@ -82,8 +87,18 @@
       const head = await transport.commit(uid,remote?.head || null,{op,hash,payload});
       ensureActive(uid);
       if (!head || head.op !== op || head.hash !== hash) throw fail('changed-remote');
-      acknowledge({...pending,firstUpload:true},hash,head.revision);
+      acknowledge({...pending,firstUpload:true},hash,head.revision,gameHash);
       review = null;
+    }
+
+    async function keepHistory(uid, local, hash, remote, remoteGame) {
+      const combined=history()?.join(local,remote.records)||local;
+      const combinedHash=combined===local?hash:await bridge.hash(combined);
+      if(combinedHash!==hash)await bridge.replace(local,combined);
+      ensureActive(uid);
+      if(combinedHash!==remote.head.hash)return write(uid,combined,combinedHash,remote,meta());
+      acknowledge(meta(),combinedHash,remote.head.revision,remoteGame);
+      review=null;
     }
 
     async function reconcile() {
@@ -91,26 +106,36 @@
       if (bridge.blocked()) throw fail('local-blocked');
       const uid = user.uid, local = await bridge.read(), hash = await bridge.hash(local);
       const remote = await unpack(await transport.head(uid));
+      const remoteGame = remote ? await gameplayHash(remote.records,remote.head.hash) : null;
       ensureActive(uid);
       let info = meta();
       if (info.revision && (remote?.head.revision || 0) < info.revision) throw fail('missing-remote');
       if (remote && info.pending?.op === remote.head.op && info.pending.hash === remote.head.hash) {
-        acknowledge({...info,firstUpload:true},remote.head.hash,remote.head.revision);
+        acknowledge({...info,firstUpload:true},remote.head.hash,remote.head.revision,remoteGame);
         info = meta();
       }
-      const action = decide(hash,remote?.head.hash,info.base,!hasRecords(local));
+      let action = decide(hash,remote?.head.hash,info.base,!hasRecords(local));
+      if (action === 'conflict' && history()) {
+        const localGame=await gameplayHash(local,hash);
+        ensureActive(uid);
+        // A new observation on either device does not fork the gameplay data.
+        if(localGame===remoteGame)return keepHistory(uid,local,hash,remote,remoteGame);
+        if(info.baseGame===localGame)action='pull';
+        else if(info.baseGame===remoteGame)action='push';
+      }
       if (action === 'missing') throw fail('missing-remote');
       if (action === 'empty') { review = null; return; }
       if (action === 'equal') {
-        if (info.base !== hash || info.revision !== remote.head.revision) acknowledge(info,hash,remote.head.revision);
+        if (info.base !== hash || info.revision !== remote.head.revision || info.baseGame !== remoteGame)
+          acknowledge(info,hash,remote.head.revision,remoteGame);
         review = null;
         return;
       }
-      if (action === 'push') return write(uid,local,hash,remote,info);
+      if (action === 'push') return remote ? keepHistory(uid,local,hash,remote,remoteGame) : write(uid,local,hash,remote,info);
       if (action === 'pull') {
         await bridge.replace(local,remote.records);
         ensureActive(uid);
-        acknowledge(info,remote.head.hash,remote.head.revision);
+        acknowledge(info,remote.head.hash,remote.head.revision,remoteGame);
         review = null;
         return;
       }
@@ -168,10 +193,12 @@
           ensureActive(uid);
           if (await bridge.hash(local) !== expected.hash || remote?.head.op !== expected.remote.head.op ||
               remote.head.revision !== expected.remote.head.revision) throw fail('changed-review');
-          if (choice === 'local') return write(uid,local,expected.hash,remote,meta());
+          const remoteGame=await gameplayHash(remote.records,remote.head.hash);
+          ensureActive(uid);
+          if (choice === 'local') return keepHistory(uid,local,expected.hash,remote,remoteGame);
           await bridge.replace(local,remote.records);
           ensureActive(uid);
-          acknowledge(meta(),remote.head.hash,remote.head.revision);
+          acknowledge(meta(),remote.head.hash,remote.head.revision,remoteGame);
           review = null;
         });
       },

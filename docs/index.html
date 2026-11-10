@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.5.1";window.APP_BUILD="3c667f46d636";</script><script src="config.js"></script><script src="save-history.js"></script><script src="cloud-sync.js"></script><script src="cloud-firebase.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#17121f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>window.APP_VERSION="1.6.0-preview.1";window.APP_BUILD="a83d54108a9f";</script><script src="config.js"></script><script src="save-history.js"></script><script src="world-history.js"></script><script src="cloud-sync.js"></script><script src="cloud-firebase.js"></script><script src="localdb.js"></script><script src="awakening.js"></script>
 <title>Вкач</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -871,6 +871,7 @@ html,body{overflow-anchor:none}
       <div class="profile-section-title">СТАТИСТИКА ПУТИ</div>
       <div class="profile-stats profile-history"><div><small>Дней с записями</small><b id="profile-days">—</b></div><div><small>Отметок заданий</small><b id="profile-checks">—</b></div><div><small>Получено достижений</small><b id="profile-ach-count">—</b></div></div>
       <section class="profile-journey" aria-label="Последние семь дней"><div class="profile-section-title">ПОСЛЕДНИЕ СЕМЬ ДНЕЙ <small id="profile-week-summary"></small></div><div id="profile-week" class="profile-week"></div><p id="profile-body-history" class="hint"></p><div class="profile-actions"><button type="button" data-profile-path="today">К ЗАДАНИЯМ</button><button type="button" data-profile-path="week">К ХРОНИКЕ НЕДЕЛИ</button></div></section>
+      <section class="profile-journey" aria-label="Снимки мира"><div class="profile-section-title">СНИМКИ МИРА <small id="world-history-count"></small></div><p id="world-history-latest" class="hint">После загрузки игра запишет облик героя, состояние Цитадели и открытые печати.</p><p id="world-history-note" class="hint"></p></section>
       <div class="profile-section-title">ПОЛУЧЕННЫЕ ОФОРМЛЕНИЯ</div><div id="profile-collections" class="profile-collections"></div>
       <div class="profile-actions"><button type="button" id="profile-title-open">ВЫБРАТЬ ЗВАНИЕ</button><button type="button" id="profile-gear-open">ГАРДЕРОБ</button></div>
       <div id="profile-titles" class="profile-picker" hidden></div>
@@ -1036,10 +1037,11 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
+    <div class="hint"><b>1.6 · Пробуждение мира, предварительная сборка.</b> Игра сохраняет снимки героя и Цитадели. Восстановленные комнаты зажигают огни на горизонте.</div>
     <div class="hint"><b>1.5.1 · Капризы Заклятия.</b> Цитадель и Древо Судьбы встречают одну магическую погоду. Обстановка меняется сама, а выбранный пейзаж сохраняется.</div>
     <div class="hint"><b>1.5 · Тайна Заклятия.</b> В коллекции появился раздел «Тайны». Некоторые печати откликаются на новые записи, а Древо Судьбы постепенно раскрывает скрытые ответвления.</div>
     <div class="hint"><b>1.4 · Путь Восхождения.</b> Сохранённые дела открывают новые отметины и узлы древа. Трапезная понимает распространённые русские названия продуктов, а расписание фоновых уведомлений доступно в настройках.</div>
-    <div class="release-stamp"><b>Версия 1.5.1</b><span>Сборка 3c667f46d636</span></div>
+    <div class="release-stamp"><b>Версия 1.6.0-preview.1</b><span>Сборка a83d54108a9f</span></div>
     <details class="release-notes"><summary>История обновлений</summary><div class="goal vhist"><div class="hint"><b>1.3.3</b> · Пробуждение Цитадели. Меню комнат, поиск и дневник питания с рецептами.</div><div class="hint"><b>1.3.2</b> · Живая Цитадель. Жители снова ходят, работают и реагируют на разговор. У каждого движения отдельный кадр.<br><b>1.3.1</b> · Разрыв оков использует общие осколки и скрытый аспект. Исправлена загрузка сборки при обновлении.<br><b>1.3</b> · Разрыв оков: дневник, осколки за соблюдение лимита, скрытые отметины и Песочные часы судьбы.<br><b>1.2</b> · Кузница судьбы: настройка заданий, целей и открытых аспектов.<br><b>1.0</b> · Пробуждение: обучение в настоящих разделах, подсветка действий, продолжение и повтор из настроек. Прогресс и правила мира сохранены.<br><b>0.90</b> · Защита полученных открытий при восстановлении копий, бережная перерисовка героя и коллекции, адаптация к экранной клавиатуре.<br><b>0.79</b> · Осколки судьбы: находки складываются в образы. Сохранения и баланс прежние.<br><b>0.78</b> · Отголоски легенд, памятные сцены и отклик мира. Сохранения и баланс прежние.<br><b>0.77</b> · Тихие действия в комнатах, занятия и отклики жителей, видимая экипировка и ясная связь с делами дня.</div><div class="hint"><b>0.76</b> · Закрытые комнаты хранят свою тайну до открытия.</div><div class="hint"><b>0.74</b> · Жители сохраняют фокус во время перемещений и поворачиваются к герою. Осмотр предметов получил ясную обратную связь.</div><div class="hint"><b>0.73</b> · Прогулки по комнатам, удобные действия рядом с жителями и стабильность общего прогресса.</div><div class="hint"><b>0.72</b> · Редактор операций, даты и копейки, сохранение ввода и надёжные ежедневные отметки.</div><div class="hint"><b>0.71</b> · Проверенные резервные копии, безопасное восстановление и защита записи прогресса.</div><div class="hint"><b>0.70</b> · Возвращён узнаваемый герой, общая внешность и пиксельные анимации Цитадели.</div><div class="hint"><b>0.69</b> · Кнопка «Колесо» в финансах и точная камера комнаты без смещения интерфейса.</div><div class="hint"><b>0.68</b> · Камера и подписи замка, компактные финансы, навигация без перекрытий.</div><div class="hint"><b>0.67</b> · Компактный RPG-интерфейс, Android-навигация, руины и обновлённый герой.</div>
       <div class="hint"><b>0.58</b> · 31.10 · Пиксельная Цитадель: оригинальные интерьеры, живые жители и игровой экран для телефона</div>
       <div class="hint"><b>0.54</b> · 30.10 · Новый предмет убежища в стилистике Бездны; тайна отметины сохранена</div>
@@ -1190,7 +1192,7 @@ html,body{overflow-anchor:none}
 <script src="food-ui.js"></script>
 <script src="room-workspace.js"></script>
 <dialog id="citadel-mystery" aria-labelledby="citadel-mystery-title" aria-describedby="citadel-mystery-text"><h2 id="citadel-mystery-title">Неизведанная комната</h2><p id="citadel-mystery-text"></p><form method="dialog"><button autofocus>Понятно</button></form></dialog>
-<script>window.APP_VERSION = "1.5.1";
+<script>window.APP_VERSION = "1.6.0-preview.1";
 (function () {
   // ---- pixel avatar (layered wardrobe) -----------------------------
   var W = 32, H = 52;
@@ -4403,6 +4405,7 @@ html,body{overflow-anchor:none}
     });
   }
   function renderProfileJourney(p){
+    renderWorldHistory();
     var meter=$('profile-rank-meter');meter.max=Math.max(1,p.need);meter.value=Math.max(0,Math.min(p.P,p.need));
     $('profile-rank-next').textContent='ДО РАНГА '+(p.L+1)+' · '+Math.max(0,p.need-p.P)+' ОСКОЛКОВ';
     var resolved=outfitFrom(allItems(),outfitIds()),equipment=$('profile-equipment');clear(equipment);
@@ -5723,6 +5726,54 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
     destinyStamp=stamp;
     destinyScene.sync(VkachDestinyWorld.project(VkachAscension.view(ledger,progress),levels));
   }
+  var worldHistoryBusy=false,worldHistoryIssue='',worldHistoryAttempt='';
+  function renderWorldHistory(){
+    var frames=VkachWorldHistory.frames(PlanSync._docs()),latest=frames[0];
+    $('world-history-count').textContent=frames.length?'ДНЕЙ ЗАПИСАНО · '+frames.length:'';
+    if(latest){
+      var rooms=Object.values(latest.rooms||{}).filter(function(level){return level===2||level===3;}).length;
+      $('world-history-latest').textContent='Снимок от '+latest.date.split('-').reverse().join('.')+' · ранг '+(latest.hero?.[0]||1)+' · восстановлено комнат '+rooms+' · открыто печатей '+(latest.seals?.length||0);
+    }
+    $('world-history-note').textContent=worldHistoryIssue==='full'?'Хранилище снимков заполнено. Записанные дни сохранены в резервных копиях.':
+      worldHistoryIssue==='failed'?'Сегодняшний снимок пока не записан. После перезагрузки игра попробует снова.':
+      worldHistoryIssue==='unsupported'?'Снимок этого дня записан более новой версией игры.':
+      latest?'Первый снимок от '+frames.at(-1).date.split('-').reverse().join('.')+'. С этой даты записываются изменения облика мира.':'';
+  }
+  function recordWorldHistory(){
+    if(!loaded||!lastGI||document.hidden||worldHistoryBusy||ascensionBusy)return;
+    var now=Date.now(),day=dkey(new Date(now)),docs=PlanSync._docs(),outfit=outfitFrom(allItems(),outfitIds());
+    var marks=achievementOwnedRows().filter(function(row){return row.date&&row.date<=day;}).map(function(row){return row.id;});
+    var ledger=docs[VkachAscension.path]?.d,nodes=ledger?.nodes||{};
+    var seals=VkachAscension.view(ledger,ascensionProgress(docs[VkachRealm.path]?.d)).flatMap(function(row){
+      return row.nodes.filter(function(node){return node.state==='open'&&nodes[node.id]<=now;}).map(function(node){return node.id;});
+    });
+    var weight=bodyMeasurements().at(-1),rooms=citadelRooms.map(function(room){return [room,citadelRoomLevel(room)];});
+    var interior=rooms.flatMap(function(pair){
+      return VkachShelter.active(S.shelter,pair[0],pair[1]).map(function(entry){return [entry[0],pair[0],entry[1].slot];});
+    });
+    var frame=VkachWorldHistory.observation({
+      rank:lastPI?.L||1,bodyStage:bodyStage(),shape:bodyShape(),
+      rankProgress:[lastPI?.P,lastPI?.need],
+      clothes:['top','bottom','outer'].map(function(slot){var item=outfit[slot];return [item,item?.id];}),
+      look:['bg','aura','frame'].map(lookId),echo:legendActive()?.id,rooms:rooms,interior:interior,seals:seals,marks:marks,
+      activity:VkachWorldHistory.activity(day,docs['days/'+day]?.d,docs['per/'+day]?.d,now),
+      weight:weight?{date:weight.date,kg:Number(weight.kg)}:null
+    });
+    if(VkachWorldHistory.same(docs[VkachWorldHistory.collection+'/'+day]?.d,frame)){
+      worldHistoryAttempt='';
+      if(worldHistoryIssue){worldHistoryIssue='';renderWorldHistory();}
+      return;
+    }
+    var attempt=JSON.stringify([day,frame]);
+    if(attempt===worldHistoryAttempt)return;
+    worldHistoryBusy=true;worldHistoryAttempt=attempt;
+    enqueue(function(){
+      return db.runTransaction(function(tx){return VkachWorldHistory.capture(tx,day,now,frame);}).catch(function(){return 'failed';});
+    }).then(function(status){
+      worldHistoryIssue=status;worldHistoryBusy=false;renderWorldHistory();
+      recordWorldHistory();
+    });
+  }
   var ascensionDialog=$('ascension'),ascensionUI=VkachAscension.mount(ascensionDialog),ascensionBusy=false;
   function ascensionProgress(realm){
     var skills=SK_KEYS.map(function(key){return lastGI?.ups[key]?.at(-1)?.lvl||0;});
@@ -5746,7 +5797,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
         syncDestiny(saved,progress);
         if(ascensionDialog.open)ascensionUI.render(VkachAscension.view(saved,progress));
       })
-      .catch(function(){}).finally(function(){ascensionBusy=false;});
+      .catch(function(){}).finally(function(){ascensionBusy=false;recordWorldHistory();});
   }
   $('ascension-open').onclick=function(){
     if(ascensionDialog.open)return;
@@ -5938,7 +5989,7 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
   }
 
 function renderAllInner() {
-    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync(); forgeAwardsSync(); ascensionSync();
+    renderPoints(); renderDiet(); renderAch(); applyLook(); checkAch(); renderRoom(); weeklySummary(); monthlySummary(); renderToday(); renderTrial(); renderWeek(); renderShop(); renderMoney(); renderGoals(); renderWardrobe(); renderSpend(); renderGlobal(); renderHourglass(); syncCitadel(); legendSync(); fateSync(); realmSync(); shelterSync(); forgeAwardsSync(); ascensionSync(); recordWorldHistory();
   }
 
   function renderHourglass() {
@@ -6067,7 +6118,7 @@ function renderAllInner() {
     items.forEach(function (g) {
       box.appendChild(questButton(g.name, '', g.done ? 'ГОТОВО' : '', !!g.done, function () {
         if (!db) return;
-        enqueue(function () { return db.doc('goals/' + g.id).update({ done: !g.done }); });
+        enqueue(function () { return db.doc('goals/' + g.id).update({ done: !g.done, completedAt: g.done ? null : Date.now() }); });
       }));
     });
   }
