@@ -6,7 +6,9 @@
   const hashPattern = /^[a-f0-9]{64}$/;
   const idPattern = /^[a-zA-Z0-9_-]{1,128}$/;
   const fail = code => Object.assign(new Error(code), {code});
-  const hasRecords = records => Object.values(records).some(row=>row.d!==null);
+  const history = () => root.VkachWorldHistory;
+  const gameplay = records => Object.fromEntries(Object.entries(records).filter(([path])=>!history()?.isPath(path)));
+  const hasRecords = records => Object.values(gameplay(records)).some(row=>row.d!==null);
 
   function configured(config, origin) {
     if (!config || config.enabled !== true || config.origin !== origin || !origin.startsWith('https://')) return false;
@@ -86,6 +88,16 @@
       review = null;
     }
 
+    async function keepHistory(uid, local, hash, remote) {
+      const combined=history()?.join(local,remote.records)||local;
+      const combinedHash=combined===local?hash:await bridge.hash(combined);
+      if(combinedHash!==hash)await bridge.replace(local,combined);
+      ensureActive(uid);
+      if(combinedHash!==remote.head.hash)return write(uid,combined,combinedHash,remote,meta());
+      acknowledge(meta(),combinedHash,remote.head.revision);
+      review=null;
+    }
+
     async function reconcile() {
       if (!active() || !transport.online()) return;
       if (bridge.blocked()) throw fail('local-blocked');
@@ -106,13 +118,16 @@
         review = null;
         return;
       }
-      if (action === 'push') return write(uid,local,hash,remote,info);
+      if (action === 'push') return remote ? keepHistory(uid,local,hash,remote) : write(uid,local,hash,remote,info);
       if (action === 'pull') {
         await bridge.replace(local,remote.records);
         ensureActive(uid);
         acknowledge(info,remote.head.hash,remote.head.revision);
         review = null;
         return;
+      }
+      if (history() && await bridge.hash(gameplay(local)) === await bridge.hash(gameplay(remote.records))) {
+        return keepHistory(uid,local,hash,remote);
       }
       if (review?.hash !== hash || review?.remote.head.op !== remote.head.op) {
         await bridge.archive('conflict-'+crypto.randomUUID(),local,remote.records,'cloud-conflict');
@@ -168,7 +183,7 @@
           ensureActive(uid);
           if (await bridge.hash(local) !== expected.hash || remote?.head.op !== expected.remote.head.op ||
               remote.head.revision !== expected.remote.head.revision) throw fail('changed-review');
-          if (choice === 'local') return write(uid,local,expected.hash,remote,meta());
+          if (choice === 'local') return keepHistory(uid,local,expected.hash,remote);
           await bridge.replace(local,remote.records);
           ensureActive(uid);
           acknowledge(meta(),remote.head.hash,remote.head.revision);
