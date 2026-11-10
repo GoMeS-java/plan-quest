@@ -14,6 +14,21 @@ const claimed=api.claim(tx);assert.equal(claimed.length,earned.length);assert.eq
 const gift=earned.find(d=>d.clothes).clothes;delete tx.data['wardrobe/'+gift];assert(api.needs(tx,'2027-03-01',proof));api.reconcile(tx,'2027-03-01',1800000002000,proof);assert(tx.data['wardrobe/'+gift]);assert.equal(api.claim(tx).length,0,'repairing a missing earned garment never replays a receipt');assert.equal(api.needs(tx,'2027-03-01',proof),false);
 const merged=api.merge(tx.data['cfg/realm-achievements'],{version:1,unlocked:{},future:'keep'});assert.equal(api.owned(merged).length,earned.length);assert(api.owned(merged).every(d=>d.presented));assert.equal(merged.future,'keep');
 const future=transaction({...records,'buys/citadel-rest-2':{kind:'citadel-room',room:'rest',level:2,currency:'abyss',cost:100,ts:1e100}});assert.doesNotThrow(()=>api.reconcile(future,'2027-03-01',1800000000000,proof));
+const food=transaction({});
+food.data['food-drafts/draft']={date:'2027-02-01',items:[{name:'Несохранённая еда'}]};
+food.data['food-meals/deleted']={date:'2027-02-02',deleted:true,items:[{name:'Удалено'}]};
+food.data['food-meals/future']={date:'2027-03-02',deleted:false,items:[{name:'Из будущего'}]};
+food.data['food-meals/empty']={date:'2027-02-03',deleted:false,items:[]};
+api.reconcile(food,'2027-03-01',1800000000000,{});
+assert.equal(api.owned(food.data['cfg/realm-achievements']).length,0,'drafts, empty, deleted and future meals cannot earn a discovery');
+for(let i=0;i<30;i++){
+ const date=new Date(Date.UTC(2027,0,i+1)).toISOString().slice(0,10);
+ food.data['food-meals/meal-'+i]={date,deleted:false,items:[{name:'Завтрак'}]};
+}
+api.reconcile(food,'2027-03-01',1800000001000,{});
+assert.equal(api.owned(food.data['cfg/realm-achievements']).filter(r=>r.id.startsWith('refectory')).length,3);
+const foodWrites=food.writes.length;api.reconcile(food,'2027-03-01',1800000002000,{});
+assert.equal(food.writes.length,foodWrites,'food achievements are once-only and do not affect balance');
 const source=readFileSync('src/game.html','utf8'),worker=readFileSync('docs/sw.js','utf8');for(const d of earned)for(const id of d.cos)assert(source.includes('COS.'+id+' ='),'every earned cosmetic has a definition');assert(worker.includes('realm-achievements.js'));assert(!/авито|avito/i.test(source),'retired feature has no live UI, handler or watcher');
 console.log('PASS rebuild discoveries: durable facts, no click farming, atomic reward paths, one-time receipts, retained ownership, malformed dates and cached assets');
 
