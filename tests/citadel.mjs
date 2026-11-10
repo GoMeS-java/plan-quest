@@ -69,7 +69,7 @@ async function waitForIdle(page) {
 async function dismiss(p){for(let n=0;n<12;n++){await p.evaluate(()=>{document.querySelector('#legend-scene[open]')?.close();if(!document.getElementById('achup')?.hidden)document.getElementById('ac-ok')?.click();for(const id of ['lvup','setup','trophy']){const n=document.getElementById(id);if(n)n.hidden=true;}});await p.clock.runFor(30).catch(()=>{});await p.waitForTimeout(15);if(!await p.locator('#legend-scene[open]').count()&&await p.locator('#achup').isHidden()&&await p.locator('#lvup').isHidden())return;}}
 async function roomBack(p){const close=p.locator('#citadel-interior-close');if(await close.isVisible())await close.click();else await p.locator('[data-room-view="overview"]').click();await p.waitForFunction(()=>document.querySelector('#citadel-home').dataset.uiView==='overview');}
 async function roomMore(p){const panel=p.locator('.citadel-room-more');if(await panel.count()&&await panel.getAttribute('open')===null)await panel.locator(':scope > summary').click();}
-async function cameraControls(p){const details=p.locator('.citadel-map-camera');if(await details.getAttribute('open')===null)await details.locator('summary').click();return details;}
+async function cameraControls(p){const toggle=p.locator('.citadel-map-toggle');if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();const details=p.locator('.citadel-map-camera');if(await details.getAttribute('open')===null)await details.locator('summary').click();return details;}
 async function castle(p){await p.waitForFunction(()=>document.querySelector('#citadel-live-rank').textContent!=='РАНГ …');await p.locator('#citadel-home').evaluate(n=>n.open=true);await p.waitForFunction(()=>!!document.querySelector('[data-croom][aria-pressed="true"]'));if(await p.locator('#citadel-home').evaluate(n=>n.classList.contains('citadel-shell'))){if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').first().click();if(await p.locator('#citadel-home').getAttribute('data-ui-view')!=='overview')await roomBack(p);}}
 async function shellMenu(p){if(await p.locator('#setup').isVisible())await p.locator('#setup-x').click();if(await p.locator('#trophy').isVisible())await p.locator('#trophy-x').click();if(await p.locator('.citadel-system-dialog').isVisible())await p.locator('.citadel-system-dialog header button').click();await dismiss(p);if(await p.locator('.citadel-shell-menu-toggle').isVisible())await p.locator('.citadel-shell-menu-toggle').click();else await p.locator('.citadel-shell-dock button').last().click();}
 async function shellNav(p,label){
@@ -2055,6 +2055,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    const {page:p,context}=await open({width,height,mobile:true,shell:true,seed:advancedSeed(),day:'2027-04-16'});
    await p.clock.runFor(64);const viewport=p.locator('.citadel-viewport'),camera=p.locator('.citadel-shell-camera');
    async function shellGeometry(){return p.evaluate(()=>{const v=document.querySelector('.citadel-viewport'),r=v.getBoundingClientRect(),anc=[];for(let n=v.parentElement;n;n=n.parentElement)anc.push([n.id||n.className,n.scrollLeft,n.scrollTop]);return {anc,rect:[r.left,r.top,r.width,r.height]};});}
+   await cameraControls(p);
    const geometry=await shellGeometry();
    const economy=await p.evaluate(()=>({balance:__qa.balance(),abyss:JSON.parse(JSON.stringify(__qa.S.abyss)),buys:JSON.parse(JSON.stringify(__qa.S.buys))}));
    for(const room of ['study','rest','vault','study']){
@@ -2080,7 +2081,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await (await cameraControls(p)).getByRole('button',{name:'Общий вид',exact:true}).click();await p.clock.runFor(64);
    await (await cameraControls(p)).getByRole('button',{name:'+',exact:true}).click();await (await cameraControls(p)).getByRole('button',{name:'К комнате',exact:true}).click();await p.clock.runFor(500);
    const position=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));
-   await p.reload();await p.waitForFunction(()=>window.__qa?.S.abyss?.rank>=24);await dismiss(p);await p.clock.runFor(500);
+   await p.reload();await p.waitForFunction(()=>window.__qa?.S.abyss?.rank>=24);await dismiss(p);await p.clock.runFor(500);await cameraControls(p);
    const restored=await viewport.evaluate(v=>({left:v.scrollLeft,top:v.scrollTop}));assert.deepEqual(restored,position,'camera preference survives reload without shifting ancestors');
    assert.deepEqual(await shellGeometry(),geometry);
    assert.deepEqual(await p.evaluate(()=>({balance:__qa.balance(),abyss:JSON.parse(JSON.stringify(__qa.S.abyss)),buys:JSON.parse(JSON.stringify(__qa.S.buys))})),economy);

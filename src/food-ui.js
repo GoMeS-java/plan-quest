@@ -7,6 +7,7 @@
   const format = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
   const dateText = date => date.split('-').reverse().join('.');
   const copy = value => JSON.parse(JSON.stringify(value));
+  const fatSecretEndpoint = 'https://vkach-fatsecret-api.ugghhtb.workers.dev';
 
   function element(tag, text, className) {
     const node = document.createElement(tag);
@@ -70,6 +71,67 @@
     return { id: model.makeId(), name: '', grams: '', base: '100', mode: 'exact', values: {} };
   }
 
+  function remoteFoodSearch(addPosition) {
+    const panel = element('section', null, 'food-entry food-remote-search');
+    const query = element('input');
+    query.type = 'search';
+    query.placeholder = 'Название продукта или бренд';
+    query.maxLength = 80;
+    query.setAttribute('aria-label', 'Поиск в FatSecret');
+    const message = element('p', 'Найди продукт — КБЖУ заполнится автоматически.', 'hint');
+    message.setAttribute('role', 'status');
+    const results = element('div', null, 'food-stack');
+    let serial = 0;
+
+    async function get(path) {
+      const response = await fetch(fatSecretEndpoint + path);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'unavailable');
+      return data;
+    }
+
+    async function search() {
+      const term = query.value.trim();
+      if (term.length < 2) { message.textContent = 'Введи минимум две буквы.'; return; }
+      const request = ++serial;
+      results.replaceChildren();
+      message.textContent = 'Ищу в FatSecret…';
+      try {
+        const { foods } = await get('/search?q=' + encodeURIComponent(term));
+        if (request !== serial) return;
+        message.textContent = foods.length ? 'Выбери продукт из списка.' : 'Ничего не найдено. Попробуй другое название.';
+        foods.forEach(food => {
+          const label = food.name + (food.brand ? ' · ' + food.brand : '');
+          results.appendChild(button(label, async () => {
+            message.textContent = 'Загружаю порции…';
+            try {
+              const detail = (await get('/food?id=' + encodeURIComponent(food.id))).food;
+              const servings = detail.servings.filter(s => s.grams > 0 &&
+                ['kcal', 'protein', 'fat', 'carbs'].every(key => Number.isFinite(s[key])));
+              if (!servings.length) { message.textContent = 'Нет полной граммовой порции. Выбери другой продукт.'; return; }
+              results.replaceChildren();
+              const selectServing = element('select');
+              selectServing.setAttribute('aria-label', 'Порция FatSecret');
+              servings.forEach((s, i) => selectServing.add(new Option(
+                s.label + ' · ' + s.grams + ' г · ' + s.kcal + ' ккал', String(i))));
+              message.textContent = label + ' · выбери исходную порцию.';
+              results.append(selectServing, button('Добавить продукт с КБЖУ', () => {
+                const serving = servings[Number(selectServing.value)];
+                addPosition({ id: model.makeId(), name: label, grams: String(serving.grams),
+                  base: String(serving.grams), mode: 'exact', values: {
+                    kcal: serving.kcal, protein: serving.protein, fat: serving.fat, carbs: serving.carbs
+                  } });
+              }));
+            } catch { message.textContent = 'Не удалось загрузить порции. Попробуй ещё раз.'; }
+          }));
+        });
+      } catch { message.textContent = 'FatSecret временно недоступен. Своя позиция работает без интернета.'; }
+    }
+    query.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); search(); } });
+    panel.append(element('strong', 'Поиск FatSecret'), query, button('Найти продукт', search), message, results);
+    return panel;
+  }
+
   function nutrientFields(values, changed, includes = model.keys) {
     const grid = element('div', null, 'food-nutrients');
     for (const key of includes) {
@@ -81,8 +143,9 @@
     return grid;
   }
 
-  function itemsEditor(items, catalog, changed, rerender, massLabel) {
+  function itemsEditor(items, catalog, changed, rerender, massLabel, remoteAdd) {
     const list = element('div', null, 'food-stack');
+    if (remoteAdd) list.appendChild(remoteFoodSearch(remoteAdd));
     items.forEach((row, index) => {
       const section = element('div', null, 'food-entry');
       const update = (key, value) => { row[key] = value; changed(); };
@@ -407,8 +470,17 @@
         updateDraft();
         updatePreview();
       }
+      const addRemote = position => {
+        if (editor !== current) return;
+        const blankIndex = draft.items.findIndex(item => !item.name && !item.grams);
+        if (blankIndex >= 0) draft.items.splice(blankIndex, 1, position);
+        else if (draft.items.length < model.limit) draft.items.push(position);
+        else { report('Максимум 24 позиции в одном приёме пищи.'); return; }
+        changed();
+        render();
+      };
       body.append(element('h2', model.kinds[draft.kind] + ' · ' + dateText(draft.date)), preview,
-        itemsEditor(draft.items, catalog(), changed, render, 'Масса порции, г'));
+        itemsEditor(draft.items, catalog(), changed, render, 'Масса порции, г', addRemote));
       updatePreview();
       body.append(button('Выйти из черновика', async () => { if (await leaveEditor()) render(); }),
         button('Удалить черновик', () => run(async () => {
