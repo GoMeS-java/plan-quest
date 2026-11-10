@@ -3033,6 +3033,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   }
   return expected;
  }
+ function expectMysteryStart(expected,after){
+  const path='cfg/realm-achievements',current=after[path];
+  assert.match(current.d.mysterySince,/^\d{4}-\d{2}-\d{2}$/);
+  const old=expected[path]?.d;
+  if(old?.mysterySince)return;
+  expected[path]={u:current.u,d:{...old,version:1,mysterySince:current.d.mysterySince,unlocked:old?.unlocked||{}}};
+ }
  await check('1.3.2 PWA replaces the 1.3.1 cache and retains saves and all poses offline',async()=>{
   for(const file of ['index.html','sw.js','citadel-art.css','rpg-ui.css']){
    servedOverrides.set(resolve(root,file),execFileSync('git',['show','a49d492:docs/'+file]));
@@ -3057,7 +3064,10 @@ await check('1.1 profile is the single system hub and finance has three reachabl
    await shellMenu(p);await p.locator('.pl-chip').click();
    await p.locator('.pl-menu').getByRole('button',{name:'ОБНОВИТЬ ПРИЛОЖЕНИЕ',exact:true}).click();
    await p.waitForFunction(v=>window.APP_VERSION===v&&/^РАНГ \d+$/.test(document.querySelector('#citadel-live-rank')?.textContent),currentVersion);
-   const after=await docs(p);assert.deepEqual(after,expectedEconomyUpgrade(before,after));
+   await p.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.mysterySince);
+   const after=await docs(p),expected=expectedEconomyUpgrade(before,after);
+   expectMysteryStart(expected,after);
+   assert.deepEqual(after,expected);
    assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
    await context.setOffline(true);await p.reload();
    await p.waitForFunction(v=>APP_VERSION===v&&!!navigator.serviceWorker.controller,currentVersion);
@@ -3076,9 +3086,13 @@ await check('1.1 profile is the single system hub and finance has three reachabl
  });
  async function checkPwaUpgrade(versions){
   for(const [oldVersion,previous] of versions){
-  const diaryVersion=['1.3.3','1.3.4','1.3.5','1.4'].includes(oldVersion);
-  const workspaceVersion=['1.3.4','1.3.5','1.4'].includes(oldVersion);
+  const diaryVersion=['1.3.3','1.3.4','1.3.5','1.4','1.4.1'].includes(oldVersion);
+  const workspaceVersion=['1.3.4','1.3.5','1.4','1.4.1'].includes(oldVersion);
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css','citadel-art.css',...(['1.3','1.3.2'].includes(oldVersion)?['chains.js','chains-ui.js','chains.css']:[]),...(diaryVersion?['food.js','food-ui.js']:[]),...(workspaceVersion?['room-workspace.js']:[]),...(['0.79','0.90'].includes(oldVersion)?['legends.js','fate.js','citadel-world.js','config.js']:[])])servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
+  for(const name of ['realm-achievements.js','ascension.js']){
+    const available=execFileSync('git',['ls-tree',previous,'--','docs/'+name],{encoding:'utf8'});
+    if(available)servedOverrides.set(resolve(root,name),execFileSync('git',['show',previous+':docs/'+name]));
+  }
   const expectedBuild=/window.APP_BUILD="([^"]+)"/.exec(game)[1];
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,timezoneId:'Europe/Moscow',serviceWorkers:'allow',reducedMotion:'reduce'});
   context.setDefaultTimeout(15000);const seed={...structuredClone(initial),'cfg/citadel':{selectedRoom:'rest',decor:{}},'cfg/future-synthetic':{nested:{keep:42}}};if(['0.79','0.90'].includes(oldVersion)){seed['cfg/legends']={version:1,active:'',unlocked:{echo01:{version:1,at:1,presented:true}}};seed['cfg/fate']={version:1,active:'',entries:{f01:{pieces:{0:{version:1,at:1,presented:true}}}}};}
@@ -3108,16 +3122,18 @@ await check('1.1 profile is the single system hub and finance has three reachabl
     assert.doesNotMatch(await p.locator('#chains-profile').textContent(),/Воля/);
   }
   if(diaryVersion)await p.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.unlocked.refectory01?.presented);
+  await p.waitForFunction(()=>PlanSync._docs()['cfg/realm-achievements']?.d.mysterySince);
   const migrated=await docs(p),expected=expectedEconomyUpgrade(before,migrated);
   if(diaryVersion&&!before['cfg/realm-achievements']){
     const {u,d}=migrated['cfg/realm-achievements'],at=d.unlocked.refectory01.at;
     assert(at>0&&u>=at);
     expected['cfg/realm-achievements']={u,d:{version:1,unlocked:{refectory01:{version:1,at,presented:true}}}};
   }
-  assert.deepEqual(migrated,expected,'an upgrade preserves records and economy apart from the existing rank migration and one earned meal receipt');
+  expectMysteryStart(expected,migrated);
+  assert.deepEqual(migrated,expected,'an upgrade preserves records and adds only the expected migration fields and earned meal receipt');
   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('plan.pre-update.v1')).docs),before);
   await context.setOffline(true);await p.reload();await p.waitForFunction(build=>APP_BUILD===build&&document.querySelector('#citadel-live-rank').textContent!=='РАНГ …',expectedBuild);assert.deepEqual(await docs(p),migrated);assert.equal(await p.locator('[data-croom="archive"]').getAttribute('data-revealed'),'false');assert.equal(await p.locator('[data-croom="archive"] .citadel-room-name').textContent(),'Неизведанная комната');assert.equal(await p.locator('[data-croom="rest"]').getAttribute('data-revealed'),'true');
-  if(oldVersion==='1.4'){
+  if(oldVersion==='1.4'||oldVersion==='1.4.1'){
     await dismiss(p);
     await p.evaluate(()=>window.__citadelShell.openFood(false));
     const food=p.locator('#food');
@@ -3138,8 +3154,8 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   ['1.3.2','6e803409efc1afd695401f2959b0895039287e58'],['1.3.3','212442e'],['1.3.4','1babd748d46766a396aa6a9c92ea0e8ecb0da279'],
   ['1.3.5','03f3e1c1c3c0ed08f938f61129dc534c10d5b1cc']
  ]));
- await check('1.4 to current PWA upgrade preserves saves and exposes old products offline',()=>checkPwaUpgrade([
-  ['1.4','769c9e00a878e8caaf3bb78c913bc9ccefe6fe8b']
+ await check('1.4 and 1.4.1 to current PWA upgrade preserves saves and exposes old products offline',()=>checkPwaUpgrade([
+  ['1.4','769c9e00a878e8caaf3bb78c913bc9ccefe6fe8b'],['1.4.1','d933f63a0f3805b32d13eb8c634d614cec934283']
  ]));
  await check('0.68 to 0.69 PWA update replaces cached UI while preserving synthetic saves',async()=>{
   for(const name of ['index.html','localdb.js','sw.js','rpg-ui.css'])servedOverrides.set(resolve(root,name),execFileSync('git',['show','fbe6f935569a798b5b9ed3109b7a260668e8b96a:docs/'+name]));
