@@ -1035,7 +1035,7 @@ html,body{overflow-anchor:none}
     <h2 id="look-h" hidden>ВНЕШНИЙ ВИД</h2>
     <p id="look-intro" class="look-intro" hidden>Здесь собраны твои открытые образы. Выбор сохраняется автоматически и не расходует ресурсы. Новые варианты появляются за достижения.</p>
     <div id="looklist" style="display:flex;flex-direction:column;gap:14px"></div>
-    <div class="hint"><b>1.7 · Живые корни.</b> Древо Судьбы отращивает побеги и меняет кору по мере развития. Ветка Капитала откликается на финансовый прогресс. Летопись Спящего открывается из профиля.</div>
+    <div class="hint"><b>1.7 · Живые корни II.</b> Ствол, корни и сердце Древа преображаются по мере развития шести направлений. Летопись Спящего открывается из профиля.</div>
     <div class="hint"><b>1.6 · Пробуждение мира.</b> Игра сохраняет снимки героя и Цитадели. Восстановленные комнаты зажигают огни на горизонте.</div>
     <div class="hint"><b>1.5.1 · Капризы Заклятия.</b> Цитадель и Древо Судьбы встречают одну магическую погоду. Обстановка меняется сама, а выбранный пейзаж сохраняется.</div>
     <div class="hint"><b>1.5 · Тайна Заклятия.</b> В коллекции появился раздел «Тайны». Некоторые печати откликаются на новые записи, а Древо Судьбы постепенно раскрывает скрытые ответвления.</div>
@@ -1149,7 +1149,7 @@ html,body{overflow-anchor:none}
 </dialog>
 <dialog id="destiny-world" aria-labelledby="destiny-world-title">
   <header class="destiny-world-head">
-    <div><small>МИР ЗА ПРЕДЕЛАМИ СНА</small><h2 id="destiny-world-title">Древо Судьбы</h2><p class="destiny-weather-label"></p></div>
+    <div><h2 id="destiny-world-title">Древо Судьбы</h2><p class="destiny-awakening-label"></p><p class="destiny-weather-label"></p></div>
     <button type="button" class="destiny-world-back">← В Цитадель</button>
   </header>
   <div class="destiny-world-content">
@@ -5804,6 +5804,8 @@ function syncCitadel(){if(!loaded)return;var p=pointsInfo();citadelSyncRoomVisib
       chronicleCount(frame.marks?.length||0,'достижение','достижения','достижений')));
     var tree=VkachWorldHistory.treeState(frame.tree);
     if(tree){
+      var state=VkachDestinyWorld.historicalAppearance(tree,frame.seals).awakening;
+      details.appendChild(el('p','chronicle-awakening',VkachDestinyWorld.stages[state.stage]+' · '+state.percent+'%'));
       var list=el('ul','chronicle-tree');
       Object.entries(tree).forEach(function(pair){
         var li=el('li',null,chronicleBranches[pair[0]]);

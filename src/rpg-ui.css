@@ -1291,7 +1291,7 @@ body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
 .chronicle-tree{list-style:none;padding:0}
 .chronicle-tree li{display:grid;grid-template-columns:minmax(80px,1fr) 2fr;gap:6px;align-items:center;margin:4px 0}
 .chronicle-tree progress{width:100%;accent-color:#b99262}
-.destiny-camera{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
+.destiny-camera{position:absolute;right:8px;top:8px;display:flex;gap:4px}
 #destiny-world .destiny-camera button{font-size:19px;background:#21192edb}
 .destiny-world-panel{padding:10px;border-top:1px solid #53425b;background:linear-gradient(153deg,#21192e,#16131f)}
 .destiny-branches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
@@ -1332,6 +1332,49 @@ body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
 .destiny-wood[data-direction="path"]{--timber:#375b49;--sap:#bdde91}
 .destiny-wood[data-direction="citadel"]{--timber:#4d5968;--sap:#cce6d5;--dead:#3e3a4b}
 .destiny-wood[data-direction="capital"]{--timber:#98713d;--sap:#ffe29b;--dead:#40302d}
+.destiny-awakening-label{margin:2px 0 0;color:#edce96;font-size:12px}
+.chronicle-awakening{color:#edce96}
+.destiny-heart-tree{pointer-events:none}
+.destiny-trunk,.destiny-living-roots,.destiny-major-limbs{opacity:0}
+.destiny-heart-tree:not([data-stage="0"]) .destiny-trunk{opacity:1}
+.destiny-trunk{clip-path:polygon(0 var(--growth-edge),20% calc(var(--growth-edge) - 4%),36% calc(var(--growth-edge) + 3%),50% calc(var(--growth-edge) - 7%),65% calc(var(--growth-edge) + 2%),85% calc(var(--growth-edge) - 4%),100% var(--growth-edge),100% 100%,0 100%);transition:clip-path .8s ease}
+.destiny-heart-tree[data-stage="4"] .destiny-trunk{clip-path:polygon(0 0,20% 0,36% 0,50% 0,65% 0,85% 0,100% 0,100% 100%,0 100%)}
+.destiny-trunk-mass,.destiny-root-mass{stroke:#342232;stroke-width:6;stroke-linejoin:round;paint-order:stroke}
+.destiny-bark-ridge{opacity:.8;stroke:#c0906f;stroke-width:1.5;stroke-linejoin:round}
+.destiny-trunk-grain{fill:none;stroke:#352535;stroke-width:3;stroke-linecap:round;opacity:.75}
+.destiny-heart-tree:not([data-stage="0"]) .destiny-living-roots{opacity:.86;scale:.87 1;transform-origin:390px 650px}
+.destiny-heart-tree:is([data-stage="3"],[data-stage="4"]) .destiny-living-roots{opacity:1;scale:1}
+.destiny-spine,.destiny-root-vein{fill:none;stroke:#f6b880;stroke-width:3.5;stroke-linecap:round;opacity:calc(var(--tree-light)*.78)}
+.destiny-heart-tree[data-stage="1"] .destiny-root-mass:nth-child(n+5),.destiny-heart-tree[data-stage="1"] .destiny-root-vein:nth-child(n+5){display:none}
+.destiny-heart-tree[data-stage="1"] .destiny-root-vein{stroke:#c38770;stroke-width:2.5}
+.destiny-heart-tree:is([data-stage="2"],[data-stage="3"],[data-stage="4"]) .destiny-major-limbs{opacity:1}
+.destiny-major-limb[data-tier="0"]{visibility:hidden}
+.destiny-limb-bark{fill:color-mix(in srgb,#33242d 46%,var(--essence));stroke:#39242c;stroke-width:4;paint-order:stroke;stroke-linejoin:round}
+.destiny-limb-crown{fill:color-mix(in srgb,var(--essence) 75%,#3c3037);stroke:var(--spark);stroke-width:1.2;stroke-linejoin:round}
+.destiny-heart-tree[data-stage="2"] .destiny-limb-crown:nth-child(n+4){display:none}
+.destiny-crown-spine,.destiny-high-crown{display:none}
+.destiny-heart-tree[data-stage="4"] :is(.destiny-crown-spine,.destiny-high-crown){display:inline}
+.destiny-heart{opacity:.1}
+.destiny-heart-tree[data-stage="1"] .destiny-heart{opacity:.28}
+.destiny-heart-tree[data-stage="2"] .destiny-heart{opacity:.73}
+.destiny-heart-tree:is([data-stage="3"],[data-stage="4"]) .destiny-heart{opacity:1}
+.destiny-heart-halo{opacity:var(--tree-light)}
+.destiny-heart-cradle{fill:#33232d;stroke:#b98261;stroke-width:2.5;stroke-linejoin:round}
+.destiny-heart-core{fill:#ffc77c;stroke:#fff2c4;stroke-width:2;stroke-linejoin:round}
+.destiny-heart-dust{stroke:#ffd393;stroke-width:2;stroke-linecap:round;opacity:0}
+.destiny-heart-tree:is([data-stage="3"],[data-stage="4"]) .destiny-heart-dust{opacity:var(--tree-light)}
+.destiny-heart-channel{fill:none;stroke:var(--spark);stroke-linecap:round;stroke-width:3.2;opacity:0}
+.destiny-heart-tree:is([data-stage="2"],[data-stage="3"],[data-stage="4"]) .destiny-heart-channel{opacity:calc(var(--channel-light)*var(--tree-light))}
+.destiny-horizon .destiny-root-vein,.destiny-horizon .destiny-spine,.destiny-horizon .destiny-heart-channel{stroke-width:7}
+.destiny-horizon .destiny-trunk{transition:none}
+.destiny-horizon-chain{fill:none;stroke:#8c685e;stroke-width:6;opacity:.54}
+.destiny-trunk-wave{fill:none;stroke:#ffe2ac;stroke-width:9;stroke-linecap:round;opacity:0;stroke-dasharray:.18 .82}
+#destiny-world[open] .destiny-heart-tree:is([data-stage="2"],[data-stage="3"],[data-stage="4"]) .destiny-heart-halo{animation:destiny-heart-breathe 4s ease-in-out infinite alternate}
+#destiny-world[open] .destiny-heart-channel.is-flowing{animation:destiny-heart-current .7s ease-out}
+#destiny-world[open] .destiny-trunk-wave.is-rising{animation:destiny-trunk-rise .9s ease-out}
+@keyframes destiny-heart-breathe{to{opacity:calc(var(--tree-light)*.55)}}
+@keyframes destiny-heart-current{from{stroke-dasharray:.28 .72;stroke-dashoffset:1;opacity:0}40%{opacity:1}to{stroke-dasharray:.28 .72;stroke-dashoffset:0;opacity:0}}
+@keyframes destiny-trunk-rise{from{stroke-dashoffset:1;opacity:0}32%{opacity:.92}to{stroke-dashoffset:0;opacity:0}}
 .destiny-cambium,.destiny-new-wood{fill:var(--timber);stroke:var(--sap);stroke-width:1.5;stroke-linejoin:round}
 .destiny-cambium{opacity:var(--bark-light)}
 .destiny-wood[data-tier="0"] .destiny-cambium{fill:var(--dead);stroke:#413444;opacity:.46}
@@ -1359,12 +1402,12 @@ body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
 .destiny-link-metal{fill:none;stroke:color-mix(in srgb,#916555,#f3c78e calc(var(--wear,0)*65%));stroke-width:3;opacity:.91}
 .destiny-chain{pointer-events:none}
 .destiny-chain[data-state="1"] .destiny-link-metal{stroke:#a6887e}
-.destiny-chain-link.is-eroded:not(:has(.destiny-chain-crack)){opacity:.27}
+.destiny-chain-link.is-eroded{opacity:.42}
+.destiny-chain-link.is-gone{display:none}
 .destiny-chain-crack{display:none;fill:none;stroke:#ffd097;stroke-width:1.9}
-.destiny-chain[data-state="1"] .destiny-chain-crack,.destiny-chain.is-breaking .destiny-chain-crack{display:block}
-.destiny-chain[data-state="2"]:not(.is-breaking) .destiny-chain-link{display:none}
+.destiny-chain[data-state="1"] .destiny-chain-crack,.destiny-chain-link.is-eroded .destiny-chain-crack,.destiny-chain.is-breaking .destiny-chain-crack{display:block}
 .destiny-chain[data-state="2"] .destiny-chain-tip .destiny-link-metal{stroke:#8d766e;opacity:.62}
-.destiny-chain.is-breaking .destiny-chain-link{animation:destiny-chain-break .7s ease-out both}
+.destiny-chain.is-breaking .destiny-chain-link.is-fragment{display:inline;animation:destiny-chain-break .7s ease-out both}
 .destiny-veins.is-surging .destiny-vein-core{animation:destiny-vein-surge .8s ease-out both}
 #destiny-world[open] .destiny-wood.is-growing{animation:destiny-grow .75s ease-out both}
 #destiny-world[open] .destiny-living-wood.is-awakening{animation:destiny-awakening .8s ease-out both}
@@ -1419,6 +1462,7 @@ body.citadel-shell-active #setup{max-width:100dvw;overflow-x:hidden}
 :root.citadel-suspended #destiny-world *{animation-play-state:paused!important}
 #destiny-world.is-background,#destiny-world.is-background *{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){
+  .destiny-heart-tree,.destiny-heart-tree *{animation:none!important;transition:none!important}
   #destiny-world[open],#destiny-world[open]::backdrop,#destiny-world[open] :is(.destiny-embers,.destiny-haze,.destiny-chain-link,.destiny-vein-core,.destiny-wood,.destiny-living-wood,.destiny-crown),
   #destiny-travel-fog,.destiny-departure .citadel-viewport,.destiny-homecoming .citadel-viewport{animation:none!important}
 }

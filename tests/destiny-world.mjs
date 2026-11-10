@@ -20,6 +20,15 @@ const branch=recent=>VkachDestinyWorld.project(VkachAscension.view(null,blank),[
 assert.equal(branch(0).tier,3,'real activity changes wood before a seal');
 assert.equal(branch(8).tier,branch(0).tier,'inactivity does not remove wood');
 assert(branch(8).warmth>branch(0).warmth);
+assert.equal(baseline.awakening.percent,0);
+const directions=baseline.branches.map(branch=>branch.id);
+const recordedTree=tier=>Object.fromEntries(directions.map(id=>[id,[tier,0]]));
+for(const [stage,tier] of [0,3,6,9,12].entries()){
+  const historical=VkachDestinyWorld.historicalAppearance(recordedTree(tier));
+  assert.deepEqual(historical.awakening,{stage,percent:stage*25,warmth:0});
+}
+assert.equal(VkachDestinyWorld.historicalAppearance(null),null);
+assert.equal(model({'body-1':123,'body-2':124,'body-3':125}).awakening.stage,0,'a single direction cannot wake the whole tree');
 
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.png':'image/png','.webp':'image/webp'};
 const root=resolve('android-test');
@@ -163,7 +172,7 @@ try{
   assert.equal(await distantCitadelBranch.getAttribute('data-state'),'1');
   assert.equal(await map.locator('.destiny-window.is-lit').count(),2);
   assert.equal(await map.locator('.destiny-castle-renewal').getAttribute('data-restoration'),'1');
-  assert.equal(await chain.locator('.destiny-chain-crack').evaluate(el=>getComputedStyle(el).display),'block');
+  assert.equal(await chain.locator('.destiny-chain-crack').first().evaluate(el=>getComputedStyle(el).display),'block');
   await tab.click();
   await screenshot('03-chain-weakened');
 
@@ -261,7 +270,115 @@ try{
   await page.locator('#citadel-interior:not([hidden])').waitFor();
   assert.equal(await page.locator('#citadel-interior-stage').getAttribute('data-room'),'rest');
   assert.deepEqual(errors,[]);
-  console.log('PASS six living branches, capital, inactivity and return, one-time chains, mobile gestures, reduced motion and offline reload');
+
+  const comparison=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,
+    timezoneId:'Europe/Moscow',reducedMotion:'reduce'});
+  await comparison.route('https://**/*',route=>route.fulfill({body:'',contentType:'text/css'}));
+  const noon=Date.parse('2026-12-20T12:00:00Z');
+  await comparison.addInitScript(noon=>{
+    const prefix='plan.android-test.';
+    localStorage.setItem(prefix+'awakening.v1',JSON.stringify({version:1,step:12,status:'done'}));
+    localStorage.setItem(prefix+'rebuild-guide.v1',JSON.stringify({version:1,step:2,status:'done'}));
+    localStorage.setItem(prefix+'world-weather.v1',JSON.stringify({version:1,id:'heart-comparison',type:'clear',
+      intensity:1,startedAt:noon-1000,endsAt:noon+29*60000}));
+    localStorage.setItem('wsum','2026-12-14');
+    localStorage.setItem('msum','2026-12');
+    localStorage.setItem('trialSeen','2026-12-20');
+  },noon);
+  const example=await comparison.newPage();
+  example.on('pageerror',error=>errors.push(error.message));
+  await example.clock.setFixedTime(noon);
+  await example.goto(url);
+  const tree=example.locator('#destiny-world');
+  const nearTree=tree.locator('.destiny-heart-tree');
+  const farTree=example.locator('.destiny-horizon .destiny-heart-tree');
+  const view=tree.locator('.destiny-world-view');
+  await farTree.locator('.destiny-heart').waitFor();
+  await example.waitForFunction(()=>PlanSync._docs()['world-history/2026-12-20']?.d.frame.tree);
+  await example.evaluate(()=>{
+    for(let i=0;i<15&&!document.querySelector('#achup').hidden;i++)document.querySelector('#ac-ok').click();
+  });
+  await example.locator('.citadel-shell-dock').getByRole('button',{name:'Все разделы игры'}).click();
+  await example.getByRole('searchbox',{name:'Поиск по Вкачу'}).fill('Древо Судьбы');
+  await example.locator('.citadel-search-results').getByRole('button',{name:/Древо Судьбы/}).click();
+  await tree.waitFor();
+  const weatherLabel=await tree.locator('.destiny-weather-label').innerText();
+  assert.match(weatherLabel,/Ясное небо · день/);
+  const size=await view.evaluate(el=>[el.clientWidth,el.clientHeight]);
+  const comparisons=[
+    [0,[0,0,0,0,0,0],'heart-00-dead'],
+    [25,[1,1,1,1,0,0],'heart-25-breath'],
+    [50,[3,2,2,2,0,0],'heart-50-awakening'],
+    [75,[3,2,2,2,2,2],null],
+    [100,[3,3,3,3,3,3],'heart-100-heart']
+  ];
+  let prior;
+  for(const [percent,levels,filename] of comparisons){
+    if(percent===75)await example.emulateMedia({reducedMotion:'no-preference'});
+    if(percent===100)await example.emulateMedia({reducedMotion:'reduce'});
+    if(percent)await example.evaluate(({directions,levels,percent})=>PlanDB.runTransaction(tx=>{
+      const nodes={};
+      directions.forEach((id,index)=>{
+        for(let level=1;level<=levels[index];level++)nodes[id+'-'+level]=Date.now()-1000;
+      });
+      tx.set('cfg/ascension',{version:1,nodes});
+      for(let index=0;index<5;index++){
+        const date='2026-12-'+(15+index);
+        if(percent===25)tx.set('days/'+date,{steps:6200});
+        if(percent===75)tx.set('jar/heart-'+index,{date,a:10,ts:Date.now()-1000});
+      }
+    }),{directions,levels,percent});
+    await nearTree.and(example.locator('[data-percent="'+percent+'"]')).waitFor();
+    assert.equal(await farTree.getAttribute('data-percent'),String(percent));
+    assert.equal(await nearTree.getAttribute('data-stage'),String(percent/25));
+    assert.equal(await tree.locator('.destiny-weather-label').innerText(),weatherLabel);
+    assert.equal(await tree.locator('.destiny-world-art').getAttribute('data-zoom'),'1');
+    assert.deepEqual(await view.evaluate(el=>[el.clientWidth,el.clientHeight]),size);
+    if(percent===75){
+      await nearTree.locator('.destiny-trunk-wave.is-rising').waitFor({state:'attached'});
+      assert.equal(await nearTree.locator('.destiny-trunk-wave').evaluate(el=>getComputedStyle(el).animationName),'destiny-trunk-rise');
+      assert(await nearTree.locator('.destiny-heart-channel.is-flowing').count()>0);
+    }
+    if(filename){
+      const image=await view.screenshot({path:resolve(shots,filename+'.png'),animations:'disabled'});
+      if(prior)assert(!image.equals(prior),'each stage visibly changes the rendered tree');
+      prior=image;
+    }
+  }
+  assert.equal(await nearTree.locator('.destiny-heart-channel').count(),6);
+  assert.equal(await nearTree.locator('.destiny-heart-halo').evaluate(node=>getComputedStyle(node).animationName),'none');
+  for(const width of [320,360,430]){
+    await example.setViewportSize({width,height:844});
+    assert(await view.evaluate(host=>{
+      const camera=host.querySelector('.destiny-camera').getBoundingClientRect();
+      return [...host.querySelectorAll('.destiny-hit')].every(node=>{
+        const seal=node.getBoundingClientRect();
+        return seal.right<=camera.left||seal.left>=camera.right||seal.bottom<=camera.top||seal.top>=camera.bottom;
+      });
+    }),'zoom controls clear all seals at '+width+'px');
+  }
+  await example.setViewportSize({width:390,height:844});
+  await example.emulateMedia({reducedMotion:'no-preference'});
+  const comparisonCDP=await comparison.newCDPSession(example);
+  await comparisonCDP.send('Emulation.setCPUThrottlingRate',{rate:4});
+  const frameSample=await tree.evaluate(dialog=>new Promise(resolve=>{
+    const times=[];
+    function collect(time){
+      times.push(time);
+      if(time-times[0]<1050){requestAnimationFrame(collect);return;}
+      const intervals=times.slice(1).map((current,index)=>current-times[index]).sort((a,b)=>a-b);
+      const active=dialog.getAnimations({subtree:true}).filter(animation=>animation.playState==='running');
+      resolve({frames:intervals.length,p95:Math.round(intervals[Math.floor(intervals.length*.95)]),active:active.length});
+    }
+    requestAnimationFrame(collect);
+  }));
+  assert(frameSample.frames>1&&frameSample.active>0&&frameSample.active<30);
+  await tree.getByRole('button',{name:/В Цитадель/}).click();
+  await tree.waitFor({state:'hidden'});
+  assert.equal(await tree.evaluate(dialog=>dialog.getAnimations({subtree:true}).filter(animation=>animation.playState==='running').length),0);
+  console.log('Chromium mobile viewport, CPU ×4:',JSON.stringify(frameSample));
+  assert.deepEqual(errors,[]);
+  console.log('PASS shared tree stages, six directions, four controlled screenshots, chains, mobile gestures and offline restoration');
 }finally{
   await browser?.close();
   server.close();

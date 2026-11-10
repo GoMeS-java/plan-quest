@@ -67,6 +67,42 @@
     stone:'M-17 6V-8H-10V-16H-4V-10H3V-24H9V-15H15V3ZM-7 3V-3H-2V3M5-3V-9H9V-3',
     gold:'M1 11L-4 2Q-17-5-14-23Q3-21 5-8Q12-23 28-25Q24-8 8 2L3 11Z'
   };
+  const stages=['Мёртвое Древо','Первое дыхание','Пробуждение','Возрождение','Сердце Древа'];
+  const trunk='M82 829L171 790 235 750Q270 705 288 638L311 552Q327 481 298 440L244 395 186 368 261 380Q309 395 337 431L324 365 294 312 265 251 215 183 268 233 318 297 352 371 357 314 347 250 345 196 365 257 375 333 393 368Q406 294 446 242L488 185 533 145 501 191 458 253Q428 307 422 361L487 327 562 316 652 289 572 335 501 351 457 379Q419 431 450 468L516 463 573 444 650 440 580 467 521 482 471 502Q447 534 460 584L483 665Q503 707 553 739L613 778 716 838 625 810 552 779 492 739 448 690 451 733 483 798 545 850 483 829 447 791 415 737 409 796 415 856 387 835 376 789 381 731 364 695 342 746 294 797 229 849 187 860 238 822 280 770 300 727 254 768 174 809 116 822Z';
+  const barkRidges=[
+    ['M141 807L237 756 278 697 304 616 325 550 331 490 320 450 273 405 224 385Q296 399 339 452L349 515 331 587 317 664 273 733 226 780Z','#936b58'],
+    ['M216 850L282 783 321 728 349 656 356 599 374 536 370 482 351 440 337 387 320 341 287 285 325 331 351 380 362 428 391 472 398 533 381 602 377 668 349 735 316 779 261 824Z','#b38463'],
+    ['M399 835L387 787 394 726 383 670 394 613 390 569 410 517 405 466 390 432 405 375 416 318 441 273 476 222 504 187 483 226 450 279 431 327 424 388 411 430 431 468 434 516 418 569 426 617 415 671 425 721 409 779Z','#634653'],
+    ['M525 837L479 813 450 773 419 724 421 666 432 615 420 569 439 523 445 494 438 461 428 435 437 404 468 373 517 353 558 347 626 318 573 352 520 366 484 387 455 422 452 445 464 473 457 528 445 575 456 620 443 666 449 724 467 779Z','#c1946e'],
+    ['M703 836L622 800 555 771 505 736 478 701 462 658 454 622 466 640 496 694 534 727 592 764 631 783Z','#916851']
+  ];
+  const grain='M185 796l56-32 44-53 29-63 19-87m-21-30 3-31-16-56-27-20m81 28 14 29 6 32-15 61m-2 36-4 47-22 52-30 43m45-3 25-47 15-44 11-74m-13 189 7-40-7-37m43 66-14-38 2-38m39 67-20-54-2-39 11-64m-12-20-10-38 20-50 4-38m15 21 40-12 33 3 45-17m-134-13-19-41 4-44m-64 16-11-48-5-60m-14 85-23-38-32-37m108 80 8-52 25-44m-45 96 18-72 29-52m26 107 48-15 48-2 35-18m-124 399 31 41 51 35 62 27m-137-85-34-57-18-53';
+  const crownSpine='M354 312Q351 274 348 231L346 183 337 141 339 108 325 74 323 42 341 82 352 111 350 139 366 183 364 232 380 315ZM398 333Q412 262 432 214L459 162 482 127 494 89 504 64 516 32 516 62 508 91 505 123 523 108 567 95 611 66 596 88 565 110 531 121 498 147 472 177 452 222 435 278 422 333Z';
+  const rootMass=[
+    'M353 622Q316 685 270 727Q222 764 174 770L121 798 76 813 36 846 118 823 166 804 216 791Q292 755 332 707L371 658Z',
+    'M387 661Q363 731 313 772L263 811 217 861 259 850 286 831 331 814Q378 776 402 720L413 680Z',
+    'M439 606Q481 667 508 711Q567 755 625 766L677 804 758 846 728 846 660 821 614 805Q544 790 496 751Q454 725 421 668Z',
+    'M404 681Q432 742 470 769L522 800 555 839 612 870 565 868 522 851 477 816Q431 799 407 753L387 722Z'
+  ];
+  const rootVeins=[
+    'M351 647Q316 727 233 770L164 795 104 813 52 842',
+    'M396 682Q375 749 318 798L269 829 225 858',
+    'M430 629Q476 722 541 756L617 784 675 814 742 843',
+    'M403 709Q435 780 484 803L525 832 590 863'
+  ];
+  const forks=[
+    ['body','M340 422Q279 319 184 295L142 252 197 276 258 291 306 340 357 417Z',[[166,268,-58],[190,280,-18],[231,291,-65],[251,307,2]]],
+    ['will','M417 376Q438 279 538 231L613 185 584 224 526 256Q459 289 438 370Z',[[560,240,33],[581,224,60],[608,196,25],[538,258,-16]]],
+    ['mind','M364 355Q323 271 263 199L246 157 277 178 309 220 336 248 381 351Z',[[256,172,-28],[279,199,18],[305,232,-37],[324,248,2]]],
+    ['path','M440 498Q517 514 590 493L673 475 639 506 586 521Q520 533 458 520Z',[[613,501,50],[632,505,71],[657,486,24],[584,516,55]]],
+    ['citadel','M376 620Q341 694 272 714L205 753 227 716 275 691 328 665 367 606Z',[[245,711,-37],[268,705,-19],[289,690,3],[225,733,-33]]],
+    ['capital','M479 697Q543 743 613 724L704 752 648 750 603 755 548 763 505 750Z',[[620,739,49],[644,745,64],[669,746,54],[693,753,78]]]
+  ];
+  const channels=[
+    'M392 524Q367 477 347 520','M392 524Q415 507 405 485','M392 524Q378 501 377 464',
+    'M392 524Q412 533 403 554','M392 524Q420 533 417 493','M392 524Q401 544 413 548'
+  ];
+  const pulseTrace='M397 777Q376 725 393 672L409 604 402 568 392 524Q415 479 402 434L418 374 435 317 464 265';
   const stone = 'M0-18L13-12 18 0 12 13 0 18-13 12-18 0-12-13Z';
   const windows = [[661,390],[628,420],[690,433],[599,445],[718,455],[661,406],[633,438],[683,453],[611,466],[710,477],[652,425],[672,436],[637,471],[681,480],[623,483],[700,466]];
   const svg = (tag, attributes = {}) => {
@@ -94,7 +130,104 @@
     const levels = roomLevels.filter(level => level === 2 || level === 3);
     const lamps = Math.min(windows.length, 1 + levels.reduce((count,level) => count + level - 1,0));
     const restoration=lamps>=12?3:lamps>=6?2:lamps>=2?1:0;
-    return {branches,lamps,restoration};
+    return {branches,lamps,restoration,awakening:awakening(branches)};
+  }
+
+  function awakening(branches) {
+    const fullness=branches.reduce((sum,branch)=>sum+branch.tier,0)/(12*branches.length);
+    return {
+      percent:Math.floor(fullness*100),
+      stage:Math.floor(fullness*4),
+      warmth:branches.reduce((sum,branch)=>sum+branch.warmth,0)/(4*branches.length)
+    };
+  }
+
+  function historicalAppearance(tree, seals=[]) {
+    if(!tree)return null;
+    const known=new Set(seals);
+    const branches=Object.entries(layout).map(([id,shape])=>{
+      const [tier,warmth]=tree[id];
+      const readNodes=(points,prefix)=>points.map((point,index)=>{
+        const key=prefix+'-'+(index+1);
+        return {id:key,point,open:known.has(key)};
+      });
+      const nodes=readNodes(shape.points,id);
+      const opened=nodes.filter(node=>node.open).length;
+      const extra=shape.forkPoints&&known.has(id+'-hidden-1')?readNodes(shape.forkPoints,id+'-hidden'):[];
+      return {id,tier,warmth,nodes,extra,opened,state:opened===3?2:opened>0?1:0};
+    });
+    return {branches,awakening:awakening(branches)};
+  }
+
+  function heartArt(id, distant=false) {
+    const group=svg('g',{class:'destiny-heart-tree','aria-hidden':'true'});
+    const defs=svg('defs');
+    const gradient=svg('linearGradient',{id:id+'-bark',gradientUnits:'userSpaceOnUse',x1:180,y1:390,x2:610,y2:610});
+    for(const [offset,color] of [[0,'#31212e'],[.28,'#735344'],[.40,'#a77b5f'],[.5,'#765348'],[.58,'#503846'],[.71,'#95634e'],[1,'#35222e']]){
+      gradient.append(svg('stop',{offset,'stop-color':color}));
+    }
+    const halo=svg('radialGradient',{id:id+'-halo'});
+    for(const [offset,color,opacity] of [[0,'#ffdda2',.95],[.24,'#ffc784',.43],[.60,'#e88d75',.19],[1,'#b66c84',0]]){
+      halo.append(svg('stop',{offset,'stop-color':color,'stop-opacity':opacity}));
+    }
+    defs.append(gradient,halo);
+    const roots=svg('g',{class:'destiny-living-roots'});
+    rootMass.forEach((d,i)=>roots.append(svg('path',{d,class:'destiny-root-mass',fill:'url(#'+id+'-bark)'}),
+      svg('path',{d:rootVeins[i],class:'destiny-root-vein'})));
+    const bark=svg('g',{class:'destiny-trunk'});
+    const barkFill='url(#'+id+'-bark)';
+    bark.append(svg('path',{d:trunk,fill:barkFill,class:'destiny-trunk-mass'}),
+      svg('path',{d:crownSpine,fill:barkFill,class:'destiny-trunk-mass destiny-crown-spine'}));
+    if(!distant){
+      barkRidges.forEach(([d,fill])=>bark.append(svg('path',{d,fill,class:'destiny-bark-ridge'})));
+      bark.append(svg('path',{d:grain,class:'destiny-trunk-grain'}));
+    }
+    bark.append(svg('path',{d:pulseTrace,class:'destiny-spine'}));
+    const limbs=svg('g',{class:'destiny-major-limbs'});
+    forks.forEach(([branch,d,crown])=>{
+      const limb=svg('g',{'data-direction':branch,class:'destiny-major-limb'});
+      limb.append(svg('path',{d,class:'destiny-limb-bark'}));
+      if(!distant)crown.forEach(([x,y,angle],index)=>limb.append(svg('path',{
+        d:motifs[forms[branch].kind],class:'destiny-limb-crown',
+        transform:`translate(${x} ${y}) rotate(${angle}) scale(${index%2?.7:.94})`
+      })));
+      limbs.append(limb);
+    });
+    if(!distant){
+      const foliage=svg('g',{class:'destiny-high-crown'});
+      for(const [branch,x,y,angle] of [
+        ['mind',333,78,-30],['mind',348,113,20],['mind',353,145,-33],
+        ['will',506,72,20],['will',486,119,-25],['will',526,123,62],
+        ['body',572,105,44],['body',599,82,60]
+      ]){
+        foliage.append(svg('path',{d:motifs[forms[branch].kind],class:'destiny-limb-crown','data-direction':branch,
+          transform:`translate(${x} ${y}) rotate(${angle}) scale(.66)`}));
+      }
+      limbs.append(foliage);
+    }
+    const heart=svg('g',{class:'destiny-heart',transform:'translate(392 524)'});
+    heart.append(svg('circle',{r:62,fill:'url(#'+id+'-halo)',class:'destiny-heart-halo'}),
+      svg('path',{d:'M-19-15L-7-24 8-22 21-8 19 9 8 21-6 24-20 10-24-2Z',class:'destiny-heart-cradle'}),
+      svg('path',{d:'M0-15L12-6 9 7 0 16-10 5-12-5ZM0-15L3 0 12-6M3 0L0 16M-12-5L3 0',class:'destiny-heart-core'}));
+    if(!distant)heart.append(svg('path',{d:'M-25 12l-3 5m-1-40 4 2m43-13 1-4m11 55 5 3m-41 6-1 5m43-41 4-2',class:'destiny-heart-dust'}));
+    const flow=svg('g',{class:'destiny-heart-channels'});
+    Object.keys(layout).forEach((branch,index)=>flow.append(svg('path',{d:channels[index],
+      'data-direction':branch,class:'destiny-heart-channel','pathLength':1})));
+    const wave=svg('path',{d:pulseTrace,class:'destiny-trunk-wave',pathLength:1});
+    group.append(defs,roots,bark,limbs,flow,heart);
+    if(!distant)group.append(wave);
+    function sync(model) {
+      const {stage,percent,warmth}=model.awakening;
+      group.dataset.stage=stage;
+      group.dataset.percent=percent;
+      group.style.setProperty('--growth-edge',Math.max(0,100-percent*1.12)+'%');
+      group.style.setProperty('--tree-light',String(.42+warmth*.58));
+      model.branches.forEach((branch,index)=>{
+        limbs.children[index].dataset.tier=branch.tier;
+        flow.children[index].style.setProperty('--channel-light',String(branch.tier/12));
+      });
+    }
+    return {group,sync,flow,wave};
   }
 
   function snapshot(model) {
@@ -151,7 +284,7 @@
       const link=svg('g',{class:i<2||i>count-2?'destiny-chain-tip':'destiny-chain-link',transform:'translate('+x+' '+y+') rotate('+angle+')'});
       const ring={rx:i%2?10:12,ry:i%2?3.6:7.5};
       link.append(svg('ellipse',{...ring,class:'destiny-link-shadow'}),svg('ellipse',{...ring,class:'destiny-link-metal'}));
-      if(i===Math.floor(count/2))link.append(svg('path',{class:'destiny-chain-crack',d:'M-4-8l-2 6 5 4-2 7M2-7L0-4l4 3'}));
+      if(i===Math.floor(count/2)||i%3===0)link.append(svg('path',{class:'destiny-chain-crack',d:'M-4-8l-2 6 5 4-2 7M2-7L0-4l4 3'}));
       chain.append(link);
     }
     return chain;
@@ -160,12 +293,21 @@
   function horizonArt(horizon) {
     horizon.append(artImage('destiny-tree.svg'));
     const layer=svg('g');
-    horizon.append(layer);
+    const heart=heartArt('horizon-tree',true);
+    heart.group.insertBefore(layer,heart.flow);
+    horizon.append(heart.group);
     return model=>{
+      heart.sync(model);
       layer.replaceChildren();
       for(const branch of model.branches){
+        const shape=layout[branch.id];
         layer.append(drawWood(branch));
-        drawVeins(layer,branch,layout[branch.id],true);
+        drawVeins(layer,branch,shape,true);
+        if(branch.tier<12){
+          const [a,b,c]=shape.chain, edge=(12-branch.tier)/24;
+          layer.append(svg('path',{d:`M${a.join(' ')}Q${b.join(' ')} ${c.join(' ')}`,
+            class:'destiny-horizon-chain',pathLength:1,'stroke-dasharray':`${edge} ${1-edge*2} ${edge}`}));
+        }
       }
     };
   }
@@ -247,14 +389,19 @@
     for(const [x,y] of [[89,633],[153,720],[193,488],[267,588],[310,536],[347,648],[455,702],[517,587],[556,690],[614,517],[687,641],[733,583]]){
       embers.append(svg('path',{d:'M'+x+' '+y+'l2-4 2 4-2 3z'}));
     }
-    near.append(artImage('destiny-tree.svg'),wood,veins,chains,seals,embers);
+    const heart=heartArt('near-tree');
+    heart.group.insertBefore(wood,heart.flow);
+    heart.group.insertBefore(veins,heart.flow);
+    near.append(artImage('destiny-tree.svg'),heart.group,chains,seals,embers);
     const reset=cameraFor(map,near,far,dialog);
     const close=dialog.querySelector('.destiny-world-back');
     const tabs=dialog.querySelector('.destiny-branches'), nodeList=dialog.querySelector('.destiny-node-list');
     const heading=dialog.querySelector('.destiny-branch-title'), phase=dialog.querySelector('.destiny-branch-phase');
+    const stageLabel=dialog.querySelector('.destiny-awakening-label');
     const desc=dialog.querySelector('.destiny-node-description'), status=dialog.querySelector('.destiny-status');
     const fog=document.getElementById('destiny-travel-fog');
     const pending=new Map(), visuals=new Map();
+    let stageWave=false;
     let model=null, signature='', branchId='body', nodeId='', timer=0, travelling=false, opener=null;
 
     for(const [id,shape] of Object.entries(layout)){
@@ -294,20 +441,28 @@
 
     function playPending() {
       if(!dialog.open||document.hidden)return;
+      if(stageWave&&!reduce.matches)restartAnimation(heart.wave,'is-rising');
+      stageWave=false;
       if(!reduce.matches&&pending.size>1)wood.classList.add('is-awakening');
       for(const [id,event] of pending){
         const {chain,line,bark}=visuals.get(id);
         if(!reduce.matches){
-          if(event.release)chain.classList.add('is-breaking');
-          if(event.seal)line.classList.add('is-surging');
+          if(event.seal){
+            if(chain.querySelector('.is-fragment'))restartAnimation(chain,'is-breaking');
+            line.classList.add('is-surging');
+            restartAnimation(heart.flow.querySelector('[data-direction="'+id+'"]'),'is-flowing');
+          }
           bark.classList.add('is-growing');
-        }
+        }else chain.querySelectorAll('.is-fragment').forEach(link=>link.classList.remove('is-fragment'));
         status.textContent=(event.release?'Цепь разомкнулась':event.seal?'Печать пробудила древесину':'Появились новые побеги')+' · '+model.branches.find(branch=>branch.id===id).label;
       }
       pending.clear();
     }
     chains.addEventListener('animationend',event=>{
-      if(event.animationName==='destiny-chain-break')event.target.closest('.is-breaking')?.classList.remove('is-breaking');
+      if(event.animationName!=='destiny-chain-break')return;
+      const chain=event.target.closest('.is-breaking');
+      event.target.classList.remove('is-fragment');
+      if(chain&&!chain.querySelector('.is-fragment'))chain.classList.remove('is-breaking');
     });
     veins.addEventListener('animationend',event=>{
       if(event.animationName==='destiny-vein-surge')event.target.closest('.is-surging')?.classList.remove('is-surging');
@@ -316,8 +471,20 @@
       if(event.animationName==='destiny-grow')event.target.classList.remove('is-growing');
       if(event.animationName==='destiny-awakening')wood.classList.remove('is-awakening');
     });
+    function restartAnimation(node,name){
+      if(node.classList.contains(name)){
+        node.classList.remove(name);
+        node.getBoundingClientRect();
+      }
+      node.classList.add(name);
+    }
+    heart.group.addEventListener('animationend',event=>{
+      if(event.animationName==='destiny-heart-current')event.target.classList.remove('is-flowing');
+      if(event.animationName==='destiny-trunk-rise')event.target.classList.remove('is-rising');
+    });
     function stopRelease(){
-      dialog.querySelectorAll('.is-breaking,.is-surging,.is-growing,.is-awakening').forEach(el=>el.classList.remove('is-breaking','is-surging','is-growing','is-awakening'));
+      const transient=['is-breaking','is-surging','is-growing','is-awakening','is-flowing','is-rising','is-fragment'];
+      dialog.querySelectorAll(transient.map(name=>'.'+name).join(',')).forEach(el=>el.classList.remove(...transient));
     }
     reduce.addEventListener('change',()=>{if(reduce.matches)stopRelease();});
 
@@ -326,16 +493,20 @@
       if(signature===stamp)return;
       signature=stamp;
       syncHorizon(next);
+      heart.sync(next);
+      stageLabel.textContent=stages[next.awakening.stage]+' · '+next.awakening.percent+'%';
+      if(model&&next.awakening.stage>model.awakening.stage)stageWave=true;
       skyline.dataset.restoration=renewal.dataset.restoration=next.restoration;
       Array.from(lights.children).forEach((lamp,index)=>lamp.classList.toggle('is-lit',index<next.lamps));
       // Commit animation only for a new change seen in this session, never for a loaded snapshot.
       for(const branch of next.branches){
         const previous=model?.branches.find(row=>row.id===branch.id);
-        if(previous&&(branch.opened>previous.opened||branch.tier>previous.tier||
-            branch.extra.some(node=>node.open&&!previous.extra.some(old=>old.id===node.id&&old.open)))){
+        const newSeal=previous&&(branch.opened>previous.opened||
+          branch.extra.some(node=>node.open&&!previous.extra.some(old=>old.id===node.id&&old.open)));
+        if(previous&&(newSeal||branch.tier>previous.tier)){
           const prior=pending.get(branch.id);
           pending.set(branch.id,{release:prior?.release||branch.state===2&&previous.state<2,
-            seal:prior?.seal||branch.opened>previous.opened||branch.extra.length>previous.extra.length});
+            seal:prior?.seal||newSeal});
         }
         const visual=visuals.get(branch.id);
         visual.tab.textContent=branch.label;
@@ -343,8 +514,15 @@
         visual.chain.dataset.state=branch.state;
         visual.chain.style.setProperty('--wear',String(branch.tier/12));
         const links=visual.chain.querySelectorAll('.destiny-chain-link');
-        links.forEach((link,index)=>link.classList.toggle('is-eroded',
-          branch.tier>=4&&Math.abs(index-(links.length-1)/2)<(branch.tier-3)/4));
+        const missing=Math.floor(links.length*branch.tier/12);
+        links.forEach((link,index)=>{
+          const distance=Math.abs(index-(links.length-1)/2);
+          const gone=distance<missing/2;
+          if(newSeal&&gone&&!link.classList.contains('is-gone'))link.classList.add('is-fragment');
+          if(!gone)link.classList.remove('is-fragment');
+          link.classList.toggle('is-gone',gone);
+          link.classList.toggle('is-eroded',branch.tier>=2&&distance<(missing+4)/2);
+        });
       }
       model=next;
       veins.replaceChildren();
@@ -443,5 +621,5 @@
     return {sync,open};
   }
 
-  root.VkachDestinyWorld=Object.freeze({project,mount,snapshot});
+  root.VkachDestinyWorld=Object.freeze({project,mount,snapshot,historicalAppearance,stages:Object.freeze(stages)});
 })(globalThis);
