@@ -3111,7 +3111,7 @@ await check('1.1 profile is the single system hub and finance has three reachabl
   await p.evaluate(()=>PlanSync.beforeUpdate());
   const after=await docs(p), observations=Object.entries(after).filter(([path])=>path.startsWith('world-history/'));
   assert.equal(observations.length,1,'an upgrade records only its first real day');
-  assert.equal(observations[0][1].d.version,1);
+  assert.equal(observations[0][1].d.version,2);
   return Object.fromEntries(observations);
  }
  await check('1.3.2 PWA replaces the 1.3.1 cache and retains saves and all poses offline',async()=>{

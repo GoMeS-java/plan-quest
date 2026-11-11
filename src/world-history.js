@@ -42,7 +42,15 @@
     return [id,typeof item.shape==='string'&&safeId.test(item.shape)?item.shape:'',Object.fromEntries(colors)];
   }
 
+  const directions=['body','will','mind','path','citadel','capital'];
+  function treeState(tree){
+    if(!directions.every(id=>Array.isArray(tree?.[id])&&tree[id].length===2&&
+      tree[id].every(Number.isInteger)&&tree[id][0]>=0&&tree[id][0]<=12&&tree[id][1]>=0&&tree[id][1]<=4))return null;
+    return Object.fromEntries(directions.map(id=>[id,tree[id].slice()]));
+  }
+
   function observation(input) {
+    const tree=treeState(input.tree);
     return {
       hero:[count(input.rank),count(input.bodyStage),Math.round(input.shape*1000)],
       rankProgress:input.rankProgress.map(value=>Number.isFinite(value)&&value>=0?value:0),
@@ -54,22 +62,25 @@
         .sort(([a],[b])=>a.localeCompare(b,'en')),
       seals:ids(input.seals),
       marks:ids(input.marks),
+      ...(tree?{tree}:{}),
       activity:[input.activity.steps,input.activity.sets,input.activity.reps,input.activity.tasks],
       weight:validWeight(input.weight?.kg)&&validDay(input.weight.date)?[input.weight.date,input.weight.kg]:null
     };
   }
 
   function same(row,frame) {
-    return row?.version===1&&JSON.stringify(row.frame)===JSON.stringify(frame);
+    const version=treeState(frame?.tree)?2:1;
+    return row?.version===version&&JSON.stringify(row.frame)===JSON.stringify(frame);
   }
 
   function capture(tx,day,at,frame) {
     if(!validDay(day)||!time(at))return 'invalid';
     const path=prefix+day, previous=tx.get(path);
-    if(previous&&previous.version!==1)return 'unsupported';
+    const version=treeState(frame?.tree)?2:1;
+    if(previous&&![1,version].includes(previous.version))return 'unsupported';
     if(same(previous,frame))return 'unchanged';
     if(previous&&previous.at>at)return 'unchanged';
-    const row={version:1,at,frame};
+    const row={version,at,frame};
     const bytes=tx.list(collection).filter(entry=>validDay(entry.id)&&entry.id!==day)
       .reduce((sum,{id,...entry})=>sum+snapshotSize(id,entry),snapshotSize(day,row));
     if(bytes>budget)return 'full';
@@ -104,9 +115,20 @@
   }
 
   function frames(records) {
-    return Object.entries(records).filter(([path,row])=>isPath(path)&&row?.d?.version===1&&time(row.d.at)&&row.d.frame)
+    return Object.entries(records).filter(([path,row])=>isPath(path)&&[1,2].includes(row?.d?.version)&&time(row.d.at)&&row.d.frame)
       .map(([path,row])=>({...row.d.frame,date:path.slice(prefix.length),at:row.d.at}))
       .sort((a,b)=>b.date.localeCompare(a.date));
+  }
+
+  function timeline(records,marks,today,dateFromTime,now){
+    const days=new Map();
+    const entry=date=>{
+      if(!days.has(date))days.set(date,{date,frame:null,events:[]});
+      return days.get(date);
+    };
+    for(const frame of frames(records))if(frame.date<=today)entry(frame.date).frame=frame;
+    for(const event of datedEvents(records,marks,today,dateFromTime,now))entry(event.date).events.push(event);
+    return [...days.values()].sort((a,b)=>b.date.localeCompare(a.date));
   }
 
   function datedEvents(records, marks, today, dateFromTime, now=Date.now()) {
@@ -140,5 +162,5 @@
     return events.sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
   }
 
-  root.VkachWorldHistory=Object.freeze({collection,isPath,activity,observation,same,capture,merge,join,frames,datedEvents});
+  root.VkachWorldHistory=Object.freeze({collection,isPath,activity,observation,same,capture,merge,join,frames,datedEvents,timeline,treeState});
 })(globalThis);
